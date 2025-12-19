@@ -3,6 +3,17 @@
   "displayName": "LogLens",
   "description": "Log Viewer for large files",
   "version": "0.0.1",
+  "author": "webispy@gmail.com",
+  "publisher": "webispy",
+  "icon": "icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/webispy/vscode-loglens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/webispy/vscode-loglens/issues"
+  },
+  "homepage": "https://github.com/webispy/vscode-loglens#readme",
   "engines": {
     "vscode": "^1.104.0"
   },
@@ -11,7 +22,113 @@
   ],
   "activationEvents": [],
   "main": "./out/extension.js",
-  "contributes": {},
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "loglens-container",
+          "title": "Log Viewer",
+          "icon": "$(list-filter)"
+        }
+      ]
+    },
+    "views": {
+      "loglens-container": [
+        {
+          "id": "loglens-filters",
+          "name": "Filters"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "loglens.addFilterGroup",
+        "title": "Add Filter Group",
+        "icon": "$(add)"
+      },
+      {
+        "command": "loglens.addFilter",
+        "title": "Add Filter",
+        "icon": "$(plus)"
+      },
+      {
+        "command": "loglens.applyFilter",
+        "title": "Apply Filter",
+        "icon": "$(play)"
+      },
+      {
+        "command": "loglens.deleteFilter",
+        "title": "Delete Filter",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "loglens.enableGroup",
+        "title": "Enable Group",
+        "icon": "$(circle-large-outline)"
+      },
+      {
+        "command": "loglens.disableGroup",
+        "title": "Disable Group",
+        "icon": "$(pass-filled)"
+      },
+      {
+        "command": "loglens.enableFilter",
+        "title": "Enable Filter",
+        "icon": "$(circle-large-outline)"
+      },
+      {
+        "command": "loglens.disableFilter",
+        "title": "Disable Filter",
+        "icon": "$(pass-filled)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "loglens.addFilterGroup",
+          "when": "view == loglens-filters",
+          "group": "navigation"
+        },
+        {
+          "command": "loglens.applyFilter",
+          "when": "view == loglens-filters",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "loglens.enableGroup",
+          "when": "view == loglens-filters && viewItem == filterGroupDisabled",
+          "group": "inline"
+        },
+        {
+          "command": "loglens.disableGroup",
+          "when": "view == loglens-filters && viewItem == filterGroupEnabled",
+          "group": "inline"
+        },
+        {
+          "command": "loglens.addFilter",
+          "when": "view == loglens-filters && viewItem =~ /filterGroup.*/",
+          "group": "inline"
+        },
+        {
+          "command": "loglens.enableFilter",
+          "when": "view == loglens-filters && viewItem == filterItemDisabled",
+          "group": "inline"
+        },
+        {
+          "command": "loglens.disableFilter",
+          "when": "view == loglens-filters && viewItem == filterItemEnabled",
+          "group": "inline"
+        },
+        {
+          "command": "loglens.deleteFilter",
+          "when": "view == loglens-filters",
+          "group": "inline"
+        }
+      ]
+    }
+  },
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
@@ -23,11 +140,15 @@
   "devDependencies": {
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
+    "@types/uuid": "^10.0.0",
     "@types/vscode": "^1.107.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.48.1"
+  },
+  "dependencies": {
+    "uuid": "^13.0.0"
   }
 }

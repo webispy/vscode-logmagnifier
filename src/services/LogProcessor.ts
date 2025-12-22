@@ -26,7 +26,14 @@ export class LogProcessor {
         const path = require('path');
         const tmpDir = os.tmpdir();
         const prefix = vscode.workspace.getConfiguration('loglens').get<string>('tempFilePrefix') || 'filtered_';
-        const outputFilename = `${prefix}${Date.now()}.log`;
+        const now = new Date();
+        const yy = now.getFullYear().toString().slice(-2);
+        const mo = (now.getMonth() + 1).toString().padStart(2, '0');
+        const dd = now.getDate().toString().padStart(2, '0');
+        const hh = now.getHours().toString().padStart(2, '0');
+        const mi = now.getMinutes().toString().padStart(2, '0');
+        const ss = now.getSeconds().toString().padStart(2, '0');
+        const outputFilename = `${prefix}${yy}${mo}${dd}_${hh}${mi}${ss}.log`;
         const outputPath = path.join(tmpDir, outputFilename);
         const outputStream = fs.createWriteStream(outputPath);
 

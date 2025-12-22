@@ -4,6 +4,15 @@ All notable changes to the "vscode-log-viewer" extension will be documented in t
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.3.0]
+
+### Added
+- **Drag and Drop**: Reorder filters easily within the list using drag and drop.
+- **Improved Filter Context Menu**: Reordered actions for better accessibility (Color > Highlight > Case > Delete > Toggle).
+- **Refined UI**: Updated word filter icons to be more distinct and highlight icon to be a rounded box.
+- **Expanded Colors**: Added 8 more color presets (total 16) and improved color selection dialog with previews.
+- **Temp File Naming**: Updated temporary file timestamp format to `YYMMDD_HHMMSS` for better sorting.
+
 ## [0.2.0]
 
 ### Added

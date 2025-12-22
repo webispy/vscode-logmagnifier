@@ -10,8 +10,11 @@ A high-performance log analysis tool for Visual Studio Code, designed to handle 
   - **Include**: Keep lines containing specific keywords.
   - **Exclude**: Remove lines containing specific keywords (highest priority).
 - **Focus Mode**: Generates a new editor tab with filtered results, enabling multi-stage filtering.
+- **Regex Support**: Advanced filtering using regular expressions.
+- **Drag & Drop**: Reorder filters intuitively.
 - **Highlighting**: Automatically highlights "include" keywords in the filtered view.
 - **Robust Detection**: Works with standard files and VS Code's optimized "Large File" read-only views.
+- **Expanded Colors**: 16 distinct colors for highlighting.
 
 ## Usage
 

@@ -2,7 +2,7 @@
   "name": "loglens",
   "displayName": "LogLens",
   "description": "High-performance log analyzer with multi-layered filtering, keyword highlighting, and optimized large file support.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "author": "webispy@gmail.com",
   "publisher": "webispy",
   "icon": "icon.png",

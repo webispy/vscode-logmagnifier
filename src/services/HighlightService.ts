@@ -108,7 +108,8 @@ export class HighlightService {
                     regex = new RegExp(filter.keyword, 'gi');
                 } else {
                     const escapedKeyword = filter.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    regex = new RegExp(escapedKeyword, 'gi');
+                    const flags = filter.caseSensitive ? 'g' : 'gi';
+                    regex = new RegExp(escapedKeyword, flags);
                 }
 
                 while ((match = regex.exec(text))) {

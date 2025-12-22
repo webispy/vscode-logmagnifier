@@ -9,6 +9,7 @@ export interface FilterItem {
     nickname?: string;
     color?: string;
     enableFullLineHighlight?: boolean;
+    caseSensitive?: boolean;
 }
 
 export interface FilterGroup {

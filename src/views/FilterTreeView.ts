@@ -41,6 +41,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
             item.contextValue = element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled';
             item.id = element.id;
+
+            description += element.caseSensitive ? ' (Aa)' : '';
             item.description = description;
 
             if (element.isEnabled) {

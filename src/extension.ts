@@ -198,6 +198,17 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
+
+	// Command: Toggle Filter Case Sensitivity
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterCaseSensitivity', (item: FilterItem) => {
+		const groups = filterManager.getGroups();
+		let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+
+		if (targetGroup) {
+			filterManager.toggleFilterCaseSensitivity(targetGroup.id, item.id);
+		}
+	}));
+
 	// Command: Change Filter Color
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.changeFilterColor', async (item: any) => {
 		// item likely has structure: { groupId, id, ... } from Tree Item context
@@ -403,8 +414,14 @@ function shouldKeepLine(line: string, groups: FilterGroup[]): boolean {
 					}
 				} catch (e) { /* ignore invalid regex */ }
 			} else {
-				if (line.includes(exclude.keyword)) {
-					return false;
+				if (exclude.caseSensitive) {
+					if (line.includes(exclude.keyword)) {
+						return false;
+					}
+				} else {
+					if (line.toLowerCase().includes(exclude.keyword.toLowerCase())) {
+						return false;
+					}
 				}
 			}
 		}
@@ -421,9 +438,16 @@ function shouldKeepLine(line: string, groups: FilterGroup[]): boolean {
 						}
 					} catch (e) { /* ignore invalid regex */ }
 				} else {
-					if (line.includes(include.keyword)) {
-						matchFound = true;
-						break;
+					if (include.caseSensitive) {
+						if (line.includes(include.keyword)) {
+							matchFound = true;
+							break;
+						}
+					} else {
+						if (line.toLowerCase().includes(include.keyword.toLowerCase())) {
+							matchFound = true;
+							break;
+						}
 					}
 				}
 			}

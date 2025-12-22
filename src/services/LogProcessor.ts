@@ -81,8 +81,16 @@ export class LogProcessor {
                         }
                     } catch (e) { /* ignore invalid regex */ }
                 } else {
-                    if (line.includes(exclude.keyword)) {
-                        return false;
+                    if (exclude.caseSensitive) {
+                        // Case sensitive check
+                        if (line.includes(exclude.keyword)) {
+                            return false;
+                        }
+                    } else {
+                        // Case insensitive check (default)
+                        if (line.toLowerCase().includes(exclude.keyword.toLowerCase())) {
+                            return false;
+                        }
                     }
                 }
             }
@@ -100,9 +108,16 @@ export class LogProcessor {
                             }
                         } catch (e) { /* ignore invalid regex */ }
                     } else {
-                        if (line.includes(include.keyword)) {
-                            matchFound = true;
-                            break;
+                        if (include.caseSensitive) {
+                            if (line.includes(include.keyword)) {
+                                matchFound = true;
+                                break;
+                            }
+                        } else {
+                            if (line.toLowerCase().includes(include.keyword.toLowerCase())) {
+                                matchFound = true;
+                                break;
+                            }
                         }
                     }
                 }

@@ -151,6 +151,17 @@ export class FilterManager {
         }
     }
 
+    public toggleFilterCaseSensitivity(groupId: string, filterId: string): void {
+        const group = this.groups.find(g => g.id === groupId);
+        if (group) {
+            const filter = group.filters.find(f => f.id === filterId);
+            if (filter) {
+                filter.caseSensitive = !filter.caseSensitive;
+                this._onDidChangeFilters.fire();
+            }
+        }
+    }
+
     public removeFilter(groupId: string, filterId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {

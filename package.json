@@ -131,6 +131,11 @@
         "command": "loglens.toggleFilterHighlightMode",
         "title": "Toggle Full Line Highlight",
         "icon": "$(arrow-both)"
+      },
+      {
+        "command": "loglens.toggleFilterCaseSensitivity",
+        "title": "Toggle Case Sensitivity",
+        "icon": "$(case-sensitive)"
       }
     ],
     "menus": {
@@ -180,17 +185,17 @@
         {
           "command": "loglens.enableFilter",
           "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterItemDisabled",
-          "group": "inline@4"
+          "group": "inline@5"
         },
         {
           "command": "loglens.disableFilter",
           "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterItemEnabled",
-          "group": "inline@4"
+          "group": "inline@5"
         },
         {
           "command": "loglens.deleteFilter",
           "when": "(viewItem == filterItemEnabled || viewItem == filterItemDisabled) && (view == loglens-filters || view == loglens-regex-filters)",
-          "group": "inline@3"
+          "group": "inline@4"
         },
         {
           "command": "loglens.deleteFilter",
@@ -201,6 +206,11 @@
           "command": "loglens.changeFilterColor",
           "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
           "group": "inline@1"
+        },
+        {
+          "command": "loglens.toggleFilterCaseSensitivity",
+          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "group": "inline@3"
         }
       ]
     }

@@ -1,3 +1,4 @@
+import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as readline from 'readline';
 import { FilterGroup } from '../models/Filter';
@@ -24,7 +25,8 @@ export class LogProcessor {
         const os = require('os');
         const path = require('path');
         const tmpDir = os.tmpdir();
-        const outputFilename = `filtered_${Date.now()}.log`;
+        const prefix = vscode.workspace.getConfiguration('loglens').get<string>('tempFilePrefix') || 'filtered_';
+        const outputFilename = `${prefix}${Date.now()}.log`;
         const outputPath = path.join(tmpDir, outputFilename);
         const outputStream = fs.createWriteStream(outputPath);
 

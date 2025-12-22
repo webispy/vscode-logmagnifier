@@ -27,6 +27,16 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
+	// Update highlights when configuration changes (e.g. color)
+	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
+		if (e.affectsConfiguration('loglens.highlightColor')) {
+			highlightService.refreshDecorationType();
+			if (vscode.window.activeTextEditor) {
+				highlightService.updateHighlights(vscode.window.activeTextEditor);
+			}
+		}
+	}));
+
 	// Initial highlight
 	if (vscode.window.activeTextEditor) {
 		highlightService.updateHighlights(vscode.window.activeTextEditor);
@@ -225,7 +235,8 @@ export function activate(context: vscode.ExtensionContext) {
 			if (stats.matched === 0) {
 				vscode.window.showWarningMessage(message + " Check your filter keywords (case-sensitive).");
 			} else {
-				vscode.window.setStatusBarMessage(message, 5000);
+				const timeout = vscode.workspace.getConfiguration('loglens').get<number>('statusBarTimeout') || 5000;
+				vscode.window.setStatusBarMessage(message, timeout);
 			}
 
 			if (document && document.isUntitled) {
@@ -233,11 +244,25 @@ export function activate(context: vscode.ExtensionContext) {
 				await vscode.window.showTextDocument(newDoc, { preview: false });
 			} else {
 				if (outputPath) {
-					const newDoc = await vscode.workspace.openTextDocument(outputPath);
-					await vscode.window.showTextDocument(newDoc, { preview: false });
-					// Ensure language mode
-					if (newDoc.languageId !== 'log') {
-						await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
+					// Check file size
+					const fs = require('fs');
+					const stats = fs.statSync(outputPath);
+					const fileSizeInBytes = stats.size;
+					const limitInMB = vscode.workspace.getConfiguration('loglens').get<number>('maxFileSizeMB') || 50;
+					const limitInBytes = limitInMB * 1024 * 1024;
+
+					if (fileSizeInBytes > limitInBytes) {
+						// Large file strategy: use vscode.open which handles large files better (no tokenization by default)
+						await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
+						// Note: We skip setting language to 'log' because for large files generic text handling is safer/faster
+					} else {
+						// Normal strategy
+						const newDoc = await vscode.workspace.openTextDocument(outputPath);
+						await vscode.window.showTextDocument(newDoc, { preview: false });
+						// Ensure language mode
+						if (newDoc.languageId !== 'log') {
+							await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
+						}
 					}
 				}
 			}

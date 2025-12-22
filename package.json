@@ -1,7 +1,7 @@
 {
   "name": "loglens",
   "displayName": "LogLens",
-  "description": "Log Viewer for large files",
+  "description": "High-performance log analyzer with multi-layered filtering, keyword highlighting, and optimized large file support.",
   "version": "0.0.1",
   "author": "webispy@gmail.com",
   "publisher": "webispy",
@@ -23,11 +23,36 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "configuration": {
+      "title": "LogLens",
+      "properties": {
+        "loglens.maxFileSizeMB": {
+          "type": "number",
+          "default": 50,
+          "description": "Maximum file size in MB for opening filtered logs as text documents. Larger files will open in safe mode."
+        },
+        "loglens.highlightColor": {
+          "type": "string",
+          "default": "rgba(255, 255, 0, 0.3)",
+          "description": "Background color for log highlights."
+        },
+        "loglens.tempFilePrefix": {
+          "type": "string",
+          "default": "filtered_",
+          "description": "Prefix for the filtered temp files."
+        },
+        "loglens.statusBarTimeout": {
+          "type": "number",
+          "default": 5000,
+          "description": "Duration for status bar messages in milliseconds."
+        }
+      }
+    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "loglens-container",
-          "title": "Log Viewer",
+          "title": "LogLens",
           "icon": "$(list-filter)"
         }
       ]

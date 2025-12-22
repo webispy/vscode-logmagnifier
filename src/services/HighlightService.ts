@@ -6,11 +6,21 @@ export class HighlightService {
     private decorationType: vscode.TextEditorDecorationType;
 
     constructor(private filterManager: FilterManager) {
-        this.decorationType = vscode.window.createTextEditorDecorationType({
-            backgroundColor: 'rgba(255, 255, 0, 0.3)', // Yellow highlight
+        this.decorationType = this.createDecorationType();
+    }
+
+    private createDecorationType(): vscode.TextEditorDecorationType {
+        const color = vscode.workspace.getConfiguration('loglens').get<string>('highlightColor') || 'rgba(255, 255, 0, 0.3)';
+        return vscode.window.createTextEditorDecorationType({
+            backgroundColor: color,
             color: 'inherit',
             fontWeight: 'bold'
         });
+    }
+
+    public refreshDecorationType() {
+        this.decorationType.dispose();
+        this.decorationType = this.createDecorationType();
     }
 
     public updateHighlights(editor: vscode.TextEditor) {
@@ -36,7 +46,9 @@ export class HighlightService {
         const ranges: vscode.Range[] = [];
 
         includeKeywords.forEach(keyword => {
-            if (!keyword) return;
+            if (!keyword) {
+                return;
+            }
             let match;
             // Simple string search or regex. Keyword might need escaping if used in regex.
             // Using simple indexOf loop for safety, or regex with escaping.

@@ -215,4 +215,27 @@ export class FilterManager {
             }
         }
     }
+
+    public updateResultCounts(counts: { filterId: string, count: number }[], groupCounts: { groupId: string, count: number }[]): void {
+        let changed = false;
+        for (const group of this.groups) {
+            const gCount = groupCounts.find(c => c.groupId === group.id);
+            if (gCount !== undefined && group.resultCount !== gCount.count) {
+                group.resultCount = gCount.count;
+                changed = true;
+            }
+
+            for (const filter of group.filters) {
+                const fCount = counts.find(c => c.filterId === filter.id);
+                if (fCount !== undefined && filter.resultCount !== fCount.count) {
+                    filter.resultCount = fCount.count;
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed) {
+            this._onDidChangeFilters.fire();
+        }
+    }
 }

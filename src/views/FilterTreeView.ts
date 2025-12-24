@@ -38,6 +38,10 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 label = `${element.type === 'include' ? '➕' : '➖'} ${element.keyword}`;
             }
 
+            if (element.resultCount !== undefined && element.resultCount > 0) {
+                label += ` (${element.resultCount})`;
+            }
+
             const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
             item.contextValue = element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled';
             item.id = element.id;

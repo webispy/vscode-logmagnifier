@@ -4,6 +4,7 @@ import { FilterTreeDataProvider } from './views/FilterTreeView';
 import { LogProcessor } from './services/LogProcessor';
 import { FilterGroup, FilterItem } from './models/Filter';
 import { HighlightService } from './services/HighlightService';
+import { ResultCountService } from './services/ResultCountService';
 
 export function activate(context: vscode.ExtensionContext) {
 	const filterManager = new FilterManager();
@@ -11,6 +12,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex');
 	const logProcessor = new LogProcessor();
 	const highlightService = new HighlightService(filterManager);
+	const resultCountService = new ResultCountService(filterManager);
 
 	vscode.window.createTreeView('loglens-filters', { treeDataProvider: wordTreeDataProvider, dragAndDropController: wordTreeDataProvider });
 	vscode.window.createTreeView('loglens-regex-filters', { treeDataProvider: regexTreeDataProvider, dragAndDropController: regexTreeDataProvider });
@@ -19,6 +21,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
 			highlightService.updateHighlights(editor);
+			resultCountService.updateCounts();
 		}
 	}));
 
@@ -26,6 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(filterManager.onDidChangeFilters(() => {
 		if (vscode.window.activeTextEditor) {
 			highlightService.updateHighlights(vscode.window.activeTextEditor);
+			resultCountService.updateCounts();
 		}
 	}));
 
@@ -42,7 +46,15 @@ export function activate(context: vscode.ExtensionContext) {
 	// Initial highlight
 	if (vscode.window.activeTextEditor) {
 		highlightService.updateHighlights(vscode.window.activeTextEditor);
+		resultCountService.updateCounts();
 	}
+
+	// Update counts when text changes
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+		if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+			resultCountService.updateCounts();
+		}
+	}));
 
 	// Command: Add Word Filter Group
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.addFilterGroup', async () => {

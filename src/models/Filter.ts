@@ -10,6 +10,7 @@ export interface FilterItem {
     color?: string;
     enableFullLineHighlight?: boolean;
     caseSensitive?: boolean;
+    resultCount?: number;
 }
 
 export interface FilterGroup {
@@ -18,4 +19,5 @@ export interface FilterGroup {
     filters: FilterItem[];
     isEnabled: boolean;
     isRegex?: boolean;
+    resultCount?: number;
 }

@@ -8,7 +8,7 @@ export interface FilterItem {
     isRegex?: boolean;
     nickname?: string;
     color?: string;
-    enableFullLineHighlight?: boolean;
+    highlightMode?: number; // 0: Word, 1: Line, 2: Full Line
     caseSensitive?: boolean;
     resultCount?: number;
 }

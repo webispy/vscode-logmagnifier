@@ -145,7 +145,14 @@ export class FilterManager {
         if (group) {
             const filter = group.filters.find(f => f.id === filterId);
             if (filter) {
-                filter.enableFullLineHighlight = !filter.enableFullLineHighlight;
+                // If it was the old boolean flag, migrate it
+                if (filter.highlightMode === undefined) {
+                    filter.highlightMode = (filter as any).enableFullLineHighlight ? 1 : 0;
+                    delete (filter as any).enableFullLineHighlight;
+                }
+
+                // Cycle: 0 (Word) -> 1 (Line) -> 2 (Full Line) -> 0
+                filter.highlightMode = (filter.highlightMode + 1) % 3;
                 this._onDidChangeFilters.fire();
             }
         }

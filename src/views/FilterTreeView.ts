@@ -57,9 +57,14 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
                     // Create a colored dot icon using SVG data URI
                     let svg: string;
-                    if (element.enableFullLineHighlight) {
-                        // Rounded box (pill shape) - represents line
+                    const mode = element.highlightMode ?? 0;
+                    if (mode === 1) {
+                        // Rounded box (pill shape) - represents line text only
                         svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect x="1" y="5" width="14" height="6" rx="3" ry="3" fill="${fillColor}"/></svg>`;
+                    } else if (mode === 2) {
+                        // Wide rectangle with gradient to represent full line width
+                        const gradId = `grad_${element.id.replace(/[^a-zA-Z0-9]/g, '')}`;
+                        svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><defs><linearGradient id="${gradId}" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:${fillColor};stop-opacity:1" /><stop offset="70%" style="stop-color:${fillColor};stop-opacity:1" /><stop offset="100%" style="stop-color:${fillColor};stop-opacity:0.3" /></linearGradient></defs><rect x="0" y="5" width="16" height="6" fill="url(#${gradId})"/></svg>`;
                     } else {
                         // Circle - represents word
                         svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" fill="${fillColor}"/></svg>`;

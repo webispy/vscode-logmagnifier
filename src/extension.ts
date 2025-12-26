@@ -420,6 +420,94 @@ export function activate(context: vscode.ExtensionContext) {
 
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.applyWordFilter', () => applyFilterHandler('word')));
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.applyRegexFilter', () => applyFilterHandler('regex')));
+
+	// Command: Next Match
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.nextMatch', async (item: FilterItem) => {
+		await findMatch(item, 'next');
+	}));
+
+	// Command: Previous Match
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.previousMatch', async (item: FilterItem) => {
+		await findMatch(item, 'previous');
+	}));
+}
+
+async function findMatch(item: FilterItem, direction: 'next' | 'previous') {
+	const editor = vscode.window.activeTextEditor;
+	if (!editor) {
+		return;
+	}
+
+	const document = editor.document;
+	const selection = editor.selection;
+	const isRegex = !!item.isRegex;
+	const flags = item.caseSensitive ? '' : 'i';
+	const pattern = isRegex ? item.keyword : item.keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+	const regex = new RegExp(pattern, flags + 'g');
+
+	const fullText = document.getText();
+	const matches = Array.from(fullText.matchAll(regex));
+
+	if (matches.length === 0) {
+		vscode.window.showInformationMessage('No matches found for: ' + item.keyword);
+		return;
+	}
+
+	let targetMatch: { index: number, text: string } | undefined;
+
+	if (direction === 'next') {
+		const offset = document.offsetAt(selection.active);
+		// Find first match that STARTS after the current active position
+		let nextM = matches.find(m => m.index! > offset);
+
+		if (!nextM) {
+			// If no match after active position, try to find one that includes active position but ends after it
+			nextM = matches.find(m => m.index! <= offset && (m.index! + m[0].length) > offset);
+
+			// If still nothing or it's the same as current selection, wrap around
+			const currentStart = document.offsetAt(selection.start);
+			const currentEnd = document.offsetAt(selection.end);
+
+			if (!nextM || (nextM.index === currentStart && (nextM.index + nextM[0].length) === currentEnd)) {
+				nextM = matches[0];
+			}
+		}
+		targetMatch = { index: nextM.index!, text: nextM[0] };
+	} else {
+		// Previous
+		const offset = document.offsetAt(selection.active);
+		// Find matches that START before the current active position
+		const matchesBefore = matches.filter(m => m.index! < offset);
+
+		if (matchesBefore.length > 0) {
+			let prevM = matchesBefore[matchesBefore.length - 1];
+
+			// If prevM is exactly the current selection, take the one before it
+			const currentStart = document.offsetAt(selection.start);
+			const currentEnd = document.offsetAt(selection.end);
+			if (prevM.index === currentStart && (prevM.index + prevM[0].length) === currentEnd) {
+				if (matchesBefore.length > 1) {
+					prevM = matchesBefore[matchesBefore.length - 2];
+				} else {
+					prevM = matches[matches.length - 1]; // Wrap
+				}
+			}
+			targetMatch = { index: prevM.index!, text: prevM[0] };
+		} else {
+			// Wrap to last
+			const lastM = matches[matches.length - 1];
+			targetMatch = { index: lastM.index!, text: lastM[0] };
+		}
+	}
+
+	if (targetMatch) {
+		const startPos = document.positionAt(targetMatch.index);
+		const endPos = document.positionAt(targetMatch.index + targetMatch.text.length);
+		const range = new vscode.Range(startPos, endPos);
+
+		editor.selection = new vscode.Selection(startPos, endPos);
+		editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+	}
 }
 
 function shouldKeepLine(line: string, groups: FilterGroup[]): boolean {

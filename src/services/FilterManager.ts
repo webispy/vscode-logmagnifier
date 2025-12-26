@@ -47,6 +47,9 @@ export class FilterManager {
 
     private initDefaultFilters(): void {
         const featuredGroup = this.addGroup('Presets', true);
+        if (!featuredGroup) {
+            return;
+        }
         featuredGroup.isEnabled = false;
 
         this.addFilter(
@@ -82,7 +85,12 @@ export class FilterManager {
         return COLOR_PRESETS.find(p => p.name === name);
     }
 
-    public addGroup(name: string, isRegex: boolean = false): FilterGroup {
+    public addGroup(name: string, isRegex: boolean = false): FilterGroup | undefined {
+        const exists = this.groups.some(g => g.name.toLowerCase() === name.toLowerCase() && !!g.isRegex === !!isRegex);
+        if (exists) {
+            return undefined;
+        }
+
         const newGroup: FilterGroup = {
             id: generateId(),
             name,
@@ -95,9 +103,20 @@ export class FilterManager {
         return newGroup;
     }
 
-    public addFilter(groupId: string, keyword: string, type: FilterType, isRegex: boolean = false, nickname?: string): void {
+    public addFilter(groupId: string, keyword: string, type: FilterType, isRegex: boolean = false, nickname?: string): FilterItem | undefined {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
+            const exists = group.filters.some(f => {
+                if (isRegex) {
+                    return f.keyword === keyword && f.nickname === nickname;
+                }
+                return f.keyword.toLowerCase() === keyword.toLowerCase() && f.type === type;
+            });
+
+            if (exists) {
+                return undefined;
+            }
+
             const newFilter: FilterItem = {
                 id: generateId(),
                 keyword,
@@ -109,7 +128,9 @@ export class FilterManager {
             };
             group.filters.push(newFilter);
             this._onDidChangeFilters.fire();
+            return newFilter;
         }
+        return undefined;
     }
 
     private assignColor(group: FilterGroup): string {

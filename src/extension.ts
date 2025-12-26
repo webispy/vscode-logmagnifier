@@ -61,7 +61,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.addFilterGroup', async () => {
 		const name = await vscode.window.showInputBox({ prompt: 'Enter Word Filter Group Name' });
 		if (name) {
-			filterManager.addGroup(name, false);
+			const group = filterManager.addGroup(name, false);
+			if (!group) {
+				vscode.window.showErrorMessage(`Word Filter Group '${name}' already exists.`);
+			}
 		}
 	}));
 
@@ -69,7 +72,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.addRegexFilterGroup', async () => {
 		const name = await vscode.window.showInputBox({ prompt: 'Enter Regex Filter Group Name' });
 		if (name) {
-			filterManager.addGroup(name, true);
+			const group = filterManager.addGroup(name, true);
+			if (!group) {
+				vscode.window.showErrorMessage(`Regex Filter Group '${name}' already exists.`);
+			}
 		}
 	}));
 
@@ -95,7 +101,11 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		filterManager.addFilter(targetGroupId, keyword, selected.label === 'Include' ? 'include' : 'exclude', false);
+		const type = selected.label === 'Include' ? 'include' : 'exclude';
+		const filter = filterManager.addFilter(targetGroupId, keyword, type, false);
+		if (!filter) {
+			vscode.window.showErrorMessage(`Filter '${keyword}' (${type}) already exists in this group.`);
+		}
 	}));
 
 	// Command: Add Regex Filter
@@ -126,7 +136,10 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 
 		// Skip type selection for Regex, default to 'include'
-		filterManager.addFilter(targetGroupId, pattern, 'include', true, nickname);
+		const filter = filterManager.addFilter(targetGroupId, pattern, 'include', true, nickname);
+		if (!filter) {
+			vscode.window.showErrorMessage(`Regex Filter with pattern '${pattern}' or nickname '${nickname}' already exists in this group.`);
+		}
 	}));
 
 	async function ensureGroupId(manager: FilterManager, group: FilterGroup | undefined, isRegex: boolean): Promise<string | undefined> {

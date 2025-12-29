@@ -156,6 +156,26 @@
         "command": "loglens.nextMatch",
         "title": "Next Match",
         "icon": "$(arrow-down)"
+      },
+      {
+        "command": "loglens.toggleFilterContextLine_cl0",
+        "title": "Context lines: none",
+        "icon": "resources/cl-0.svg"
+      },
+      {
+        "command": "loglens.toggleFilterContextLine_cl3",
+        "title": "Context lines: ±3",
+        "icon": "resources/cl-3.svg"
+      },
+      {
+        "command": "loglens.toggleFilterContextLine_cl5",
+        "title": "Context lines: ±5",
+        "icon": "resources/cl-5.svg"
+      },
+      {
+        "command": "loglens.toggleFilterContextLine_cl9",
+        "title": "Context lines: ±9",
+        "icon": "resources/cl-9.svg"
       }
     ],
     "menus": {
@@ -194,7 +214,7 @@
         },
         {
           "command": "loglens.previousMatch",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@1"
         },
         {
@@ -204,7 +224,7 @@
         },
         {
           "command": "loglens.nextMatch",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@2"
         },
         {
@@ -219,32 +239,52 @@
         },
         {
           "command": "loglens.changeFilterColor",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@3"
         },
         {
           "command": "loglens.toggleFilterHighlightMode",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@4"
         },
         {
           "command": "loglens.toggleFilterCaseSensitivity",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled)",
+          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@5"
         },
         {
+          "command": "loglens.toggleFilterContextLine_cl0",
+          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl0/",
+          "group": "inline@6"
+        },
+        {
+          "command": "loglens.toggleFilterContextLine_cl3",
+          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl3/",
+          "group": "inline@6"
+        },
+        {
+          "command": "loglens.toggleFilterContextLine_cl5",
+          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl5/",
+          "group": "inline@6"
+        },
+        {
+          "command": "loglens.toggleFilterContextLine_cl9",
+          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/",
+          "group": "inline@6"
+        },
+        {
           "command": "loglens.deleteFilter",
-          "when": "(viewItem == filterItemEnabled || viewItem == filterItemDisabled) && (view == loglens-filters || view == loglens-regex-filters)",
+          "when": "(viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && (view == loglens-filters || view == loglens-regex-filters)",
           "group": "inline@7"
         },
         {
           "command": "loglens.enableFilter",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterItemDisabled",
+          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemDisabled || viewItem =~ /filterItemDisabled_cl.*/)",
           "group": "inline@8"
         },
         {
           "command": "loglens.disableFilter",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterItemEnabled",
+          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
           "group": "inline@8"
         }
       ]

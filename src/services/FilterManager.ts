@@ -124,7 +124,8 @@ export class FilterManager {
                 isEnabled: true,
                 isRegex,
                 nickname,
-                color: (!isRegex && type === 'include') ? this.assignColor(group) : undefined
+                color: (!isRegex && type === 'include') ? this.assignColor(group) : undefined,
+                contextLine: 0
             };
             group.filters.push(newFilter);
             this._onDidChangeFilters.fire();
@@ -185,6 +186,20 @@ export class FilterManager {
             const filter = group.filters.find(f => f.id === filterId);
             if (filter) {
                 filter.caseSensitive = !filter.caseSensitive;
+                this._onDidChangeFilters.fire();
+            }
+        }
+    }
+
+    public toggleFilterContextLine(groupId: string, filterId: string): void {
+        const group = this.groups.find(g => g.id === groupId);
+        if (group) {
+            const filter = group.filters.find(f => f.id === filterId);
+            if (filter) {
+                const levels = [0, 3, 5, 9];
+                const currentIndex = levels.indexOf(filter.contextLine ?? 0);
+                const nextIndex = (currentIndex + 1) % levels.length;
+                filter.contextLine = levels[nextIndex];
                 this._onDidChangeFilters.fire();
             }
         }

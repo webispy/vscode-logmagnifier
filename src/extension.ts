@@ -235,6 +235,21 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	}));
 
+	// Command: Toggle Filter Context Line (Multiple entries for dynamic icons)
+	const toggleContextLineHandler = (item: FilterItem) => {
+		const groups = filterManager.getGroups();
+		let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+
+		if (targetGroup) {
+			filterManager.toggleFilterContextLine(targetGroup.id, item.id);
+		}
+	};
+
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl0', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl3', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl5', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl9', toggleContextLineHandler));
+
 	// Command: Change Filter Color
 	context.subscriptions.push(vscode.commands.registerCommand('loglens.changeFilterColor', async (item: any) => {
 		// item likely has structure: { groupId, id, ... } from Tree Item context
@@ -366,11 +381,11 @@ export function activate(context: vscode.ExtensionContext) {
 						const lines = fullText.split(/\r?\n/);
 						const filtered = lines.filter(line => {
 							stats.processed++;
-							const keep = shouldKeepLine(line, activeGroups);
-							if (keep) {
+							const matchResult = logProcessor.checkMatch(line, activeGroups);
+							if (matchResult.isMatched) {
 								stats.matched++;
 							}
-							return keep;
+							return matchResult.isMatched;
 						});
 						inMemoryContent = filtered.join('\n');
 					} else {
@@ -523,65 +538,5 @@ async function findMatch(item: FilterItem, direction: 'next' | 'previous') {
 	}
 }
 
-function shouldKeepLine(line: string, groups: FilterGroup[]): boolean {
-	for (const group of groups) {
-		const includes = group.filters.filter(f => f.type === 'include' && f.isEnabled);
-		const excludes = group.filters.filter(f => f.type === 'exclude' && f.isEnabled);
-
-		for (const exclude of excludes) {
-			if (exclude.isRegex) {
-				try {
-					const flags = exclude.caseSensitive ? '' : 'i';
-					const regex = new RegExp(exclude.keyword, flags);
-					if (regex.test(line)) {
-						return false;
-					}
-				} catch (e) { /* ignore invalid regex */ }
-			} else {
-				if (exclude.caseSensitive) {
-					if (line.includes(exclude.keyword)) {
-						return false;
-					}
-				} else {
-					if (line.toLowerCase().includes(exclude.keyword.toLowerCase())) {
-						return false;
-					}
-				}
-			}
-		}
-
-		if (includes.length > 0) {
-			let matchFound = false;
-			for (const include of includes) {
-				if (include.isRegex) {
-					try {
-						const flags = include.caseSensitive ? '' : 'i';
-						const regex = new RegExp(include.keyword, flags);
-						if (regex.test(line)) {
-							matchFound = true;
-							break;
-						}
-					} catch (e) { /* ignore invalid regex */ }
-				} else {
-					if (include.caseSensitive) {
-						if (line.includes(include.keyword)) {
-							matchFound = true;
-							break;
-						}
-					} else {
-						if (line.toLowerCase().includes(include.keyword.toLowerCase())) {
-							matchFound = true;
-							break;
-						}
-					}
-				}
-			}
-			if (!matchFound) {
-				return false;
-			}
-		}
-	}
-	return true;
-}
 
 export function deactivate() { }

@@ -58,7 +58,7 @@ export class HighlightService {
         const activeGroups = this.filterManager.getGroups().filter(g => g.isEnabled);
         const includeFilters: FilterItem[] = [];
 
-        const enableRegexHighlight = vscode.workspace.getConfiguration('loglens').get<boolean>('enableRegexHighlight') || false;
+        const enableRegexHighlight = vscode.workspace.getConfiguration('logmagnifier').get<boolean>('enableRegexHighlight') || false;
 
         activeGroups.forEach(g => {
             g.filters.forEach(f => {
@@ -85,7 +85,7 @@ export class HighlightService {
         this.decorationTypes.forEach((_, key) => rangesByDeco.set(key, []));
 
         // Default highlight color from config if filter has no specific color (backward compatibility)
-        const defaultColor = vscode.workspace.getConfiguration('loglens').get<string>('highlightColor') || 'rgba(255, 255, 0, 0.3)';
+        const defaultColor = vscode.workspace.getConfiguration('logmagnifier').get<string>('highlightColor') || 'rgba(255, 255, 0, 0.3)';
 
         includeFilters.forEach(filter => {
             if (!filter.keyword) {

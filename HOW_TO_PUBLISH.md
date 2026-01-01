@@ -2,14 +2,14 @@
 description: How to publish the extension to VS Code Marketplace
 ---
 
-# Publishing LogLens to VS Code Marketplace
+# Publishing LogMagnifier to VS Code Marketplace
 
 Follow these steps to release your extension to the public.
 
 ## 1. Prerequisites
 
 - **Microsoft Account**: You need a Microsoft account.
-- **Azure DevOps Organization**: 
+- **Azure DevOps Organization**:
     1. Go to [Azure DevOps](https://dev.azure.com/).
     2. Create a new organization (if you don't have one).
 - **Personal Access Token (PAT)**:
@@ -56,7 +56,7 @@ vsce login webispy
 ```bash
 vsce package
 ```
-*This creates `loglens-0.0.1.vsix`.*
+*This creates `logmagnifier-0.0.1.vsix`.*
 
 ### To publish to Marketplace:
 ```bash
@@ -66,4 +66,4 @@ vsce publish
 
 ## 6. Verification
 After publishing, it may take a few minutes for the extension to appear. verify it at:
-`https://marketplace.visualstudio.com/items?itemName=webispy.loglens`
+`https://marketplace.visualstudio.com/items?itemName=webispy.logmagnifier`

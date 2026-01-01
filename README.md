@@ -1,4 +1,4 @@
-# LogLens
+# LogMagnifier
 
 A stream-based log analysis tool for Visual Studio Code, designed to handle large log files efficiently.
 
@@ -21,7 +21,7 @@ A stream-based log analysis tool for Visual Studio Code, designed to handle larg
 
 ## Usage
 
-1. **Open** "LogLens" from the Activity Bar (List Icon).
+1. **Open** "LogMagnifier" from the Activity Bar (List Icon).
 2. **Add Group**: Click the `+` icon to create a new Filter Group (e.g., "AuthFlow").
 3. **Add Filters**: Active the group, then add "Include" or "Exclude" keywords.
     - *Tip*: Hover over items to Toggle or Delete them.
@@ -39,10 +39,10 @@ A stream-based log analysis tool for Visual Studio Code, designed to handle larg
 
 This extension contributes the following settings:
 
-* `loglens.maxFileSizeMB`: Maximum file size in MB for opening filtered logs as text documents. Larger files will open in safe mode. (Default: 50)
-* `loglens.highlightColor`: Background color for log highlights. (Default: `rgba(255, 255, 0, 0.3)`)
-* `loglens.tempFilePrefix`: Prefix for the filtered temp files. (Default: `filtered_`)
-* `loglens.statusBarTimeout`: Duration for status bar messages in milliseconds. (Default: 5000)
+* `logmagnifier.maxFileSizeMB`: Maximum file size in MB for opening filtered logs as text documents. Larger files will open in safe mode. (Default: 50)
+* `logmagnifier.highlightColor`: Background color for log highlights. (Default: `rgba(255, 255, 0, 0.3)`)
+* `logmagnifier.tempFilePrefix`: Prefix for the filtered temp files. (Default: `filtered_`)
+* `logmagnifier.statusBarTimeout`: Duration for status bar messages in milliseconds. (Default: 5000)
 
 ## Credits
 

@@ -1,6 +1,6 @@
 {
-  "name": "loglens",
-  "displayName": "LogLens",
+  "name": "logmagnifier",
+  "displayName": "LogMagnifier",
   "description": "High-performance log analyzer with multi-layered filtering, keyword highlighting, and optimized large file support.",
   "version": "0.4.0",
   "author": "webispy@gmail.com",
@@ -8,12 +8,12 @@
   "icon": "icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/webispy/vscode-loglens.git"
+    "url": "https://github.com/webispy/vscode-logmagnifier.git"
   },
   "bugs": {
-    "url": "https://github.com/webispy/vscode-loglens/issues"
+    "url": "https://github.com/webispy/vscode-logmagnifier/issues"
   },
-  "homepage": "https://github.com/webispy/vscode-loglens#readme",
+  "homepage": "https://github.com/webispy/vscode-logmagnifier#readme",
   "engines": {
     "vscode": "^1.104.0"
   },
@@ -24,29 +24,29 @@
   "main": "./out/extension.js",
   "contributes": {
     "configuration": {
-      "title": "LogLens",
+      "title": "LogMagnifier",
       "properties": {
-        "loglens.maxFileSizeMB": {
+        "logmagnifier.maxFileSizeMB": {
           "type": "number",
           "default": 50,
           "description": "Maximum file size in MB for opening filtered logs as text documents. Larger files will open in safe mode."
         },
-        "loglens.highlightColor": {
+        "logmagnifier.highlightColor": {
           "type": "string",
           "default": "rgba(255, 255, 0, 0.3)",
           "description": "Background color for log highlights."
         },
-        "loglens.tempFilePrefix": {
+        "logmagnifier.tempFilePrefix": {
           "type": "string",
           "default": "filtered_",
           "description": "Prefix for the filtered temp files."
         },
-        "loglens.statusBarTimeout": {
+        "logmagnifier.statusBarTimeout": {
           "type": "number",
           "default": 5000,
           "description": "Duration for status bar messages in milliseconds."
         },
-        "loglens.enableRegexHighlight": {
+        "logmagnifier.enableRegexHighlight": {
           "type": "boolean",
           "default": false,
           "description": "Enable highlighting for Regex filters in the editor."
@@ -56,21 +56,21 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "loglens-container",
-          "title": "LogLens",
+          "id": "logmagnifier-container",
+          "title": "LogMagnifier",
           "icon": "resources/icon.svg"
         }
       ]
     },
     "views": {
-      "loglens-container": [
+      "logmagnifier-container": [
         {
-          "id": "loglens-filters",
+          "id": "logmagnifier-filters",
           "name": "Word Filters",
           "icon": "$(filter)"
         },
         {
-          "id": "loglens-regex-filters",
+          "id": "logmagnifier-regex-filters",
           "name": "Regex Filters",
           "icon": "$(regex)"
         }
@@ -78,102 +78,102 @@
     },
     "commands": [
       {
-        "command": "loglens.addFilterGroup",
+        "command": "logmagnifier.addFilterGroup",
         "title": "Add Word Filter Group",
         "icon": "$(add)"
       },
       {
-        "command": "loglens.addRegexFilterGroup",
+        "command": "logmagnifier.addRegexFilterGroup",
         "title": "Add Regex Filter Group",
         "icon": "$(add)"
       },
       {
-        "command": "loglens.addFilter",
+        "command": "logmagnifier.addFilter",
         "title": "Add Word Filter",
         "icon": "$(plus)"
       },
       {
-        "command": "loglens.addRegexFilter",
+        "command": "logmagnifier.addRegexFilter",
         "title": "Add Regex Filter",
         "icon": "$(plus)"
       },
       {
-        "command": "loglens.applyWordFilter",
+        "command": "logmagnifier.applyWordFilter",
         "title": "Apply Word Filter",
         "icon": "$(play)"
       },
       {
-        "command": "loglens.applyRegexFilter",
+        "command": "logmagnifier.applyRegexFilter",
         "title": "Apply Regex Filter",
         "icon": "$(play)"
       },
       {
-        "command": "loglens.deleteFilter",
+        "command": "logmagnifier.deleteFilter",
         "title": "Delete Filter",
         "icon": "$(trash)"
       },
       {
-        "command": "loglens.enableGroup",
+        "command": "logmagnifier.enableGroup",
         "title": "Enable Group",
         "icon": "$(circle-large-outline)"
       },
       {
-        "command": "loglens.disableGroup",
+        "command": "logmagnifier.disableGroup",
         "title": "Disable Group",
         "icon": "$(pass-filled)"
       },
       {
-        "command": "loglens.enableFilter",
+        "command": "logmagnifier.enableFilter",
         "title": "Enable Filter",
         "icon": "$(circle-large-outline)"
       },
       {
-        "command": "loglens.disableFilter",
+        "command": "logmagnifier.disableFilter",
         "title": "Disable Filter",
         "icon": "$(pass-filled)"
       },
       {
-        "command": "loglens.changeFilterColor",
+        "command": "logmagnifier.changeFilterColor",
         "title": "Change Color",
         "icon": "$(paintcan)"
       },
       {
-        "command": "loglens.toggleFilterHighlightMode",
+        "command": "logmagnifier.toggleFilterHighlightMode",
         "title": "Toggle Highlight Mode",
         "icon": "$(arrow-both)"
       },
       {
-        "command": "loglens.toggleFilterCaseSensitivity",
+        "command": "logmagnifier.toggleFilterCaseSensitivity",
         "title": "Toggle Case Sensitivity",
         "icon": "$(case-sensitive)"
       },
       {
-        "command": "loglens.previousMatch",
+        "command": "logmagnifier.previousMatch",
         "title": "Previous Match",
         "icon": "$(arrow-up)"
       },
       {
-        "command": "loglens.nextMatch",
+        "command": "logmagnifier.nextMatch",
         "title": "Next Match",
         "icon": "$(arrow-down)"
       },
       {
-        "command": "loglens.toggleFilterContextLine_cl0",
+        "command": "logmagnifier.toggleFilterContextLine_cl0",
         "title": "Context lines: none",
         "icon": "resources/cl-0.svg"
       },
       {
-        "command": "loglens.toggleFilterContextLine_cl3",
+        "command": "logmagnifier.toggleFilterContextLine_cl3",
         "title": "Context lines: ±3",
         "icon": "resources/cl-3.svg"
       },
       {
-        "command": "loglens.toggleFilterContextLine_cl5",
+        "command": "logmagnifier.toggleFilterContextLine_cl5",
         "title": "Context lines: ±5",
         "icon": "resources/cl-5.svg"
       },
       {
-        "command": "loglens.toggleFilterContextLine_cl9",
+        "command": "logmagnifier.toggleFilterContextLine_cl9",
         "title": "Context lines: ±9",
         "icon": "resources/cl-9.svg"
       }
@@ -181,110 +181,110 @@
     "menus": {
       "view/title": [
         {
-          "command": "loglens.addFilterGroup",
-          "when": "view == loglens-filters",
+          "command": "logmagnifier.addFilterGroup",
+          "when": "view == logmagnifier-filters",
           "group": "navigation"
         },
         {
-          "command": "loglens.addRegexFilterGroup",
-          "when": "view == loglens-regex-filters",
+          "command": "logmagnifier.addRegexFilterGroup",
+          "when": "view == logmagnifier-regex-filters",
           "group": "navigation"
         },
         {
-          "command": "loglens.applyWordFilter",
-          "when": "view == loglens-filters",
+          "command": "logmagnifier.applyWordFilter",
+          "when": "view == logmagnifier-filters",
           "group": "navigation"
         },
         {
-          "command": "loglens.applyRegexFilter",
-          "when": "view == loglens-regex-filters",
+          "command": "logmagnifier.applyRegexFilter",
+          "when": "view == logmagnifier-regex-filters",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "loglens.addFilter",
-          "when": "view == loglens-filters && viewItem =~ /filterGroup.*/",
+          "command": "logmagnifier.addFilter",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterGroup.*/",
           "group": "inline@1"
         },
         {
-          "command": "loglens.addRegexFilter",
-          "when": "view == loglens-regex-filters && viewItem =~ /filterGroup.*/",
+          "command": "logmagnifier.addRegexFilter",
+          "when": "view == logmagnifier-regex-filters && viewItem =~ /filterGroup.*/",
           "group": "inline@1"
         },
         {
-          "command": "loglens.previousMatch",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "command": "logmagnifier.previousMatch",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@1"
         },
         {
-          "command": "loglens.deleteFilter",
-          "when": "viewItem =~ /filterGroup.*/ && (view == loglens-filters || view == loglens-regex-filters)",
+          "command": "logmagnifier.deleteFilter",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
           "group": "inline@2"
         },
         {
-          "command": "loglens.nextMatch",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "command": "logmagnifier.nextMatch",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@2"
         },
         {
-          "command": "loglens.enableGroup",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterGroupDisabled",
+          "command": "logmagnifier.enableGroup",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupDisabled",
           "group": "inline@3"
         },
         {
-          "command": "loglens.disableGroup",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && viewItem == filterGroupEnabled",
+          "command": "logmagnifier.disableGroup",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupEnabled",
           "group": "inline@3"
         },
         {
-          "command": "loglens.changeFilterColor",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "command": "logmagnifier.changeFilterColor",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@3"
         },
         {
-          "command": "loglens.toggleFilterHighlightMode",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "command": "logmagnifier.toggleFilterHighlightMode",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@4"
         },
         {
-          "command": "loglens.toggleFilterCaseSensitivity",
-          "when": "view == loglens-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "command": "logmagnifier.toggleFilterCaseSensitivity",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
           "group": "inline@5"
         },
         {
-          "command": "loglens.toggleFilterContextLine_cl0",
-          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl0/",
+          "command": "logmagnifier.toggleFilterContextLine_cl0",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl0/",
           "group": "inline@6"
         },
         {
-          "command": "loglens.toggleFilterContextLine_cl3",
-          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl3/",
+          "command": "logmagnifier.toggleFilterContextLine_cl3",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl3/",
           "group": "inline@6"
         },
         {
-          "command": "loglens.toggleFilterContextLine_cl5",
-          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl5/",
+          "command": "logmagnifier.toggleFilterContextLine_cl5",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl5/",
           "group": "inline@6"
         },
         {
-          "command": "loglens.toggleFilterContextLine_cl9",
-          "when": "view == loglens-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/",
+          "command": "logmagnifier.toggleFilterContextLine_cl9",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/",
           "group": "inline@6"
         },
         {
-          "command": "loglens.deleteFilter",
-          "when": "(viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && (view == loglens-filters || view == loglens-regex-filters)",
+          "command": "logmagnifier.deleteFilter",
+          "when": "(viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
           "group": "inline@7"
         },
         {
-          "command": "loglens.enableFilter",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemDisabled || viewItem =~ /filterItemDisabled_cl.*/)",
+          "command": "logmagnifier.enableFilter",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemDisabled || viewItem =~ /filterItemDisabled_cl.*/)",
           "group": "inline@8"
         },
         {
-          "command": "loglens.disableFilter",
-          "when": "(view == loglens-filters || view == loglens-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
+          "command": "logmagnifier.disableFilter",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
           "group": "inline@8"
         }
       ]

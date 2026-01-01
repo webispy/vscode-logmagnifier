@@ -92,8 +92,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         return [];
     }
 
-    dropMimeTypes = ['application/vnd.code.tree.loglens-filters'];
-    dragMimeTypes = ['application/vnd.code.tree.loglens-filters'];
+    dropMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
+    dragMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
 
     public handleDrag(source: readonly TreeItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
         if (token.isCancellationRequested) {
@@ -102,7 +102,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
         const item = source[0];
         if (!this.isGroup(item)) {
-            dataTransfer.set('application/vnd.code.tree.loglens-filters', new vscode.DataTransferItem(item));
+            dataTransfer.set('application/vnd.code.tree.logmagnifier-filters', new vscode.DataTransferItem(item));
         }
     }
 
@@ -111,7 +111,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             return;
         }
 
-        const transferItem = dataTransfer.get('application/vnd.code.tree.loglens-filters');
+        const transferItem = dataTransfer.get('application/vnd.code.tree.logmagnifier-filters');
         if (!transferItem) {
             return;
         }

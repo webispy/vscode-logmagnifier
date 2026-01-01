@@ -14,8 +14,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const highlightService = new HighlightService(filterManager);
 	const resultCountService = new ResultCountService(filterManager);
 
-	vscode.window.createTreeView('loglens-filters', { treeDataProvider: wordTreeDataProvider, dragAndDropController: wordTreeDataProvider });
-	vscode.window.createTreeView('loglens-regex-filters', { treeDataProvider: regexTreeDataProvider, dragAndDropController: regexTreeDataProvider });
+	vscode.window.createTreeView('logmagnifier-filters', { treeDataProvider: wordTreeDataProvider, dragAndDropController: wordTreeDataProvider });
+	vscode.window.createTreeView('logmagnifier-regex-filters', { treeDataProvider: regexTreeDataProvider, dragAndDropController: regexTreeDataProvider });
 
 	// Update highlights when active editor changes
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
@@ -35,7 +35,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Update highlights when configuration changes (e.g. color)
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
-		if (e.affectsConfiguration('loglens.highlightColor') || e.affectsConfiguration('loglens.enableRegexHighlight')) {
+		if (e.affectsConfiguration('logmagnifier.highlightColor') || e.affectsConfiguration('logmagnifier.enableRegexHighlight')) {
 			highlightService.refreshDecorationType();
 			if (vscode.window.activeTextEditor) {
 				highlightService.updateHighlights(vscode.window.activeTextEditor);
@@ -58,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Add Word Filter Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.addFilterGroup', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addFilterGroup', async () => {
 		const name = await vscode.window.showInputBox({ prompt: 'Enter Word Filter Group Name' });
 		if (name) {
 			const group = filterManager.addGroup(name, false);
@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Add Regex Filter Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.addRegexFilterGroup', async () => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addRegexFilterGroup', async () => {
 		const name = await vscode.window.showInputBox({ prompt: 'Enter Regex Filter Group Name' });
 		if (name) {
 			const group = filterManager.addGroup(name, true);
@@ -80,7 +80,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Add Word Filter
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.addFilter', async (group: FilterGroup | undefined) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addFilter', async (group: FilterGroup | undefined) => {
 		const targetGroupId = await ensureGroupId(filterManager, group, false);
 		if (!targetGroupId) {
 			return;
@@ -109,7 +109,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Add Regex Filter
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.addRegexFilter', async (group: FilterGroup | undefined) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addRegexFilter', async (group: FilterGroup | undefined) => {
 		const targetGroupId = await ensureGroupId(filterManager, group, true);
 		if (!targetGroupId) {
 			return;
@@ -157,28 +157,28 @@ export function activate(context: vscode.ExtensionContext) {
 	}
 
 	// Command: Toggle Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleGroup', (group: FilterGroup) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleGroup', (group: FilterGroup) => {
 		if (group) {
 			filterManager.toggleGroup(group.id);
 		}
 	}));
 
 	// Command: Enable Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.enableGroup', (group: FilterGroup) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.enableGroup', (group: FilterGroup) => {
 		if (group && !group.isEnabled) {
 			filterManager.toggleGroup(group.id);
 		}
 	}));
 
 	// Command: Disable Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.disableGroup', (group: FilterGroup) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.disableGroup', (group: FilterGroup) => {
 		if (group && group.isEnabled) {
 			filterManager.toggleGroup(group.id);
 		}
 	}));
 
 	// Command: Enable Filter
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.enableFilter', (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.enableFilter', (item: FilterItem) => {
 		const groups = filterManager.getGroups();
 		for (const g of groups) {
 			if (g.filters.find(f => f.id === item.id)) {
@@ -191,7 +191,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Disable Filter
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.disableFilter', (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.disableFilter', (item: FilterItem) => {
 		const groups = filterManager.getGroups();
 		for (const g of groups) {
 			if (g.filters.find(f => f.id === item.id)) {
@@ -204,7 +204,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Toggle Filter
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilter', (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilter', (item: FilterItem) => {
 		const groups = filterManager.getGroups();
 		for (const g of groups) {
 			if (g.filters.find(f => f.id === item.id)) {
@@ -215,7 +215,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Toggle Filter Highlight Mode (Full Line vs Word)
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterHighlightMode', (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode', (item: FilterItem) => {
 		const groups = filterManager.getGroups();
 		let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
 
@@ -226,7 +226,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 
 	// Command: Toggle Filter Case Sensitivity
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterCaseSensitivity', (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity', (item: FilterItem) => {
 		const groups = filterManager.getGroups();
 		let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
 
@@ -245,13 +245,13 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl0', toggleContextLineHandler));
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl3', toggleContextLineHandler));
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl5', toggleContextLineHandler));
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.toggleFilterContextLine_cl9', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl0', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl3', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl5', toggleContextLineHandler));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl9', toggleContextLineHandler));
 
 	// Command: Change Filter Color
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.changeFilterColor', async (item: any) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.changeFilterColor', async (item: any) => {
 		// item likely has structure: { groupId, id, ... } from Tree Item context
 
 		const groups = filterManager.getGroups();
@@ -286,7 +286,7 @@ export function activate(context: vscode.ExtensionContext) {
 	}));
 
 	// Command: Delete Filter / Group
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.deleteFilter', async (item: FilterGroup | FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.deleteFilter', async (item: FilterGroup | FilterItem) => {
 		if (!item) {
 			return;
 		}
@@ -410,7 +410,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (stats.matched === 0) {
 				vscode.window.showWarningMessage(message + " Check your filter keywords (case-sensitive).");
 			} else {
-				const timeout = vscode.workspace.getConfiguration('loglens').get<number>('statusBarTimeout') || 5000;
+				const timeout = vscode.workspace.getConfiguration('logmagnifier').get<number>('statusBarTimeout') || 5000;
 				vscode.window.setStatusBarMessage(message, timeout);
 			}
 
@@ -423,7 +423,7 @@ export function activate(context: vscode.ExtensionContext) {
 					const fs = require('fs');
 					const stats = fs.statSync(outputPath);
 					const fileSizeInBytes = stats.size;
-					const limitInMB = vscode.workspace.getConfiguration('loglens').get<number>('maxFileSizeMB') || 50;
+					const limitInMB = vscode.workspace.getConfiguration('logmagnifier').get<number>('maxFileSizeMB') || 50;
 					const limitInBytes = limitInMB * 1024 * 1024;
 
 					if (fileSizeInBytes > limitInBytes) {
@@ -446,16 +446,16 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 	};
 
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.applyWordFilter', () => applyFilterHandler('word')));
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.applyRegexFilter', () => applyFilterHandler('regex')));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.applyWordFilter', () => applyFilterHandler('word')));
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.applyRegexFilter', () => applyFilterHandler('regex')));
 
 	// Command: Next Match
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.nextMatch', async (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.nextMatch', async (item: FilterItem) => {
 		await findMatch(item, 'next');
 	}));
 
 	// Command: Previous Match
-	context.subscriptions.push(vscode.commands.registerCommand('loglens.previousMatch', async (item: FilterItem) => {
+	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.previousMatch', async (item: FilterItem) => {
 		await findMatch(item, 'previous');
 	}));
 }

@@ -46,6 +46,14 @@ This extension contributes the following settings:
 * `logmagnifier.statusBarTimeout`: Duration for status bar messages in milliseconds. (Default: 5000)
 * `logmagnifier.enableRegexHighlight`: Enable highlighting for Regex filters in the editor. (Default: `false`)
 
+## Known Limitations
+
+### Large File Highlighting
+
+For extremely large files, VS Code disables certain features to preserve performance. As a result, **LogMagnifier cannot apply highlights** to these files directly.
+- You will see a "File too large for highlighting" message in the status bar.
+- **Workaround**: Use the **Apply Word Filter** (Play button) feature to extract relevant lines into a new, smaller file. This new file will support full highlighting and analysis.
+
 ## Credits
 
 This project was built with **Google Antigravity**.

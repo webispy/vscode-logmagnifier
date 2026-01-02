@@ -38,7 +38,9 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 			if (activeTab && activeTab.input instanceof vscode.TabInputText) {
 				const uri = activeTab.input.uri;
-				logger.info(`Active editor changed to (Tab): ${uri.fsPath} (Scheme: ${uri.scheme})`);
+				logger.info(`Active editor changed to (Tab): ${uri.fsPath} (Scheme: ${uri.scheme}) - Large File (Highlighting Disabled)`);
+				vscode.window.setStatusBarMessage("LogMagnifier: File too large for highlighting", 3000);
+				resultCountService.clearCounts();
 			} else {
 				logger.info('Active editor changed to: (None)');
 			}

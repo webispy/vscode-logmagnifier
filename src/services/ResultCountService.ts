@@ -69,7 +69,7 @@ export class ResultCountService {
         this.filterManager.updateResultCounts(filterCounts, groupCounts);
     }
 
-    private clearCounts() {
+    public clearCounts() {
         const groups = this.filterManager.getGroups();
         const filterCounts = groups.flatMap(g => g.filters.map(f => ({ filterId: f.id, count: 0 })));
         const groupCounts = groups.map(g => ({ groupId: g.id, count: 0 }));

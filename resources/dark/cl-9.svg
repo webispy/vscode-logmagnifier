@@ -1,9 +1,9 @@
 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
-  <path fill="currentColor" d="M3 2.5 L1 5 H2.5 V11 H1 L3 13.5 L5 11 H3.5 V5 H5 L3 2.5 Z"/>
-  <g fill="currentColor">
-    <!-- 3: 3x5 dot matrix, shifted left to x=6.5 -->
+  <path fill="#C5C5C5" d="M3 2.5 L1 5 H2.5 V11 H1 L3 13.5 L5 11 H3.5 V5 H5 L3 2.5 Z"/>
+  <g fill="#C5C5C5">
+    <!-- 9: 3x5 dot matrix, shifted left to x=6.5 -->
     <rect x="6.5" y="3.5" width="2" height="1.5" rx="0.3"/> <rect x="9" y="3.5" width="2" height="1.5" rx="0.3"/> <rect x="11.5" y="3.5" width="2" height="1.5" rx="0.3"/>
-                                                         <rect x="11.5" y="5.5" width="2" height="1.5" rx="0.3"/>
+    <rect x="6.5" y="5.5" width="2" height="1.5" rx="0.3"/>                             <rect x="11.5" y="5.5" width="2" height="1.5" rx="0.3"/>
     <rect x="6.5" y="7.5" width="2" height="1.5" rx="0.3"/> <rect x="9" y="7.5" width="2" height="1.5" rx="0.3"/> <rect x="11.5" y="7.5" width="2" height="1.5" rx="0.3"/>
                                                          <rect x="11.5" y="9.5" width="2" height="1.5" rx="0.3"/>
     <rect x="6.5" y="11.5" width="2" height="1.5" rx="0.3"/> <rect x="9" y="11.5" width="2" height="1.5" rx="0.3"/> <rect x="11.5" y="11.5" width="2" height="1.5" rx="0.3"/>

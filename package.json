@@ -160,22 +160,34 @@
       {
         "command": "logmagnifier.toggleFilterContextLine_cl0",
         "title": "Context lines: none",
-        "icon": "resources/cl-0.svg"
+        "icon": {
+          "light": "resources/light/cl-0.svg",
+          "dark": "resources/dark/cl-0.svg"
+        }
       },
       {
         "command": "logmagnifier.toggleFilterContextLine_cl3",
         "title": "Context lines: ±3",
-        "icon": "resources/cl-3.svg"
+        "icon": {
+          "light": "resources/light/cl-3.svg",
+          "dark": "resources/dark/cl-3.svg"
+        }
       },
       {
         "command": "logmagnifier.toggleFilterContextLine_cl5",
         "title": "Context lines: ±5",
-        "icon": "resources/cl-5.svg"
+        "icon": {
+          "light": "resources/light/cl-5.svg",
+          "dark": "resources/dark/cl-5.svg"
+        }
       },
       {
         "command": "logmagnifier.toggleFilterContextLine_cl9",
         "title": "Context lines: ±9",
-        "icon": "resources/cl-9.svg"
+        "icon": {
+          "light": "resources/light/cl-9.svg",
+          "dark": "resources/dark/cl-9.svg"
+        }
       }
     ],
     "menus": {

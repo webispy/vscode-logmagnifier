@@ -299,11 +299,13 @@ export function activate(context: vscode.ExtensionContext) {
 
 			// Create QuickPickItems with SVG icons for each color
 			const colorItems = presets.map(preset => {
-				const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${preset.icon}"/></svg>`;
+				const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+				const iconColor = isDark ? preset.dark : preset.light;
+				const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${iconColor}"/></svg>`;
 				const iconUri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
 
 				return {
-					label: preset.name,
+					label: preset.id,
 					description: `Dark: ${preset.dark} | Light: ${preset.light}`,
 					iconPath: iconUri,
 					detail: '',

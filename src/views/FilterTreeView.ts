@@ -50,9 +50,14 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
             if (element.isEnabled) {
                 if (element.color) {
-                    // Resolve color: check if it's a preset name, otherwise use as is
-                    const preset = this.filterManager.getPresetByName(element.color);
-                    const fillColor = preset ? preset.icon : element.color;
+                    // Resolve color: check if it's a preset ID, otherwise use as is
+                    const preset = this.filterManager.getPresetById(element.color);
+                    let fillColor = element.color;
+
+                    if (preset) {
+                        const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                        fillColor = isDark ? preset.dark : preset.light;
+                    }
 
                     // Create a colored dot icon using SVG data URI
                     let svg: string;

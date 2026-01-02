@@ -3,34 +3,29 @@ import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
 import { Logger } from './Logger';
 
 // Solarized-inspired and distinct colors for highlights
-// Solarized-inspired and distinct colors for highlights
-// Solarized-inspired and distinct colors for highlights
 export interface ColorPreset {
-    name: string;
+    id: string; // color1 ~ color16
     dark: string;
     light: string;
-    icon: string; // Hex for UI
 }
 
 const COLOR_PRESETS: ColorPreset[] = [
-    { name: 'Red', dark: 'rgba(220, 50, 47, 0.4)', light: 'rgba(220, 50, 47, 0.3)', icon: '#dc322f' },
-    { name: 'Orange', dark: 'rgba(203, 75, 22, 0.4)', light: 'rgba(203, 75, 22, 0.3)', icon: '#cb4b16' },
-    { name: 'Yellow', dark: 'rgba(181, 137, 0, 0.4)', light: 'rgba(181, 137, 0, 0.3)', icon: '#b58900' },
-    { name: 'Green', dark: 'rgba(133, 153, 0, 0.4)', light: 'rgba(133, 153, 0, 0.3)', icon: '#859900' },
-    { name: 'Cyan', dark: 'rgba(42, 161, 152, 0.4)', light: 'rgba(42, 161, 152, 0.3)', icon: '#2aa198' },
-    { name: 'Blue', dark: 'rgba(38, 139, 210, 0.4)', light: 'rgba(38, 139, 210, 0.3)', icon: '#268bd2' },
-    { name: 'Violet', dark: 'rgba(108, 113, 196, 0.4)', light: 'rgba(108, 113, 196, 0.3)', icon: '#6c71c4' },
-    { name: 'Magenta', dark: 'rgba(211, 54, 130, 0.4)', light: 'rgba(211, 54, 130, 0.3)', icon: '#d33682' },
-
-    // Additional 8 colors
-    { name: 'Lime', dark: 'rgba(128, 255, 0, 0.4)', light: 'rgba(50, 205, 50, 0.3)', icon: '#32cd32' },
-    { name: 'Teal', dark: 'rgba(0, 128, 128, 0.4)', light: 'rgba(0, 128, 128, 0.3)', icon: '#008080' },
-    { name: 'Sky', dark: 'rgba(135, 206, 235, 0.4)', light: 'rgba(0, 191, 255, 0.3)', icon: '#87ceeb' },
-    { name: 'Indigo', dark: 'rgba(75, 0, 130, 0.4)', light: 'rgba(75, 0, 130, 0.2)', icon: '#4b0082' },
-    { name: 'Pink', dark: 'rgba(255, 105, 180, 0.4)', light: 'rgba(255, 105, 180, 0.3)', icon: '#ff69b4' },
-    { name: 'Brown', dark: 'rgba(165, 42, 42, 0.4)', light: 'rgba(165, 42, 42, 0.3)', icon: '#a52a2a' },
-    { name: 'Slate', dark: 'rgba(112, 128, 144, 0.4)', light: 'rgba(112, 128, 144, 0.3)', icon: '#708090' },
-    { name: 'Emerald', dark: 'rgba(0, 201, 87, 0.4)', light: 'rgba(0, 201, 87, 0.3)', icon: '#00c957' }
+    { id: 'color1', dark: 'rgba(220, 50, 47, 0.4)', light: 'rgba(220, 50, 47, 0.3)' }, // Red
+    { id: 'color2', dark: 'rgba(203, 75, 22, 0.4)', light: 'rgba(203, 75, 22, 0.3)' }, // Orange
+    { id: 'color3', dark: 'rgba(181, 137, 0, 0.4)', light: 'rgba(181, 137, 0, 0.3)' }, // Yellow
+    { id: 'color4', dark: 'rgba(133, 153, 0, 0.4)', light: 'rgba(133, 153, 0, 0.3)' }, // Green
+    { id: 'color5', dark: 'rgba(42, 161, 152, 0.4)', light: 'rgba(42, 161, 152, 0.3)' }, // Cyan
+    { id: 'color6', dark: 'rgba(38, 139, 210, 0.4)', light: 'rgba(38, 139, 210, 0.3)' }, // Blue
+    { id: 'color7', dark: 'rgba(108, 113, 196, 0.4)', light: 'rgba(108, 113, 196, 0.3)' }, // Violet
+    { id: 'color8', dark: 'rgba(211, 54, 130, 0.4)', light: 'rgba(211, 54, 130, 0.3)' }, // Magenta
+    { id: 'color9', dark: 'rgba(128, 255, 0, 0.4)', light: 'rgba(50, 205, 50, 0.3)' }, // Lime
+    { id: 'color10', dark: 'rgba(0, 128, 128, 0.4)', light: 'rgba(0, 128, 128, 0.3)' }, // Teal
+    { id: 'color11', dark: 'rgba(135, 206, 235, 0.4)', light: 'rgba(0, 191, 255, 0.3)' }, // Sky
+    { id: 'color12', dark: 'rgba(75, 0, 130, 0.4)', light: 'rgba(75, 0, 130, 0.2)' }, // Indigo
+    { id: 'color13', dark: 'rgba(255, 105, 180, 0.4)', light: 'rgba(255, 105, 180, 0.3)' }, // Pink
+    { id: 'color14', dark: 'rgba(165, 42, 42, 0.4)', light: 'rgba(165, 42, 42, 0.3)' }, // Brown
+    { id: 'color15', dark: 'rgba(112, 128, 144, 0.4)', light: 'rgba(112, 128, 144, 0.3)' }, // Slate
+    { id: 'color16', dark: 'rgba(0, 201, 87, 0.4)', light: 'rgba(0, 201, 87, 0.3)' }  // Emerald
 ];
 
 function generateId(): string {
@@ -78,15 +73,15 @@ export class FilterManager {
     }
 
     public getAvailableColors(): string[] {
-        return COLOR_PRESETS.map(p => p.name);
+        return COLOR_PRESETS.map(p => p.id);
     }
 
     public getColorPresets(): ColorPreset[] {
         return COLOR_PRESETS;
     }
 
-    public getPresetByName(name: string): ColorPreset | undefined {
-        return COLOR_PRESETS.find(p => p.name === name);
+    public getPresetById(id: string): ColorPreset | undefined {
+        return COLOR_PRESETS.find(p => p.id === id);
     }
 
     public addGroup(name: string, isRegex: boolean = false): FilterGroup | undefined {
@@ -148,13 +143,13 @@ export class FilterManager {
         );
 
         // Find first unused color
-        const availableColor = COLOR_PRESETS.find(c => !usedColors.has(c.name));
+        const availableColor = COLOR_PRESETS.find(c => !usedColors.has(c.id));
         if (availableColor) {
-            return availableColor.name;
+            return availableColor.id;
         }
 
         // If all used, pick random from presets
-        return COLOR_PRESETS[Math.floor(Math.random() * COLOR_PRESETS.length)].name;
+        return COLOR_PRESETS[Math.floor(Math.random() * COLOR_PRESETS.length)].id;
     }
 
     public updateFilterColor(groupId: string, filterId: string, color: string): void {

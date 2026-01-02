@@ -20,7 +20,7 @@ export class HighlightService {
             let decorationOptions: vscode.DecorationRenderOptions;
 
             if (typeof colorNameOrValue === 'string') {
-                const preset = this.filterManager.getPresetByName(colorNameOrValue);
+                const preset = this.filterManager.getPresetById(colorNameOrValue);
                 if (preset) {
                     decorationOptions = {
                         light: {
@@ -29,7 +29,6 @@ export class HighlightService {
                         dark: {
                             backgroundColor: preset.dark
                         },
-                        color: 'inherit',
                         fontWeight: 'bold',
                         isWholeLine: isFullLine
                     };
@@ -37,7 +36,6 @@ export class HighlightService {
                     // Fallback for custom color string
                     decorationOptions = {
                         backgroundColor: colorNameOrValue,
-                        color: 'inherit',
                         fontWeight: 'bold',
                         isWholeLine: isFullLine
                     };
@@ -51,7 +49,6 @@ export class HighlightService {
                     dark: {
                         backgroundColor: colorNameOrValue.dark
                     },
-                    color: 'inherit',
                     fontWeight: 'bold',
                     isWholeLine: isFullLine
                 };
@@ -175,8 +172,36 @@ export class HighlightService {
             }
 
             const isFullLine = isFullLineStr === 'true';
+
+            // Deduplicate ranges to avoid opacity stacking
+            // For full line/line mode, we only need one range per line
+            let uniqueRanges: vscode.Range[] = [];
+            if (isFullLine) { // This covers mode 2 (Full Line) which sets isFullLine=true in decoration
+                const lines = new Set<number>();
+                uniqueRanges = ranges.filter(r => {
+                    if (lines.has(r.start.line)) {
+                        return false;
+                    }
+                    lines.add(r.start.line);
+                    return true;
+                });
+            } else {
+                // For word mode or line mode, we dedup by exact range equality.
+                // Since mode 1 pushes the same line range multiple times, this handles it correctly.
+
+                const seen = new Set<string>();
+                uniqueRanges = ranges.filter(r => {
+                    const key = `${r.start.line}:${r.start.character}-${r.end.line}:${r.end.character}`;
+                    if (seen.has(key)) {
+                        return false;
+                    }
+                    seen.add(key);
+                    return true;
+                });
+            }
+
             const decorationType = this.getDecorationType(color, isFullLine);
-            editor.setDecorations(decorationType, ranges);
+            editor.setDecorations(decorationType, uniqueRanges);
         });
 
         const duration = Date.now() - startTime;

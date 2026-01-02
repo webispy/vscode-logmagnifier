@@ -4,6 +4,20 @@ All notable changes to the "LogMagnifier" extension will be documented in this f
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.6.0]
+
+### Added
+- **Debug Logger**: Implemented internal debug logger for better diagnostics.
+
+### Fixed
+- **Large File Handling**: Improved stability by disabling highlights and clearing counts for large parsed files.
+- **Icon**: Fixed extension icon transparent background.
+
+### Refactored
+- **Color Presets**: Refined color presets for better distinction and optimized color usage.
+- **Configuration**: Renamed `logmagnifier.highlightColor` to `logmagnifier.regexHighlightColor` and added support for theme-specific colors.
+- **UI**: Enhanced inline action buttons for filters.
+
 ## [0.5.0]
 
 ### Added

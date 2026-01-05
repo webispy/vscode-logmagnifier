@@ -92,12 +92,12 @@
       {
         "command": "logmagnifier.addFilterGroup",
         "title": "Add Word Filter Group",
-        "icon": "$(add)"
+        "icon": "$(new-folder)"
       },
       {
         "command": "logmagnifier.addRegexFilterGroup",
         "title": "Add Regex Filter Group",
-        "icon": "$(add)"
+        "icon": "$(new-folder)"
       },
       {
         "command": "logmagnifier.addFilter",

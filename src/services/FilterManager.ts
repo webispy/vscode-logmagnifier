@@ -37,6 +37,9 @@ export class FilterManager {
     private _onDidChangeFilters: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeFilters: vscode.Event<void> = this._onDidChangeFilters.event;
 
+    private _onDidChangeResultCounts: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
+    readonly onDidChangeResultCounts: vscode.Event<void> = this._onDidChangeResultCounts.event;
+
     private logger: Logger;
 
     constructor() {
@@ -286,7 +289,7 @@ export class FilterManager {
         }
 
         if (changed) {
-            this._onDidChangeFilters.fire();
+            this._onDidChangeResultCounts.fire();
         }
     }
 }

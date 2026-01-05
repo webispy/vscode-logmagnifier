@@ -19,6 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
 	const highlightService = new HighlightService(filterManager, logger);
 	const resultCountService = new ResultCountService(filterManager);
 
+	let lastProcessedDoc: vscode.TextDocument | undefined;
+
 	// Initialize Command Manager (Handles all command registrations)
 	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, logger);
 
@@ -28,16 +30,23 @@ export function activate(context: vscode.ExtensionContext) {
 	// Update highlights and counts when active editor changes
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
 		if (editor) {
-			if (editor.document.uri.scheme === 'output') {
+			const scheme = editor.document.uri.scheme;
+			if (scheme !== 'file' && scheme !== 'untitled') {
 				return;
 			}
-			const scheme = editor.document.uri.scheme;
 			const fileName = editor.document.fileName;
+
+			// Optimization: Prevent redundant processing if switching back to the same document
+			if (lastProcessedDoc && editor.document === lastProcessedDoc) {
+				return;
+			}
+
 			const largeFileOptimizations = vscode.workspace.getConfiguration('editor').get<boolean>('largeFileOptimizations');
 			logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
 
 			const counts = highlightService.updateHighlights(editor);
 			resultCountService.updateCounts(counts);
+			lastProcessedDoc = editor.document;
 		} else {
 			// Fallback for large files where activeTextEditor is undefined
 			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
@@ -69,9 +78,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// Update highlights when filters change
 	context.subscriptions.push(filterManager.onDidChangeFilters(() => {
+		lastProcessedDoc = undefined; // Force update
 		if (vscode.window.activeTextEditor) {
-			const counts = highlightService.updateHighlights(vscode.window.activeTextEditor);
-			resultCountService.updateCounts(counts);
+			const scheme = vscode.window.activeTextEditor.document.uri.scheme;
+			if (scheme === 'file' || scheme === 'untitled') {
+				const counts = highlightService.updateHighlights(vscode.window.activeTextEditor);
+				resultCountService.updateCounts(counts);
+				lastProcessedDoc = vscode.window.activeTextEditor.document;
+			}
 		}
 	}));
 
@@ -79,9 +93,14 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(e => {
 		if (e.affectsConfiguration('logmagnifier.regexHighlightColor') || e.affectsConfiguration('logmagnifier.enableRegexHighlight')) {
 			highlightService.refreshDecorationType();
+			lastProcessedDoc = undefined; // Force update
 			if (vscode.window.activeTextEditor) {
-				const counts = highlightService.updateHighlights(vscode.window.activeTextEditor);
-				resultCountService.updateCounts(counts);
+				const scheme = vscode.window.activeTextEditor.document.uri.scheme;
+				if (scheme === 'file' || scheme === 'untitled') {
+					const counts = highlightService.updateHighlights(vscode.window.activeTextEditor);
+					resultCountService.updateCounts(counts);
+					lastProcessedDoc = vscode.window.activeTextEditor.document;
+				}
 			}
 		}
 	}));
@@ -95,12 +114,19 @@ export function activate(context: vscode.ExtensionContext) {
 
 		const counts = highlightService.updateHighlights(editor);
 		resultCountService.updateCounts(counts);
+		lastProcessedDoc = editor.document;
 	}
 
 	// Update counts when text changes
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
 		if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+			lastProcessedDoc = undefined; // Invalidate because content changed
 			resultCountService.updateCounts();
+			// Note: resultCountService.updateCounts() currently might just recount, 
+			// but if we need to re-highlight immediately on edit, we should do so.
+			// Ideally onDidChangeTextDocument should trigger re-highlight or invalidation.
+			// The original code only called resultCountService.updateCounts().
+			// We'll leave it as is but ensure next focus switch re-processes.
 		}
 	}));
 }

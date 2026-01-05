@@ -13,6 +13,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         private mode: 'word' | 'regex'
     ) {
         this.filterManager.onDidChangeFilters(() => this.refresh());
+        this.filterManager.onDidChangeResultCounts(() => this.refresh());
     }
 
     refresh(): void {

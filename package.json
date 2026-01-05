@@ -283,52 +283,52 @@
         },
         {
           "command": "logmagnifier.changeFilterColor",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/)",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/",
           "group": "inline@3"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.word",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm0.*/",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm0.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.line",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm1.*/",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm1.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.full",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm2.*/",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_hm2.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterCaseSensitivity.off",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_cs0$/",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_cs0.*/",
           "group": "inline@5"
         },
         {
           "command": "logmagnifier.toggleFilterCaseSensitivity.on",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_cs1$/",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_cs1.*/",
           "group": "inline@5"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl0",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl0/",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl0/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl3",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl3/",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl3/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl5",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl5/",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl5/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl9",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/",
+          "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {

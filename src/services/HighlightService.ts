@@ -16,8 +16,11 @@ export class HighlightService {
         // Initial setup if needed
     }
 
-    private getDecorationType(colorNameOrValue: string | { light: string, dark: string }, isFullLine: boolean = false): vscode.TextEditorDecorationType {
-        const key = `${typeof colorNameOrValue === 'string' ? colorNameOrValue : JSON.stringify(colorNameOrValue)}_${isFullLine}`;
+    private getDecorationType(colorNameOrValue: string | { light: string, dark: string } | undefined, isFullLine: boolean = false, textDecoration?: string, fontWeight?: string): vscode.TextEditorDecorationType {
+        const colorKey = typeof colorNameOrValue === 'string' ? colorNameOrValue : (colorNameOrValue ? JSON.stringify(colorNameOrValue) : 'undefined');
+        // Use 'auto' for key if fontWeight is undefined to distinguish from explicit values
+        const key = `${colorKey}_${isFullLine}_${textDecoration || ''}_${fontWeight || 'auto'}`;
+
         if (!this.decorationTypes.has(key)) {
             let decorationOptions: vscode.DecorationRenderOptions;
 
@@ -31,18 +34,20 @@ export class HighlightService {
                         dark: {
                             backgroundColor: preset.dark
                         },
-                        fontWeight: 'bold',
-                        isWholeLine: isFullLine
+                        fontWeight: fontWeight,
+                        isWholeLine: isFullLine,
+                        textDecoration: textDecoration
                     };
                 } else {
                     // Fallback for custom color string
                     decorationOptions = {
                         backgroundColor: colorNameOrValue,
-                        fontWeight: 'bold',
-                        isWholeLine: isFullLine
+                        fontWeight: fontWeight,
+                        isWholeLine: isFullLine,
+                        textDecoration: textDecoration
                     };
                 }
-            } else {
+            } else if (colorNameOrValue) {
                 // Object with light/dark values
                 decorationOptions = {
                     light: {
@@ -51,8 +56,17 @@ export class HighlightService {
                     dark: {
                         backgroundColor: colorNameOrValue.dark
                     },
-                    fontWeight: 'bold',
-                    isWholeLine: isFullLine
+                    fontWeight: fontWeight,
+                    isWholeLine: isFullLine,
+                    textDecoration: textDecoration
+                };
+            } else {
+                // No color, just text decoration (e.g. strike-through)
+                decorationOptions = {
+                    fontWeight: fontWeight,
+                    isWholeLine: isFullLine,
+                    textDecoration: textDecoration,
+                    opacity: '0.6' // Dim excluded items slightly
                 };
             }
 
@@ -75,32 +89,32 @@ export class HighlightService {
         }
 
         const activeGroups = this.filterManager.getGroups().filter(g => g.isEnabled);
-        const includeFilters: FilterItem[] = [];
+        const activeFilters: FilterItem[] = [];
 
         const enableRegexHighlight = vscode.workspace.getConfiguration('logmagnifier').get<boolean>('enableRegexHighlight') || false;
 
         activeGroups.forEach(g => {
             g.filters.forEach(f => {
-                if (f.type === 'include' && f.isEnabled) {
+                if (f.isEnabled) {
                     if (f.isRegex && !enableRegexHighlight) {
                         return;
                     }
-                    includeFilters.push(f);
+                    activeFilters.push(f);
                 }
             });
         });
 
-        if (includeFilters.length === 0) {
+        if (activeFilters.length === 0) {
             this.decorationTypes.forEach(dt => editor.setDecorations(dt, []));
             return matchCounts;
         }
 
-        this.logger.info(`Highlighting started (Items: ${includeFilters.length})`);
+        this.logger.info(`Highlighting started (Items: ${activeFilters.length})`);
         const startTime = Date.now();
 
         const text = editor.document.getText();
 
-        // Group ranges by decoration type key (color + fullLine)
+        // Group ranges by decoration type key (color + fullLine + textDecoration + fontWeight)
         const rangesByDeco: Map<string, vscode.Range[]> = new Map();
 
         // Initialize ranges for all currently known decoration types to empty to clear old highlights
@@ -109,22 +123,72 @@ export class HighlightService {
         // Default highlight color from config if filter has no specific color (backward compatibility)
         const defaultColor = vscode.workspace.getConfiguration('logmagnifier').get<string | { light: string, dark: string }>('regexHighlightColor') || 'rgba(255, 255, 0, 0.3)';
 
-        includeFilters.forEach(filter => {
+        activeFilters.forEach(filter => {
             if (!filter.keyword) {
                 return;
             }
 
-            const color = filter.color || defaultColor;
-            const mode = filter.highlightMode ?? 0;
-            const isFullLine = mode === 2;
-            const decoKey = `${typeof color === 'string' ? color : JSON.stringify(color)}_${isFullLine}`;
+            const isExclude = filter.type === 'exclude';
 
-            if (!rangesByDeco.has(decoKey)) {
-                rangesByDeco.set(decoKey, []);
+            // Define decorators logic
+            // Exclude: 
+            // 1. Line strike-through (no color, bold=undefined (inherit), full decoration)
+            // 2. Word highlight (color (if set), bold weight, word range)
+
+            // Include:
+            // 1. Highlight (color, bold, word/line/full based on mode)
+
+            let decoConfigs: { color: string | { light: string, dark: string } | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, useLineRange: boolean }[] = [];
+
+            if (isExclude) {
+                // Config 1: Strike-through Line
+                decoConfigs.push({
+                    color: undefined,
+                    isFullLine: true,
+                    textDecoration: 'line-through',
+                    fontWeight: undefined, // Inherit (don't force normal, allowing word bold to show)
+                    useLineRange: true // Strike through the whole line
+                });
+
+                // Config 2: Bold Word (with color if set)
+                // Note: We always bold the word for exclude items as per request, regardless of color presence
+                decoConfigs.push({
+                    color: filter.color,
+                    isFullLine: false,
+                    textDecoration: undefined,
+                    fontWeight: 'bold',     // Bold the word
+                    useLineRange: false // Only bold the word
+                });
+            } else {
+                // Include logic
+                const mode = filter.highlightMode ?? 0;
+                const isFullLine = mode === 2;
+                const color = filter.color || defaultColor;
+
+                decoConfigs.push({
+                    color: color,
+                    isFullLine: isFullLine,
+                    textDecoration: undefined,
+                    fontWeight: 'bold',
+                    useLineRange: (mode === 1 || mode === 2) // Line or Full Line mode
+                });
             }
 
-            // Ensure we have a decoration type for this combo
-            this.getDecorationType(color, isFullLine);
+            // Prepare keys
+            const keys = decoConfigs.map(config => {
+                const colorKey = typeof config.color === 'string' ? config.color : (config.color ? JSON.stringify(config.color) : 'undefined');
+                // Use 'auto' for key if fontWeight is undefined
+                const key = `${colorKey}_${config.isFullLine}_${config.textDecoration || ''}_${config.fontWeight || 'auto'}`;
+
+                if (!rangesByDeco.has(key)) {
+                    rangesByDeco.set(key, []);
+                }
+
+                // Ensure decoration exists
+                this.getDecorationType(config.color, config.isFullLine, config.textDecoration, config.fontWeight);
+
+                return { key, config };
+            });
 
             let regex: RegExp;
             let count = 0;
@@ -138,15 +202,14 @@ export class HighlightService {
                     const startPos = editor.document.positionAt(match.index);
                     const endPos = editor.document.positionAt(match.index + match[0].length);
 
-                    if (mode === 1 || mode === 2) {
-                        const line = editor.document.lineAt(startPos.line);
-                        // For mode 1 (Line) or mode 2 (Full Line), we use the line range.
-                        // The difference is in the DecorationType's isFullLine property.
-                        rangesByDeco.get(decoKey)!.push(line.range);
-                    } else {
-                        // mode 0: Word
-                        rangesByDeco.get(decoKey)!.push(new vscode.Range(startPos, endPos));
-                    }
+                    keys.forEach(({ key, config }) => {
+                        if (config.useLineRange) {
+                            const line = editor.document.lineAt(startPos.line);
+                            rangesByDeco.get(key)!.push(line.range);
+                        } else {
+                            rangesByDeco.get(key)!.push(new vscode.Range(startPos, endPos));
+                        }
+                    });
                 }
                 matchCounts.set(filter.id, count);
             } catch (e) {
@@ -156,28 +219,39 @@ export class HighlightService {
 
         // Apply decorations
         rangesByDeco.forEach((ranges, decoKey) => {
-            const separatorIndex = decoKey.lastIndexOf('_');
-            const colorStr = decoKey.substring(0, separatorIndex);
-            const isFullLineStr = decoKey.substring(separatorIndex + 1);
+            // Reconstruct keys: color_isFullLine_textDecoration_fontWeight
+            const parts = decoKey.split('_');
 
-            let color: string | { light: string, dark: string };
-            try {
-                // If it starts with {, assume it's a JSON object
-                if (colorStr.startsWith('{')) {
-                    color = JSON.parse(colorStr);
-                } else {
+            const fontWeightStr = parts.pop();
+            const textDecoration = parts.pop() || undefined;
+            const isFullLineStr = parts.pop();
+            const colorStr = parts.join('_');
+
+            let fontWeight: string | undefined = fontWeightStr;
+            if (fontWeight === 'auto') {
+                fontWeight = undefined;
+            }
+
+            let color: string | { light: string, dark: string } | undefined;
+            if (colorStr !== 'undefined') {
+                try {
+                    if (colorStr.startsWith('{')) {
+                        color = JSON.parse(colorStr);
+                    } else {
+                        color = colorStr;
+                    }
+                } catch (e) {
                     color = colorStr;
                 }
-            } catch (e) {
-                color = colorStr;
+            } else {
+                color = undefined;
             }
 
             const isFullLine = isFullLineStr === 'true';
 
             // Deduplicate ranges to avoid opacity stacking
-            // For full line/line mode, we only need one range per line
             let uniqueRanges: vscode.Range[] = [];
-            if (isFullLine) { // This covers mode 2 (Full Line) which sets isFullLine=true in decoration
+            if (isFullLine) {
                 const lines = new Set<number>();
                 uniqueRanges = ranges.filter(r => {
                     if (lines.has(r.start.line)) {
@@ -187,9 +261,6 @@ export class HighlightService {
                     return true;
                 });
             } else {
-                // For word mode or line mode, we dedup by exact range equality.
-                // Since mode 1 pushes the same line range multiple times, this handles it correctly.
-
                 const seen = new Set<string>();
                 uniqueRanges = ranges.filter(r => {
                     const key = `${r.start.line}:${r.start.character}-${r.end.line}:${r.end.character}`;
@@ -201,7 +272,8 @@ export class HighlightService {
                 });
             }
 
-            const decorationType = this.getDecorationType(color, isFullLine);
+            const activeDecoration = textDecoration === '' ? undefined : textDecoration;
+            const decorationType = this.getDecorationType(color, isFullLine, activeDecoration, fontWeight);
             editor.setDecorations(decorationType, uniqueRanges);
         });
 

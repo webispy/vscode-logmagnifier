@@ -10,7 +10,7 @@ export class LogProcessor {
      * @param filterGroups Active filter groups to apply.
      * @returns A promise that resolves to the output path and statistics.
      */
-    public async processFile(inputPath: string, filterGroups: FilterGroup[]): Promise<{ outputPath: string, processed: number, matched: number }> {
+    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number }): Promise<{ outputPath: string, processed: number, matched: number }> {
         const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
 
         const rl = readline.createInterface({
@@ -34,9 +34,21 @@ export class LogProcessor {
         let matched = 0;
 
         const maxBeforeLines = 10;
-        const beforeBuffer: string[] = [];
+        const beforeBuffer: { line: string, index: number }[] = [];
         let afterLinesRemaining = 0;
         let lastWrittenLineIndex = -1; // Index of the last line written to output
+
+        // Padding calculation
+        const prependLineNumbers = options?.prependLineNumbers || false;
+        const totalLineCount = options?.totalLineCount || 999999;
+        const padding = totalLineCount.toString().length;
+
+        const formatLine = (line: string, index: number) => {
+            if (prependLineNumbers) {
+                return `${index.toString().padStart(padding, '0')}: ${line}`;
+            }
+            return line;
+        };
 
         try {
             for await (const line of rl) {
@@ -51,22 +63,19 @@ export class LogProcessor {
                     const startIndex = Math.max(0, beforeBuffer.length - contextBefore);
                     const linesToSubmit = beforeBuffer.slice(startIndex);
 
-                    // How many lines in beforeBuffer correspond to lines we haven't written?
-                    // current line index is processed
-                    // lines in beforeBuffer are [processed - beforeBuffer.length, ..., processed - 1]
                     for (let i = 0; i < linesToSubmit.length; i++) {
-                        const lineIndex = processed - linesToSubmit.length + i;
-                        if (lineIndex > lastWrittenLineIndex) {
-                            if (!outputStream.write(linesToSubmit[i] + '\n')) {
+                        const bufferedItem = linesToSubmit[i];
+                        if (bufferedItem.index > lastWrittenLineIndex) {
+                            if (!outputStream.write(formatLine(bufferedItem.line, bufferedItem.index) + '\n')) {
                                 await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
                             }
-                            lastWrittenLineIndex = lineIndex;
+                            lastWrittenLineIndex = bufferedItem.index;
                         }
                     }
 
                     // 2. Write current matching line
                     if (processed > lastWrittenLineIndex) {
-                        if (!outputStream.write(line + '\n')) {
+                        if (!outputStream.write(formatLine(line, processed) + '\n')) {
                             await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
                         }
                         lastWrittenLineIndex = processed;
@@ -77,7 +86,7 @@ export class LogProcessor {
                 } else if (afterLinesRemaining > 0) {
                     // This is an 'After' context line
                     if (processed > lastWrittenLineIndex) {
-                        if (!outputStream.write(line + '\n')) {
+                        if (!outputStream.write(formatLine(line, processed) + '\n')) {
                             await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
                         }
                         lastWrittenLineIndex = processed;
@@ -86,7 +95,7 @@ export class LogProcessor {
                 }
 
                 // Maintain before buffer
-                beforeBuffer.push(line);
+                beforeBuffer.push({ line, index: processed });
                 if (beforeBuffer.length > maxBeforeLines) {
                     beforeBuffer.shift();
                 }

@@ -220,6 +220,16 @@
           "light": "resources/light/cl-9.svg",
           "dark": "resources/dark/cl-9.svg"
         }
+      },
+      {
+        "command": "logmagnifier.togglePrependLineNumbers.enable",
+        "title": "Line Numbers in Output: disabled",
+        "icon": "$(list-flat)"
+      },
+      {
+        "command": "logmagnifier.togglePrependLineNumbers.disable",
+        "title": "Line Numbers in Output: enabled",
+        "icon": "$(list-ordered)"
       }
     ],
     "menus": {
@@ -227,22 +237,32 @@
         {
           "command": "logmagnifier.addFilterGroup",
           "when": "view == logmagnifier-filters",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "logmagnifier.addRegexFilterGroup",
           "when": "view == logmagnifier-regex-filters",
-          "group": "navigation"
+          "group": "navigation@1"
         },
         {
           "command": "logmagnifier.applyWordFilter",
           "when": "view == logmagnifier-filters",
-          "group": "navigation"
+          "group": "navigation@3"
         },
         {
           "command": "logmagnifier.applyRegexFilter",
           "when": "view == logmagnifier-regex-filters",
-          "group": "navigation"
+          "group": "navigation@3"
+        },
+        {
+          "command": "logmagnifier.togglePrependLineNumbers.enable",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && !logmagnifier.prependLineNumbersEnabled",
+          "group": "navigation@2"
+        },
+        {
+          "command": "logmagnifier.togglePrependLineNumbers.disable",
+          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && logmagnifier.prependLineNumbersEnabled",
+          "group": "navigation@2"
         }
       ],
       "view/item/context": [

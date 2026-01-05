@@ -18,6 +18,15 @@ export class CommandManager {
         private logger: Logger
     ) {
         this.registerCommands();
+        // Initialize context key
+        this.setPrependLineNumbersEnabled(false);
+    }
+
+    private _prependLineNumbersEnabled: boolean = false;
+
+    private setPrependLineNumbersEnabled(value: boolean) {
+        this._prependLineNumbersEnabled = value;
+        vscode.commands.executeCommand('setContext', 'logmagnifier.prependLineNumbersEnabled', value);
     }
 
     private registerCommands() {
@@ -255,6 +264,16 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.previousMatch', async (item: FilterItem) => {
             await this.findMatch(item, 'previous');
         }));
+
+        // Command: Toggle Prepend Line Numbers (Enable)
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.togglePrependLineNumbers.enable', () => {
+            this.setPrependLineNumbersEnabled(true);
+        }));
+
+        // Command: Toggle Prepend Line Numbers (Disable)
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.togglePrependLineNumbers.disable', () => {
+            this.setPrependLineNumbersEnabled(false);
+        }));
     }
 
     private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {
@@ -370,7 +389,16 @@ export class CommandManager {
                             throw new Error("Could not check active file path");
                         }
 
-                        const result = await this.logProcessor.processFile(targetPath, activeGroups);
+                        // Determine total line count for padding
+                        let totalLineCount = 999999;
+                        if (document) {
+                            totalLineCount = document.lineCount;
+                        }
+
+                        const result = await this.logProcessor.processFile(targetPath, activeGroups, {
+                            prependLineNumbers: this._prependLineNumbersEnabled,
+                            totalLineCount: totalLineCount
+                        });
                         outputPath = result.outputPath;
                         stats.processed = result.processed;
                         stats.matched = result.matched;

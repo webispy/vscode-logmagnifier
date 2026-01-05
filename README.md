@@ -1,6 +1,6 @@
 # LogMagnifier
 
-A stream-based log analysis tool for Visual Studio Code, designed to handle large log files efficiently.
+A powerful log analysis tool for Visual Studio Code, featuring advanced log filtering and diverse highlighting options.
 
 ## Features
 
@@ -48,11 +48,22 @@ This extension contributes the following settings:
 
 ## Known Limitations
 
-### Large File Highlighting
+### Large File Support & Highlighting
 
-For extremely large files, VS Code disables certain features to preserve performance. As a result, **LogMagnifier cannot apply highlights** to these files directly.
-- You will see a "File too large for highlighting" message in the status bar.
-- **Workaround**: Use the **Apply Word Filter** (Play button) feature to extract relevant lines into a new, smaller file. This new file will support full highlighting and analysis.
+LogMagnifier depends on VS Code's extension capabilities to provide highlighting and navigation. There are two levels of limitations for large files:
+
+1.  **Restricted Mode (`editor.largeFileOptimizations`)**:
+    *   VS Code defaults to "restricted mode" for large files to allow them to open quickly. In this mode, extensions are disabled.
+    *   To enable Highlighting, Previous Match, and Next Match commands for these files, you must disable this optimization in your VS Code settings:
+        ```json
+        "editor.largeFileOptimizations": false
+        ```
+    *   *Warning*: This may cause VS Code to freeze or perform slowly when opening very large files.
+
+2.  **Extension Host Hard Limit (50MB)**:
+    *   Even with optimizations disabled, VS Code's extension host has a hard limit. Files larger than **50MB** are **not synchronized** to extensions ([reference](https://github.com/microsoft/vscode/issues/31078)).
+    *   For files > 50MB, **highlighting will not work** regardless of your settings because the text content is completely invisible to the plugin.
+    *   **Workaround**: Use the **Apply Filter** (Play button) feature. This streams the file content (bypassing the editor limit) and generates a smaller filtered log file where highlighting and navigation will work perfectly.
 
 ## Credits
 

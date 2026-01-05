@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { FilterManager } from './FilterManager';
 import { FilterItem } from '../models/Filter';
 import { Logger } from './Logger';

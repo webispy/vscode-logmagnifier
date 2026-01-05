@@ -1,7 +1,7 @@
 {
   "name": "logmagnifier",
   "displayName": "LogMagnifier",
-  "description": "A stream-based log analysis tool for Visual Studio Code, designed to handle large log files efficiently.",
+  "description": "A powerful log analysis tool for Visual Studio Code, featuring advanced log filtering and diverse highlighting options.",
   "version": "0.6.0",
   "author": "webispy@gmail.com",
   "publisher": "webispy",
@@ -28,11 +28,6 @@
     "configuration": {
       "title": "LogMagnifier",
       "properties": {
-        "logmagnifier.maxFileSizeMB": {
-          "type": "number",
-          "default": 50,
-          "description": "Maximum file size in MB for opening filtered logs as text documents. Larger files will open in safe mode."
-        },
         "logmagnifier.regexHighlightColor": {
           "anyOf": [
             {

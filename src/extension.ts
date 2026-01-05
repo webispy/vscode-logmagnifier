@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { FilterManager } from './services/FilterManager';
 import { FilterTreeDataProvider } from './views/FilterTreeView';
 import { LogProcessor } from './services/LogProcessor';
@@ -29,7 +30,8 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			const scheme = editor.document.uri.scheme;
 			const fileName = editor.document.fileName;
-			logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme})`);
+			const largeFileOptimizations = vscode.workspace.getConfiguration('editor').get<boolean>('largeFileOptimizations');
+			logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
 
 			highlightService.updateHighlights(editor);
 			resultCountService.updateCounts();
@@ -38,9 +40,25 @@ export function activate(context: vscode.ExtensionContext) {
 			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 			if (activeTab && activeTab.input instanceof vscode.TabInputText) {
 				const uri = activeTab.input.uri;
-				logger.info(`Active editor changed to (Tab): ${uri.fsPath} (Scheme: ${uri.scheme}) - Large File (Highlighting Disabled)`);
-				vscode.window.setStatusBarMessage("LogMagnifier: File too large for highlighting", 3000);
-				resultCountService.clearCounts();
+
+				// Standard VS Code limit for extensions is 50MB
+				// We can try to check file size to be sure
+				try {
+					if (uri.scheme === 'file') {
+						const stats = fs.statSync(uri.fsPath);
+						const sizeMB = stats.size / (1024 * 1024);
+						if (sizeMB > 50) {
+							logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
+							vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
+							resultCountService.clearCounts();
+							return;
+						}
+					}
+				} catch (e) {
+					logger.error(`Error checking file size: ${e}`);
+				}
+
+				logger.info(`Active editor changed to (Tab): ${uri.fsPath} (Scheme: ${uri.scheme}) - activeTextEditor undefined.`);
 			} else {
 				logger.info('Active editor changed to: (None)');
 			}
@@ -187,6 +205,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleGroup', (group: FilterGroup) => {
 		if (group) {
 			filterManager.toggleGroup(group.id);
+			logger.info(`Group toggled: ${group.name}`);
 		}
 	}));
 
@@ -194,6 +213,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.enableGroup', (group: FilterGroup) => {
 		if (group && !group.isEnabled) {
 			filterManager.toggleGroup(group.id);
+			logger.info(`Group enabled: ${group.name}`);
 		}
 	}));
 
@@ -201,6 +221,7 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.disableGroup', (group: FilterGroup) => {
 		if (group && group.isEnabled) {
 			filterManager.toggleGroup(group.id);
+			logger.info(`Group disabled: ${group.name}`);
 		}
 	}));
 
@@ -211,6 +232,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (g.filters.find(f => f.id === item.id)) {
 				if (!item.isEnabled) {
 					filterManager.toggleFilter(g.id, item.id);
+					logger.info(`Filter enabled: ${item.keyword}`);
 				}
 				break;
 			}
@@ -224,6 +246,7 @@ export function activate(context: vscode.ExtensionContext) {
 			if (g.filters.find(f => f.id === item.id)) {
 				if (item.isEnabled) {
 					filterManager.toggleFilter(g.id, item.id);
+					logger.info(`Filter disabled: ${item.keyword}`);
 				}
 				break;
 			}
@@ -236,6 +259,7 @@ export function activate(context: vscode.ExtensionContext) {
 		for (const g of groups) {
 			if (g.filters.find(f => f.id === item.id)) {
 				filterManager.toggleFilter(g.id, item.id);
+				logger.info(`Filter toggled: ${item.keyword}`);
 				break;
 			}
 		}
@@ -458,25 +482,22 @@ export function activate(context: vscode.ExtensionContext) {
 				await vscode.window.showTextDocument(newDoc, { preview: false });
 			} else {
 				if (outputPath) {
-					// Check file size
-					const fs = require('fs');
-					const stats = fs.statSync(outputPath);
-					const fileSizeInBytes = stats.size;
-					const limitInMB = vscode.workspace.getConfiguration('logmagnifier').get<number>('maxFileSizeMB') || 50;
-					const limitInBytes = limitInMB * 1024 * 1024;
-
-					if (fileSizeInBytes > limitInBytes) {
-						// Large file strategy: use vscode.open which handles large files better (no tokenization by default)
-						await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
-						// Note: We skip setting language to 'log' because for large files generic text handling is safer/faster
-					} else {
-						// Normal strategy
+					try {
+						// Try to open as text document first (VS Code handles large files by restricting features based on 'editor.largeFileOptimizations')
 						const newDoc = await vscode.workspace.openTextDocument(outputPath);
 						await vscode.window.showTextDocument(newDoc, { preview: false });
-						// Ensure language mode
+
+						// Ensure language mode if possible (might not work for restricted large files)
 						if (newDoc.languageId !== 'log') {
-							await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
+							// set language might fail for large files, so wrap in try-catch or just ignore result
+							try {
+								await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
+							} catch (e) { /* ignore */ }
 						}
+					} catch (e) {
+						// Fallback: If openTextDocument fails (e.g. strict limit), open external/default
+						logger.info(`Failed to open text document (likely too large), falling back to vscode.open: ${e}`);
+						await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
 					}
 				}
 			}

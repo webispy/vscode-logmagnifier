@@ -44,7 +44,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             }
 
             const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-            item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_type${element.type}`;
+            item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}`;
             item.id = element.id;
 
             item.description = description;

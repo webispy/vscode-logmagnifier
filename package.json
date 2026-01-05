@@ -150,6 +150,86 @@
         "icon": "$(paintcan)"
       },
       {
+        "command": "logmagnifier.changeFilterColor.color1",
+        "title": "Change color: color1",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color2",
+        "title": "Change color: color2",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color3",
+        "title": "Change color: color3",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color4",
+        "title": "Change color: color4",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color5",
+        "title": "Change color: color5",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color6",
+        "title": "Change color: color6",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color7",
+        "title": "Change color: color7",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color8",
+        "title": "Change color: color8",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color9",
+        "title": "Change color: color9",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color10",
+        "title": "Change color: color10",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color11",
+        "title": "Change color: color11",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color12",
+        "title": "Change color: color12",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color13",
+        "title": "Change color: color13",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color14",
+        "title": "Change color: color14",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color15",
+        "title": "Change color: color15",
+        "icon": "$(paintcan)"
+      },
+      {
+        "command": "logmagnifier.changeFilterColor.color16",
+        "title": "Change color: color16",
+        "icon": "$(paintcan)"
+      },
+      {
         "command": "logmagnifier.toggleFilterHighlightMode",
         "title": "Toggle Highlight Mode",
         "icon": "$(arrow-both)"
@@ -302,8 +382,83 @@
           "group": "inline@3"
         },
         {
-          "command": "logmagnifier.changeFilterColor",
-          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/",
+          "command": "logmagnifier.changeFilterColor.color1",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor1_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color2",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor2_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color3",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor3_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color4",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor4_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color5",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor5_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color6",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor6_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color7",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor7_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color8",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor8_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color9",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor9_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color10",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor10_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color11",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor11_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color12",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor12_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color13",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor13_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color14",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor14_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color15",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor15_.*/",
+          "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color16",
+          "when": "view == logmagnifier-filters && (viewItem == filterItemEnabled || viewItem == filterItemDisabled || viewItem =~ /filterItem(Enabled|Disabled)_cl.*/) && viewItem =~ /.*_typeinclude/ && viewItem =~ /.*_colcolor16_.*/",
           "group": "inline@3"
         },
         {

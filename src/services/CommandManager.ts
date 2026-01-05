@@ -200,7 +200,8 @@ export class CommandManager {
 
 
         // Command: Change Filter Color
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.changeFilterColor', async (item: any) => {
+        // Command: Change Filter Color
+        const changeColorHandler = async (item: any) => {
             const groups = this.filterManager.getGroups();
             let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
 
@@ -231,7 +232,15 @@ export class CommandManager {
                     this.filterManager.updateFilterColor(targetGroup.id, item.id, picked.label);
                 }
             }
-        }));
+        };
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.changeFilterColor', changeColorHandler));
+
+        // Register specific color commands to support specific tooltips
+        const colorPresets = this.filterManager.getAvailableColors();
+        colorPresets.forEach(colorId => {
+            this.context.subscriptions.push(vscode.commands.registerCommand(`logmagnifier.changeFilterColor.${colorId}`, changeColorHandler));
+        });
 
         // Command: Delete Filter / Group
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.deleteFilter', async (item: FilterGroup | FilterItem) => {

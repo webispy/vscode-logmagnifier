@@ -30,13 +30,16 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             return item;
         } else {
             let label = element.keyword;
-            let description = element.isEnabled ? '' : '(Disabled)';
 
             if (element.isRegex) {
                 label = element.nickname || element.keyword;
-                description = element.keyword + (element.isEnabled ? '' : ' (Disabled)');
             } else {
-                label = `${element.type === 'include' ? '➕' : '➖'} ${element.keyword}`;
+                // Apply tilde prefix for exclude items (both enabled and disabled)
+                if (element.type === 'exclude') {
+                    label = `^${element.keyword}`;
+                } else {
+                    label = element.keyword;
+                }
             }
 
             if (element.resultCount !== undefined && element.resultCount > 0) {
@@ -47,10 +50,38 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}`;
             item.id = element.id;
 
-            item.description = description;
+            item.description = '';
 
             if (element.isEnabled) {
-                if (element.color) {
+                if (element.type === 'exclude') {
+                    // Resolve color: check if it's a preset ID, otherwise use as is
+                    let fillColor: string;
+                    if (element.color) {
+                        const preset = this.filterManager.getPresetById(element.color);
+                        if (preset) {
+                            const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                            fillColor = isDark ? preset.dark : preset.light;
+                        } else {
+                            fillColor = element.color;
+                        }
+                    } else {
+                        // Default to gray for exclude if no color is set
+                        fillColor = '#808080';
+                    }
+
+                    // Determine stroke color for the strike-through line based on theme
+                    const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                    const strokeColor = isDark ? '#cccccc' : '#333333';
+
+                    // Create a strike-through icon with gap
+                    // Text 'abc' represents the word, Line represents the strike
+                    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+                        <text x="50%" y="11" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="${fillColor}" text-anchor="middle">abc</text>
+                        <line x1="0" y1="8" x2="16" y2="8" stroke="${strokeColor}" stroke-width="1.5" />
+                    </svg>`;
+                    item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+
+                } else if (element.color) {
                     // Resolve color: check if it's a preset ID, otherwise use as is
                     const preset = this.filterManager.getPresetById(element.color);
                     let fillColor = element.color;

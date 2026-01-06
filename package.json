@@ -112,12 +112,12 @@
       {
         "command": "logmagnifier.applyWordFilter",
         "title": "Apply Word Filter",
-        "icon": "$(play)"
+        "icon": "$(run-all)"
       },
       {
         "command": "logmagnifier.applyRegexFilter",
         "title": "Apply Regex Filter",
-        "icon": "$(play)"
+        "icon": "$(run-all)"
       },
       {
         "command": "logmagnifier.deleteFilter",
@@ -294,7 +294,7 @@
       {
         "command": "logmagnifier.togglePrependLineNumbers.enable",
         "title": "Line Numbers in Output: disabled",
-        "icon": "$(list-flat)"
+        "icon": "$(list-selection)"
       },
       {
         "command": "logmagnifier.togglePrependLineNumbers.disable",

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { FilterManager } from './services/FilterManager';
 import { FilterTreeDataProvider } from './views/FilterTreeView';
+import { QuickAccessProvider } from './views/QuickAccessProvider';
 import { LogProcessor } from './services/LogProcessor';
 import { HighlightService } from './services/HighlightService';
 import { ResultCountService } from './services/ResultCountService';
@@ -12,6 +13,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const filterManager = new FilterManager();
 	const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word');
 	const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex');
+	const quickAccessProvider = new QuickAccessProvider();
 	const logProcessor = new LogProcessor();
 	const logger = Logger.getInstance();
 	logger.info('LogMagnifier activated');
@@ -26,9 +28,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	vscode.window.createTreeView('logmagnifier-filters', { treeDataProvider: wordTreeDataProvider, dragAndDropController: wordTreeDataProvider });
 	vscode.window.createTreeView('logmagnifier-regex-filters', { treeDataProvider: regexTreeDataProvider, dragAndDropController: regexTreeDataProvider });
+	vscode.window.createTreeView('logmagnifier-quick-access', { treeDataProvider: quickAccessProvider });
 
 	// Update highlights and counts when active editor changes
 	context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+		quickAccessProvider.refresh();
 		if (editor) {
 			const scheme = editor.document.uri.scheme;
 			if (scheme !== 'file' && scheme !== 'untitled') {
@@ -102,6 +106,13 @@ export function activate(context: vscode.ExtensionContext) {
 					lastProcessedDoc = vscode.window.activeTextEditor.document;
 				}
 			}
+		}
+
+		// Refresh Quick Access view if editor settings change
+		if (e.affectsConfiguration('editor.wordWrap') ||
+			e.affectsConfiguration('editor.minimap.enabled') ||
+			e.affectsConfiguration('editor.stickyScroll.enabled')) {
+			quickAccessProvider.refresh();
 		}
 	}));
 

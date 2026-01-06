@@ -77,6 +77,11 @@
     "views": {
       "logmagnifier-container": [
         {
+          "id": "logmagnifier-quick-access",
+          "name": "Quick Access",
+          "icon": "$(tools)"
+        },
+        {
           "id": "logmagnifier-filters",
           "name": "Word Filters",
           "icon": "$(filter)"
@@ -300,6 +305,21 @@
         "command": "logmagnifier.togglePrependLineNumbers.disable",
         "title": "Line Numbers in Output: enabled",
         "icon": "$(list-ordered)"
+      },
+      {
+        "command": "logmagnifier.toggleWordWrap",
+        "title": "Toggle Word Wrap",
+        "icon": "$(word-wrap)"
+      },
+      {
+        "command": "logmagnifier.toggleMinimap",
+        "title": "Toggle Minimap",
+        "icon": "$(layout-sidebar-right)"
+      },
+      {
+        "command": "logmagnifier.toggleStickyScroll",
+        "title": "Toggle Sticky Scroll",
+        "icon": "$(pinned)"
       }
     ],
     "menus": {

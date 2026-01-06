@@ -283,6 +283,28 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.togglePrependLineNumbers.disable', () => {
             this.setPrependLineNumbersEnabled(false);
         }));
+
+        // Command: Toggle Word Wrap
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleWordWrap', async () => {
+            const config = vscode.workspace.getConfiguration('editor');
+            const current = config.get<string>('wordWrap');
+            const newValue = (current === 'on' || current === 'bounded' || current === 'wordWrapColumn') ? 'off' : 'on';
+            await config.update('wordWrap', newValue, vscode.ConfigurationTarget.Global);
+        }));
+
+        // Command: Toggle Minimap
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleMinimap', async () => {
+            const config = vscode.workspace.getConfiguration('editor');
+            const current = config.get<boolean>('minimap.enabled');
+            await config.update('minimap.enabled', !current, vscode.ConfigurationTarget.Global);
+        }));
+
+        // Command: Toggle Sticky Scroll
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleStickyScroll', async () => {
+            const config = vscode.workspace.getConfiguration('editor');
+            const current = config.get<boolean>('stickyScroll.enabled');
+            await config.update('stickyScroll.enabled', !current, vscode.ConfigurationTarget.Global);
+        }));
     }
 
     private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {

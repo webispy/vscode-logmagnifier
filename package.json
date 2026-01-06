@@ -145,11 +145,6 @@
         "icon": "$(pass-filled)"
       },
       {
-        "command": "logmagnifier.changeFilterColor",
-        "title": "Change Color",
-        "icon": "$(paintcan)"
-      },
-      {
         "command": "logmagnifier.changeFilterColor.color1",
         "title": "Change color: color1",
         "icon": "$(paintcan)"
@@ -228,11 +223,6 @@
         "command": "logmagnifier.changeFilterColor.color16",
         "title": "Change color: color16",
         "icon": "$(paintcan)"
-      },
-      {
-        "command": "logmagnifier.toggleFilterHighlightMode",
-        "title": "Toggle Highlight Mode",
-        "icon": "$(arrow-both)"
       },
       {
         "command": "logmagnifier.toggleFilterHighlightMode.word",

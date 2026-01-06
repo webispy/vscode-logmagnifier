@@ -163,7 +163,7 @@ export class CommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode', toggleHighlightModeHandler));
+
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.word', toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.line', toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.full', toggleHighlightModeHandler));
@@ -179,7 +179,7 @@ export class CommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity', toggleCaseSensitivityHandler));
+
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity.on', toggleCaseSensitivityHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity.off', toggleCaseSensitivityHandler));
 
@@ -234,7 +234,7 @@ export class CommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.changeFilterColor', changeColorHandler));
+
 
         // Register specific color commands to support specific tooltips
         const colorPresets = this.filterManager.getAvailableColors();

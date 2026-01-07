@@ -360,25 +360,40 @@ export class FilterManager {
         const groupsToExport = this.groups
             .filter(g => mode === 'regex' ? g.isRegex : !g.isRegex)
             .map(g => {
-                const { resultCount, ...rest } = g;
+                const { resultCount, id, ...rest } = g;
                 return {
                     ...rest,
                     filters: g.filters.map(f => {
-                        const { resultCount: itemResultCount, ...itemRest } = f;
+                        const { resultCount: itemResultCount, id: itemId, ...itemRest } = f;
                         return itemRest;
                     })
                 };
             });
-        this.logger.info(`Exporting ${groupsToExport.length} ${mode} filter groups.`);
-        return JSON.stringify(groupsToExport, null, 4);
+
+        const exportData = {
+            version: this.context.extension.packageJSON.version,
+            groups: groupsToExport
+        };
+
+        this.logger.info(`Exporting ${groupsToExport.length} ${mode} filter groups (v${exportData.version}).`);
+        return JSON.stringify(exportData, null, 4);
     }
 
     public importFilters(json: string, mode: 'word' | 'regex', overwrite: boolean): { count: number, error?: string } {
         this.logger.info(`Starting ${mode} filters import (Overwrite: ${overwrite})...`);
         try {
-            const importedGroups = JSON.parse(json) as FilterGroup[];
-            if (!Array.isArray(importedGroups)) {
-                throw new Error('Invalid filter data format: expected an array of groups');
+            const parsedData = JSON.parse(json);
+
+            let importedGroups: FilterGroup[] = [];
+            let importedVersion: string | undefined;
+
+            if (typeof parsedData === 'object' && parsedData !== null && Array.isArray(parsedData.groups)) {
+                // New format: Root is object with version and groups
+                importedGroups = parsedData.groups;
+                importedVersion = parsedData.version;
+                this.logger.info(`Detected import data (Version: ${importedVersion || 'unknown'}).`); // Removed "new" as it's the only one
+            } else {
+                throw new Error('Invalid filter data format: expected an object with a "groups" array. Legacy array format is no longer supported.');
             }
 
             this.logger.info(`Importing ${importedGroups.length} groups from JSON.`);

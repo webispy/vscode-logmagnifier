@@ -5,7 +5,27 @@ import { FilterGroup, FilterItem } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 
 
+export interface CompiledGroup {
+    includes: { regex: RegExp, contextLine: number }[];
+    excludes: RegExp[];
+}
+
 export class LogProcessor {
+
+    public compileGroups(activeGroups: FilterGroup[]): CompiledGroup[] {
+        return activeGroups.map(group => ({
+            includes: group.filters
+                .filter(f => f.type === 'include' && f.isEnabled)
+                .map(f => ({
+                    regex: RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive),
+                    contextLine: f.contextLine ?? 0
+                })),
+            excludes: group.filters
+                .filter(f => f.type === 'exclude' && f.isEnabled)
+                .map(f => RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive))
+        }));
+    }
+
     /**
      * Processes a log file and returns filtered lines.
      * @param inputPath Path to the input log file.
@@ -21,19 +41,7 @@ export class LogProcessor {
         });
 
         const activeGroups = filterGroups.filter(g => g.isEnabled);
-
-        // Pre-compile regex for performance
-        const compiledGroups = activeGroups.map(group => ({
-            includes: group.filters
-                .filter(f => f.type === 'include' && f.isEnabled)
-                .map(f => ({
-                    regex: RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive),
-                    contextLine: f.contextLine ?? 0
-                })),
-            excludes: group.filters
-                .filter(f => f.type === 'exclude' && f.isEnabled)
-                .map(f => RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive))
-        }));
+        const compiledGroups = this.compileGroups(activeGroups);
 
         // Path and stream setup
         const os = require('os');
@@ -69,48 +77,11 @@ export class LogProcessor {
             for await (const line of rl) {
                 processed++;
 
-                // Optimized match check using pre-compiled regex
-                let maxContext = 0;
-                let isMatched = true;
+                const matchResult = this.checkMatchCompiled(line, compiledGroups);
 
-                if (compiledGroups.length === 0) {
-                    isMatched = false;
-                } else {
-                    for (const group of compiledGroups) {
-                        // Excludes
-                        let isExcluded = false;
-                        for (const exclude of group.excludes) {
-                            if (exclude.test(line)) {
-                                isExcluded = true;
-                                break;
-                            }
-                        }
-                        if (isExcluded) {
-                            isMatched = false;
-                            break;
-                        }
-
-                        // Includes
-                        if (group.includes.length > 0) {
-                            let groupMatch = false;
-                            let groupMaxContext = 0;
-                            for (const include of group.includes) {
-                                if (include.regex.test(line)) {
-                                    groupMatch = true;
-                                    groupMaxContext = Math.max(groupMaxContext, include.contextLine);
-                                }
-                            }
-                            if (!groupMatch) {
-                                isMatched = false;
-                                break;
-                            }
-                            maxContext = Math.max(maxContext, groupMaxContext);
-                        }
-                    }
-                }
-
-                if (isMatched) {
+                if (matchResult.isMatched) {
                     matched++;
+                    const maxContext = matchResult.contextLines;
 
                     // 1. Write 'Before' context lines that haven't been written yet
                     const startIndex = Math.max(0, beforeBuffer.length - maxContext);
@@ -162,53 +133,61 @@ export class LogProcessor {
     }
 
     /**
-     * Checks if a line matches filters and returns the required context lines.
-     * Note: This is now less performant than the inline check in processFile due to regex re-creation.
-     * Kept for backward compatibility or simple single-line checks if needed.
+     * Checks if a line matches filters using pre-compiled regex groups.
      */
-    public checkMatch(line: string, groups: FilterGroup[]): { isMatched: boolean, contextLines: number } {
+    public checkMatchCompiled(line: string, compiledGroups: CompiledGroup[]): { isMatched: boolean, contextLines: number } {
         let maxContext = 0;
         let isMatched = true;
 
-        if (groups.length === 0) { return { isMatched: false, contextLines: 0 }; }
+        if (compiledGroups.length === 0) {
+            return { isMatched: false, contextLines: 0 };
+        }
 
-        for (const group of groups) {
-            const hasExcludes = group.filters.some(f => f.type === 'exclude' && f.isEnabled);
-            const hasIncludes = group.filters.some(f => f.type === 'include' && f.isEnabled);
-
+        for (const group of compiledGroups) {
             // Excludes
-            if (hasExcludes) {
-                for (const f of group.filters) {
-                    if (f.type === 'exclude' && f.isEnabled) {
-                        const regex = RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive);
-                        if (regex.test(line)) {
-                            return { isMatched: false, contextLines: 0 };
-                        }
-                    }
+            let isExcluded = false;
+            for (const excludeRegex of group.excludes) {
+                if (excludeRegex.test(line)) {
+                    isExcluded = true;
+                    break;
                 }
+            }
+            if (isExcluded) {
+                isMatched = false;
+                break;
             }
 
             // Includes
-            if (hasIncludes) {
+            if (group.includes.length > 0) {
                 let groupMatch = false;
                 let groupMaxContext = 0;
-                for (const f of group.filters) {
-                    if (f.type === 'include' && f.isEnabled) {
-                        const regex = RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive);
-                        if (regex.test(line)) {
-                            groupMatch = true;
-                            groupMaxContext = Math.max(groupMaxContext, f.contextLine ?? 0);
-                        }
+                for (const include of group.includes) {
+                    if (include.regex.test(line)) {
+                        groupMatch = true;
+                        groupMaxContext = Math.max(groupMaxContext, include.contextLine);
                     }
                 }
                 if (!groupMatch) {
-                    return { isMatched: false, contextLines: 0 };
+                    isMatched = false;
+                    break;
                 }
                 maxContext = Math.max(maxContext, groupMaxContext);
             }
         }
 
         return { isMatched, contextLines: maxContext };
+    }
+
+    /**
+     * Checks if a line matches filters and returns the required context lines.
+     * Legacy method: Wrapper around checkMatchCompiled for backward compatibility.
+     */
+    public checkMatch(line: string, groups: FilterGroup[]): { isMatched: boolean, contextLines: number } {
+        // Optimization: if we are calling this in a loop for many lines, it's better to use checkMatchCompiled
+        // with pre-compiled groups.
+        const activeGroups = groups.filter(g => g.isEnabled);
+        const compiled = this.compileGroups(activeGroups);
+        return this.checkMatchCompiled(line, compiled);
     }
 
 }

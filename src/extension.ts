@@ -53,6 +53,8 @@ export function activate(context: vscode.ExtensionContext) {
 			resultCountService.updateCounts(counts);
 			lastProcessedDoc = editor.document;
 		} else {
+			lastProcessedDoc = undefined; // Invalidate since we are not tracking a standard editor
+
 			// Fallback for large files where activeTextEditor is undefined
 			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
 			if (activeTab && activeTab.input instanceof vscode.TabInputText) {
@@ -129,16 +131,24 @@ export function activate(context: vscode.ExtensionContext) {
 		lastProcessedDoc = editor.document;
 	}
 
+	let debounceTimer: NodeJS.Timeout | undefined;
+
 	// Update counts when text changes
 	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
 		if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
 			lastProcessedDoc = undefined; // Invalidate because content changed
-			resultCountService.updateCounts();
-			// Note: resultCountService.updateCounts() currently might just recount, 
-			// but if we need to re-highlight immediately on edit, we should do so.
-			// Ideally onDidChangeTextDocument should trigger re-highlight or invalidation.
-			// The original code only called resultCountService.updateCounts().
-			// We'll leave it as is but ensure next focus switch re-processes.
+
+			if (debounceTimer) {
+				clearTimeout(debounceTimer);
+			}
+
+			debounceTimer = setTimeout(() => {
+				if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+					const counts = highlightService.updateHighlights(vscode.window.activeTextEditor);
+					resultCountService.updateCounts(counts);
+					lastProcessedDoc = vscode.window.activeTextEditor.document;
+				}
+			}, 500);
 
 			// Update Quick Access if untitled (size changes)
 			if (e.document.isUntitled) {

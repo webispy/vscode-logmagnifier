@@ -505,9 +505,10 @@ export class CommandManager {
                     if (document && document.isUntitled) {
                         const fullText = document.getText();
                         const lines = fullText.split(/\r?\n/);
+                        const compiledGroups = this.logProcessor.compileGroups(activeGroups);
                         const filtered = lines.filter(line => {
                             stats.processed++;
-                            const matchResult = this.logProcessor.checkMatch(line, activeGroups);
+                            const matchResult = this.logProcessor.checkMatchCompiled(line, compiledGroups);
                             if (matchResult.isMatched) {
                                 stats.matched++;
                             }

@@ -68,17 +68,7 @@ export class CommandManager {
                 return;
             }
 
-            const items: vscode.QuickPickItem[] = [
-                { label: 'Include', description: 'Show lines containing this keyword' },
-                { label: 'Exclude', description: 'Hide lines containing this keyword' }
-            ];
-
-            const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select Filter Type' });
-            if (!selected) {
-                return;
-            }
-
-            const type = selected.label === 'Include' ? 'include' : 'exclude';
+            const type = 'include';
             const filter = this.filterManager.addFilter(targetGroupId, keyword, type, false);
             if (!filter) {
                 vscode.window.showErrorMessage(`Filter '${keyword}' (${type}) already exists in this group.`);

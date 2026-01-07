@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
+import { Constants } from '../constants';
 import { FilterManager } from './FilterManager';
 import { HighlightService } from './HighlightService';
 import { ResultCountService } from './ResultCountService';
 import { LogProcessor } from './LogProcessor';
 import { Logger } from './Logger';
 import { QuickAccessProvider } from '../views/QuickAccessProvider';
-import { FilterGroup, FilterItem } from '../models/Filter';
+import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 import * as fs from 'fs';
 import * as os from 'os';
@@ -30,13 +31,13 @@ export class CommandManager {
 
     private setPrependLineNumbersEnabled(value: boolean) {
         this._prependLineNumbersEnabled = value;
-        vscode.commands.executeCommand('setContext', 'logmagnifier.prependLineNumbersEnabled', value);
+        vscode.commands.executeCommand('setContext', Constants.ContextKeys.PrependLineNumbersEnabled, value);
     }
 
     private registerCommands() {
         // Command: Add Word Filter Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addFilterGroup', async () => {
-            const name = await vscode.window.showInputBox({ prompt: 'Enter Word Filter Group Name' });
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilterGroup, async () => {
+            const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterGroupName });
             if (name) {
                 const group = this.filterManager.addGroup(name, false);
                 if (!group) {
@@ -46,8 +47,8 @@ export class CommandManager {
         }));
 
         // Command: Add Regex Filter Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addRegexFilterGroup', async () => {
-            const name = await vscode.window.showInputBox({ prompt: 'Enter Regex Filter Group Name' });
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddRegexFilterGroup, async () => {
+            const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterRegexFilterGroupName });
             if (name) {
                 const group = this.filterManager.addGroup(name, true);
                 if (!group) {
@@ -57,18 +58,18 @@ export class CommandManager {
         }));
 
         // Command: Add Word Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addFilter', async (group: FilterGroup | undefined) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilter, async (group: FilterGroup | undefined) => {
             const targetGroupId = await this.ensureGroupId(group, false);
             if (!targetGroupId) {
                 return;
             }
 
-            const keyword = await vscode.window.showInputBox({ prompt: 'Enter Filter Keyword' });
+            const keyword = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterKeyword });
             if (!keyword) {
                 return;
             }
 
-            const type = 'include';
+            const type = Constants.FilterTypes.Include as FilterType;
             const filter = this.filterManager.addFilter(targetGroupId, keyword, type, false);
             if (!filter) {
                 vscode.window.showErrorMessage(`Filter '${keyword}' (${type}) already exists in this group.`);
@@ -76,19 +77,19 @@ export class CommandManager {
         }));
 
         // Command: Add Regex Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addRegexFilter', async (group: FilterGroup | undefined) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddRegexFilter, async (group: FilterGroup | undefined) => {
             const targetGroupId = await this.ensureGroupId(group, true);
             if (!targetGroupId) {
                 return;
             }
 
-            const nickname = await vscode.window.showInputBox({ prompt: 'Enter Filter Nickname (e.g. ADB Logcat)' });
+            const nickname = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterNickname });
             if (!nickname) {
                 return;
             }
 
             const pattern = await vscode.window.showInputBox({
-                prompt: 'Enter Regex Pattern',
+                prompt: Constants.Prompts.EnterRegexPattern,
                 validateInput: (value) => {
                     try {
                         new RegExp(value);
@@ -102,14 +103,14 @@ export class CommandManager {
                 return;
             }
 
-            const filter = this.filterManager.addFilter(targetGroupId, pattern, 'include', true, nickname);
+            const filter = this.filterManager.addFilter(targetGroupId, pattern, Constants.FilterTypes.Include as FilterType, true, nickname);
             if (!filter) {
                 vscode.window.showErrorMessage(`Regex Filter with pattern '${pattern}' or nickname '${nickname}' already exists in this group.`);
             }
         }));
 
         // Command: Toggle Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleGroup', (group: FilterGroup) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleGroup, (group: FilterGroup) => {
             if (group) {
                 this.filterManager.toggleGroup(group.id);
                 this.logger.info(`Group toggled: ${group.name}`);
@@ -117,7 +118,7 @@ export class CommandManager {
         }));
 
         // Command: Enable Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.enableGroup', (group: FilterGroup) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableGroup, (group: FilterGroup) => {
             if (group && !group.isEnabled) {
                 this.filterManager.toggleGroup(group.id);
                 this.logger.info(`Group enabled: ${group.name}`);
@@ -125,7 +126,7 @@ export class CommandManager {
         }));
 
         // Command: Disable Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.disableGroup', (group: FilterGroup) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableGroup, (group: FilterGroup) => {
             if (group && group.isEnabled) {
                 this.filterManager.toggleGroup(group.id);
                 this.logger.info(`Group disabled: ${group.name}`);
@@ -133,17 +134,17 @@ export class CommandManager {
         }));
 
         // Command: Enable Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.enableFilter', (item: FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'enable');
         }));
 
         // Command: Disable Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.disableFilter', (item: FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'disable');
         }));
 
         // Command: Toggle Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilter', (item: FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'toggle');
         }));
 
@@ -157,8 +158,8 @@ export class CommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterType.include', toggleFilterTypeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterType.exclude', toggleFilterTypeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Include, toggleFilterTypeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Exclude, toggleFilterTypeHandler));
 
         // Command: Toggle Filter Highlight Mode
         const toggleHighlightModeHandler = (item: FilterItem) => {
@@ -171,9 +172,9 @@ export class CommandManager {
         };
 
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.word', toggleHighlightModeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.line', toggleHighlightModeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterHighlightMode.full', toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Word, toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
 
 
         // Command: Toggle Filter Case Sensitivity
@@ -187,8 +188,8 @@ export class CommandManager {
         };
 
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity.on', toggleCaseSensitivityHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterCaseSensitivity.off', toggleCaseSensitivityHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
         // Command: Toggle Filter Context Line
         const toggleContextLineHandler = (item: FilterItem) => {
@@ -200,10 +201,10 @@ export class CommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl0', toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl3', toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl5', toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterContextLine_cl9', toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.None, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus3, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus5, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus9, toggleContextLineHandler));
 
 
         // Command: Change Filter Color
@@ -231,7 +232,7 @@ export class CommandManager {
                 });
 
                 const picked = await vscode.window.showQuickPick(colorItems, {
-                    placeHolder: 'Select a highlight color',
+                    placeHolder: Constants.Prompts.SelectColor,
                     ignoreFocusOut: true
                 });
 
@@ -246,11 +247,11 @@ export class CommandManager {
         // Register specific color commands to support specific tooltips
         const colorPresets = this.filterManager.getAvailableColors();
         colorPresets.forEach(colorId => {
-            this.context.subscriptions.push(vscode.commands.registerCommand(`logmagnifier.changeFilterColor.${colorId}`, changeColorHandler));
+            this.context.subscriptions.push(vscode.commands.registerCommand(`${Constants.Commands.ChangeFilterColor.Prefix}.${colorId}`, changeColorHandler));
         });
 
         // Command: Delete Filter / Group
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.deleteFilter', async (item: FilterGroup | FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteFilter, async (item: FilterGroup | FilterItem) => {
             if (!item) {
                 return;
             }
@@ -268,63 +269,63 @@ export class CommandManager {
         }));
 
         // Command: Apply Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.applyWordFilter', () => this.applyFilter('word')));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.applyRegexFilter', () => this.applyFilter('regex')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyWordFilter, () => this.applyFilter('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyRegexFilter, () => this.applyFilter('regex')));
 
         // Command: Next Match
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.nextMatch', async (item: FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.NextMatch, async (item: FilterItem) => {
             await this.findMatch(item, 'next');
         }));
 
         // Command: Previous Match
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.previousMatch', async (item: FilterItem) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PreviousMatch, async (item: FilterItem) => {
             await this.findMatch(item, 'previous');
         }));
 
         // Command: Toggle Prepend Line Numbers (Enable)
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.togglePrependLineNumbers.enable', () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Enable, () => {
             this.setPrependLineNumbersEnabled(true);
         }));
 
         // Command: Toggle Prepend Line Numbers (Disable)
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.togglePrependLineNumbers.disable', () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Disable, () => {
             this.setPrependLineNumbersEnabled(false);
         }));
 
         // Command: Toggle Word Wrap
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleWordWrap', async () => {
-            const config = vscode.workspace.getConfiguration('editor');
-            const current = config.get<string>('wordWrap');
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleWordWrap, async () => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
+            const current = config.get<string>(Constants.Configuration.Editor.WordWrap);
             const newValue = (current === 'on' || current === 'bounded' || current === 'wordWrapColumn') ? 'off' : 'on';
-            await config.update('wordWrap', newValue, vscode.ConfigurationTarget.Global);
+            await config.update(Constants.Configuration.Editor.WordWrap, newValue, vscode.ConfigurationTarget.Global);
         }));
 
         // Command: Toggle Minimap
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleMinimap', async () => {
-            const config = vscode.workspace.getConfiguration('editor');
-            const current = config.get<boolean>('minimap.enabled');
-            await config.update('minimap.enabled', !current, vscode.ConfigurationTarget.Global);
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleMinimap, async () => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
+            const current = config.get<boolean>(Constants.Configuration.Editor.MinimapEnabled);
+            await config.update(Constants.Configuration.Editor.MinimapEnabled, !current, vscode.ConfigurationTarget.Global);
         }));
 
         // Command: Toggle Sticky Scroll
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleStickyScroll', async () => {
-            const config = vscode.workspace.getConfiguration('editor');
-            const current = config.get<boolean>('stickyScroll.enabled');
-            await config.update('stickyScroll.enabled', !current, vscode.ConfigurationTarget.Global);
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleStickyScroll, async () => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
+            const current = config.get<boolean>(Constants.Configuration.Editor.StickyScrollEnabled);
+            await config.update(Constants.Configuration.Editor.StickyScrollEnabled, !current, vscode.ConfigurationTarget.Global);
         }));
 
         // Command: Toggle File Size Unit
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFileSizeUnit', () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFileSizeUnit, () => {
             this.quickAccessProvider.toggleFileSizeUnit();
         }));
 
         // Command: Export Filters
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.exportWordFilters', () => this.handleExport('word')));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.exportRegexFilters', () => this.handleExport('regex')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportWordFilters, () => this.handleExport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
 
         // Command: Import Filters
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.importWordFilters', () => this.handleImport('word')));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.importRegexFilters', () => this.handleImport('regex')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportWordFilters, () => this.handleImport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportRegexFilters, () => this.handleImport('regex')));
     }
 
     private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {
@@ -464,7 +465,7 @@ export class CommandManager {
             if (stats.matched === 0) {
                 vscode.window.showWarningMessage(message + " Check your filter keywords (case-sensitive).");
             } else {
-                const timeout = vscode.workspace.getConfiguration('logmagnifier').get<number>('statusBarTimeout') || 5000;
+                const timeout = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<number>(Constants.Configuration.StatusBarTimeout) || 5000;
                 vscode.window.setStatusBarMessage(message, timeout);
             }
 
@@ -603,15 +604,15 @@ export class CommandManager {
                 const json = fs.readFileSync(uris[0].fsPath, 'utf8');
 
                 const choice = await vscode.window.showQuickPick(
-                    ['Merge (Add to existing)', 'Overwrite (Replace existing)'],
-                    { placeHolder: 'Select import mode' }
+                    [Constants.ImportModes.Merge, Constants.ImportModes.Overwrite],
+                    { placeHolder: Constants.Prompts.SelectImportMode }
                 );
 
                 if (!choice) {
                     return;
                 }
 
-                const overwrite = choice.startsWith('Overwrite');
+                const overwrite = choice === Constants.ImportModes.Overwrite;
                 const result = this.filterManager.importFilters(json, mode, overwrite);
 
                 if (result.error) {

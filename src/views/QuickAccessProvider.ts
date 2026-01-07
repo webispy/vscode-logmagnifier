@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import { Constants } from '../constants';
 import { Logger } from '../services/Logger';
 
 export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
@@ -35,9 +36,9 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         Logger.getInstance().info(`Sticky Scroll state: ${stickyScrollEnabled}`);
 
         return Promise.resolve([
-            this.createToggleItem('Word Wrap', isWordWrapOn, 'logmagnifier.toggleWordWrap', 'word-wrap'),
-            this.createToggleItem('Minimap', !!minimapEnabled, 'logmagnifier.toggleMinimap', 'layout-sidebar-right'),
-            this.createToggleItem('Sticky Scroll', !!stickyScrollEnabled, 'logmagnifier.toggleStickyScroll', 'pinned'),
+            this.createToggleItem(Constants.Labels.WordWrap, isWordWrapOn, Constants.Commands.ToggleWordWrap, 'word-wrap'),
+            this.createToggleItem(Constants.Labels.Minimap, !!minimapEnabled, Constants.Commands.ToggleMinimap, 'layout-sidebar-right'),
+            this.createToggleItem(Constants.Labels.StickyScroll, !!stickyScrollEnabled, Constants.Commands.ToggleStickyScroll, 'pinned'),
             this.createFileSizeItem()
         ]);
     }
@@ -143,7 +144,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         // Default to 0 if undefined for safety in calculations, though logic handles hasFile check
         const safeSize = size ?? 0;
 
-        let label = 'File Size: N/A';
+        let label = `${Constants.Labels.FileSize}: ${Constants.Labels.NA}`;
         if (hasFile) {
             let value = '';
             let unit = '';
@@ -151,24 +152,24 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
             switch (this._fileSizeUnit) {
                 case 'bytes':
                     value = safeSize.toLocaleString();
-                    unit = 'Bytes';
+                    unit = Constants.Labels.Bytes;
                     break;
                 case 'kb':
                     value = (safeSize / 1024).toLocaleString(undefined, { maximumFractionDigits: 0 });
-                    unit = 'KB';
+                    unit = Constants.Labels.KB;
                     break;
                 case 'mb':
                     value = (safeSize / (1024 * 1024)).toLocaleString(undefined, { maximumFractionDigits: 0 });
-                    unit = 'MB';
+                    unit = Constants.Labels.MB;
                     break;
             }
-            label = `File Size: ${value} ${unit}`;
+            label = `${Constants.Labels.FileSize}: ${value} ${unit}`;
         }
 
         const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
         item.iconPath = new vscode.ThemeIcon('database');
         item.command = {
-            command: 'logmagnifier.toggleFileSizeUnit',
+            command: Constants.Commands.ToggleFileSizeUnit,
             title: 'Toggle Unit',
             arguments: []
         };

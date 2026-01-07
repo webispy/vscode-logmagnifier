@@ -1,11 +1,12 @@
 import * as vscode from 'vscode';
+import { Constants } from '../constants';
 
 export class Logger {
     private static instance: Logger;
     private outputChannel: vscode.OutputChannel;
 
     private constructor() {
-        this.outputChannel = vscode.window.createOutputChannel('LogMagnifier');
+        this.outputChannel = vscode.window.createOutputChannel(Constants.ExtensionDisplayName);
     }
 
     public static getInstance(): Logger {

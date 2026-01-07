@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Constants } from '../constants';
 
 import { FilterManager } from './FilterManager';
 import { FilterItem } from '../models/Filter';
@@ -92,7 +93,7 @@ export class HighlightService {
 
         const activeGroups = this.filterManager.getGroups().filter(g => g.isEnabled);
         const activeFilters: FilterItem[] = [];
-        const enableRegexHighlight = vscode.workspace.getConfiguration('logmagnifier').get<boolean>('regex.enableHighlight') || false;
+        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
 
         activeGroups.forEach(g => {
             g.filters.forEach(f => {
@@ -115,7 +116,7 @@ export class HighlightService {
         // Clear existing decorations
         this.decorationTypes.forEach((_, key) => rangesByDeco.set(key, []));
 
-        const defaultColor = vscode.workspace.getConfiguration('logmagnifier').get<string | { light: string, dark: string }>('regex.highlightColor') || 'rgba(255, 255, 0, 0.3)';
+        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
 
         activeFilters.forEach(filter => {
             if (!filter.keyword) { return; }

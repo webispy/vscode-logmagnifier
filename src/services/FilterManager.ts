@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { Constants } from '../constants';
 import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
 import { Logger } from './Logger';
 
@@ -32,7 +33,7 @@ export class FilterManager {
 
         // Listen for configuration changes
         vscode.workspace.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('logmagnifier.highlightColors')) {
+            if (e.affectsConfiguration(Constants.Configuration.HighlightColors.Section)) {
                 this.loadColorPresets();
                 this._onDidChangeFilters.fire();
             }
@@ -40,7 +41,7 @@ export class FilterManager {
     }
 
     private loadFromState() {
-        const savedGroups = this.context.globalState.get<FilterGroup[]>('logmagnifier.filterGroups');
+        const savedGroups = this.context.globalState.get<FilterGroup[]>(Constants.GlobalState.FilterGroups);
         if (savedGroups && Array.isArray(savedGroups)) {
             this.groups = savedGroups;
             this.logger.info(`Loaded ${this.groups.length} filter groups from state.`);
@@ -48,11 +49,11 @@ export class FilterManager {
     }
 
     private saveToState() {
-        this.context.globalState.update('logmagnifier.filterGroups', this.groups);
+        this.context.globalState.update(Constants.GlobalState.FilterGroups, this.groups);
     }
 
     private loadColorPresets() {
-        const config = vscode.workspace.getConfiguration('logmagnifier.highlightColors');
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.HighlightColors.Section);
         const presets: ColorPreset[] = [];
 
         this.logger.info('Loading color presets...');
@@ -184,7 +185,7 @@ export class FilterManager {
                 isEnabled: true,
                 isRegex,
                 nickname,
-                color: (!isRegex && type === 'include') ? this.assignColor(group) : undefined,
+                color: (!isRegex && type === Constants.FilterTypes.Include) ? this.assignColor(group) : undefined,
                 contextLine: 0
             };
             group.filters.push(newFilter);

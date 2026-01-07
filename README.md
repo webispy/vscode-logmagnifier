@@ -19,6 +19,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Context Lines**: View matching lines with surrounding context (±3, ±5, ±9 lines).
 - **Persistence**: Filters are automatically saved and restored when VS Code restarts.
 - **Import/Export**: Share and backup your filter configurations via JSON files.
+- **Selection to Filter**: Quickly add selected text as a new filter via the editor context menu.
+- **Enhanced Drag & Drop**: Move filters between groups and reorder them easily.
 
 ## Usage
 
@@ -28,8 +30,9 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 4. **Manage Filters**:
     - **Add Group**: Click the folder icon to create a new Filter Group (e.g., "AuthFlow").
     - **Import/Export**: Use the **Repo Push** (Export) and **Repo Pull** (Import) icons in the view title bar to backup or share your filters.
-5. **Add Filters**: Activate the group, then add "Include" or "Exclude" keywords using the `+` icon.
-    - *Tip*: Hover over items to toggle, delete, or access options like **Change Color**, **Toggle Case Sensitivity**, **Context Lines** (±0/3/5/9), and **Toggle Highlighting Mode**.
+5. **Add Filters**: Activate the group, then click the **Plus** (`+`) icon to add a keyword (defaults to 'Include').
+    - *Tip*: Select text in the editor, right-click, and choose **Add Selection to LogMagnifier** to instantly create a filter.
+    - *Tip*: Hover over items to toggle, delete, or access options like **Change Color**, **Toggle Filter Type** (Include/Exclude), **Toggle Case Sensitivity**, **Context Lines** (±0/3/5/9), and **Toggle Highlighting Mode**.
     - *Tip*: Click the **Arrow Up/Down** icons on a filter item to navigate to the previous or next match in the editor.
 6. **Apply**: Click the **Play** icon in the view title to generate filtered results.
     - *Tip*: Toggle the **List Icon** in the view title to include original line numbers in the output.

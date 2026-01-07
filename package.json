@@ -523,6 +523,16 @@
         "icon": "$(preserve-case)"
       },
       {
+        "command": "logmagnifier.toggleFilterType.include",
+        "title": "Toggle Filter Type: include",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "logmagnifier.toggleFilterType.exclude",
+        "title": "Toggle Filter Type: exclude",
+        "icon": "$(filter)"
+      },
+      {
         "command": "logmagnifier.previousMatch",
         "title": "Previous Match",
         "icon": "$(arrow-up)"
@@ -822,6 +832,16 @@
         {
           "command": "logmagnifier.toggleFilterContextLine_cl9",
           "when": "view == logmagnifier-filters && viewItem =~ /filterItem(Enabled|Disabled)_cl9/ && viewItem =~ /.*_typeinclude/",
+          "group": "inline@6"
+        },
+        {
+          "command": "logmagnifier.toggleFilterType.include",
+          "when": "view == logmagnifier-filters && (viewItem =~ /filterItem(Enabled|Disabled)_cl.*/ || viewItem == filterItemEnabled || viewItem == filterItemDisabled) && viewItem =~ /.*_typeinclude/",
+          "group": "inline@6"
+        },
+        {
+          "command": "logmagnifier.toggleFilterType.exclude",
+          "when": "view == logmagnifier-filters && (viewItem =~ /filterItem(Enabled|Disabled)_cl.*/ || viewItem == filterItemEnabled || viewItem == filterItemDisabled) && viewItem =~ /.*_typeexclude/",
           "group": "inline@6"
         },
         {

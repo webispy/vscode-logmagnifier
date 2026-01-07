@@ -157,6 +157,19 @@ export class CommandManager {
             this.handleFilterToggle(item, 'toggle');
         }));
 
+        // Command: Toggle Filter Type
+        const toggleFilterTypeHandler = (item: FilterItem) => {
+            const groups = this.filterManager.getGroups();
+            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+
+            if (targetGroup) {
+                this.filterManager.toggleFilterType(targetGroup.id, item.id);
+            }
+        };
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterType.include', toggleFilterTypeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.toggleFilterType.exclude', toggleFilterTypeHandler));
+
         // Command: Toggle Filter Highlight Mode
         const toggleHighlightModeHandler = (item: FilterItem) => {
             const groups = this.filterManager.getGroups();

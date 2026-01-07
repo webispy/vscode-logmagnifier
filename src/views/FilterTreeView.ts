@@ -59,19 +59,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             if (element.isEnabled) {
                 if (element.type === 'exclude') {
                     // Resolve color: check if it's a preset ID, otherwise use as is
-                    let fillColor: string;
-                    if (element.color) {
-                        const preset = this.filterManager.getPresetById(element.color);
-                        if (preset) {
-                            const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                            fillColor = isDark ? preset.dark : preset.light;
-                        } else {
-                            fillColor = element.color;
-                        }
-                    } else {
-                        // Default to gray for exclude if no color is set
-                        fillColor = '#808080';
-                    }
+                    // Always use default gray for exclude, even if color property exists from previous include state
+                    const fillColor = '#808080';
 
                     // Determine stroke color for the strike-through line based on theme
                     const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;

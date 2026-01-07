@@ -314,6 +314,25 @@ export class FilterManager {
         }
     }
 
+    public toggleFilterType(groupId: string, filterId: string): void {
+        const group = this.groups.find(g => g.id === groupId);
+        if (group) {
+            const filter = group.filters.find(f => f.id === filterId);
+            if (filter) {
+                filter.type = filter.type === 'include' ? 'exclude' : 'include';
+
+                // If switching to include and color is missing, assign one
+                if (filter.type === 'include' && !filter.color) {
+                    filter.color = this.assignColor(group);
+                }
+
+                this.logger.info(`Filter '${filter.keyword}' type toggled to: ${filter.type}`);
+                this.saveToState();
+                this._onDidChangeFilters.fire();
+            }
+        }
+    }
+
     public moveFilter(groupId: string, activeFilterId: string, targetFilterId: string, position: 'before' | 'after'): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {

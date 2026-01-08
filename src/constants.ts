@@ -67,6 +67,29 @@ export const Constants = {
             PlusMinus9: 'logmagnifier.toggleFilterContextLine_cl9',
         },
 
+        SetFilterType: {
+            Include: 'logmagnifier.setFilterType.include',
+            Exclude: 'logmagnifier.setFilterType.exclude',
+        },
+
+        SetFilterCaseSensitivity: {
+            On: 'logmagnifier.setFilterCaseSensitivity.on',
+            Off: 'logmagnifier.setFilterCaseSensitivity.off',
+        },
+
+        SetFilterHighlightMode: {
+            Word: 'logmagnifier.setFilterHighlightMode.word',
+            Line: 'logmagnifier.setFilterHighlightMode.line',
+            Full: 'logmagnifier.setFilterHighlightMode.full',
+        },
+
+        SetFilterContextLine: {
+            None: 'logmagnifier.setFilterContextLine.none', // cl0
+            PlusMinus3: 'logmagnifier.setFilterContextLine.cl3',
+            PlusMinus5: 'logmagnifier.setFilterContextLine.cl5',
+            PlusMinus9: 'logmagnifier.setFilterContextLine.cl9',
+        },
+
         TogglePrependLineNumbers: {
             Enable: 'logmagnifier.togglePrependLineNumbers.enable',
             Disable: 'logmagnifier.togglePrependLineNumbers.disable',

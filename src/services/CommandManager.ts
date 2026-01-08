@@ -389,6 +389,24 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Include, toggleFilterTypeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Exclude, toggleFilterTypeHandler));
 
+        // Command: Filter Type Setters
+        const setFilterTypeHandler = (type: FilterType) => (item: FilterItem) => {
+            const groups = this.filterManager.getGroups();
+            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            if (targetGroup) {
+                this.filterManager.setFilterType(targetGroup.id, item.id, type);
+            }
+        };
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Include, setFilterTypeHandler(Constants.FilterTypes.Include as FilterType)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Exclude, setFilterTypeHandler(Constants.FilterTypes.Exclude as FilterType)));
+
+        // Command: Toggle Filter Type (Legacy/Inline)
+        // The original toggleFilterTypeHandler is already defined above, so we don't redefine it.
+        // We just need to ensure the registrations are in the correct place if they were moved.
+        // Since the original registrations are immediately after its definition, and the new 'set' commands are inserted between,
+        // the original registrations will now appear after the 'set' commands. This matches the provided snippet's intent.
+
         // Command: Toggle Filter Highlight Mode
         const toggleHighlightModeHandler = (item: FilterItem) => {
             const groups = this.filterManager.getGroups();
@@ -403,6 +421,18 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Word, toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
+
+        // Command: Highlight Mode Setters
+        const setHighlightModeHandler = (mode: number) => (item: FilterItem) => {
+            const groups = this.filterManager.getGroups();
+            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            if (targetGroup) {
+                this.filterManager.setFilterHighlightMode(targetGroup.id, item.id, mode);
+            }
+        };
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Word, setHighlightModeHandler(0)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Line, setHighlightModeHandler(1)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(2)));
 
 
         // Command: Toggle Filter Case Sensitivity
@@ -419,6 +449,17 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
+        // Command: Case Sensitivity Setters
+        const setCaseSensitivityHandler = (enable: boolean) => (item: FilterItem) => {
+            const groups = this.filterManager.getGroups();
+            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            if (targetGroup) {
+                this.filterManager.setFilterCaseSensitivity(targetGroup.id, item.id, enable);
+            }
+        };
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterCaseSensitivity.On, setCaseSensitivityHandler(true)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterCaseSensitivity.Off, setCaseSensitivityHandler(false)));
+
         // Command: Toggle Filter Context Line
         const toggleContextLineHandler = (item: FilterItem) => {
             const groups = this.filterManager.getGroups();
@@ -433,6 +474,19 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus3, toggleContextLineHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus5, toggleContextLineHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus9, toggleContextLineHandler));
+
+        // Command: Context Line Setters
+        const setContextLineHandler = (lines: number) => (item: FilterItem) => {
+            const groups = this.filterManager.getGroups();
+            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            if (targetGroup) {
+                this.filterManager.setFilterContextLine(targetGroup.id, item.id, lines);
+            }
+        };
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.None, setContextLineHandler(0)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus3, setContextLineHandler(3)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus5, setContextLineHandler(5)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus9, setContextLineHandler(9)));
 
 
         // Command: Change Filter Color
@@ -470,6 +524,9 @@ export class CommandManager {
             }
         };
 
+        // Command: Change Filter Color (Generic)
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.changeFilterColor', changeColorHandler));
+
 
 
         // Register specific color commands to support specific tooltips
@@ -477,6 +534,20 @@ export class CommandManager {
         colorPresets.forEach(colorId => {
             this.context.subscriptions.push(vscode.commands.registerCommand(`${Constants.Commands.ChangeFilterColor.Prefix}.${colorId}`, changeColorHandler));
         });
+
+        // Alias Commands for Context Menu Titles
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.createFilter', (item: any) => {
+            // Pass the item (Group) to the AddFilter command so it knows where to add
+            vscode.commands.executeCommand(Constants.Commands.AddFilter, item);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.createRegexFilter', (item: any) => {
+            vscode.commands.executeCommand(Constants.Commands.AddRegexFilter, item);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.deleteGroup', (item: any) => {
+            vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item);
+        }));
 
         // Command: Delete Filter / Group
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteFilter, async (item: FilterGroup | FilterItem) => {
@@ -495,11 +566,6 @@ export class CommandManager {
                 }
             }
         }));
-
-        // Command: Apply Filter
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyWordFilter, () => this.applyFilter('word')));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyRegexFilter, () => this.applyFilter('regex')));
-
         // Command: Next Match
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.NextMatch, async (item: FilterItem) => {
             await this.findMatch(item, 'next');

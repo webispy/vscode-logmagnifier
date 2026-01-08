@@ -26,14 +26,14 @@ export function activate(context: vscode.ExtensionContext) {
 	const wordTreeView = vscode.window.createTreeView('logmagnifier-filters', {
 		treeDataProvider: wordTreeDataProvider,
 		dragAndDropController: wordTreeDataProvider,
-		showCollapseAll: true
+		showCollapseAll: false
 	});
 
 	const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex');
 	const regexTreeView = vscode.window.createTreeView('logmagnifier-regex-filters', {
 		treeDataProvider: regexTreeDataProvider,
 		dragAndDropController: regexTreeDataProvider,
-		showCollapseAll: true
+		showCollapseAll: false
 	});
 
 	// Sync expansion state

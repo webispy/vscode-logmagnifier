@@ -605,6 +605,51 @@ export class CommandManager {
             await config.update(Constants.Configuration.Editor.StickyScrollEnabled, !current, vscode.ConfigurationTarget.Global);
         }));
 
+        // Command: Toggle Occurrences Highlight
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleOccurrencesHighlight, async (value?: boolean | string) => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
+
+            // If argument is provided, set it directly
+            if (value !== undefined) {
+                await config.update('occurrencesHighlight', value, vscode.ConfigurationTarget.Global);
+                this.quickAccessProvider.refresh();
+                return;
+            }
+
+            // Legacy/Fallback: Show Quick Pick
+            const currentValue = config.get<boolean | string>('occurrencesHighlight'); // 'off' | 'singleFile' | 'multiFile' (boolean false is off)
+
+            // Map current value to QuickPick selection
+            let currentLabel = 'Off';
+            if (currentValue === 'singleFile' || currentValue === true) {
+                currentLabel = 'Single File';
+            } else if (currentValue === 'multiFile') {
+                currentLabel = 'Multi File';
+            }
+
+            const options: vscode.QuickPickItem[] = [
+                { label: 'Off', description: 'Disable occurrences highlight' },
+                { label: 'Single File', description: 'Highlight occurrences in the current file only' },
+                { label: 'Multi File', description: 'Highlight occurrences across all open files' }
+            ];
+
+            const selected = await vscode.window.showQuickPick(options, {
+                placeHolder: `Select Occurrences Highlight Mode (Current: ${currentLabel})`
+            });
+
+            if (selected) {
+                let newValue: boolean | string = false;
+                if (selected.label === 'Single File') {
+                    newValue = 'singleFile';
+                } else if (selected.label === 'Multi File') {
+                    newValue = 'multiFile';
+                }
+
+                await config.update('occurrencesHighlight', newValue, vscode.ConfigurationTarget.Global);
+                this.quickAccessProvider.refresh();
+            }
+        }));
+
         // Command: Toggle File Size Unit
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFileSizeUnit, () => {
             this.quickAccessProvider.toggleFileSizeUnit();

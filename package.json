@@ -609,6 +609,11 @@
         "icon": "$(pinned)"
       },
       {
+        "command": "logmagnifier.toggleOccurrencesHighlight",
+        "title": "Set Occurrences Highlight",
+        "icon": "$(search)"
+      },
+      {
         "command": "logmagnifier.exportWordFilters",
         "title": "Export Word Filters",
         "icon": "$(repo-push)"

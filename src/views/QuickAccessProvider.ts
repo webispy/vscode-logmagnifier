@@ -36,6 +36,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
             this.createButtonItem('Toggle Word Wrap', Constants.Commands.ToggleWordWrap, 'word-wrap'),
             this.createToggleItem(Constants.Labels.Minimap, !!minimapEnabled, Constants.Commands.ToggleMinimap, 'layout-sidebar-right'),
             this.createToggleItem(Constants.Labels.StickyScroll, !!stickyScrollEnabled, Constants.Commands.ToggleStickyScroll, 'pinned'),
+            this.createOccurrencesHighlightItem(config),
             this.createFileSizeItem()
         ]);
     }
@@ -145,6 +146,34 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
         return item;
     }
+
+    private createOccurrencesHighlightItem(config: vscode.WorkspaceConfiguration): vscode.TreeItem {
+        const value = config.get<boolean | string>('occurrencesHighlight');
+
+        let label = Constants.Labels.OccurrencesHighlight;
+        let description = 'Off';
+        let iconId = 'search-stop';
+
+        if (value === 'singleFile' || value === true) {
+            description = 'Single File';
+            iconId = 'search';
+        } else if (value === 'multiFile') {
+            description = 'Multi File';
+            iconId = 'references';
+        }
+
+        const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+        item.label = `${label}: ${description}`;
+        item.iconPath = new vscode.ThemeIcon(iconId);
+        item.command = {
+            command: Constants.Commands.ToggleOccurrencesHighlight,
+            title: 'Set Occurrences Highlight',
+            arguments: []
+        };
+
+        return item;
+    }
+
 
     private createFileSizeItem(): vscode.TreeItem {
         const size = this.getFileSize();

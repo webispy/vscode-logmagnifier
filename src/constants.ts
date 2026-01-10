@@ -98,6 +98,7 @@ export const Constants = {
         ToggleWordWrap: 'logmagnifier.toggleWordWrap',
         ToggleMinimap: 'logmagnifier.toggleMinimap',
         ToggleStickyScroll: 'logmagnifier.toggleStickyScroll',
+        ToggleOccurrencesHighlight: 'logmagnifier.toggleOccurrencesHighlight',
         ToggleFileSizeUnit: 'logmagnifier.toggleFileSizeUnit',
 
         ExportWordFilters: 'logmagnifier.exportWordFilters',
@@ -162,6 +163,7 @@ export const Constants = {
         WordWrap: 'Word Wrap',
         Minimap: 'Minimap',
         StickyScroll: 'Sticky Scroll',
+        OccurrencesHighlight: 'Occurrences Highlight',
         FileSize: 'File Size',
         Bytes: 'Bytes',
         KB: 'KB',

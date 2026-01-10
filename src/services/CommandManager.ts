@@ -613,6 +613,7 @@ export class CommandManager {
         // Command: Export Filters
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportWordFilters, () => this.handleExport('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.exportGroup', (group: FilterGroup) => this.handleExportGroup(group)));
 
         // Command: Import Filters
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportWordFilters, () => this.handleImport('word')));
@@ -884,6 +885,44 @@ export class CommandManager {
                 vscode.window.showInformationMessage(`${mode === 'word' ? 'Word' : 'Regex'} filters exported successfully to ${uri.fsPath}`);
             } catch (err) {
                 vscode.window.showErrorMessage(`Failed to export filters: ${err}`);
+            }
+        }
+    }
+
+    private async handleExportGroup(group: FilterGroup) {
+        if (!group) {
+            return;
+        }
+
+        const filtersJson = this.filterManager.exportGroup(group.id);
+        if (!filtersJson) {
+            vscode.window.showErrorMessage(`Failed to export group: ${group.name}`);
+            return;
+        }
+
+        const safeName = group.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const fileName = `logmagnifier_group_${safeName}.json`;
+
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
+
+        // Fallback to homedir if Downloads doesn't exist
+        if (!fs.existsSync(downloadsPath)) {
+            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
+        }
+
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: defaultUri,
+            filters: { 'JSON': ['json'] },
+            title: `Export Group: ${group.name}`
+        });
+
+        if (uri) {
+            try {
+                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
+                vscode.window.showInformationMessage(`Group '${group.name}' exported successfully to ${uri.fsPath}`);
+            } catch (err) {
+                vscode.window.showErrorMessage(`Failed to export group: ${err}`);
             }
         }
     }

@@ -587,6 +587,30 @@ export class FilterManager {
         return JSON.stringify(exportData, null, 4);
     }
 
+    public exportGroup(groupId: string): string | undefined {
+        const group = this.groups.find(g => g.id === groupId);
+        if (!group) {
+            return undefined;
+        }
+
+        const { resultCount, id, ...rest } = group;
+        const exportedGroup = {
+            ...rest,
+            filters: group.filters.map(f => {
+                const { resultCount: itemResultCount, id: itemId, ...itemRest } = f;
+                return itemRest;
+            })
+        };
+
+        const exportData = {
+            version: this.context.extension.packageJSON.version,
+            groups: [exportedGroup]
+        };
+
+        this.logger.info(`Exporting filter group '${group.name}' (v${exportData.version}).`);
+        return JSON.stringify(exportData, null, 4);
+    }
+
     public importFilters(json: string, mode: 'word' | 'regex', overwrite: boolean): { count: number, error?: string } {
         this.logger.info(`Starting ${mode} filters import (Overwrite: ${overwrite})...`);
         try {

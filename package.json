@@ -683,6 +683,11 @@
         "icon": "$(repo-push)"
       },
       {
+        "command": "logmagnifier.exportGroup",
+        "title": "Export Group...",
+        "icon": "$(repo-push)"
+      },
+      {
         "command": "logmagnifier.importRegexFilters",
         "title": "Import Regex Filters",
         "icon": "$(repo-pull)"
@@ -1079,6 +1084,11 @@
           "command": "logmagnifier.disableFilter",
           "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
           "group": "inline@8"
+        },
+        {
+          "command": "logmagnifier.exportGroup",
+          "when": "viewItem == filterGroupEnabled || viewItem == filterGroupDisabled",
+          "group": "3_edit@0"
         }
       ]
     }

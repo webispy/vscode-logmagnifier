@@ -799,6 +799,21 @@
         "icon": "$(symbol-method)"
       },
       {
+        "command": "logmagnifier.control.uninstall",
+        "title": "Uninstall App",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.control.clearStorage",
+        "title": "Clear Storage",
+        "icon": "$(database)"
+      },
+      {
+        "command": "logmagnifier.control.clearCache",
+        "title": "Clear Cache",
+        "icon": "$(archive)"
+      },
+      {
         "command": "logmagnifier.addLogcatSession",
         "title": "New Logcat Session",
         "icon": "$(plus)"

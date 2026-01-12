@@ -2,7 +2,7 @@
 import * as vscode from 'vscode';
 import { LogcatService } from './LogcatService';
 import { LogcatTreeProvider } from '../views/LogcatTreeProvider';
-import { AdbDevice, LogcatSession, LogcatTag, LogPriority } from '../models/LogcatModels';
+import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem } from '../models/LogcatModels';
 import * as crypto from 'crypto';
 
 export class LogcatCommandManager {
@@ -170,6 +170,53 @@ export class LogcatCommandManager {
 
             if (picked) {
                 this.logcatService.setTargetApp(device, picked.label);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.control.uninstall', async (item: ControlActionItem) => {
+            if (item && item.device && item.device.targetApp) {
+                const answer = await vscode.window.showWarningMessage(
+                    `Are you sure you want to uninstall ${item.device.targetApp}?`,
+                    'Yes', 'No'
+                );
+                if (answer !== 'Yes') { return; }
+
+                const success = await this.logcatService.uninstallApp(item.device.id, item.device.targetApp);
+                if (success) {
+                    vscode.window.showInformationMessage('Uninstall completed. Please refresh the device list.');
+                    this.treeProvider.refreshDevices(); // Proactive refresh
+                } else {
+                    vscode.window.showErrorMessage('Uninstall failed.');
+                }
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.control.clearStorage', async (item: ControlActionItem) => {
+            if (item && item.device && item.device.targetApp) {
+                const answer = await vscode.window.showWarningMessage(
+                    `Are you sure you want to clear storage for ${item.device.targetApp}?`,
+                    'Yes', 'No'
+                );
+                if (answer !== 'Yes') { return; }
+
+                const success = await this.logcatService.clearAppStorage(item.device.id, item.device.targetApp);
+                if (success) {
+                    vscode.window.showInformationMessage('Clear storage completed. Please refresh if needed.');
+                } else {
+                    vscode.window.showErrorMessage('Clear storage failed.');
+                }
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.control.clearCache', async (item: ControlActionItem) => {
+            if (item && item.device && item.device.targetApp) {
+                const success = await this.logcatService.clearAppCache(item.device.id, item.device.targetApp);
+                // Clear cache might not return "Success" explicitly in stdout so we trust the boolean Result
+                if (success) {
+                    vscode.window.showInformationMessage('Clear cache completed. Please refresh if needed.');
+                } else {
+                    vscode.window.showErrorMessage('Clear cache failed (App might need to be debuggable).');
+                }
             }
         }));
     }

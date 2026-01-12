@@ -31,7 +31,7 @@ export class LogcatService {
             const adbPath = this.getAdbPath();
             this.logger.info(`[ADB] Executing: ${adbPath} devices -l`);
 
-            cp.exec(`${adbPath} devices -l`, (err, stdout, stderr) => {
+            cp.exec(`${adbPath} devices -l`, async (err, stdout, stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Error running adb devices: ${err.message}`);
                     resolve([]);
@@ -60,15 +60,34 @@ export class LogcatService {
                             }
                         }
                         this.logger.info(`[ADB] Parsed device: ${JSON.stringify(device)}`);
-                        // Restore target app selection
-                        if (this.deviceTargetApps.has(device.id)) {
-                            device.targetApp = this.deviceTargetApps.get(device.id);
-                        } else {
-                            device.targetApp = 'all';
-                        }
                         devices.push(device);
                     }
                 }
+
+                // Validate Target Apps
+                const validationPromises = devices.map(async (device) => {
+                    const storedTarget = this.deviceTargetApps.get(device.id);
+                    if (storedTarget && storedTarget !== 'all') {
+                        // Check if running
+                        try {
+                            const runningApps = await this.getRunningApps(device.id);
+                            if (!runningApps.has(storedTarget)) {
+                                this.logger.info(`[ADB] Target app ${storedTarget} not running on ${device.id}. Resetting to all.`);
+                                this.deviceTargetApps.set(device.id, 'all');
+                                device.targetApp = 'all';
+                            } else {
+                                device.targetApp = storedTarget;
+                            }
+                        } catch (e) {
+                            this.logger.warn(`[ADB] Failed to check running apps for ${device.id}, keeping stored target.`);
+                            device.targetApp = storedTarget;
+                        }
+                    } else {
+                        device.targetApp = 'all';
+                    }
+                });
+
+                await Promise.all(validationPromises);
                 resolve(devices);
             });
         });
@@ -399,5 +418,60 @@ export class LogcatService {
         } catch (e) {
             console.error('Failed to write to logcat document', e);
         }
+    }
+
+    public async uninstallApp(deviceId: string, packageName: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Uninstalling ${packageName} on ${deviceId}`);
+            cp.exec(`${adbPath} -s ${deviceId} uninstall ${packageName}`, (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Uninstall failed: ${err.message}`);
+                    resolve(false);
+                    return;
+                }
+                this.logger.info(`[ADB] Uninstall output: ${stdout.trim()}`);
+                resolve(stdout.includes('Success'));
+            });
+        });
+    }
+
+    public async clearAppStorage(deviceId: string, packageName: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Clearing storage for ${packageName} on ${deviceId}`);
+            cp.exec(`${adbPath} -s ${deviceId} shell pm clear ${packageName}`, (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Clear storage failed: ${err.message}`);
+                    resolve(false);
+                    return;
+                }
+                this.logger.info(`[ADB] Clear storage output: ${stdout.trim()}`);
+                resolve(stdout.includes('Success'));
+            });
+        });
+    }
+
+    public async clearAppCache(deviceId: string, packageName: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Clearing cache for ${packageName} on ${deviceId}`);
+            // Note: This only works for debuggable apps or rooted devices usually via run-as
+            // For non-debuggable apps without root, clearing just cache isn't easily possible via adb without pm clear
+            // But we try nonetheless.
+            const cmd = `${adbPath} -s ${deviceId} shell run-as ${packageName} rm -rf cache code_cache`;
+            cp.exec(cmd, (err, stdout) => {
+                if (err) {
+                    this.logger.warn(`[ADB] Clear cache failed (might need debuggable app): ${err.message}`);
+                    // We interpret 'run-as: package not debuggable' as a sort of failure but we resolve true so UI isn't blocked?
+                    // actually resolve false to maybe warn user?
+                    // Detailed error often in stderr. 
+                    resolve(false);
+                    return;
+                }
+                this.logger.info(`[ADB] Clear cache output: ${stdout.trim()}`);
+                resolve(true); // rm -rf usually doesn't output 'Success'
+            });
+        });
     }
 }

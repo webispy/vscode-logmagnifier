@@ -46,4 +46,17 @@ export interface SessionGroupItem {
     device: AdbDevice;
 }
 
-export type LogcatTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem;
+export interface ControlAppItem {
+    type: 'controlApp';
+    device: AdbDevice;
+}
+
+export type ControlActionType = 'uninstall' | 'clearStorage' | 'clearCache';
+
+export interface ControlActionItem {
+    type: 'controlAction';
+    actionType: ControlActionType;
+    device: AdbDevice;
+}
+
+export type LogcatTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem | ControlAppItem | ControlActionItem;

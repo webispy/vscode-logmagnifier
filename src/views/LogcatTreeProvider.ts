@@ -12,6 +12,10 @@ export class LogcatTreeProvider implements vscode.TreeDataProvider<LogcatTreeIte
 
     constructor(private logcatService: LogcatService) {
         this.logcatService.onDidChangeSessions(() => this.refresh());
+        // Deferred initialization: devices are fetched via initialize()
+    }
+
+    public initialize() {
         this.refreshDevices();
     }
 

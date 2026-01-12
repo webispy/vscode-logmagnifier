@@ -70,6 +70,11 @@ export function activate(context: vscode.ExtensionContext) {
 	vscode.window.registerTreeDataProvider('logmagnifier-adb-logcat', logcatTreeProvider);
 	new LogcatCommandManager(context, logcatService, logcatTreeProvider);
 
+	// Defer ADB device fetching to avoid slowing down extension activation
+	setTimeout(() => {
+		logcatTreeProvider.initialize();
+	}, 1000);
+
 	vscode.window.createTreeView('logmagnifier-quick-access', { treeDataProvider: quickAccessProvider });
 
 	// Update highlights and counts when active editor changes

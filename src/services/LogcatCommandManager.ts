@@ -28,9 +28,14 @@ export class LogcatCommandManager {
             }
 
             if (!device) { return; }
+            const existingSessions = this.logcatService.getSessions();
+            const defaultName = `Session ${existingSessions.length + 1}`;
+
             const name = await vscode.window.showInputBox({
                 prompt: 'Enter Session Name',
-                placeHolder: 'My App Debug'
+                placeHolder: 'My App Debug',
+                value: defaultName,
+                valueSelection: [0, defaultName.length]
             });
             if (name) {
                 this.logcatService.createSession(name, device);

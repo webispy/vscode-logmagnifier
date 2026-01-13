@@ -222,6 +222,15 @@ export class LogcatService {
         const session = this.sessions.get(sessionId);
         if (!session || session.isRunning) { return; }
 
+        if (session.outputDocumentUri) {
+            const uri = vscode.Uri.parse(session.outputDocumentUri);
+            const doc = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
+            // If document is not found or is closed, clear the reference to create a new one
+            if (!doc || doc.isClosed) {
+                session.outputDocumentUri = undefined;
+            }
+        }
+
         try {
             const adbPath = this.getAdbPath();
             const defaultOptions = vscode.workspace.getConfiguration('logmagnifier').get<string>('adbLogcatDefaultOptions') || '-v threadtime -T 1';

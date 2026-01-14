@@ -929,12 +929,8 @@ export class CommandManager {
                     }
                 }
 
-                if (!filePathFromTab && !document) {
-                    const openFile = vscode.workspace.textDocuments.find(doc => doc.uri.scheme === 'file' || doc.uri.scheme === 'untitled');
-                    if (openFile) {
-                        document = openFile;
-                    }
-                }
+                // Fallback removed: Do not search for random background files.
+                // If the user has no active tab/editor, we should not guess.
             }
 
             if (!document && !filePathFromTab) {

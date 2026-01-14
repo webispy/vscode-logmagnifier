@@ -100,6 +100,7 @@ export function activate(context: vscode.ExtensionContext) {
 			lastProcessedDoc = editor.document;
 		} else {
 			lastProcessedDoc = undefined; // Invalidate since we are not tracking a standard editor
+			resultCountService.clearCounts(); // Ensure counts are cleared when no standard editor is active
 
 			// Fallback for large files where activeTextEditor is undefined
 			const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
@@ -114,7 +115,6 @@ export function activate(context: vscode.ExtensionContext) {
 						if (sizeMB > 50) {
 							logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
 							vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
-							resultCountService.clearCounts();
 							return;
 						}
 					}

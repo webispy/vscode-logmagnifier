@@ -50,7 +50,17 @@ export class FilterManager {
         const savedGroups = this.context.globalState.get<FilterGroup[]>(Constants.GlobalState.FilterGroups);
         if (savedGroups && Array.isArray(savedGroups)) {
             this.groups = savedGroups;
+            this.resetCounts(); // Reset counts on startup
             this.logger.info(`Loaded ${this.groups.length} filter groups from state.`);
+        }
+    }
+
+    private resetCounts() {
+        for (const group of this.groups) {
+            group.resultCount = 0;
+            for (const filter of group.filters) {
+                filter.resultCount = 0;
+            }
         }
     }
 
@@ -908,6 +918,7 @@ export class FilterManager {
 
             if (profile) {
                 this.groups = JSON.parse(JSON.stringify(profile.groups));
+                this.resetCounts();
             } else {
                 // Reset to factory defaults
                 this.groups = [];
@@ -928,6 +939,7 @@ export class FilterManager {
         if (profile) {
             // Deep copy to separate from stored profile
             this.groups = JSON.parse(JSON.stringify(profile.groups));
+            this.resetCounts();
             this.saveToState(); // Update current session state
             await this.context.globalState.update(Constants.GlobalState.ActiveProfile, name);
             this._onDidChangeFilters.fire();

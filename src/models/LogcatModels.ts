@@ -33,6 +33,7 @@ export interface LogcatSession {
     tags: LogcatTag[];
     isRunning: boolean;
     outputDocumentUri?: string; // URI of the editor document
+    useStartFromCurrentTime?: boolean; // If true, adds -T 1 (or equivalent) to start from now. If false, shows history.
 }
 
 // Tree Item Types

@@ -195,7 +195,8 @@ export class LogcatService {
             name,
             device,
             tags: [],
-            isRunning: false
+            isRunning: false,
+            useStartFromCurrentTime: true // Default to true (current behavior with default options)
         };
         this.sessions.set(session.id, session);
         this._onDidChangeSessions.fire();
@@ -239,8 +240,46 @@ export class LogcatService {
             const args = ['-s', session.device.id, 'logcat'];
 
             // Add default options (split by space)
+            // We need to carefully handle -T and -t if useStartFromCurrentTime is toggled.
+            // If useStartFromCurrentTime is true, we ensure -T 1 is present (or leave as is if user provided it).
+            // If false, we must filter OUT -T or -t from default options.
+
+            const startFromNow = session.useStartFromCurrentTime !== false; // Default true
+
             if (defaultOptions.trim().length > 0) {
-                args.push(...defaultOptions.split(/\s+/));
+                const parts = defaultOptions.split(/\s+/);
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    // Check for time flags
+                    if (part === '-T' || part === '-t') {
+                        if (!startFromNow) {
+                            // Skip this and the next argument (the value)
+                            i++;
+                            continue;
+                        }
+                    }
+                    args.push(part);
+                }
+            }
+
+            // If we want startFromNow, ensure -T 1 is there if not added by default options
+            // But checking if "args" already has -T is tricky because it might be part of defaultOptions which we just added.
+            // The defaultOptions usually contains "-T 1". 
+            // If startFromNow is TRUE, we just appended default options. If default options has -T 1, good.
+            // If default options DOES NOT have -T 1, but we want it? 
+            // Let's assume defaultOptions is the source of truth for "base" args. 
+            // If user wants "Start from Now" but removed -T 1 from config, maybe we should force it?
+            // Current behavior: "defaultOptions" holds the preference. 
+            // But now we have a per-session toggle.
+            // So:
+            // 1. Process defaultOptions. Remove any -T/-t if startFromNow == false.
+            // 2. If startFromNow == true, AND we didn't see -T/-t in defaultOptions (or even if we did?), make sure it's applied?
+            // Actually, if defaultOptions has -T 1, and we pushed it, we are good.
+            // If defaultOptions DOES NOT have -T 1, and startFromNow is true, we should probably Add it.
+
+            const hasTimeArg = args.includes('-T') || args.includes('-t');
+            if (startFromNow && !hasTimeArg) {
+                args.push('-T', '1');
             }
 
             // PID Filter
@@ -387,6 +426,15 @@ export class LogcatService {
                 session.tags[index] = tag;
                 this._onDidChangeSessions.fire();
             }
+        }
+    }
+
+    public toggleSessionTimeFilter(sessionId: string) {
+        const session = this.sessions.get(sessionId);
+        if (session && !session.isRunning) {
+            session.useStartFromCurrentTime = !session.useStartFromCurrentTime;
+            this.logger.info(`[Session] Toggled time filter for ${sessionId} to ${session.useStartFromCurrentTime}`);
+            this._onDidChangeSessions.fire();
         }
     }
 

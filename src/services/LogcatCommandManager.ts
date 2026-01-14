@@ -63,6 +63,18 @@ export class LogcatCommandManager {
             }
         }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.session.enableTimeFilter', async (session: LogcatSession) => {
+            if (session) {
+                this.logcatService.toggleSessionTimeFilter(session.id);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.session.disableTimeFilter', async (session: LogcatSession) => {
+            if (session) {
+                this.logcatService.toggleSessionTimeFilter(session.id);
+            }
+        }));
+
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.addLogcatTag', async (session: LogcatSession) => {
             if (!session) { return; }
 

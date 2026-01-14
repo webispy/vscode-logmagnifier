@@ -799,6 +799,16 @@
         "icon": "$(symbol-method)"
       },
       {
+        "command": "logmagnifier.session.enableTimeFilter",
+        "title": "With history: yes (Click to toggle)",
+        "icon": "$(history)"
+      },
+      {
+        "command": "logmagnifier.session.disableTimeFilter",
+        "title": "With history: none (Click to toggle)",
+        "icon": "$(pulse)"
+      },
+      {
         "command": "logmagnifier.control.uninstall",
         "title": "Uninstall App",
         "icon": "$(trash)"
@@ -1277,23 +1287,33 @@
         },
         {
           "command": "logmagnifier.startLogcatSession",
-          "when": "view == logmagnifier-adb-logcat && viewItem == session_stopped",
-          "group": "inline"
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_stopped.*/",
+          "group": "inline@4"
         },
         {
           "command": "logmagnifier.stopLogcatSession",
-          "when": "view == logmagnifier-adb-logcat && viewItem == session_running",
-          "group": "inline"
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_running.*/",
+          "group": "inline@4"
+        },
+        {
+          "command": "logmagnifier.session.enableTimeFilter",
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_stopped_full/",
+          "group": "inline@2"
+        },
+        {
+          "command": "logmagnifier.session.disableTimeFilter",
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_stopped_t1/",
+          "group": "inline@2"
         },
         {
           "command": "logmagnifier.removeLogcatSession",
-          "when": "view == logmagnifier-adb-logcat && (viewItem == session_stopped || viewItem == session_running)",
-          "group": "inline"
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_.*/",
+          "group": "inline@3"
         },
         {
           "command": "logmagnifier.addLogcatTag",
-          "when": "view == logmagnifier-adb-logcat && viewItem == session_stopped",
-          "group": "inline"
+          "when": "view == logmagnifier-adb-logcat && viewItem =~ /session_stopped.*/",
+          "group": "inline@1"
         },
         {
           "command": "logmagnifier.editLogcatTag",

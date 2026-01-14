@@ -56,7 +56,15 @@ export class LogcatTreeProvider implements vscode.TreeDataProvider<LogcatTreeIte
             const item = new vscode.TreeItem(element.name, vscode.TreeItemCollapsibleState.Expanded);
             item.description = element.isRunning ? '(Running)' : '';
             item.iconPath = new vscode.ThemeIcon(stateIcon);
-            item.contextValue = element.isRunning ? 'session_running' : 'session_stopped';
+            const timeContext = (element.useStartFromCurrentTime !== false) ? 't1' : 'full';
+            const runContext = element.isRunning ? 'session_running' : 'session_stopped';
+            item.contextValue = `${runContext}_${timeContext}`;
+
+            const timeFilterStatus = (element.useStartFromCurrentTime !== false)
+                ? "With history: none (Click icon to change)"
+                : "With history: yes (Click icon to change)";
+            item.tooltip = `${element.name}\nStatus: ${element.isRunning ? 'Running' : 'Stopped'}\n${timeFilterStatus}`;
+
             return item;
         } else if (this.isControlApp(element)) {
             const item = new vscode.TreeItem('Control app', vscode.TreeItemCollapsibleState.Expanded);

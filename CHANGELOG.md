@@ -1,5 +1,18 @@
 # Change Log
 
+## [1.3.0]
+
+### Added
+- **Screen Recording**: Capture device screen directly from VS Code.
+- **Device Control**: Added "Screenshot" feature and "Show Touches" toggle.
+- **Dumpsys**: Added dedicated commands for Activity, Meminfo, and Package dumps.
+- **Logcat**: Added toggle to start logcat from current time.
+
+### Changed
+- **UI**: Improved filter item color change interaction by making the icon clickable.
+
+### Fixed
+- **Filters**: Fixed issue where untitled documents were not filtered correctly.
 ## [1.2.2]
 
 ### Added

@@ -12,6 +12,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Search Navigation**: Quickly navigate between matches using Previous/Next buttons in the sidebar.
 - **Highlighting**: Automatically highlights include type keywords in the filtered view.
 - **3-Stage Highlighting**: Toggle between Word, Line, and Full Line highlight modes.
+- **Navigation Animation**: Visual flash effect when navigating to search matches (configurable).
 - **Expanded Colors**: 16 distinct, high-visibility colors with standardized configuration.
 - **Context Lines**: View matching lines with surrounding context (±3, ±5, ±9 lines).
 - **Focus Mode**: Generates a new editor tab with filtered results, enabling multi-stage filtering.
@@ -46,6 +47,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - *Tip*: Select text in the editor, right-click, and choose **Add Selection to LogMagnifier** to instantly create a filter.
     - *Tip*: Right-click items to access organized options like **Filter Type**, **Case Sensitivity**, **Highlight Mode**, and **Context Lines**.
     - *Tip*: Click the **Arrow Up/Down** icons on a filter item to navigate to the previous or next match in the editor.
+    - *Tip*: Use keyboard shortcuts **`Ctrl + Cmd + ]`** (Next) and **`Ctrl + Cmd + [`** (Previous) to navigate matches of the selected filter.
 5. **Apply**: Click the **Play** icon in the view title to generate filtered results.
     - *Tip*: Toggle the **List Icon** in the view title to include original line numbers in the output.
 6. **Quick Access**: Use the **Quick Access** view to toggle editor settings (Word Wrap, Minimap, Sticky Scroll) or check the current file size.
@@ -80,6 +82,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 This extension contributes the following settings:
 
 * `logmagnifier.regex.enableHighlight`: Enable highlighting for Regex filters in the editor. (Default: `false`)
+* `logmagnifier.editor.navigationAnimation`: Enable visual flash animation when navigating to search matches. (Default: `true`)
 * `logmagnifier.regex.highlightColor`: Background color for Regex highlight. Can be a color string, a preset name, or an object with `light`/`dark` values.
 * `logmagnifier.highlightColors.color01` ... `color16`: Customizable light/dark mode colors for each highlight preset.
 * `logmagnifier.tempFilePrefix`: Prefix for the filtered temp files. (Default: `filtered_`)

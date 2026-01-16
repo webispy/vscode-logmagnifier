@@ -310,6 +310,11 @@
             "default": false,
             "description": "Enable highlighting for Regex filters in the editor."
           },
+          "logmagnifier.editor.navigationAnimation": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable visual flash animation when navigating to search matches."
+          },
           "logmagnifier.regex.highlightColor": {
             "anyOf": [
               {
@@ -397,6 +402,18 @@
       ]
     },
     "viewsWelcome": [],
+    "keybindings": [
+      {
+        "command": "logmagnifier.nextMatch",
+        "key": "ctrl+cmd+]",
+        "when": "editorTextFocus || focusedView == logmagnifier-filters || focusedView == logmagnifier-regex-filters"
+      },
+      {
+        "command": "logmagnifier.previousMatch",
+        "key": "ctrl+cmd+[",
+        "when": "editorTextFocus || focusedView == logmagnifier-filters || focusedView == logmagnifier-regex-filters"
+      }
+    ],
     "commands": [
       {
         "command": "logmagnifier.addFilterGroup",

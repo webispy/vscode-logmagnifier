@@ -37,11 +37,14 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         const stickyScrollEnabled = config.get<boolean>('stickyScroll.enabled');
         Logger.getInstance().info(`Sticky Scroll state: ${stickyScrollEnabled}`);
 
+        const lmConfig = vscode.workspace.getConfiguration('logmagnifier', scope);
+
         return Promise.resolve([
             this.createButtonItem('Toggle Word Wrap', Constants.Commands.ToggleWordWrap, 'word-wrap'),
             this.createToggleItem(Constants.Labels.Minimap, !!minimapEnabled, Constants.Commands.ToggleMinimap, 'layout-sidebar-right'),
             this.createToggleItem(Constants.Labels.StickyScroll, !!stickyScrollEnabled, Constants.Commands.ToggleStickyScroll, 'pinned'),
-            this.createOccurrencesHighlightItem(config),
+            this.createToggleItem(Constants.Labels.NavigationAnimation, !!lmConfig.get<boolean>(Constants.Configuration.Editor.NavigationAnimation), Constants.Commands.ToggleNavigationAnimation, 'eye'),
+            this.createOccurrencesHighlightItem(lmConfig),
             this.createFileSizeItem(),
             this.createSeparator(),
             this.createProfileItem()

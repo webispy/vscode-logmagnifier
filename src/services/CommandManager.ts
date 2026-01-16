@@ -602,6 +602,14 @@ export class CommandManager {
             this.context.subscriptions.push(vscode.commands.registerCommand(`${Constants.Commands.ChangeFilterColor.Prefix}.${colorId}`, changeColorHandler));
         });
 
+        // Command: Toggle Navigation Animation
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleNavigationAnimation, async () => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+            const current = config.get<boolean>(Constants.Configuration.Editor.NavigationAnimation);
+            await config.update(Constants.Configuration.Editor.NavigationAnimation, !current, vscode.ConfigurationTarget.Global);
+            this.quickAccessProvider.refresh();
+        }));
+
         // Alias Commands for Context Menu Titles
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.createFilter', (item: any) => {
             // Pass the item (Group) to the AddFilter command so it knows where to add
@@ -1028,9 +1036,31 @@ export class CommandManager {
         }
     }
 
-    private async findMatch(item: FilterItem, direction: 'next' | 'previous') {
+    private async findMatch(item: FilterItem | undefined, direction: 'next' | 'previous') {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
+            return;
+        }
+
+        // If no item passed (via shortcut), try to get from TreeView selection
+        if (!item) {
+            const selection = this.wordTreeView.selection;
+            if (selection && selection.length > 0) {
+                const selected = selection[0];
+                // Ensure it is a FilterItem (not a Group) and it is enabled
+                if ('keyword' in selected) { // Simple check for FilterItem
+                    item = selected as FilterItem;
+                }
+            }
+        }
+
+        if (!item) {
+            vscode.window.showInformationMessage('Please select a filter in the Word Filters view first.');
+            return;
+        }
+
+        if (!item.isEnabled) {
+            vscode.window.showInformationMessage(`Filter '${item.keyword}' is disabled.`);
             return;
         }
 
@@ -1096,6 +1126,10 @@ export class CommandManager {
 
             editor.selection = new vscode.Selection(startPos, endPos);
             editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+
+            // Trigger Flash Animation
+            // Pass the filter color from the item
+            this.highlightService.flashLine(editor, startPos.line, item.color);
         }
     }
 

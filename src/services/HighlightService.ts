@@ -9,6 +9,8 @@ import { RegexUtils } from '../utils/RegexUtils';
 export class HighlightService implements vscode.Disposable {
     // Map of color string -> DecorationType
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: any }> = new Map();
+    private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
+    private activeFlashTimeout: NodeJS.Timeout | undefined;
 
     constructor(
         private filterManager: FilterManager,
@@ -227,6 +229,66 @@ export class HighlightService implements vscode.Disposable {
         const duration = Date.now() - startTime;
         this.logger.info(`Highlighting finished (${duration}ms)`);
         return matchCounts;
+    }
+
+    public flashLine(editor: vscode.TextEditor, line: number, color?: string | { light: string, dark: string }) {
+        if (!editor || line < 0) { return; }
+
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+        const enableAnimation = config.get<boolean>(Constants.Configuration.Editor.NavigationAnimation) || false;
+
+        if (!enableAnimation) { return; }
+
+        // Cancel previous animation if active
+        if (this.activeFlashTimeout) {
+            clearTimeout(this.activeFlashTimeout);
+            this.activeFlashTimeout = undefined;
+        }
+        if (this.activeFlashDecoration) {
+            this.activeFlashDecoration.dispose();
+            this.activeFlashDecoration = undefined;
+        }
+
+        const range = editor.document.lineAt(line).range;
+
+        // Resolve Color
+        let decorationOptions: vscode.DecorationRenderOptions = {
+            isWholeLine: true,
+            fontWeight: 'bold'
+        };
+
+        if (color) {
+            if (typeof color === 'string') {
+                const preset = this.filterManager.getPresetById(color);
+                if (preset) {
+                    decorationOptions.light = { backgroundColor: preset.light };
+                    decorationOptions.dark = { backgroundColor: preset.dark };
+                } else {
+                    decorationOptions.backgroundColor = color;
+                }
+            } else {
+                // It is already { light, dark } object
+                decorationOptions.light = { backgroundColor: color.light };
+                decorationOptions.dark = { backgroundColor: color.dark };
+            }
+        } else {
+            // Default match highlight
+            const defaultColor = new vscode.ThemeColor('editor.findMatchHighlightBackground');
+            decorationOptions.backgroundColor = defaultColor;
+        }
+
+        // Step 3: Background + Bold + Border
+        this.activeFlashDecoration = vscode.window.createTextEditorDecorationType(decorationOptions);
+
+        editor.setDecorations(this.activeFlashDecoration, [range]);
+
+        this.activeFlashTimeout = setTimeout(() => {
+            if (this.activeFlashDecoration) {
+                this.activeFlashDecoration.dispose();
+                this.activeFlashDecoration = undefined;
+            }
+            this.activeFlashTimeout = undefined;
+        }, 500);
     }
 
     public dispose() {

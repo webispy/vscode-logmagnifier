@@ -20,6 +20,9 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmark, (item: BookmarkItem) => this.removeBookmark(item)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.JumpToBookmark, (item: BookmarkItem) => this.jumpToBookmark(item)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddMatchListToBookmark, (filter: FilterItem) => this.addMatchListToBookmark(filter)));
+        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.removeBookmarkFile', (uri: vscode.Uri) => this.removeBookmarkFile(uri)));
+        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.copyBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.copyBookmarkFile(uri, withLineNumber)));
+        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.openBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.openBookmarkFile(uri, withLineNumber)));
     }
 
     private addBookmark() {
@@ -88,4 +91,56 @@ export class LogBookmarkCommandManager {
             vscode.window.showErrorMessage(`Failed to open bookmark: ${e}`);
         }
     }
+
+    private removeBookmarkFile(uri: vscode.Uri) {
+        if (uri) {
+            this.bookmarkService.removeBookmarksForUri(uri);
+        }
+    }
+
+    private async copyBookmarkFile(uri: vscode.Uri, withLineNumber: boolean = true) {
+        if (!uri) { return; }
+        const bookmarksMap = this.bookmarkService.getBookmarks();
+        const bookmarks = bookmarksMap.get(uri.toString());
+
+        if (bookmarks && bookmarks.length > 0) {
+            const content = bookmarks.map(b => withLineNumber ? `Line ${b.line + 1}: ${b.content}` : b.content).join('\n');
+            await vscode.env.clipboard.writeText(content);
+            vscode.window.showInformationMessage('Bookmarks copied to clipboard.');
+        }
+    }
+
+    private async openBookmarkFile(uri: vscode.Uri, withLineNumber: boolean = true) {
+        if (!uri) { return; }
+        const bookmarksMap = this.bookmarkService.getBookmarks();
+        const bookmarks = bookmarksMap.get(uri.toString());
+
+        if (bookmarks && bookmarks.length > 0) {
+            const content = bookmarks.map(b => withLineNumber ? `Line ${b.line + 1}: ${b.content}` : b.content).join('\n');
+            const filename = uri.path.split('/').pop() || 'file';
+            const docName = `Bookmark: ${filename}`;
+
+            // Create a specialized URI for the untitled document to set its name
+            // The format is untitled:<path> where the last segment is used as the name
+            const untitledUri = vscode.Uri.parse(`untitled:${docName}`);
+
+            try {
+                const doc = await vscode.workspace.openTextDocument(untitledUri);
+                const editor = await vscode.window.showTextDocument(doc);
+
+                // Replace content
+                const fullRange = new vscode.Range(
+                    doc.positionAt(0),
+                    doc.positionAt(doc.getText().length)
+                );
+
+                await editor.edit(editBuilder => {
+                    editBuilder.replace(fullRange, content);
+                });
+            } catch (e) {
+                vscode.window.showErrorMessage(`Failed to open bookmark tab: ${e}`);
+            }
+        }
+    }
 }
+

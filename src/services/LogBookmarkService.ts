@@ -110,7 +110,7 @@ export class LogBookmarkService implements vscode.Disposable {
         return this._bookmarks;
     }
 
-    private removeBookmarksForUri(uri: vscode.Uri) {
+    public removeBookmarksForUri(uri: vscode.Uri) {
         const key = uri.toString();
         if (this._bookmarks.has(key)) {
             this._bookmarks.delete(key);

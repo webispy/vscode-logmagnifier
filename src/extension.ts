@@ -14,6 +14,7 @@ import { AdbCommandManager } from './services/AdbCommandManager';
 import { LogBookmarkService } from './services/LogBookmarkService';
 import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
 import { LogBookmarkCommandManager } from './services/LogBookmarkCommandManager';
+import { JsonPrettyService } from './services/JsonPrettyService';
 import { Constants } from './constants';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -66,7 +67,8 @@ export function activate(context: vscode.ExtensionContext) {
 	setupExpansionSync(regexTreeView);
 
 	// Initialize Command Manager (Handles all command registrations)
-	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView);
+	const jsonPrettyService = new JsonPrettyService(logger);
+	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService);
 
 	// ADB Devices
 	const adbService = new AdbService(logger);

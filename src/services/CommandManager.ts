@@ -11,6 +11,7 @@ import { RegexUtils } from '../utils/RegexUtils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { JsonPrettyService } from './JsonPrettyService';
 
 export class CommandManager {
     constructor(
@@ -22,7 +23,8 @@ export class CommandManager {
         private quickAccessProvider: QuickAccessProvider,
         private logger: Logger,
         private wordTreeView: vscode.TreeView<FilterGroup | FilterItem>,
-        private regexTreeView: vscode.TreeView<FilterGroup | FilterItem>
+        private regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
+        private jsonPrettyService: JsonPrettyService
     ) {
         this.registerCommands();
         // Initialize context key
@@ -336,6 +338,11 @@ export class CommandManager {
 
             await vscode.workspace.applyEdit(edits);
             vscode.window.showInformationMessage(`Removed ${matchCount} lines matching '${selectedText}'.`);
+        }));
+
+        // Command: Apply Json Pretty
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.applyJsonPretty', async () => {
+            await this.jsonPrettyService.execute();
         }));
 
         // Command: Toggle Group

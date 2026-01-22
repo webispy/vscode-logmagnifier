@@ -437,6 +437,11 @@
         "command": "logmagnifier.removeMatchesWithSelection",
         "key": "ctrl+cmd+r",
         "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "logmagnifier.applyJsonPretty",
+        "key": "ctrl+cmd+j",
+        "when": "editorTextFocus"
       }
     ],
     "commands": [
@@ -947,6 +952,11 @@
         "command": "logmagnifier.removeMatchesWithSelection",
         "title": "Remove Lines Matching Selection",
         "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.applyJsonPretty",
+        "title": "Apply json-pretty on the line",
+        "category": "LogMagnifier"
       }
     ],
     "submenus": [
@@ -1160,7 +1170,12 @@
         {
           "command": "logmagnifier.removeMatchesWithSelection",
           "when": "editorHasSelection",
-          "group": "logmagnifier@4"
+          "group": "logmagnifier@5"
+        },
+        {
+          "command": "logmagnifier.applyJsonPretty",
+          "group": "logmagnifier@4",
+          "when": "editorTextFocus"
         }
       ],
       "view/item/context": [

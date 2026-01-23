@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.5.0]
+
+### Added
+- **JSON Pretty**: Added "Apply JSON Pretty" command to format JSON strings in log lines (Cmd+Ctrl+J).
+- **Config**: Added `logmagnifier.removeMatches.maxLines` setting to configure threshold for removing matches.
+
+### Changed
+- **Context Menu**: Renamed "Add Selection to LogMagnifier" to "Add Selection to LogMagnifier Filter".
+- **Internal**: Refactored ADB components naming for consistency.
+
+### Fixed
+- **UI**: Fixed context menu visibility in Output/Debug panels.
+- **Filters**: Fixed issue with whitespace stripping in word filters.
+
 ## [1.4.2]
 
 ### Added

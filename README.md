@@ -33,6 +33,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Add/Remove**: Toggle bookmarks via context menu.
   - **Navigate**: Jump to bookmarks instantly from the "LogMagnifier" view in the Panel.
   - **Persistence**: Bookmarks are saved and restored across sessions.
+- **JSON Pretty Print**: Extract and format JSON objects from log lines (Ctrl+Cmd+J).
 
 ## Usage
 
@@ -125,6 +126,13 @@ LogMagnifier depends on VS Code's extension capabilities to provide highlighting
     * Even with optimizations disabled, VS Code's extension host has a hard limit. Files larger than **50MB** are **not synchronized** to extensions ([reference](https://github.com/microsoft/vscode/issues/31078)).
     * For files > 50MB, **highlighting will not work** regardless of your settings because the text content is completely invisible to the plugin.
     * **Workaround**: Use the **Apply Filter** (Play button) feature. This streams the file content (bypassing the editor limit) and generates a smaller filtered log file where highlighting and navigation will work perfectly.
+
+## Contributors
+
+Thanks to the following people who have contributed to this project:
+
+- [@birdea](https://github.com/birdea)
+- [@JeanTracker](https://github.com/JeanTracker)
 
 ## Credits
 

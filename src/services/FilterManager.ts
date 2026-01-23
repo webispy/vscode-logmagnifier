@@ -12,6 +12,7 @@ import * as crypto from 'crypto';
 export class FilterManager {
     private groups: FilterGroup[] = [];
     private colorPresets: ColorPreset[] = [];
+    private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
     private _onDidChangeFilters: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeFilters: vscode.Event<void> = this._onDidChangeFilters.event;
 
@@ -130,6 +131,26 @@ export class FilterManager {
         return this.groups;
     }
 
+    public getActiveFilters(): { filter: FilterItem, groupId: string }[] {
+        if (this.activeFiltersCache === null) {
+            this.activeFiltersCache = [];
+            for (const group of this.groups) {
+                if (group.isEnabled) {
+                    for (const filter of group.filters) {
+                        if (filter.isEnabled) {
+                            this.activeFiltersCache.push({ filter, groupId: group.id });
+                        }
+                    }
+                }
+            }
+        }
+        return this.activeFiltersCache;
+    }
+
+    private invalidateCache() {
+        this.activeFiltersCache = null;
+    }
+
     public getAvailableColors(): string[] {
         return this.colorService.getAvailableColors();
     }
@@ -159,6 +180,7 @@ export class FilterManager {
         this.groups.push(newGroup);
         this.logger.info(`Filter group added: ${name} (Regex: ${isRegex})`);
         this.debouncedSaveToState();
+        this.invalidateCache();
         this._onDidChangeFilters.fire();
         return newGroup;
     }
@@ -201,6 +223,7 @@ export class FilterManager {
             group.filters.push(newFilter);
             this.logger.info(`Filter added to group '${group.name}': ${keyword} (Type: ${type}, Regex: ${isRegex})`);
             this.debouncedSaveToState();
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
             return newFilter;
         }
@@ -218,6 +241,7 @@ export class FilterManager {
             if (filter) {
                 filter.color = color;
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -229,6 +253,7 @@ export class FilterManager {
             group.name = newName;
             this.logger.info(`Filter group renamed to: ${newName}`);
             this.debouncedSaveToState();
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
         }
     }
@@ -246,6 +271,7 @@ export class FilterManager {
                 }
                 this.logger.info(`Filter '${filter.id}' updated`);
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -261,6 +287,7 @@ export class FilterManager {
                 // Cycle: 0 (Word) -> 1 (Line) -> 2 (Whole Line) -> 0
                 filter.highlightMode = ((filter.highlightMode ?? 0) + 1) % 3;
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -273,6 +300,7 @@ export class FilterManager {
             if (filter) {
                 filter.caseSensitive = !filter.caseSensitive;
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -288,6 +316,7 @@ export class FilterManager {
                 const nextIndex = (currentIndex + 1) % levels.length;
                 filter.contextLine = levels[nextIndex];
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -299,6 +328,7 @@ export class FilterManager {
             group.filters = group.filters.filter(f => f.id !== filterId);
             this.logger.info(`Filter removed from group '${group.name}': ${filterId}`);
             this.debouncedSaveToState();
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
         }
     }
@@ -315,6 +345,7 @@ export class FilterManager {
             }
 
             this.debouncedSaveToState();
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
         }
     }
@@ -325,6 +356,7 @@ export class FilterManager {
             group.isEnabled = !group.isEnabled;
             this.logger.info(`Filter group '${group.name}' ${group.isEnabled ? 'enabled' : 'disabled'}`);
             this.debouncedSaveToState();
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
         }
     }
@@ -342,6 +374,7 @@ export class FilterManager {
             if (changed) {
                 this.logger.info(`All filters enabled in group '${group.name}'`);
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -360,6 +393,7 @@ export class FilterManager {
             if (changed) {
                 this.logger.info(`All filters disabled in group '${group.name}'`);
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -377,6 +411,7 @@ export class FilterManager {
                 filter.isEnabled = !filter.isEnabled;
                 this.logger.info(`Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
                 this.debouncedSaveToState();
+                this.invalidateCache();
                 this._onDidChangeFilters.fire();
             }
         }
@@ -409,6 +444,7 @@ export class FilterManager {
 
                     this.logger.info(`Filter '${filter.keyword}' type set to: ${filter.type}`);
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
             }
@@ -423,6 +459,7 @@ export class FilterManager {
                 if (filter.caseSensitive !== enable) {
                     filter.caseSensitive = enable;
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
             }
@@ -437,6 +474,7 @@ export class FilterManager {
                 if (filter.excludeStyle !== style) {
                     filter.excludeStyle = style;
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
             }
@@ -453,6 +491,7 @@ export class FilterManager {
                 if (filter.highlightMode !== mode) {
                     filter.highlightMode = mode;
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
             }
@@ -467,6 +506,7 @@ export class FilterManager {
                 if (filter.contextLine !== lines) {
                     filter.contextLine = lines;
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
             }
@@ -549,6 +589,7 @@ export class FilterManager {
         }
 
         this.debouncedSaveToState();
+        this.invalidateCache();
         this._onDidChangeFilters.fire();
     }
 
@@ -588,6 +629,7 @@ export class FilterManager {
         }
 
         this.debouncedSaveToState();
+        this.invalidateCache();
         this._onDidChangeFilters.fire();
     }
 
@@ -684,6 +726,7 @@ export class FilterManager {
 
                 if (addedCount > 0) {
                     this.debouncedSaveToState();
+                    this.invalidateCache();
                     this._onDidChangeFilters.fire();
                 }
 
@@ -796,6 +839,7 @@ export class FilterManager {
             // Checking service: createProfile just pushes to array.
             // So we need to switch.
             await this.profileManager.loadProfile(name); // This sets active profile state
+            this.invalidateCache();
             this._onDidChangeFilters.fire();
             this.logger.info(`Created and switched to new profile: ${name}`);
             return true;

@@ -11,6 +11,7 @@ export interface ColorPreset {
 
 export class ColorService {
     private colorPresets: ColorPreset[] = [];
+    private colorPresetsMap: Map<string, ColorPreset> = new Map();
 
     constructor() {
         this.loadColorPresets();
@@ -40,6 +41,12 @@ export class ColorService {
             }
         }
         this.colorPresets = presets;
+
+        // Rebuild cache
+        this.colorPresetsMap.clear();
+        for (const preset of this.colorPresets) {
+            this.colorPresetsMap.set(preset.id, preset);
+        }
     }
 
     private getDefaultPresets(): ColorPreset[] {
@@ -72,7 +79,7 @@ export class ColorService {
     }
 
     public getPresetById(id: string): ColorPreset | undefined {
-        return this.colorPresets.find(p => p.id === id);
+        return this.colorPresetsMap.get(id);
     }
 
     public assignColor(group: FilterGroup): string {

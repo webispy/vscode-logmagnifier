@@ -81,7 +81,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Initialize Command Manager (Handles all command registrations)
-	const jsonPrettyService = new JsonPrettyService(logger);
+	const jsonPrettyService = new JsonPrettyService(logger, sourceMapService);
 	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
 
 	// ADB Devices

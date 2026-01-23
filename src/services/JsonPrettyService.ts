@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { Logger } from './Logger';
+import { SourceMapService } from './SourceMapService';
 
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';
@@ -9,7 +10,7 @@ interface ExtractedJson {
 }
 
 export class JsonPrettyService {
-    constructor(private logger: Logger) { }
+    constructor(private logger: Logger, private sourceMapService: SourceMapService) { }
 
     public async execute() {
         try {
@@ -44,6 +45,16 @@ export class JsonPrettyService {
                 language: 'jsonc'
             });
             await vscode.window.showTextDocument(doc);
+
+            // Register Source Mapping for navigation
+            const lineCount = doc.lineCount;
+            const sourceLine = selection.active.line;
+            const lineMapping = new Array(lineCount).fill(sourceLine);
+
+            // We need to use the uri of the newly created document. 
+            // Note: Untitled documents have a specific URI scheme.
+            this.sourceMapService.register(doc.uri, editor.document.uri, lineMapping);
+            this.sourceMapService.updateContextKey(vscode.window.activeTextEditor);
 
             this.logger.info(`JsonPrettyService: Processed ${jsons.length} objects.`);
 

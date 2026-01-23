@@ -47,6 +47,26 @@ export class LogBookmarkService implements vscode.Disposable {
         }, null, context.subscriptions);
     }
 
+    public getBookmarkAt(uri: vscode.Uri, line: number): BookmarkItem | undefined {
+        const key = uri.toString();
+        const bookmarks = this._bookmarks.get(key);
+        if (!bookmarks) {
+            return undefined;
+        }
+
+        const activeIds = this.getActiveIds();
+        return bookmarks.find(b => b.line === line && activeIds.has(b.id));
+    }
+
+    public toggleBookmark(editor: vscode.TextEditor, line: number) {
+        const bookmark = this.getBookmarkAt(editor.document.uri, line);
+        if (bookmark) {
+            this.removeBookmark(bookmark);
+        } else {
+            this.addBookmark(editor, line);
+        }
+    }
+
     public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string }) {
         const matchText = options?.matchText;
         const uri = editor.document.uri;

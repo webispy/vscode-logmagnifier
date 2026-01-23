@@ -21,6 +21,7 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.JumpToBookmark, (item: BookmarkItem) => this.jumpToBookmark(item)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddMatchListToBookmark, (filter: FilterItem) => this.addMatchListToBookmark(filter)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionMatchesToBookmark, () => this.addSelectionMatchesToBookmark()));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmark, () => this.toggleBookmark()));
         context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.removeBookmarkFile', (uri: vscode.Uri) => this.removeBookmarkFile(uri)));
         context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.copyBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.copyBookmarkFile(uri, withLineNumber)));
         context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.openBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.openBookmarkFile(uri, withLineNumber)));
@@ -85,6 +86,78 @@ export class LogBookmarkCommandManager {
             const selection = editor.selection;
             const selectedText = !selection.isEmpty ? editor.document.getText(selection) : undefined;
             this.bookmarkService.addBookmark(editor, line, { matchText: selectedText });
+        }
+    }
+
+    private async toggleBookmark() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+
+        const selection = editor.selection;
+        if (selection.isEmpty) {
+            // Case 1: Single line toggle
+            const line = selection.active.line;
+            this.bookmarkService.toggleBookmark(editor, line);
+            return;
+        }
+
+        // Case 2: Selection based keyword toggle
+        const selectedText = editor.document.getText(selection);
+        if (!selectedText) {
+            return;
+        }
+
+        // Limit the number of lines to scan
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+        const MAX_MATCHES = config.get<number>('bookmark.maxMatches', 500);
+
+        const text = editor.document.getText();
+        const lines = text.split(/\r?\n/);
+        const matchedLines: number[] = [];
+
+        const escapedText = selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(escapedText);
+
+        for (let i = 0; i < lines.length; i++) {
+            if (regex.test(lines[i])) {
+                matchedLines.push(i);
+                if (matchedLines.length >= MAX_MATCHES) {
+                    break;
+                }
+            }
+        }
+
+        if (matchedLines.length === 0) {
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);
+            return;
+        }
+
+        // Check if ALL matched lines are already bookmarked
+        const allBookmarked = matchedLines.every(line =>
+            this.bookmarkService.getBookmarkAt(editor.document.uri, line) !== undefined
+        );
+
+        if (allBookmarked) {
+            // Remove all matched bookmarks
+            let removedCount = 0;
+            for (const line of matchedLines) {
+                const b = this.bookmarkService.getBookmarkAt(editor.document.uri, line);
+                if (b) {
+                    this.bookmarkService.removeBookmark(b);
+                    removedCount++;
+                }
+            }
+            vscode.window.showInformationMessage(`Removed ${removedCount} bookmarks matching selection.`);
+        } else {
+            // Add bookmarks to all matched lines (that aren't already bookmarked)
+            const addedCount = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: selectedText });
+            if (matchedLines.length >= MAX_MATCHES) {
+                vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarksLimited.replace('{0}', addedCount.toString()).replace('{1}', MAX_MATCHES.toString()));
+            } else {
+                vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', addedCount.toString()));
+            }
         }
     }
 
@@ -262,4 +335,3 @@ export class LogBookmarkCommandManager {
         }
     }
 }
-

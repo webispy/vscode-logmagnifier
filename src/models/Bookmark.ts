@@ -5,4 +5,6 @@ export interface BookmarkItem {
     uri: vscode.Uri;
     line: number;
     content: string;
+    groupId: string; // ID for the addition group
+    matchText?: string; // The text that was matched or selected
 }

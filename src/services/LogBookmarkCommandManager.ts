@@ -30,7 +30,9 @@ export class LogBookmarkCommandManager {
         const editor = vscode.window.activeTextEditor;
         if (editor) {
             const line = editor.selection.active.line;
-            this.bookmarkService.addBookmark(editor, line);
+            const selection = editor.selection;
+            const selectedText = !selection.isEmpty ? editor.document.getText(selection) : undefined;
+            this.bookmarkService.addBookmark(editor, line, { matchText: selectedText });
         }
     }
 
@@ -77,7 +79,7 @@ export class LogBookmarkCommandManager {
         }
 
         if (matchedLines.length > 0) {
-            const addedCount = this.bookmarkService.addBookmarks(editor, matchedLines);
+            const addedCount = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: selectedText });
             if (matchedLines.length >= MAX_MATCHES_TO_ADD) {
                 vscode.window.showInformationMessage(`Added ${addedCount} bookmarks (Limited to first ${MAX_MATCHES_TO_ADD} matches).`);
             } else {
@@ -115,7 +117,7 @@ export class LogBookmarkCommandManager {
             regex.lastIndex = 0;
 
             if (regex.test(lineContent)) {
-                this.bookmarkService.addBookmark(editor, i);
+                this.bookmarkService.addBookmark(editor, i, { matchText: keyword });
                 count++;
             }
         }

@@ -6,6 +6,9 @@ import { Logger } from './Logger';
 
 export class LogBookmarkService implements vscode.Disposable {
     private _bookmarks: Map<string, BookmarkItem[]> = new Map();
+    // History stack of active bookmark IDs in each step
+    private _history: string[][] = [];
+    private _historyIndex: number = -1;
     private _onDidChangeBookmarks: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeBookmarks: vscode.Event<void> = this._onDidChangeBookmarks.event;
 
@@ -44,7 +47,8 @@ export class LogBookmarkService implements vscode.Disposable {
         }, null, context.subscriptions);
     }
 
-    public addBookmark(editor: vscode.TextEditor, line: number) {
+    public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string }) {
+        const matchText = options?.matchText;
         const uri = editor.document.uri;
         const key = uri.toString();
 
@@ -53,36 +57,38 @@ export class LogBookmarkService implements vscode.Disposable {
         }
 
         const list = this._bookmarks.get(key)!;
-        // Check if already exists
-        if (list.some(b => b.line === line)) {
+        // Check if already exists in current state (though we should check all for ID reuse)
+        const currentActiveIds = this.getActiveIds();
+        if (list.some(b => b.line === line && currentActiveIds.has(b.id))) {
             return;
         }
 
         const lineContent = editor.document.lineAt(line).text;
+        const groupId = Date.now().toString();
         const bookmark: BookmarkItem = {
             id: Date.now().toString() + Math.random().toString().slice(2),
             uri: uri,
             line: line,
-            content: lineContent.trim()
+            content: lineContent.trim(),
+            groupId: groupId,
+            matchText: matchText
         };
 
         list.push(bookmark);
         // Sort by line number
         list.sort((a, b) => a.line - b.line);
 
+        // Record new set of active IDs
+        currentActiveIds.add(bookmark.id);
+        this.pushToHistory(Array.from(currentActiveIds));
+
         this._onDidChangeBookmarks.fire();
-
-        // Update decorations for all visible editors displaying this document
-        vscode.window.visibleTextEditors.forEach(e => {
-            if (e.document.uri.toString() === uri.toString()) {
-                this.updateDecorations(e);
-            }
-        });
-
+        this.refreshAllDecorations();
         this.saveToState();
     }
 
-    public addBookmarks(editor: vscode.TextEditor, lines: number[]) {
+    public addBookmarks(editor: vscode.TextEditor, lines: number[], options?: { matchText?: string }) {
+        const matchText = options?.matchText;
         const uri = editor.document.uri;
         const key = uri.toString();
 
@@ -92,10 +98,12 @@ export class LogBookmarkService implements vscode.Disposable {
 
         const list = this._bookmarks.get(key)!;
         let addedCount = 0;
+        const currentActiveIds = this.getActiveIds();
+        const groupId = Date.now().toString();
 
         for (const line of lines) {
             // Check if already exists
-            if (list.some(b => b.line === line)) {
+            if (list.some(b => b.line === line && currentActiveIds.has(b.id))) {
                 continue;
             }
 
@@ -104,26 +112,21 @@ export class LogBookmarkService implements vscode.Disposable {
                 id: Date.now().toString() + Math.random().toString().slice(2),
                 uri: uri,
                 line: line,
-                content: lineContent.trim()
+                content: lineContent.trim(),
+                groupId: groupId,
+                matchText: matchText
             };
 
             list.push(bookmark);
+            currentActiveIds.add(bookmark.id);
             addedCount++;
         }
 
         if (addedCount > 0) {
-            // Sort by line number
             list.sort((a, b) => a.line - b.line);
-
+            this.pushToHistory(Array.from(currentActiveIds));
             this._onDidChangeBookmarks.fire();
-
-            // Update decorations for all visible editors displaying this document
-            vscode.window.visibleTextEditors.forEach(e => {
-                if (e.document.uri.toString() === uri.toString()) {
-                    this.updateDecorations(e);
-                }
-            });
-
+            this.refreshAllDecorations();
             this.saveToState();
         }
 
@@ -131,57 +134,123 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public removeBookmark(item: BookmarkItem) {
-        const key = item.uri.toString();
-        if (this._bookmarks.has(key)) {
-            const list = this._bookmarks.get(key)!;
-            const index = list.findIndex(b => b.id === item.id);
-            if (index !== -1) {
-                list.splice(index, 1);
-                if (list.length === 0) {
-                    this._bookmarks.delete(key);
+        const currentActiveIds = this.getActiveIds();
+        if (currentActiveIds.has(item.id)) {
+            currentActiveIds.delete(item.id);
+            this.pushToHistory(Array.from(currentActiveIds));
+            this._onDidChangeBookmarks.fire();
+            this.refreshAllDecorations();
+            this.saveToState();
+        }
+    }
+
+    public removeBookmarksForUri(uri: vscode.Uri) {
+        const key = uri.toString();
+        const items = this._bookmarks.get(key);
+        if (items) {
+            const currentActiveIds = this.getActiveIds();
+            let changed = false;
+            items.forEach(item => {
+                if (currentActiveIds.has(item.id)) {
+                    currentActiveIds.delete(item.id);
+                    changed = true;
                 }
+            });
+
+            if (changed) {
+                this.pushToHistory(Array.from(currentActiveIds));
                 this._onDidChangeBookmarks.fire();
-
-                // Update decorations for all visible editors displaying this document
-                vscode.window.visibleTextEditors.forEach(e => {
-                    if (e.document.uri.toString() === item.uri.toString()) {
-                        this.updateDecorations(e);
-                    }
-                });
-
+                this.refreshAllDecorations();
                 this.saveToState();
             }
         }
     }
 
-    public getBookmarks(): Map<string, BookmarkItem[]> {
-        return this._bookmarks;
+    private getActiveIds(): Set<string> {
+        if (this._historyIndex >= 0 && this._historyIndex < this._history.length) {
+            return new Set(this._history[this._historyIndex]);
+        }
+        return new Set();
     }
 
-    public removeBookmarksForUri(uri: vscode.Uri) {
-        const key = uri.toString();
-        if (this._bookmarks.has(key)) {
-            this._bookmarks.delete(key);
+    private pushToHistory(ids: string[]) {
+        // Clear future history if we were in a back state
+        if (this._historyIndex < this._history.length - 1) {
+            this._history = this._history.slice(0, this._historyIndex + 1);
+        }
+        this._history.push(ids);
+        this._historyIndex++;
+    }
+
+    public canGoBack(): boolean {
+        return this._historyIndex > 0;
+    }
+
+    public canGoForward(): boolean {
+        return this._historyIndex < this._history.length - 1;
+    }
+
+    public back() {
+        if (this.canGoBack()) {
+            this._historyIndex--;
             this._onDidChangeBookmarks.fire();
-
-            // Update decorations for all visible editors displaying this document
-            vscode.window.visibleTextEditors.forEach(e => {
-                if (e.document.uri.toString() === uri.toString()) {
-                    this.updateDecorations(e);
-                }
-            });
-
+            this.refreshAllDecorations();
             this.saveToState();
         }
     }
 
+    public forward() {
+        if (this.canGoForward()) {
+            this._historyIndex++;
+            this._onDidChangeBookmarks.fire();
+            this.refreshAllDecorations();
+            this.saveToState();
+        }
+    }
 
+    public getActiveLinesCount(): number {
+        const bookmarksMap = this.getBookmarks();
+        let totalLines = 0;
+        for (const items of bookmarksMap.values()) {
+            totalLines += items.length;
+        }
+        return totalLines;
+    }
+
+    public getHistoryGroupsCount(): number {
+        const bookmarksMap = this.getBookmarks();
+        const uniqueGroupIds = new Set<string>();
+        for (const items of bookmarksMap.values()) {
+            for (const item of items) {
+                if (item.groupId) {
+                    uniqueGroupIds.add(item.groupId);
+                }
+            }
+        }
+        return uniqueGroupIds.size;
+    }
+
+    private refreshAllDecorations() {
+        vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
+    }
+
+    public getBookmarks(): Map<string, BookmarkItem[]> {
+        const activeIds = this.getActiveIds();
+        const filteredMap = new Map<string, BookmarkItem[]>();
+        for (const [uri, items] of this._bookmarks) {
+            const activeItems = items.filter(item => activeIds.has(item.id));
+            if (activeItems.length > 0) {
+                filteredMap.set(uri, activeItems);
+            }
+        }
+        return filteredMap;
+    }
 
     private updateDecorations(editor: vscode.TextEditor) {
         const key = editor.document.uri.toString();
-        if (this._bookmarks.has(key)) {
-            const bookmarks = this._bookmarks.get(key)!;
-            const ranges = bookmarks.map(b => new vscode.Range(b.line, 0, b.line, 0));
+        const activeBookmarks = this.getBookmarks().get(key);
+        if (activeBookmarks) {
+            const ranges = activeBookmarks.map(b => new vscode.Range(b.line, 0, b.line, 0));
             editor.setDecorations(this.decorationType, ranges);
         } else {
             editor.setDecorations(this.decorationType, []);
@@ -198,30 +267,42 @@ export class LogBookmarkService implements vscode.Disposable {
         for (const [key, bookmarks] of this._bookmarks) {
             bookmarksData[key] = bookmarks.map(b => ({
                 id: b.id,
-                uri: b.uri.toString(), // Store URI as string
+                uri: b.uri.toString(),
                 line: b.line,
-                content: b.content
+                content: b.content,
+                groupId: b.groupId,
+                matchText: b.matchText
             }));
         }
         await this.context.globalState.update(Constants.GlobalState.Bookmarks, bookmarksData);
-        this.logger.info(`Saved bookmarks to state: ${Object.keys(bookmarksData).length} files.`);
+        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_history', {
+            history: this._history,
+            index: this._historyIndex
+        });
+        this.logger.info(`Saved bookmarks to state. History speed: ${this._historyIndex}/${this._history.length}`);
     }
 
     private loadFromState() {
         const bookmarksData = this.context.globalState.get<{ [key: string]: any[] }>(Constants.GlobalState.Bookmarks);
-        this.logger.info(`Loading bookmarks from state... Found: ${bookmarksData ? Object.keys(bookmarksData).length + ' files' : 'None'}`);
+        const historyData = this.context.globalState.get<{ history: string[][], index: number }>(Constants.GlobalState.Bookmarks + '_history');
+
         if (bookmarksData) {
             for (const key in bookmarksData) {
                 const bookmarks = bookmarksData[key].map(b => {
                     try {
+                        if (!b || typeof b !== 'object') { return null; }
+                        if (!b.id || !b.uri) { return null; }
+
                         return {
                             id: b.id,
-                            uri: vscode.Uri.parse(b.uri), // Restore URI
-                            line: b.line,
-                            content: b.content
+                            uri: vscode.Uri.parse(b.uri),
+                            line: typeof b.line === 'number' ? b.line : 0,
+                            content: b.content || '',
+                            groupId: b.groupId || Date.now().toString(), // Fallback for old bookmarks
+                            matchText: b.matchText
                         } as BookmarkItem;
                     } catch (e) {
-                        console.error('Failed to restore bookmark uri', b.uri, e);
+                        this.logger.error(`Error parsing bookmark from state: ${e}`);
                         return null;
                     }
                 }).filter(b => b !== null) as BookmarkItem[];
@@ -230,11 +311,27 @@ export class LogBookmarkService implements vscode.Disposable {
                     this._bookmarks.set(key, bookmarks);
                 }
             }
-            // Notify that bookmarks are loaded, though UI might not be ready.
-            // But existing open editors will get decorations via onDidChangeVisibleTextEditors callback if they become active/visible?
-            // Actually, we should probably manually trigger an update if there are active editors right now.
-            vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
-            this._onDidChangeBookmarks.fire();
         }
+
+        if (historyData && Array.isArray(historyData.history)) {
+            // Sanitize history: only keep IDs that actually exist in _bookmarks
+            const allValidIds = new Set<string>();
+            for (const items of this._bookmarks.values()) {
+                items.forEach(item => allValidIds.add(item.id));
+            }
+
+            this._history = historyData.history.map(step =>
+                step.filter(id => allValidIds.has(id))
+            );
+            this._historyIndex = typeof historyData.index === 'number' ? historyData.index : this._history.length - 1;
+        } else if (this._bookmarks.size > 0) {
+            // Reconstruct initial history if missing
+            const allIds = Array.from(this._bookmarks.values()).flatMap(items => items.map(i => i.id));
+            this._history = [allIds];
+            this._historyIndex = 0;
+        }
+
+        vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
+        this._onDidChangeBookmarks.fire();
     }
 }

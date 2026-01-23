@@ -176,25 +176,72 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public removeBookmarkGroup(groupId: string) {
-        const currentActiveIds = this.getActiveIds();
-        const bookmarksMap = this.getBookmarks();
-        let changed = false;
+        const removedIds = new Set<string>();
 
-        for (const items of bookmarksMap.values()) {
-            for (const item of items) {
-                if (item.groupId === groupId && currentActiveIds.has(item.id)) {
-                    currentActiveIds.delete(item.id);
-                    changed = true;
+        // 1. Remove from master bookmark list
+        for (const [uri, items] of this._bookmarks.entries()) {
+            const filtered = items.filter(item => {
+                if (item.groupId === groupId) {
+                    removedIds.add(item.id);
+                    return false;
+                }
+                return true;
+            });
+
+            if (filtered.length !== items.length) {
+                if (filtered.length === 0) {
+                    this._bookmarks.delete(uri);
+                } else {
+                    this._bookmarks.set(uri, filtered);
                 }
             }
         }
 
-        if (changed) {
-            this.pushToHistory(Array.from(currentActiveIds));
-            this._onDidChangeBookmarks.fire();
-            this.refreshAllDecorations();
-            this.saveToState();
+        if (removedIds.size === 0) {
+            return;
         }
+
+        // 2. Purge from all history steps
+        const currentHistoryStep = this._historyIndex >= 0 ? this._history[this._historyIndex] : [];
+        const currentStepIds = new Set(currentHistoryStep);
+        let currentStepAffected = false;
+
+        const newHistory: string[][] = [];
+        for (let i = 0; i < this._history.length; i++) {
+            const step = this._history[i];
+            const filteredStep = step.filter(id => !removedIds.has(id));
+
+            if (i === this._historyIndex && filteredStep.length !== step.length) {
+                currentStepAffected = true;
+            }
+
+            // Deduplicate: don't add if it's identical to the previous step after filtering
+            if (newHistory.length === 0 || JSON.stringify(newHistory[newHistory.length - 1]) !== JSON.stringify(filteredStep)) {
+                newHistory.push(filteredStep);
+            }
+        }
+
+        // 3. Update history and index
+        // Find where the current index should point to in the new history
+        // If the current step was modified or removed, we try to find a reasonable mapping
+        // Simplest: if we purged, we just update the whole history and keep index bounded
+
+        const oldIndex = this._historyIndex;
+        this._history = newHistory;
+
+        // Adjust index: if history shrank, make sure index is still valid
+        if (this._history.length === 0) {
+            this._historyIndex = -1;
+        } else {
+            this._historyIndex = Math.min(oldIndex, this._history.length - 1);
+            if (this._historyIndex < 0 && this._history.length > 0) {
+                this._historyIndex = 0;
+            }
+        }
+
+        this._onDidChangeBookmarks.fire();
+        this.refreshAllDecorations();
+        this.saveToState();
     }
 
     private getActiveIds(): Set<string> {

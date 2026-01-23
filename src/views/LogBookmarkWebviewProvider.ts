@@ -141,7 +141,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             }
         }
 
-        const tagsHtml = Array.from(groupMap.entries()).map(([groupId, data]) => `
+        const tagsHtml = Array.from(groupMap.entries())
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([groupId, data]) => `
             <span class="tag" title="${data.keyword} (${data.count} lines)">
                 <span class="tag-label">${data.keyword}</span>
                 <span class="tag-remove" onclick="removeGroup('${groupId}', event)">×</span>

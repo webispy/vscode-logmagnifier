@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { Logger } from './Logger';
 import { SourceMapService } from './SourceMapService';
 import { Constants } from '../constants';
+import { JsonTreeWebview } from '../views/JsonTreeWebview';
+import { LenientJsonParser } from './LenientJsonParser';
 
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';
@@ -11,7 +13,13 @@ interface ExtractedJson {
 }
 
 export class JsonPrettyService {
-    constructor(private logger: Logger, private sourceMapService: SourceMapService) { }
+    private lenientParser = new LenientJsonParser();
+
+    constructor(
+        private logger: Logger,
+        private sourceMapService: SourceMapService,
+        private jsonTreeWebview: JsonTreeWebview
+    ) { }
 
     public async execute() {
         try {
@@ -57,7 +65,31 @@ export class JsonPrettyService {
             this.sourceMapService.register(doc.uri, editor.document.uri, lineMapping);
             this.sourceMapService.updateContextKey(vscode.window.activeTextEditor);
 
-            this.logger.info(`JsonPrettyService: Processed ${jsons.length} objects.`);
+            // Update Tree View (Webview)
+            // Prioritize valid JSONs, but fallback to lenient parsing for invalid ones
+            // JSON Webview is now always enabled for this command
+            // Process all extracted JSONs for the Webview
+            const results = jsons.map(json => {
+                if (json.type === 'valid') {
+                    return {
+                        data: LenientJsonParser.toParsedNode(json.parsed),
+                        status: 'valid' as const
+                    };
+                } else {
+                    return {
+                        data: this.lenientParser.parse(json.text),
+                        status: 'invalid' as const
+                    };
+                }
+            });
+
+            if (results.length > 0) {
+                // Pass array of results. We update the signature of show later.
+                // TypeScript might complain until we update the interface.
+                this.jsonTreeWebview.show(results, 'JSON Preview');
+            }
+
+
 
         } catch (error) {
             this.logger.error(`JsonPrettyService error: ${error}`);

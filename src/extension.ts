@@ -15,6 +15,7 @@ import { LogBookmarkService } from './services/LogBookmarkService';
 import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
 import { LogBookmarkCommandManager } from './services/LogBookmarkCommandManager';
 import { JsonPrettyService } from './services/JsonPrettyService';
+import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { SourceMapService } from './services/SourceMapService';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
 import { Constants } from './constants';
@@ -88,7 +89,9 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Initialize Command Manager (Handles all command registrations)
-	const jsonPrettyService = new JsonPrettyService(logger, sourceMapService);
+	const jsonTreeWebview = new JsonTreeWebview(context.extensionUri);
+
+	const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview);
 	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
 
 	// ADB Devices
@@ -110,7 +113,11 @@ export function activate(context: vscode.ExtensionContext) {
 
 	new LogBookmarkCommandManager(context, bookmarkService, highlightService);
 
-	vscode.window.createTreeView(Constants.Views.QuickAccess, { treeDataProvider: quickAccessProvider });
+	logger.info(`Registering QuickAccessProvider with view ID: ${Constants.Views.QuickAccess}`);
+	context.subscriptions.push(
+		vscode.window.registerTreeDataProvider(Constants.Views.QuickAccess, quickAccessProvider)
+	);
+	logger.info('QuickAccessProvider registered');
 
 	// Listen for selection changes to trigger navigation animation (flash)
 	context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {

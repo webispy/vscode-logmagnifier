@@ -59,6 +59,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     case 'toggleWordWrap':
                         this._bookmarkService.toggleWordWrap();
                         break;
+                    case 'mouseEnter':
+                        vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, true);
+                        break;
+                    case 'mouseLeave':
+                        vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);
+                        break;
                 }
             });
 
@@ -519,6 +525,14 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     function toggleWordWrap() {
                          vscode.postMessage({ type: 'toggleWordWrap' });
                     }
+
+                    // Mouse tracking for shortcut context
+                    window.addEventListener('mouseenter', () => {
+                        vscode.postMessage({ type: 'mouseEnter' });
+                    });
+                    window.addEventListener('mouseleave', () => {
+                        vscode.postMessage({ type: 'mouseLeave' });
+                    });
                 </script>
             </body>
             </html>`;

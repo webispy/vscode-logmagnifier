@@ -270,6 +270,7 @@ export const Constants = {
 
     ContextKeys: {
         PrependLineNumbersEnabled: 'logmagnifier.prependLineNumbersEnabled',
+        BookmarkMouseOver: 'logmagnifier.bookmark.mouseOver',
     },
 
     GlobalState: {

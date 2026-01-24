@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { Constants } from '../constants';
+import { Logger } from '../services/Logger';
 
 export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
@@ -61,6 +62,8 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'mouseEnter':
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, true);
+                        // Brief status bar message to confirm mouse registration
+                        vscode.window.setStatusBarMessage('LogMagnifier: Bookmark Focus', 1000);
                         break;
                     case 'mouseLeave':
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);
@@ -441,7 +444,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     }
                 </style>
             </head>
-            <body>
+            <body onmouseenter="vscode.postMessage({type:'mouseEnter'})" onmouseleave="vscode.postMessage({type:'mouseLeave'})">
                 <div class="toolbar">
                     <button class="nav-btn" onclick="back()" title="Back" ${canGoBack ? '' : 'disabled'}>
                         <svg viewBox="0 0 16 16"><path fill="currentColor" d="M11.354 1.646l-6 6 6 6 .708-.708L6.773 7.646l5.289-5.292z"/></svg>
@@ -525,14 +528,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     function toggleWordWrap() {
                          vscode.postMessage({ type: 'toggleWordWrap' });
                     }
-
-                    // Mouse tracking for shortcut context
-                    window.addEventListener('mouseenter', () => {
-                        vscode.postMessage({ type: 'mouseEnter' });
-                    });
-                    window.addEventListener('mouseleave', () => {
-                        vscode.postMessage({ type: 'mouseLeave' });
-                    });
                 </script>
             </body>
             </html>`;

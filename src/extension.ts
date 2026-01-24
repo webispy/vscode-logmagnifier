@@ -110,6 +110,9 @@ export function activate(context: vscode.ExtensionContext) {
 
 	new LogBookmarkCommandManager(context, bookmarkService, highlightService);
 
+	// Initialize mouse over context
+	vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);
+
 	vscode.window.createTreeView(Constants.Views.QuickAccess, { treeDataProvider: quickAccessProvider });
 
 	// Listen for selection changes to trigger navigation animation (flash)

@@ -148,6 +148,7 @@ export const Constants = {
         CopyAllBookmarks: 'logmagnifier.copyAllBookmarks',
         OpenAllBookmarks: 'logmagnifier.openAllBookmarks',
         RemoveAllBookmarks: 'logmagnifier.removeAllBookmarks',
+        ToggleBookmarkWordWrap: 'logmagnifier.bookmark.toggleWordWrap',
 
         // Other shortcuts / Context menu
         CopyGroupEnabledItems: 'logmagnifier.copyGroupEnabledItems',

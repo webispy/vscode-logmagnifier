@@ -29,6 +29,7 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyAllBookmarks, () => this.copyAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenAllBookmarks, () => this.openAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveAllBookmarks, () => this.removeAllBookmarks()));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmarkWordWrap, () => this.toggleBookmarkWordWrap()));
         context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.removeBookmarkGroup', (groupId: string) => this.removeBookmarkGroup(groupId)));
     }
 
@@ -77,6 +78,10 @@ export class LogBookmarkCommandManager {
 
     private removeAllBookmarks() {
         this.bookmarkService.removeAllBookmarks();
+    }
+
+    private toggleBookmarkWordWrap() {
+        this.bookmarkService.toggleWordWrap();
     }
 
     private addBookmark() {

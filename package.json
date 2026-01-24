@@ -447,6 +447,11 @@
         "command": "logmagnifier.toggleBookmark",
         "key": "ctrl+cmd+b",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "logmagnifier.bookmark.toggleWordWrap",
+        "key": "ctrl+cmd+w",
+        "when": "focusedView == logmagnifier-bookmark"
       }
     ],
     "commands": [
@@ -971,6 +976,11 @@
       {
         "command": "logmagnifier.toggleBookmark",
         "title": "Toggle Line Bookmark",
+        "category": "LogMagnifier"
+      },
+      {
+        "command": "logmagnifier.bookmark.toggleWordWrap",
+        "title": "Toggle Bookmark Word Wrap",
         "category": "LogMagnifier"
       }
     ],

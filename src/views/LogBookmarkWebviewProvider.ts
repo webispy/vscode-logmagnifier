@@ -56,6 +56,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     case 'removeGroup':
                         vscode.commands.executeCommand('logmagnifier.removeBookmarkGroup', data.groupId);
                         break;
+                    case 'toggleWordWrap':
+                        this._bookmarkService.toggleWordWrap();
+                        break;
                 }
             });
 
@@ -222,6 +225,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const canGoForward = (this._bookmarkService as any).canGoForward();
         const lineCount = (this._bookmarkService as any).getActiveLinesCount();
         const groupCount = (this._bookmarkService as any).getHistoryGroupsCount();
+        const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
 
         return `<!DOCTYPE html>
             <html lang="en">
@@ -240,6 +244,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         display: flex;
                         flex-direction: column;
                         height: 100vh;
+                        overflow: hidden;
                     }
                     .toolbar {
                         display: flex;
@@ -341,6 +346,13 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         width: 12px;
                         height: 12px;
                     }
+                    .action-btn.active {
+                        background-color: var(--vscode-button-secondaryBackground);
+                        color: var(--vscode-button-secondaryForeground);
+                    }
+                    .action-btn.active:hover {
+                        background-color: var(--vscode-button-secondaryHoverBackground);
+                    }
                     .bookmark-group {
                         margin-bottom: 8px;
                         border-bottom: 1px solid var(--vscode-panel-border);
@@ -412,6 +424,10 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         text-underline-offset: 2px;
                         text-decoration-color: var(--vscode-editorActionCodeAction-foreground);
                     }
+                    .word-wrap .log-line {
+                        white-space: pre-wrap;
+                        word-break: break-all;
+                    }
                     .empty-state {
                         padding: 20px;
                         text-align: center;
@@ -433,6 +449,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         ${tagsHtml}
                     </div>
                     
+                    <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" onclick="toggleWordWrap()" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
+                        <svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M1.5 3H14.5V4H1.5V3ZM1.5 6H11.5V7H1.5V6ZM1.5 9H8.5V10H1.5V9ZM2 12.5C2 11.6716 2.67157 11 3.5 11H14V12H3.5C3.22386 12 3 12.2239 3 12.5C3 12.7761 3.22386 13 3.5 13H14V14H3.5C2.67157 14 2 13.3284 2 12.5Z"/></svg>
+                    </button>
                     <button class="action-btn" onclick="copyAll()" title="Copy All Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                         <svg viewBox="0 0 16 16"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
                     </button>
@@ -443,7 +462,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         <svg viewBox="0 0 16 16"><path fill="currentColor" d="M11 1.75V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.75 1.75 0 0 1 10.595 15h-5.19a1.75 1.75 0 0 1-1.741-1.575l-.66-6.6a.75.75 0 1 1 1.492-.15ZM6.5 1.75V3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Z"/></svg>
                     </button>
                 </div>
-                <div class="content">
+                <div class="content ${wordWrapEnabled ? 'word-wrap' : ''}">
                     ${finalHtml}
                 </div>
                 <script>
@@ -496,6 +515,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     function removeGroup(groupId, event) {
                          if (event) event.stopPropagation();
                          vscode.postMessage({ type: 'removeGroup', groupId: groupId });
+                    }
+                    function toggleWordWrap() {
+                         vscode.postMessage({ type: 'toggleWordWrap' });
                     }
                 </script>
             </body>

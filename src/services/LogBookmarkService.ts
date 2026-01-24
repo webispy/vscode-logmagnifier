@@ -12,6 +12,8 @@ export class LogBookmarkService implements vscode.Disposable {
     private _onDidChangeBookmarks: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeBookmarks: vscode.Event<void> = this._onDidChangeBookmarks.event;
 
+    private _isWordWrapEnabled: boolean = false;
+
     private decorationType: vscode.TextEditorDecorationType;
 
     private context: vscode.ExtensionContext;
@@ -315,6 +317,16 @@ export class LogBookmarkService implements vscode.Disposable {
         return totalLines;
     }
 
+    public isWordWrapEnabled(): boolean {
+        return this._isWordWrapEnabled;
+    }
+
+    public toggleWordWrap() {
+        this._isWordWrapEnabled = !this._isWordWrapEnabled;
+        this._onDidChangeBookmarks.fire();
+        this.saveToState();
+    }
+
     public getHistoryGroupsCount(): number {
         const bookmarksMap = this.getBookmarks();
         const uniqueGroupIds = new Set<string>();
@@ -377,6 +389,7 @@ export class LogBookmarkService implements vscode.Disposable {
             history: this._history,
             index: this._historyIndex
         });
+        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_wordWrap', this._isWordWrapEnabled);
         this.logger.info(`Saved bookmarks to state. History speed: ${this._historyIndex}/${this._history.length}`);
     }
 
@@ -431,6 +444,11 @@ export class LogBookmarkService implements vscode.Disposable {
             const allIds = Array.from(this._bookmarks.values()).flatMap(items => items.map(i => i.id));
             this._history = [allIds];
             this._historyIndex = 0;
+        }
+
+        const wordWrapData = this.context.globalState.get<boolean>(Constants.GlobalState.Bookmarks + '_wordWrap');
+        if (wordWrapData !== undefined) {
+            this._isWordWrapEnabled = wordWrapData;
         }
 
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));

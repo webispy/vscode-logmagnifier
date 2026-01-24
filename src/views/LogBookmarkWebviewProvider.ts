@@ -62,8 +62,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'mouseEnter':
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, true);
-                        // Brief status bar message to confirm mouse registration
-                        vscode.window.setStatusBarMessage('LogMagnifier: Bookmark Focus', 1000);
                         break;
                     case 'mouseLeave':
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);

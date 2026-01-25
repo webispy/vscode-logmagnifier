@@ -181,6 +181,7 @@ export const Constants = {
         RemoveBookmarkFile: 'logmagnifier.removeBookmarkFile',
         CopyBookmarkFile: 'logmagnifier.copyBookmarkFile',
         OpenBookmarkFile: 'logmagnifier.openBookmarkFile',
+        RemoveBookmarkGroup: 'logmagnifier.removeBookmarkGroup',
 
         // ... (existing commands)
     },

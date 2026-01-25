@@ -53,14 +53,14 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'copyAll':
                         if (data.uriString) {
-                            vscode.commands.executeCommand('logmagnifier.copyBookmarkFile', vscode.Uri.parse(data.uriString));
+                            vscode.commands.executeCommand(Constants.Commands.CopyBookmarkFile, vscode.Uri.parse(data.uriString));
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.CopyAllBookmarks);
                         }
                         break;
                     case 'openAll':
                         if (data.uriString) {
-                            vscode.commands.executeCommand('logmagnifier.openBookmarkFile', vscode.Uri.parse(data.uriString));
+                            vscode.commands.executeCommand(Constants.Commands.OpenBookmarkFile, vscode.Uri.parse(data.uriString));
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.OpenAllBookmarks);
                         }
@@ -75,7 +75,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         this._bookmarkService.forward(data.uriString);
                         break;
                     case 'removeGroup':
-                        vscode.commands.executeCommand('logmagnifier.removeBookmarkGroup', data.groupId);
+                        vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkGroup, data.groupId);
                         break;
                     case 'focusFile':
                         this.focusFile(data.uriString);
@@ -117,7 +117,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             ...item,
             uri: vscode.Uri.parse(item.uriString)
         };
-        vscode.commands.executeCommand('logmagnifier.jumpToBookmark', hydratedItem);
+        vscode.commands.executeCommand(Constants.Commands.JumpToBookmark, hydratedItem);
     }
 
     private removeBookmark(item: any) {
@@ -126,7 +126,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             ...item,
             uri: vscode.Uri.parse(item.uriString)
         };
-        vscode.commands.executeCommand('logmagnifier.removeBookmark', hydratedItem);
+        vscode.commands.executeCommand(Constants.Commands.RemoveBookmark, hydratedItem);
     }
 
     private async focusFile(uriStr: string) {
@@ -144,19 +144,19 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     private removeBookmarkFile(uriStr: string) {
         if (uriStr) {
-            vscode.commands.executeCommand('logmagnifier.removeBookmarkFile', vscode.Uri.parse(uriStr));
+            vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkFile, vscode.Uri.parse(uriStr));
         }
     }
 
     private copyBookmarkFile(uriStr: string, withLineNumber: boolean) {
         if (uriStr) {
-            vscode.commands.executeCommand('logmagnifier.copyBookmarkFile', vscode.Uri.parse(uriStr), withLineNumber);
+            vscode.commands.executeCommand(Constants.Commands.CopyBookmarkFile, vscode.Uri.parse(uriStr), withLineNumber);
         }
     }
 
     private openBookmarkFile(uriStr: string, withLineNumber: boolean) {
         if (uriStr) {
-            vscode.commands.executeCommand('logmagnifier.openBookmarkFile', vscode.Uri.parse(uriStr), withLineNumber);
+            vscode.commands.executeCommand(Constants.Commands.OpenBookmarkFile, vscode.Uri.parse(uriStr), withLineNumber);
         }
     }
 
@@ -287,7 +287,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                  ${tagsHtml}
                             </div>
                         </div>
-                        <div class="header-right">
+                        <div class="file-actions">
                             <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" onclick="toggleWordWrap()" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M1.5 3H14.5V4H1.5V3ZM1.5 6H11.5V7H1.5V6ZM1.5 9H8.5V10H1.5V9ZM2 12.5C2 11.6716 2.67157 11 3.5 11H14V12H3.5C3.22386 12 3 12.2239 3 12.5C3 12.7761 3.22386 13 3.5 13H14V14H3.5C2.67157 14 2 13.3284 2 12.5Z"/></svg>
                             </button>
@@ -344,7 +344,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         z-index: 100;
                         gap: 4px;
                     }
-                    .header-left, .header-right {
+                    .header-left, .file-actions {
                         display: flex;
                         align-items: center;
                         gap: 2px;

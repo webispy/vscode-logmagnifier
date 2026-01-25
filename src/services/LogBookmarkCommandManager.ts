@@ -22,15 +22,15 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddMatchListToBookmark, (filter: FilterItem) => this.addMatchListToBookmark(filter)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionMatchesToBookmark, () => this.addSelectionMatchesToBookmark()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmark, () => this.toggleBookmark()));
-        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.removeBookmarkFile', (uri: vscode.Uri) => this.removeBookmarkFile(uri)));
-        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.copyBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.copyBookmarkFile(uri, withLineNumber)));
-        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.openBookmarkFile', (uri: vscode.Uri, withLineNumber: boolean) => this.openBookmarkFile(uri, withLineNumber)));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmarkFile, (uri: vscode.Uri) => this.removeBookmarkFile(uri)));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyBookmarkFile, (uri: vscode.Uri, withLineNumber: boolean) => this.copyBookmarkFile(uri, withLineNumber)));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenBookmarkFile, (uri: vscode.Uri, withLineNumber: boolean) => this.openBookmarkFile(uri, withLineNumber)));
 
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyAllBookmarks, () => this.copyAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenAllBookmarks, () => this.openAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveAllBookmarks, () => this.removeAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmarkWordWrap, () => this.toggleBookmarkWordWrap()));
-        context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.removeBookmarkGroup', (groupId: string) => this.removeBookmarkGroup(groupId)));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmarkGroup, (groupId: string) => this.removeBookmarkGroup(groupId)));
     }
 
     private removeBookmarkGroup(groupId: string) {

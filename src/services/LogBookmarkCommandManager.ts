@@ -88,17 +88,24 @@ export class LogBookmarkCommandManager {
 
     private addBookmark() {
         const editor = vscode.window.activeTextEditor;
-        if (editor) {
-            const line = editor.selection.active.line;
-            const selection = editor.selection;
-            const selectedText = !selection.isEmpty ? editor.document.getText(selection) : undefined;
-            this.bookmarkService.addBookmark(editor, line, { matchText: selectedText });
+        if (!editor) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
+            return;
+        }
+
+        const line = editor.selection.active.line;
+        const selection = editor.selection;
+        const selectedText = !selection.isEmpty ? editor.document.getText(selection) : undefined;
+        const result = this.bookmarkService.addBookmark(editor, line, { matchText: selectedText });
+        if (!result.success && result.message) {
+            vscode.window.showErrorMessage(result.message);
         }
     }
 
     private async toggleBookmark() {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
             return;
         }
 
@@ -106,7 +113,10 @@ export class LogBookmarkCommandManager {
         if (selection.isEmpty) {
             // Case 1: Single line toggle
             const line = selection.active.line;
-            this.bookmarkService.toggleBookmark(editor, line);
+            const result = this.bookmarkService.toggleBookmark(editor, line);
+            if (!result.success && result.message) {
+                vscode.window.showErrorMessage(result.message);
+            }
             return;
         }
 
@@ -171,6 +181,7 @@ export class LogBookmarkCommandManager {
     private async addSelectionMatchesToBookmark() {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
             return;
         }
 

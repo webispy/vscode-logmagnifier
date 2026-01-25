@@ -8,3 +8,8 @@ export interface BookmarkItem {
     groupId: string; // ID for the addition group
     matchText?: string; // The text that was matched or selected
 }
+
+export interface BookmarkResult {
+    success: boolean;
+    message?: string;
+}

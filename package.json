@@ -310,11 +310,6 @@
             "default": false,
             "description": "Enable highlighting for Regex filters in the editor."
           },
-          "logmagnifier.editor.navigationAnimation": {
-            "type": "boolean",
-            "default": true,
-            "description": "Enable visual flash animation when navigating to search matches."
-          },
           "logmagnifier.regex.highlightColor": {
             "anyOf": [
               {

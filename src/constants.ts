@@ -103,7 +103,7 @@ export const Constants = {
         ToggleWordWrap: 'logmagnifier.toggleWordWrap',
         ToggleMinimap: 'logmagnifier.toggleMinimap',
         ToggleStickyScroll: 'logmagnifier.toggleStickyScroll',
-        ToggleNavigationAnimation: 'logmagnifier.toggleNavigationAnimation',
+
         ToggleOccurrencesHighlight: 'logmagnifier.toggleOccurrencesHighlight',
         ToggleFileSizeUnit: 'logmagnifier.toggleFileSizeUnit',
 
@@ -213,7 +213,6 @@ export const Constants = {
             WordWrap: 'wordWrap',
             MinimapEnabled: 'minimap.enabled',
             StickyScrollEnabled: 'stickyScroll.enabled',
-            NavigationAnimation: 'editor.navigationAnimation',
             RemoveMatchesMaxLines: 'removeMatches.maxLines',
             LargeFileOptimizations: 'largeFileOptimizations',
         },
@@ -278,7 +277,7 @@ export const Constants = {
         WordWrap: 'Word Wrap',
         Minimap: 'Minimap',
         StickyScroll: 'Sticky Scroll',
-        NavigationAnimation: 'Navigation Animation',
+
         OccurrencesHighlight: 'Occurrences Highlight',
         FileSize: 'File Size',
         Bytes: 'Bytes',

@@ -387,12 +387,7 @@ export class HighlightService implements vscode.Disposable {
             return;
         }
 
-        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
-        const enableAnimation = config.get<boolean>(Constants.Configuration.Editor.NavigationAnimation) || false;
 
-        if (!enableAnimation) {
-            return;
-        }
 
         // Cancel previous animation if active
         if (this.activeFlashTimeout) {

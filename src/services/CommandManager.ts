@@ -618,12 +618,7 @@ export class CommandManager {
         });
 
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleNavigationAnimation, async () => {
-            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
-            const current = config.get<boolean>(Constants.Configuration.Editor.NavigationAnimation);
-            await config.update(Constants.Configuration.Editor.NavigationAnimation, !current, vscode.ConfigurationTarget.Global);
-            this.quickAccessProvider.refresh();
-        }));
+
 
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateFilter, (item: any) => {

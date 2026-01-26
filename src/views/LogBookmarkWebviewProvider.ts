@@ -53,14 +53,16 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'copyAll':
                         if (data.uriString) {
-                            vscode.commands.executeCommand(Constants.Commands.CopyBookmarkFile, vscode.Uri.parse(data.uriString));
+                            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
+                            vscode.commands.executeCommand(Constants.Commands.CopyBookmarkFile, vscode.Uri.parse(data.uriString), withLn);
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.CopyAllBookmarks);
                         }
                         break;
                     case 'openAll':
                         if (data.uriString) {
-                            vscode.commands.executeCommand(Constants.Commands.OpenBookmarkFile, vscode.Uri.parse(data.uriString));
+                            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
+                            vscode.commands.executeCommand(Constants.Commands.OpenBookmarkFile, vscode.Uri.parse(data.uriString), withLn);
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.OpenAllBookmarks);
                         }
@@ -98,6 +100,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         } else {
                             this._foldedUris.add(data.uriString);
                         }
+                        break;
+                    case 'toggleLineNumbers':
+                        this._bookmarkService.toggleIncludeLineNumbers(data.uriString);
                         break;
                 }
             });
@@ -183,12 +188,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
         const sortedUris = Array.from(bookmarksMap.keys()).sort();
 
+        const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
         const itemsMap: Record<string, any> = {};
         let filesHtml = '';
 
-        const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
-
         for (const uriStr of sortedUris) {
+            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
             const items = bookmarksMap.get(uriStr)!;
             const filename = uriStr.split('/').pop() || 'Unknown File';
             const displayFilename = filename.length > 15 ? filename.substring(0, 15) + '...' : filename;
@@ -290,6 +295,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         <div class="file-actions">
                             <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" onclick="toggleWordWrap()" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M1.5 3H14.5V4H1.5V3ZM1.5 6H11.5V7H1.5V6ZM1.5 9H8.5V10H1.5V9ZM2 12.5C2 11.6716 2.67157 11 3.5 11H14V12H3.5C3.22386 12 3 12.2239 3 12.5C3 12.7761 3.22386 13 3.5 13H14V14H3.5C2.67157 14 2 13.3284 2 12.5Z"/></svg>
+                            </button>
+                            <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" onclick="toggleLineNumbers('${uriStr}')" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
+                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/><circle fill="currentColor" cx="4" cy="3.5" r="1"/><circle fill="currentColor" cx="4" cy="6.5" r="1"/><circle fill="currentColor" cx="4" cy="9.5" r="1"/><circle fill="currentColor" cx="4" cy="12.5" r="1"/></svg>
                             </button>
                             <button class="action-btn" onclick="copyFile('${uriStr}')" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
@@ -641,6 +649,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     }
                     function toggleWordWrap() {
                          vscode.postMessage({ type: 'toggleWordWrap' });
+                    }
+                    function toggleLineNumbers(uriStr) {
+                         vscode.postMessage({ type: 'toggleLineNumbers', uriString: uriStr });
                     }
                     function focusFile(uriString) {
                          vscode.postMessage({ type: 'focusFile', uriString: uriString });

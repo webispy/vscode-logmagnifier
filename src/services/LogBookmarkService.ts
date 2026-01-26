@@ -15,6 +15,7 @@ export class LogBookmarkService implements vscode.Disposable {
     private _onDidAddBookmark: vscode.EventEmitter<vscode.Uri> = new vscode.EventEmitter<vscode.Uri>();
     public readonly onDidAddBookmark: vscode.Event<vscode.Uri> = this._onDidAddBookmark.event;
 
+    private _includeLineNumbers: Map<string, boolean> = new Map();
     private _isWordWrapEnabled: boolean = false;
 
     private decorationType: vscode.TextEditorDecorationType;
@@ -357,6 +358,17 @@ export class LogBookmarkService implements vscode.Disposable {
         this.saveToState();
     }
 
+    public isIncludeLineNumbersEnabled(uriKey: string): boolean {
+        return this._includeLineNumbers.get(uriKey) || false;
+    }
+
+    public toggleIncludeLineNumbers(uriKey: string) {
+        const current = this.isIncludeLineNumbersEnabled(uriKey);
+        this._includeLineNumbers.set(uriKey, !current);
+        this._onDidChangeBookmarks.fire();
+        this.saveToState();
+    }
+
     public getHistoryGroupsCount(): number {
         // Legacy/Global count
         let total = 0;
@@ -430,8 +442,13 @@ export class LogBookmarkService implements vscode.Disposable {
         const indicesObj: Record<string, number> = {};
         for (const [k, v] of this._historyIndices.entries()) { indicesObj[k] = v; }
 
+        // Convert _includeLineNumbers Map to Object for storage
+        const lnObj: Record<string, boolean> = {};
+        for (const [k, v] of this._includeLineNumbers.entries()) { lnObj[k] = v; }
+
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_history_map', historyObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_indices_map', indicesObj);
+        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_include_ln_map', lnObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_wordWrap', this._isWordWrapEnabled);
         this.logger.info(`Saved bookmarks to state. Files with history: ${this._history.size}`);
     }
@@ -474,6 +491,13 @@ export class LogBookmarkService implements vscode.Disposable {
 
         const historyMapData = this.context.globalState.get<Record<string, string[][]>>(Constants.GlobalState.Bookmarks + '_history_map');
         const indicesMapData = this.context.globalState.get<Record<string, number>>(Constants.GlobalState.Bookmarks + '_indices_map');
+        const lnMapData = this.context.globalState.get<Record<string, boolean>>(Constants.GlobalState.Bookmarks + '_include_ln_map');
+
+        if (lnMapData) {
+            for (const key in lnMapData) {
+                this._includeLineNumbers.set(key, lnMapData[key]);
+            }
+        }
 
         if (historyMapData && indicesMapData) {
             for (const key in historyMapData) {

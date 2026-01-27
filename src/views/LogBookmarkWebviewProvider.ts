@@ -192,6 +192,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const itemsMap: Record<string, any> = {};
         let filesHtml = '';
 
+        const toggleLnIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'list-ordered.svg'));
+        const toggleWordWrapIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'word-wrap.svg'));
+        const removeFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'trash.svg'));
+        const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'copy.svg'));
+        const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'link-external.svg'));
+
         for (const uriStr of sortedUris) {
             const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
             const items = bookmarksMap.get(uriStr)!;
@@ -294,19 +300,19 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         </div>
                         <div class="file-actions">
                             <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" onclick="toggleWordWrap()" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" fill-rule="evenodd" clip-rule="evenodd" d="M1.5 3H14.5V4H1.5V3ZM1.5 6H11.5V7H1.5V6ZM1.5 9H8.5V10H1.5V9ZM2 12.5C2 11.6716 2.67157 11 3.5 11H14V12H3.5C3.22386 12 3 12.2239 3 12.5C3 12.7761 3.22386 13 3.5 13H14V14H3.5C2.67157 14 2 13.3284 2 12.5Z"/></svg>
+                                <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleWordWrapIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                             <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" onclick="toggleLineNumbers('${uriStr}')" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M2 3h12v1H2V3zm0 3h12v1H2V6zm0 3h12v1H2V9zm0 3h12v1H2v-1z"/><circle fill="currentColor" cx="4" cy="3.5" r="1"/><circle fill="currentColor" cx="4" cy="6.5" r="1"/><circle fill="currentColor" cx="4" cy="9.5" r="1"/><circle fill="currentColor" cx="4" cy="12.5" r="1"/></svg>
+                                <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleLnIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                             <button class="action-btn" onclick="copyFile('${uriStr}')" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path fill="currentColor" d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>
+                                <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${copyFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                             <button class="action-btn" onclick="openFile('${uriStr}')" title="Open File in Tab" ${lineCount > 0 ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M3.75 2h3.5a.75.75 0 0 1 0 1.5h-3.5a.25.25 0 0 0-.25.25v8.5c0 .138.112.25.25.25h8.5a.25.25 0 0 0 .25-.25v-3.5a.75.75 0 0 1 1.5 0v3.5A1.75 1.75 0 0 1 12.25 14h-8.5A1.75 1.75 0 0 1 2 12.25v-8.5C2 2.784 2.784 2 3.75 2Zm6.854-1h4.146a.25.25 0 0 1 .25.25v4.146a.25.25 0 0 1-.427.177L11.774 2.774 6.28 8.268a.75.75 0 0 1-1.06-1.06l5.494-5.494-2.796-2.796A.25.25 0 0 1 8.094 1Z"/></svg>
+                                <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${openFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                             <button class="action-btn" onclick="removeFile('${uriStr}')" title="Clear Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M11 1.75V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75ZM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.75 1.75 0 0 1 10.595 15h-5.19a1.75 1.75 0 0 1-1.741-1.575l-.66-6.6a.75.75 0 1 1 1.492-.15ZM6.5 1.75V3h3V1.75a.25.25 0 0 0-.25-.25h-2.5a.25.25 0 0 0-.25.25Z"/></svg>
+                                <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${removeFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                         </div>
                     </div>

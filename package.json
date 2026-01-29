@@ -319,17 +319,27 @@
         }
       },
       {
+        "title": "JSON Preview",
+        "properties": {
+          "logmagnifier.jsonPreview.enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enable automatic JSON preview update when active line changes."
+          },
+          "logmagnifier.jsonPreview.maxLines": {
+            "type": "number",
+            "default": 10,
+            "description": "Maximum number of lines to process for JSON preview. Selections exceeding this limit will be truncated."
+          }
+        }
+      },
+      {
         "title": "Regex",
         "properties": {
           "logmagnifier.regex.enableHighlight": {
             "type": "boolean",
             "default": false,
             "description": "Enable highlighting for Regex filters in the editor."
-          },
-          "logmagnifier.jsonPreviewEnabled": {
-            "type": "boolean",
-            "default": false,
-            "description": "Enable automatic JSON preview update when active line changes."
           },
           "logmagnifier.regex.highlightColor": {
             "anyOf": [

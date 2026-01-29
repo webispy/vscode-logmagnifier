@@ -453,6 +453,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     .file-section.folded .file-lines-container {
                         display: none;
                     }
+                    .file-lines-container {
+                        overflow-x: auto;
+                    }
                     .file-name {
                         cursor: pointer;
                         font-weight: 600;
@@ -534,6 +537,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     .content {
                         flex: 1;
                         overflow-y: auto;
+                        overflow-x: hidden;
                     }
                     .nav-btn {
                         background: none;

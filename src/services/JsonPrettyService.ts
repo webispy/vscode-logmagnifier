@@ -91,17 +91,22 @@ export class JsonPrettyService {
                 }
                 // If silent (auto-update), we might still want to clear the view if it was open
                 if (silent) {
-                    this.jsonTreeWebview.show(
-                        [{ status: 'no-json', data: {}, text: '' }],
-                        'JSON Preview',
-                        'no-json',
-                        2,
-                        editor.document.uri.toString(),
-                        selection.active.line,
-                        true
-                    );
+                    this.clearWebview(editor);
                 }
                 return;
+            }
+
+            // Check for line limit
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+            const maxLines = config.get<number>(Constants.Configuration.JsonPreviewMaxLines, 10);
+            const selectionLineCount = selection.end.line - selection.start.line + 1;
+
+            if (selectionLineCount > maxLines) {
+                const limitedRange = new vscode.Range(selection.start.line, 0, selection.start.line + maxLines, 0);
+                text = editor.document.getText(limitedRange);
+
+                // Show warning
+                vscode.window.showWarningMessage(`JSON Preview limited to first ${maxLines} selected lines.`);
             }
 
             const jsons = this.extractJsons(text);
@@ -111,19 +116,7 @@ export class JsonPrettyService {
                 }
 
                 // Clear the webview to reflect the current state (avoid showing stale data)
-                const sourceUri = editor.document.uri.toString();
-                const sourceLine = selection.active.line;
-                const tabSize = typeof editor.options.tabSize === 'number' ? editor.options.tabSize : 2;
-
-                this.jsonTreeWebview.show(
-                    [{ status: 'no-json', data: {}, text: '' }],
-                    'JSON Preview',
-                    'no-json',
-                    tabSize,
-                    sourceUri,
-                    sourceLine,
-                    silent
-                );
+                this.clearWebview(editor);
                 return;
             }
 
@@ -344,5 +337,21 @@ export class JsonPrettyService {
             }
         }
         return output;
+    }
+
+    private clearWebview(editor: vscode.TextEditor) {
+        const sourceUri = editor.document.uri.toString();
+        const sourceLine = editor.selection.active.line;
+        const tabSize = typeof editor.options.tabSize === 'number' ? editor.options.tabSize : 2;
+
+        this.jsonTreeWebview.show(
+            [{ status: 'no-json', data: {}, text: '' }],
+            'JSON Preview',
+            'no-json',
+            tabSize,
+            sourceUri,
+            sourceLine,
+            true
+        );
     }
 }

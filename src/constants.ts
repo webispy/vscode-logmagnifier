@@ -198,7 +198,8 @@ export const Constants = {
     Configuration: {
         Section: 'logmagnifier',
         TempFilePrefix: 'tempFilePrefix', // relative to section
-        JsonPreviewEnabled: 'jsonPreviewEnabled',
+        JsonPreviewEnabled: 'jsonPreview.enabled',
+        JsonPreviewMaxLines: 'jsonPreview.maxLines',
         StatusBarTimeout: 'statusBarTimeout',
         HighlightColors: {
             Section: 'logmagnifier.highlightColors',

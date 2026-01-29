@@ -214,7 +214,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         existing.count++;
                     } else {
                         groupMap.set(item.groupId, {
-                            keyword: item.matchText || 'Manual',
+                            keyword: item.matchText || `L:${item.line + 1}`,
                             count: 1
                         });
                     }

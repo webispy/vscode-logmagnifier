@@ -94,9 +94,9 @@ export class LogBookmarkCommandManager {
         }
 
         const line = editor.selection.active.line;
-        const selection = editor.selection;
-        const selectedText = !selection.isEmpty ? editor.document.getText(selection) : undefined;
-        const result = this.bookmarkService.addBookmark(editor, line, { matchText: selectedText });
+        // Manual "Add Bookmark" should not use selection as matchText.
+        // If user wants to match selection, they should use "Add Selection Matches to Bookmark".
+        const result = this.bookmarkService.addBookmark(editor, line, { matchText: undefined });
         if (!result.success && result.message) {
             vscode.window.showErrorMessage(result.message);
         }

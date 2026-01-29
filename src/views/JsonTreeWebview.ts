@@ -6,12 +6,13 @@ export class JsonTreeWebview {
     private readonly _onDidRevealLine = new vscode.EventEmitter<{ uri: string, line: number }>();
     public readonly onDidRevealLine = this._onDidRevealLine.event;
 
-    constructor(private readonly extensionUri: vscode.Uri) { }
+    constructor(private readonly context: vscode.ExtensionContext) { }
 
     public show(data: any, title: string = 'JSON Preview', status: 'valid' | 'invalid' | 'no-json' = 'valid', tabSize: number = 2, sourceUri?: string, sourceLine?: number, preserveFocus: boolean = false) {
         if (this.panel) {
+            const expansionDepth = this.context.globalState.get<number>('jsonPreview.expansionDepth', 1);
             this.panel.reveal(vscode.ViewColumn.Beside, preserveFocus);
-            this.panel.webview.postMessage({ command: 'update', data, status, tabSize, sourceUri, sourceLine });
+            this.panel.webview.postMessage({ command: 'update', data, status, tabSize, sourceUri, sourceLine, expansionDepth });
         } else {
             this.panel = vscode.window.createWebviewPanel(
                 'logmagnifier-json-tree',
@@ -19,7 +20,7 @@ export class JsonTreeWebview {
                 { viewColumn: vscode.ViewColumn.Beside, preserveFocus: preserveFocus },
                 {
                     enableScripts: true,
-                    localResourceRoots: [this.extensionUri]
+                    localResourceRoots: [this.context.extensionUri]
                 }
             );
 
@@ -30,11 +31,14 @@ export class JsonTreeWebview {
             this.panel.webview.onDidReceiveMessage(message => {
                 if (message.command === 'reveal') {
                     this._onDidRevealLine.fire({ uri: message.uri, line: message.line });
+                } else if (message.command === 'saveState') {
+                    this.context.globalState.update('jsonPreview.expansionDepth', message.expansionDepth);
                 }
             });
 
             // Initial data
-            this.panel.webview.html = this.getHtmlForWebview(data, status, tabSize, sourceUri, sourceLine);
+            const expansionDepth = this.context.globalState.get<number>('jsonPreview.expansionDepth', 1);
+            this.panel.webview.html = this.getHtmlForWebview(data, status, tabSize, sourceUri, sourceLine, expansionDepth);
         }
     }
 
@@ -49,7 +53,7 @@ export class JsonTreeWebview {
         return !!this.panel;
     }
 
-    private getHtmlForWebview(data: any, status: 'valid' | 'invalid' | 'no-json', tabSize: number = 2, sourceUri?: string, sourceLine?: number): string {
+    private getHtmlForWebview(data: any, status: 'valid' | 'invalid' | 'no-json', tabSize: number = 2, sourceUri?: string, sourceLine?: number, expansionDepth: number = 1): string {
         const initialData = JSON.stringify(data);
 
         return `<!DOCTYPE html>
@@ -231,11 +235,61 @@ export class JsonTreeWebview {
                     cursor: not-allowed;
                 }
                 
-                button svg {
-                    width: 16px;
-                    height: 16px;
-                    fill: currentColor;
+                input[type="number"]:focus {
+                    outline: 1px solid var(--vscode-focusBorder);
                 }
+
+                /* Rich UI Depth Control */
+                .depth-control {
+                    display: inline-flex;
+                    align-items: center;
+                    background-color: var(--vscode-input-background);
+                    border: 1px solid var(--vscode-input-border);
+                    border-radius: 4px; /* Rounded corners */
+                    overflow: hidden; /* For child button borders */
+                    margin-right: 10px;
+                }
+
+                .depth-btn {
+                    background: transparent;
+                    border: none;
+                    color: var(--vscode-input-foreground);
+                    width: 28px;
+                    height: 24px;
+                    padding: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    cursor: pointer;
+                    font-size: 16px; /* Larger symbol */
+                    font-weight: bold;
+                    border-radius: 0; 
+                }
+                
+                .depth-btn:hover {
+                    background-color: var(--vscode-list-hoverBackground);
+                }
+                
+                .depth-btn:active {
+                   background-color: var(--vscode-list-activeSelectionBackground);
+                   color: var(--vscode-list-activeSelectionForeground);
+                }
+
+                .depth-label {
+                    padding: 0 8px;
+                    font-size: 12px;
+                    color: var(--vscode-descriptionForeground);
+                    user-select: none;
+                    min-width: 50px; /* Fixed width for stability */
+                    text-align: center;
+                    border-left: 1px solid var(--vscode-widget-border);
+                    border-right: 1px solid var(--vscode-widget-border);
+                    height: 24px;
+                    line-height: 24px;
+                    background-color: var(--vscode-editor-background); /* Slight contrast if desired, or transparent */
+                }
+
+                /* Text Label Buttons */
                 
                 .tree-root {
                     user-select: text; /* Allow selection */
@@ -357,7 +411,11 @@ export class JsonTreeWebview {
         </head>
         <body>
             <div class="top-toolbar">
-                <button id="btn-collapse-all">Collapse All</button>
+                <div class="depth-control">
+                    <button id="btn-collapse" class="depth-btn" title="Decrease Depth">-</button>
+                    <span id="depth-display" class="depth-label">Depth ${expansionDepth}</span>
+                    <button id="btn-expand" class="depth-btn" title="Increase Depth">+</button>
+                </div>
                 <button id="btn-compact" style="display: none;">Compact</button>
                 <button id="btn-toggle-view">Beautifier</button>
                 <button id="btn-reveal">Go to Definition</button>
@@ -388,13 +446,16 @@ export class JsonTreeWebview {
                 const btnReveal = document.getElementById('btn-reveal');
                 const treeContainer = document.getElementById('tree-container');
                 const textContainer = document.getElementById('text-container');
-                const btnCollapseAll = document.getElementById('btn-collapse-all');
+                const btnExpand = document.getElementById('btn-expand');
+                const btnCollapse = document.getElementById('btn-collapse');
+                const depthDisplay = document.getElementById('depth-display');
 
                 let rootData = ${initialData};
                 let currentStatus = '${status}';
                 let tabSize = ${tabSize};
                 let sourceUri = '${sourceUri || ''}';
                 let sourceLine = ${sourceLine ?? -1};
+                let currentDepth = ${expansionDepth};
                 
                 let focusedRowDetails = null;
                 let isCompact = false;
@@ -529,9 +590,12 @@ export class JsonTreeWebview {
                         treeContainer.style.display = 'block';
                         textContainer.style.display = 'none';
                         
+                        const depthControl = document.querySelector('.depth-control');
+                        
                         // Toolbar State: Tree View
-                        // Order: Collapse All, Beautifier, Go to Definition
-                        btnCollapseAll.style.display = 'inline-flex';
+                        // Order: Expand, Collapse, Beautifier, Go to Definition
+                        if (depthControl) depthControl.style.display = 'inline-flex';
+                        
                         btnCompact.style.display = 'none';
                         
                         btnToggleView.textContent = 'Beautifier';
@@ -543,6 +607,8 @@ export class JsonTreeWebview {
 
                         document.querySelector('.bottom-toolbar').style.display = 'flex';
                     } else {
+                        const depthControl = document.querySelector('.depth-control');
+                        
                         // Toolbar State: Text View
                          // If switching to Text View, ensure label is correct. 
                          // isCompact state is preserved.
@@ -555,7 +621,7 @@ export class JsonTreeWebview {
                         // Order: Compact (above), Preview, Go to Definition
                         btnToggleView.textContent = 'Preview';
                         
-                        btnCollapseAll.style.display = 'none';
+                        if (depthControl) depthControl.style.display = 'none';
                         
                         // Show Reveal (Go to Definition) in Text View as well
                         if (sourceUri && sourceLine >= 0) {
@@ -585,7 +651,11 @@ export class JsonTreeWebview {
 
                 function renderMultiRootItem(parent, data, status, index) {
                     const wrapper = document.createElement('div');
-                    wrapper.className = 'tree-node expanded'; // Default expanded
+                    wrapper.className = 'tree-node';
+                    // Root expanded only if depth >= 1
+                    if (currentDepth >= 1) {
+                         wrapper.classList.add('expanded');
+                    }
                     wrapper.style.marginBottom = '30px'; // Increased spacing
                     wrapper.style.borderLeft = 'none'; // Remove border
                     
@@ -607,6 +677,7 @@ export class JsonTreeWebview {
                         content.className = 'children';
                         content.style.display = 'block'; 
                         
+                        // Root content is effectively at depth 0 relative to itself, but children start at 1
                         renderRootContent(content, data);
                         wrapper.appendChild(content);
                     }
@@ -626,7 +697,11 @@ export class JsonTreeWebview {
 
                     const node = document.createElement('div');
                     node.className = 'tree-node';
-                    if (isRoot) node.classList.add('expanded');
+                    
+                    // Expand node if its depth is less than the current visible depth
+                    if (depth < currentDepth) {
+                        node.classList.add('expanded');
+                    }
 
                     const row = document.createElement('div');
                     row.className = 'tree-row';
@@ -733,12 +808,30 @@ export class JsonTreeWebview {
                     focusRow(node.querySelector('.tree-row'));
                 }
                 
-                function collapseAll() {
-                    const expanded = document.querySelectorAll('.tree-node.expanded');
-                    // Collapse everything
-                    expanded.forEach(node => {
-                        node.classList.remove('expanded');
-                    });
+                function expand() {
+                    currentDepth++;
+                    updateExpansion();
+                    saveState();
+                }
+
+                function collapse() {
+                    if (currentDepth > 0) {
+                        currentDepth--;
+                        updateExpansion();
+                        saveState();
+                    }
+                }
+                
+                function saveState() {
+                    vscode.postMessage({ command: 'saveState', expansionDepth: currentDepth });
+                }
+
+                function updateExpansion() {
+                    // Re-render to apply new depth
+                    render();
+                    if (depthDisplay) {
+                        depthDisplay.textContent = 'Depth ' + currentDepth;
+                    }
                 }
 
                 function focusRow(row) {
@@ -968,7 +1061,11 @@ export class JsonTreeWebview {
                     return el.offsetParent !== null; 
                 }
 
-                document.getElementById('btn-collapse-all').addEventListener('click', collapseAll);
+                const btnCollapseEl = document.getElementById('btn-collapse');
+                if (btnCollapseEl) btnCollapseEl.addEventListener('click', collapse);
+                
+                const btnExpandEl = document.getElementById('btn-expand');
+                if (btnExpandEl) btnExpandEl.addEventListener('click', expand);
 
                 function updateRecallButton() {
                     // Only applicable if in Tree View
@@ -995,11 +1092,15 @@ export class JsonTreeWebview {
                         if (message.tabSize) tabSize = message.tabSize;
                         if (message.sourceUri) sourceUri = message.sourceUri;
                         if (typeof message.sourceLine === 'number') sourceLine = message.sourceLine;
+                        if (typeof message.expansionDepth === 'number') {
+                             currentDepth = message.expansionDepth;
+                             if (depthDisplay) depthDisplay.textContent = 'Depth ' + currentDepth;
+                        }
                         
                         // Reset search on update
                         if (searchInput) {
                             searchInput.value = '';
-                            performSearch(); // clear matches
+                            performSearch(); 
                         }
                         
                         // Always switch to Tree View on new content

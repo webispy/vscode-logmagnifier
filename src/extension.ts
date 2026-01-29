@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext) {
 	);
 
 	// Initialize Command Manager (Handles all command registrations)
-	const jsonTreeWebview = new JsonTreeWebview(context.extensionUri);
+	const jsonTreeWebview = new JsonTreeWebview(context);
 
 	const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
 	new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);

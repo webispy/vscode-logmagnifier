@@ -432,9 +432,7 @@ export class LogBookmarkService implements vscode.Disposable {
         for (const [uri, items] of this._bookmarks) {
             const activeIds = this.getActiveIds(uri);
             const activeItems = items.filter(item => activeIds.has(item.id));
-            if (activeItems.length > 0) {
-                filteredMap.set(uri, activeItems);
-            }
+            filteredMap.set(uri, activeItems);
         }
         return filteredMap;
     }
@@ -538,11 +536,27 @@ export class LogBookmarkService implements vscode.Disposable {
                 const allValidIds = new Set<string>();
                 this._bookmarks.get(key)?.forEach(item => allValidIds.add(item.id));
 
-                const sanitizedHistory = historyMapData[key].map(step =>
+                let sanitizedHistory = historyMapData[key].map(step =>
                     step.filter(id => allValidIds.has(id))
                 );
+
+                let index = indicesMapData[key] ?? -1;
+
+                // Sanitize legacy initial empty state (ensureInitialHistory artifact)
+                if (sanitizedHistory.length > 0 && sanitizedHistory[0].length === 0) {
+                    sanitizedHistory.shift();
+                    index--;
+                }
+
+                // Ensure index is valid after shift
+                if (sanitizedHistory.length === 0) {
+                    index = -1;
+                } else if (index < 0) {
+                    index = Math.max(-1, index);
+                }
+
                 this._history.set(key, sanitizedHistory);
-                this._historyIndices.set(key, indicesMapData[key] ?? -1);
+                this._historyIndices.set(key, index);
             }
         } else if (oldHistoryData && Array.isArray(oldHistoryData.history)) {
             // Handle migration from old global history to per-file history
@@ -600,5 +614,6 @@ export class LogBookmarkService implements vscode.Disposable {
 
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
         this._onDidChangeBookmarks.fire();
+        this.logger.info(`[Bookmark] Loaded bookmarks from state. Files with bookmarks: ${this._bookmarks.size}, Files with history: ${this._history.size}`);
     }
 }

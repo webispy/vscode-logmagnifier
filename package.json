@@ -744,6 +744,11 @@
         "icon": "$(repo-push)"
       },
       {
+        "command": "logmagnifier.removeAllBookmarks",
+        "title": "Remove All Bookmarks",
+        "icon": "$(trash)"
+      },
+      {
         "command": "logmagnifier.importWordFilters",
         "title": "Import Word Filters",
         "icon": "$(repo-pull)"

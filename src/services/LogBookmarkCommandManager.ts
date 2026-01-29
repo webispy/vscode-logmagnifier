@@ -257,14 +257,14 @@ export class LogBookmarkCommandManager {
         const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
         const MAX_MATCHES = config.get<number>('bookmark.maxMatches', 500);
 
-        let count = 0;
+        const matchedLines: number[] = [];
 
         this.findMatchingLines(editor.document, regex, MAX_MATCHES, (lineIndex) => {
-            this.bookmarkService.addBookmark(editor, lineIndex, { matchText: keyword });
-            count++;
+            matchedLines.push(lineIndex);
         });
 
-        if (count > 0) {
+        if (matchedLines.length > 0) {
+            const count = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: keyword });
             vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', count.toString()));
         } else {
             vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);

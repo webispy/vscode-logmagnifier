@@ -141,7 +141,20 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         try {
             const uri = vscode.Uri.parse(uriStr);
             const doc = await vscode.workspace.openTextDocument(uri);
-            await vscode.window.showTextDocument(doc, { preview: true });
+
+            // Check if the document is already visible in any editor
+            const visibleEditor = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === uri.toString());
+
+            if (visibleEditor) {
+                // If found, reveal it
+                await vscode.window.showTextDocument(doc, {
+                    viewColumn: visibleEditor.viewColumn,
+                    preview: true
+                });
+            } else {
+                // If not found, open in active editor
+                await vscode.window.showTextDocument(doc, { preview: true });
+            }
         } catch (e) {
             console.error('Error focusing file:', e);
         }

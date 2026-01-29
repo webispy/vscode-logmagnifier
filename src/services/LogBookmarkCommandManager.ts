@@ -283,7 +283,22 @@ export class LogBookmarkCommandManager {
         }
         try {
             const doc = await vscode.workspace.openTextDocument(item.uri);
-            const editor = await vscode.window.showTextDocument(doc, { preview: true });
+
+            // Check if the document is already visible in any editor
+            let editor = vscode.window.visibleTextEditors.find(e => e.document.uri.toString() === item.uri.toString());
+
+            if (editor) {
+                // If found, reveal it
+                // We need to showTextDocument with the existing viewColumn to focus it
+                editor = await vscode.window.showTextDocument(doc, {
+                    viewColumn: editor.viewColumn,
+                    preview: true
+                });
+            } else {
+                // If not found, open in active editor (or new one if needed) as before
+                editor = await vscode.window.showTextDocument(doc, { preview: true });
+            }
+
             const range = new vscode.Range(item.line, 0, item.line, 0);
             editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
             editor.selection = new vscode.Selection(range.start, range.start);

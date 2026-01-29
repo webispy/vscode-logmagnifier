@@ -46,6 +46,13 @@ export class LogBookmarkService implements vscode.Disposable {
                 this.updateDecorations(editor);
             }
         }, null, context.subscriptions);
+
+        // Remove bookmarks for untitled files when they are closed
+        vscode.workspace.onDidCloseTextDocument(doc => {
+            if (doc.uri.scheme === Constants.Schemes.Untitled || doc.uri.scheme === 'untitled') {
+                this.removeBookmarksForUri(doc.uri);
+            }
+        }, null, context.subscriptions);
     }
 
     public getBookmarkAt(uri: vscode.Uri, line: number, matchText?: string): BookmarkItem | undefined {
@@ -230,27 +237,17 @@ export class LogBookmarkService implements vscode.Disposable {
 
     public removeBookmarksForUri(uri: vscode.Uri) {
         const key = uri.toString();
-        const items = this._bookmarks.get(key);
-        if (items) {
-            const currentActiveIds = this.getActiveIds(key); // Get active IDs for this specific URI
-            let changed = false;
-            items.forEach(item => {
-                if (currentActiveIds.has(item.id)) {
-                    currentActiveIds.delete(item.id);
-                    changed = true;
-                }
-            });
 
-            if (changed) {
-                this.pushToHistory(key, Array.from(currentActiveIds)); // Push updated history for this URI
-                this._onDidChangeBookmarks.fire();
-                this.refreshAllDecorations();
-                this.saveToState();
-            }
+        // Completely remove from bookmarks map and history to prevent memory leaks
+        if (this._bookmarks.has(key)) {
+            this._bookmarks.delete(key);
+            this._history.delete(key);
+            this._historyIndices.delete(key);
+
+            this._onDidChangeBookmarks.fire();
+            this.refreshAllDecorations();
+            this.saveToState();
         }
-        // Also clear history for this URI if all bookmarks are removed
-        this._history.delete(key);
-        this._historyIndices.delete(key);
     }
 
     public removeAllBookmarks() {
@@ -443,13 +440,21 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     private updateDecorations(editor: vscode.TextEditor) {
-        const key = editor.document.uri.toString();
-        const activeBookmarks = this.getBookmarks().get(key);
-        if (activeBookmarks) {
-            const ranges = activeBookmarks.map(b => new vscode.Range(b.line, 0, b.line, 0));
-            editor.setDecorations(this.decorationType, ranges);
-        } else {
-            editor.setDecorations(this.decorationType, []);
+        try {
+            const key = editor.document.uri.toString();
+            // Reverted to using getBookmarks() to ensure consistency, though less efficient.
+            // TODO: Optimize this to single-file lookup once stability is confirmed.
+            const activeBookmarksMap = this.getBookmarks();
+            const activeBookmarks = activeBookmarksMap.get(key);
+
+            if (activeBookmarks && activeBookmarks.length > 0) {
+                const ranges = activeBookmarks.map(b => new vscode.Range(b.line, 0, b.line, 0));
+                editor.setDecorations(this.decorationType, ranges);
+            } else {
+                editor.setDecorations(this.decorationType, []);
+            }
+        } catch (e) {
+            this.logger.error(`Error updating decorations: ${e}`);
         }
     }
 

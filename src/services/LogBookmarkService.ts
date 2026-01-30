@@ -8,6 +8,7 @@ import { Logger } from './Logger';
 export class LogBookmarkService implements vscode.Disposable {
     private _bookmarks: Map<string, BookmarkItem[]> = new Map();
     // History stack of active bookmark IDs in each file (URI -> steps)
+    private _fileOrder: string[] = [];
     private _history: Map<string, string[][]> = new Map();
     private _historyIndices: Map<string, number> = new Map();
     private _onDidChangeBookmarks: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -79,7 +80,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
-    public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string }): BookmarkResult {
+    public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string, groupId?: string }): BookmarkResult {
         try {
             const matchText = options?.matchText;
             const doc = editor.document;
@@ -108,35 +109,18 @@ export class LogBookmarkService implements vscode.Disposable {
                 vscode.window.showWarningMessage('Note: This is a filtered log view. Bookmarks added here may be lost if you re-apply filters or close this temporary file.');
             }
 
+            // LIFO Sorting: Move to top of file order
+            if (this._fileOrder.includes(key)) {
+                this._fileOrder = this._fileOrder.filter(k => k !== key);
+            }
+            this._fileOrder.unshift(key);
+
             if (!this._bookmarks.has(key)) {
                 this._bookmarks.set(key, []);
             }
 
             const list = this._bookmarks.get(key)!;
             const currentActiveIds = this.getActiveIds(key);
-
-            // Allow multiple bookmarks on same line IF matchText is different.
-            // Check if EXACT bookmark exists (same line AND same matchText)
-            const exists = list.some(b =>
-                b.line === line &&
-                currentActiveIds.has(b.id) &&
-                (matchText ? b.matchText === matchText : true) // If adding generic bookmark, check if any generic exists? Or just check if line is taken?
-                // Actually, if we add specific matchText, we check if THAT matchText exists.
-                // If we add generic (no matchText), we check if *any* exists? Or maybe generic duplicates are allowed? 
-                // Let's assume generic (manual toggle) checks for GENERIC (or any?).
-                // Usually usage is: Manual toggle (no matchText) -> blocks if ANY exists.
-                // Search add (matchText) -> blocks if SAME matchText exists.
-            );
-
-            // Simpler logic:
-            // If adding with matchText 'A', block if 'A' is already there on that line.
-            // If adding without matchText (manual), block if ANY manual bookmark exists? Or block if ANY exists?
-            // The user implies layering. 
-            // Let's refine:
-            // 1. If matchText provided: check duplicate by matchText.
-            // 2. If no matchText: check duplicate by "no matchText" (manual). OR simply check if line occupied?
-            // "Toggle" logic usually adds manual. If I have "Error" bookmark, and I manual toggle, maybe I want to add a manual note?
-            // For now, let's strict check based on equality.
 
             const isDuplicate = list.some(b =>
                 b.line === line &&
@@ -149,7 +133,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
 
             const lineContent = doc.lineAt(line).text;
-            const groupId = Date.now().toString();
+            const groupId = options?.groupId || Date.now().toString();
             const bookmark: BookmarkItem = {
                 id: Date.now().toString() + Math.random().toString().slice(2),
                 uri: uri,
@@ -163,6 +147,7 @@ export class LogBookmarkService implements vscode.Disposable {
             list.sort((a, b) => a.line - b.line);
 
             currentActiveIds.add(bookmark.id);
+
             this.pushToHistory(key, Array.from(currentActiveIds));
 
             this._onDidChangeBookmarks.fire();
@@ -176,10 +161,16 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
-    public addBookmarks(editor: vscode.TextEditor, lines: number[], options?: { matchText?: string }) {
+    public addBookmarks(editor: vscode.TextEditor, lines: number[], options?: { matchText?: string, groupId?: string }) {
         const matchText = options?.matchText;
         const uri = editor.document.uri;
         const key = uri.toString();
+
+        // LIFO Sorting: Move to top of file order
+        if (this._fileOrder.includes(key)) {
+            this._fileOrder = this._fileOrder.filter(k => k !== key);
+        }
+        this._fileOrder.unshift(key);
 
         if (!this._bookmarks.has(key)) {
             this._bookmarks.set(key, []);
@@ -188,7 +179,7 @@ export class LogBookmarkService implements vscode.Disposable {
         const list = this._bookmarks.get(key)!;
         let addedCount = 0;
         const currentActiveIds = this.getActiveIds(key);
-        const groupId = Date.now().toString();
+        const groupId = options?.groupId || Date.now().toString();
 
         for (const line of lines) {
             // Check if EXACT exists
@@ -213,7 +204,9 @@ export class LogBookmarkService implements vscode.Disposable {
 
         if (addedCount > 0) {
             list.sort((a, b) => a.line - b.line);
+
             this.pushToHistory(key, Array.from(currentActiveIds));
+
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
             this.refreshAllDecorations();
@@ -244,6 +237,9 @@ export class LogBookmarkService implements vscode.Disposable {
             this._history.delete(key);
             this._historyIndices.delete(key);
 
+            // Remove from file order
+            this._fileOrder = this._fileOrder.filter(k => k !== key);
+
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
             this.saveToState();
@@ -254,6 +250,7 @@ export class LogBookmarkService implements vscode.Disposable {
         this._bookmarks.clear();
         this._history.clear();
         this._historyIndices.clear();
+        this._fileOrder = [];
         this._onDidChangeBookmarks.fire();
         this.refreshAllDecorations();
         this.saveToState();
@@ -275,6 +272,8 @@ export class LogBookmarkService implements vscode.Disposable {
             if (filtered.length !== items.length) {
                 if (filtered.length === 0) {
                     this._bookmarks.delete(uri);
+                    // Update file order if file is empty
+                    this._fileOrder = this._fileOrder.filter(k => k !== uri);
                 } else {
                     this._bookmarks.set(uri, filtered);
                 }
@@ -337,6 +336,8 @@ export class LogBookmarkService implements vscode.Disposable {
         this._history.set(uriKey, historySteps);
         this._historyIndices.set(uriKey, historyIndex);
     }
+
+
 
     public canGoBack(uriKey: string): boolean {
         const historyIndex = this._historyIndices.get(uriKey) ?? -1;
@@ -439,6 +440,17 @@ export class LogBookmarkService implements vscode.Disposable {
         return filteredMap;
     }
 
+    /*
+     * Returns file keys sorted by insertion order (LIFO).
+     */
+    public getFileKeys(): string[] {
+        // Filter out any keys that might have been deleted from _bookmarks but lingering in _fileOrder (safety check)
+        // And append any new keys that might be in _bookmarks but not in _fileOrder (migration/safety)
+        const validKeys = this._fileOrder.filter(key => this._bookmarks.has(key));
+        const missingKeys = Array.from(this._bookmarks.keys()).filter(key => !validKeys.includes(key));
+        return [...validKeys, ...missingKeys.sort()]; // Fallback to alpha sort for missing
+    }
+
     private updateDecorations(editor: vscode.TextEditor) {
         try {
             const key = editor.document.uri.toString();
@@ -491,6 +503,10 @@ export class LogBookmarkService implements vscode.Disposable {
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_indices_map', indicesObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_include_ln_map', lnObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_wordWrap', this._isWordWrapEnabled);
+
+        // Save file order
+        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_fileOrder', this._fileOrder);
+
         this.logger.info(`Saved bookmarks to state. Files with history: ${this._history.size}`);
     }
 
@@ -533,6 +549,15 @@ export class LogBookmarkService implements vscode.Disposable {
         const historyMapData = this.context.globalState.get<Record<string, string[][]>>(Constants.GlobalState.Bookmarks + '_history_map');
         const indicesMapData = this.context.globalState.get<Record<string, number>>(Constants.GlobalState.Bookmarks + '_indices_map');
         const lnMapData = this.context.globalState.get<Record<string, boolean>>(Constants.GlobalState.Bookmarks + '_include_ln_map');
+
+        // Load file order
+        const fileOrderData = this.context.globalState.get<string[]>(Constants.GlobalState.Bookmarks + '_fileOrder');
+        if (fileOrderData) {
+            this._fileOrder = fileOrderData;
+        } else {
+            // Migration: initialize with whatever we have, sorted alphabetically or just keys
+            this._fileOrder = Array.from(this._bookmarks.keys()).sort();
+        }
 
         if (lnMapData) {
             for (const key in lnMapData) {

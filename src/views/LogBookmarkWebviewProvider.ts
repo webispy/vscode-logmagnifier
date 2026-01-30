@@ -427,6 +427,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
                             <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFile('${uriStr}')" title="${filename}">${filename}</span>
+                            <button class="nav-btn" onclick="back('${uriStr}')" title="Back" ${canGoBack ? '' : 'disabled'}>
+                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M11.354 1.646l-6 6 6 6 .708-.708L6.773 7.646l5.289-5.292z"/></svg>
+                            </button>
+                            <button class="nav-btn" onclick="forward('${uriStr}')" title="Forward" ${canGoForward ? '' : 'disabled'}>
+                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M4.646 1.646l6 6-6 6-.708-.708 5.292-5.292-5.289-5.292z"/></svg>
+                            </button>
                             <div class="stats-label">Ln:${lineCount}, Gr:${groupCount}</div>
                             <div class="header-tags">
                                  ${tagsHtml}
@@ -817,21 +823,29 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     }
 
                     function removeLineBookmars(ids, event) {
-                        if (event) event.stopPropagation();
-                        // Remove all bookmarks on this line.
-                        ids.forEach(id => {
-                            const item = itemsMap[id];
-                            if (item) {
-                                vscode.postMessage({ type: 'remove', item: item });
-                            }
-                        });
+                        if (ids && ids.length > 0) {
+                            // We can just iterate and send remove messages, or send a batch. 
+                            // Since we don't have batch remove message type yet, iterate.
+                            ids.forEach(id => {
+                                const item = itemsMap[id];
+                                if (item) {
+                                    vscode.postMessage({ type: 'remove', item: item });
+                                }
+                            });
+                        }
+                        if (event) {
+                            event.stopPropagation();
+                        }
                     }
-
-                    function copyAll() {
-                        vscode.postMessage({ type: 'copyAll' });
+                    function toggleFold(uriStr) {
+                         const section = document.getElementById('section-' + uriStr);
+                         if (section) {
+                             section.classList.toggle('folded');
+                             vscode.postMessage({ type: 'toggleFold', uriString: uriStr });
+                         }
                     }
-                    function openAll() {
-                         vscode.postMessage({ type: 'openAll' });
+                    function copyFile(uriStr) {
+                         vscode.postMessage({ type: 'copyAll', uriString: uriStr });
                     }
                     function collapseAll() {
                         vscode.postMessage({ type: 'collapseAll' });

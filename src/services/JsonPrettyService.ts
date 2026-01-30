@@ -5,6 +5,7 @@ import { Constants } from '../constants';
 import { HighlightService } from './HighlightService';
 import { JsonTreeWebview } from '../views/JsonTreeWebview';
 import { LenientJsonParser } from './LenientJsonParser';
+import { EditorUtils } from '../utils/EditorUtils';
 
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';
@@ -15,6 +16,7 @@ interface ExtractedJson {
 
 export class JsonPrettyService {
     private lenientParser = new LenientJsonParser();
+    private _lastActiveEditor: vscode.TextEditor | undefined;
 
     constructor(
         private logger: Logger,
@@ -22,6 +24,18 @@ export class JsonPrettyService {
         private jsonTreeWebview: JsonTreeWebview,
         private highlightService: HighlightService
     ) {
+        // Track active editor
+        vscode.window.onDidChangeActiveTextEditor(editor => {
+            if (editor) {
+                this._lastActiveEditor = editor;
+            }
+        });
+
+        // Initialize with current if available
+        if (vscode.window.activeTextEditor) {
+            this._lastActiveEditor = vscode.window.activeTextEditor;
+        }
+
         this.jsonTreeWebview.onDidRevealLine(async event => {
             try {
                 const targetUriStr = event.uri;
@@ -71,7 +85,17 @@ export class JsonPrettyService {
 
     public async execute(silent: boolean = false) {
         try {
-            const editor = vscode.window.activeTextEditor;
+            let editor = vscode.window.activeTextEditor;
+
+            // Manual invocation logic for better UX
+            if (!silent && !editor) {
+                editor = EditorUtils.getActiveEditor(this._lastActiveEditor, 'open JSON Preview');
+
+                if (!editor) {
+                    return;
+                }
+            }
+
             if (!editor) {
                 return;
             }

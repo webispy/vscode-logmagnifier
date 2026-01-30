@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+
 import { Constants } from '../constants';
 import { Logger } from '../services/Logger';
 import { FilterManager } from '../services/FilterManager';
+import { EditorUtils } from '../utils/EditorUtils';
 
 export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
@@ -131,12 +132,9 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         // 1. Try active text editor
         if (editor) {
             if (editor.document.uri.scheme === 'file') {
-                try {
-                    const stats = fs.statSync(editor.document.uri.fsPath);
-                    return stats.size;
-                } catch (e) {
+                return EditorUtils.getFileSize(editor.document.uri, (e) => {
                     Logger.getInstance().error(`Error getting file size: ${e}`);
-                }
+                });
             } else if (editor.document.uri.scheme === 'untitled') {
                 return editor.document.getText().length;
             }
@@ -146,14 +144,9 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
         if (activeTab && activeTab.input instanceof vscode.TabInputText) {
             const uri = activeTab.input.uri;
-            if (uri.scheme === 'file') {
-                try {
-                    const stats = fs.statSync(uri.fsPath);
-                    return stats.size;
-                } catch (e) {
-                    Logger.getInstance().error(`Error getting file size from tab: ${e}`);
-                }
-            }
+            return EditorUtils.getFileSize(uri, (e) => {
+                Logger.getInstance().error(`Error getting file size from tab: ${e}`);
+            });
         }
 
         return undefined;

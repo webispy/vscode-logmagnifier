@@ -5,14 +5,31 @@ import { FilterItem } from '../models/Filter';
 import { HighlightService } from './HighlightService';
 import { Constants } from '../constants';
 import { RegexUtils } from '../utils/RegexUtils';
+import { EditorUtils } from '../utils/EditorUtils';
 
 export class LogBookmarkCommandManager {
+    private _lastActiveEditor: vscode.TextEditor | undefined;
+
     constructor(
         context: vscode.ExtensionContext,
         private bookmarkService: LogBookmarkService,
         private highlightService: HighlightService
     ) {
         this.registerCommands(context);
+        this.registerEventListeners(context);
+    }
+
+    private registerEventListeners(context: vscode.ExtensionContext) {
+        context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+            if (editor) {
+                this._lastActiveEditor = editor;
+            }
+        }));
+
+        // Initialize with current active editor
+        if (vscode.window.activeTextEditor) {
+            this._lastActiveEditor = vscode.window.activeTextEditor;
+        }
     }
 
     private registerCommands(context: vscode.ExtensionContext) {
@@ -31,6 +48,10 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveAllBookmarks, () => this.removeAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmarkWordWrap, () => this.toggleBookmarkWordWrap()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmarkGroup, (groupId: string) => this.removeBookmarkGroup(groupId)));
+    }
+
+    private getActiveEditor(): vscode.TextEditor | undefined {
+        return EditorUtils.getActiveEditor(this._lastActiveEditor, 'add bookmark');
     }
 
     private removeBookmarkGroup(groupId: string) {
@@ -87,11 +108,8 @@ export class LogBookmarkCommandManager {
     }
 
     private addBookmark() {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
-            return;
-        }
+        const editor = this.getActiveEditor();
+        if (!editor) { return; }
 
         const line = editor.selection.active.line;
         // Manual "Add Bookmark" should not use selection as matchText.
@@ -120,11 +138,8 @@ export class LogBookmarkCommandManager {
     }
 
     private toggleBookmark() {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
-            return;
-        }
+        const editor = this.getActiveEditor();
+        if (!editor) { return; }
 
         const selection = editor.selection;
         if (selection.isEmpty) {
@@ -187,11 +202,8 @@ export class LogBookmarkCommandManager {
     }
 
     private addSelectionMatchesToBookmark() {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
-            return;
-        }
+        const editor = this.getActiveEditor();
+        if (!editor) { return; }
 
         const selection = editor.selection;
         if (selection.isEmpty) {
@@ -234,11 +246,8 @@ export class LogBookmarkCommandManager {
             return;
         }
 
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveEditor);
-            return;
-        }
+        const editor = this.getActiveEditor();
+        if (!editor) { return; }
 
         const keyword = filter.keyword;
         if (!keyword) {
@@ -359,3 +368,4 @@ export class LogBookmarkCommandManager {
         }
     }
 }
+

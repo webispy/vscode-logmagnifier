@@ -22,20 +22,8 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             const addedKey = uri.toString();
             this._lastAddedUri = addedKey;
 
-            // Refinement: Collapse all others, expand this one
-            const bookmarks = this._bookmarkService.getBookmarks();
-            // Start by assuming all folded
-            // But we don't want to reset user's state completely if they are exploring?
-            // User request: "File transition after bookmark new add -> collapse existing, expand active"
-
-            // Wait, if I add to a file, that file becomes "active" in the context of bookmarks view interaction usually.
-            // Let's implement requested behavior: valid for single-file focus workflow.
+            // Preserve state, no forced collapse on add
             this._foldedUris.delete(addedKey);
-            for (const key of bookmarks.keys()) {
-                if (key !== addedKey) {
-                    this._foldedUris.add(key);
-                }
-            }
 
             this.updateContent();
             // Clear flash after 1 second
@@ -60,23 +48,25 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 // Only act if the new active file is actually in our bookmarks
                 const bookmarks = this._bookmarkService.getBookmarks();
                 if (bookmarks.has(newActiveUri)) {
-                    // Auto-expand active, collapse others (optional, but requested behavior is "switching file collapses others")
+                    // Auto-expand active
                     this._foldedUris.delete(newActiveUri);
+                }
 
-                    for (const key of bookmarks.keys()) {
-                        if (key !== newActiveUri) {
-                            this._foldedUris.add(key);
-                        }
-                    }
-                    this.updateContent();
+                // Use postMessage to update UI without reloading
+                if (this._view && this._view.visible) {
+                    this._view.webview.postMessage({
+                        type: 'setActive',
+                        uriString: newActiveUri
+                    });
                 } else {
-                    // If switching to a non-bookmarked file, just update content for highlighting
                     this.updateContent();
                 }
             }
         } else {
             this._activeUriStr = undefined;
-            this.updateContent();
+            if (this._view && this._view.visible) {
+                this._view.webview.postMessage({ type: 'setActive', uriString: '' });
+            }
         }
     }
 
@@ -122,7 +112,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     case 'collapseAll':
                         this.collapseAll();
                         break;
-                    // expandAll removed per user request
                     case 'clearAll':
                         vscode.commands.executeCommand(Constants.Commands.RemoveAllBookmarks);
                         break;
@@ -258,14 +247,11 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     private getHtmlForWebview(webview: vscode.Webview) {
         const bookmarksMap = this._bookmarkService.getBookmarks();
-        // Use getFileKeys for insertion order sorting
+        // Use getFileKeys for insertion order sorting (LIFO)
         let sortedUris = this._bookmarkService.getFileKeys();
 
-        // Sort Active File to Top
-        if (this._activeUriStr && sortedUris.includes(this._activeUriStr)) {
-            sortedUris = sortedUris.filter(u => u !== this._activeUriStr);
-            sortedUris.unshift(this._activeUriStr);
-        }
+        // LIFO order implies no re-sorting of active file to top
+
 
         // Check active editor if not set (initial load)
         if (!this._activeUriStr && vscode.window.activeTextEditor) {
@@ -275,6 +261,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
         const itemsMap: Record<string, any> = {};
         let filesHtml = '';
+        let headerButtonsHtml = '';
 
         const toggleLnIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'list-ordered.svg'));
         const toggleWordWrapIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'word-wrap.svg'));
@@ -282,16 +269,26 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'copy.svg'));
         const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'link-external.svg'));
 
-        // Global Action Icons
-        // Expand All removed
-
         for (const uriStr of sortedUris) {
             const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
             const items = bookmarksMap.get(uriStr)!;
             const filename = uriStr.split('/').pop() || 'Unknown File';
-            // CSS will handle truncation now
             const isFolded = this._foldedUris.has(uriStr);
             const isActive = uriStr === this._activeUriStr;
+
+            // --- Header Button Generation ---
+            // Truncate filename for button if too long, strictly
+            let btnLabel = filename;
+            if (btnLabel.length > 20) {
+                btnLabel = btnLabel.substring(0, 17) + '...';
+            }
+
+            headerButtonsHtml += `
+                <button class="file-nav-btn ${isActive ? 'active' : ''}" data-uri="${uriStr}" onclick="focusFileScroll('${uriStr}')" title="${filename}">
+                    ${btnLabel}
+                </button>
+            `;
+            // -------------------------------
 
             // Calculate per-file tags
             const groupMap = new Map<string, { keyword: string, count: number }>();
@@ -409,8 +406,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     uriString: itemUriStr
                 };
 
+                // Add data-id to lines for targeted scrolling
                 fileLines += `
-                    <div class="log-line" onclick="jumpTo('${primaryItem.id}')">
+                    <div class="log-line" onclick="markActiveLine('${primaryItem.id}', '${uriStr}'); jumpTo('${primaryItem.id}')" data-id="${primaryItem.id}">
                         <div class="gutter">
                             <span class="remove-btn" onclick="removeLineBookmars(${allIdsStr}, event)">×</span>
                             <span class="line-number">${paddedLine}</span>
@@ -426,7 +424,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                             <button class="fold-toggle" onclick="toggleFold('${uriStr}')" title="Toggle Fold">
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
-                            <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFile('${uriStr}')" title="${filename}">${filename}</span>
+                            <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFileScroll('${uriStr}')" title="${filename}">${filename}</span>
 
                             <div class="header-tags">
                                  ${tagsHtml}
@@ -481,16 +479,73 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         overflow: hidden;
                     }
 
-                    /* Global Actions Bar */
+                    /* Header Layout */
+                    .global-actions-container {
+                        display: flex;
+                        flex-direction: row; /* One line */
+                        justify-content: space-between;
+                        align-items: center;
+                        background-color: var(--vscode-editor-background);
+                        border-bottom: 1px solid var(--vscode-panel-border);
+                        overflow: hidden;
+                    }
+                    
+                    .file-nav-bar {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 4px 8px;
+                        overflow-x: auto;
+                        scrollbar-width: none;
+                        flex: 1; /* Take remaining space */
+                        min-width: 0; /* Allow shrinking */
+                        border-bottom: none; /* Merged */
+                    }
+                    .file-nav-bar::-webkit-scrollbar {
+                         display: none;
+                    }
+
                     .global-actions {
                         display: flex;
                         justify-content: flex-end;
                         align-items: center;
-                        background-color: var(--vscode-editor-background);
-                        border-bottom: 1px solid var(--vscode-panel-border);
                         padding: 4px 8px;
                         gap: 8px;
+                        flex-shrink: 0; /* No shrink */
+                        border-left: 1px solid var(--vscode-panel-border);
+                        background-color: var(--vscode-editor-background);
+                        z-index: 10;
+                        margin-left: auto; /* Push to right */
                     }
+
+                    .file-nav-btn {
+                        background-color: var(--vscode-tab-inactiveBackground);
+                        color: var(--vscode-tab-inactiveForeground);
+                        border: none;
+                        border-radius: 4px; /* Pill/Tab look */
+                        padding: 3px 6px;
+                        font-size: 11px;
+                        cursor: pointer;
+                        white-space: nowrap;
+                        max-width: 150px;
+                        min-width: 30px; /* Allow small buttons */
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        flex-shrink: 1; /* Allow shrinking */
+                        transition: all 0.1s ease;
+                        opacity: 0.8;
+                    }
+                    .file-nav-btn:hover {
+                         opacity: 1;
+                        background-color: var(--vscode-tab-hoverBackground);
+                    }
+                    .file-nav-btn.active {
+                        background-color: var(--vscode-button-background);
+                        color: var(--vscode-button-foreground);
+                        opacity: 1;
+                        font-weight: 600;
+                    }
+
                     .global-btn {
                         background-color: var(--vscode-button-secondaryBackground);
                         color: var(--vscode-button-secondaryForeground);
@@ -502,6 +557,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         display: flex;
                         align-items: center;
                         gap: 4px;
+                        white-space: nowrap; /* Prevent wrap */
                     }
                     .global-btn:hover {
                         background-color: var(--vscode-button-secondaryHoverBackground);
@@ -780,16 +836,18 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 </style>
             </head>
             <body onmouseenter="vscode.postMessage({type:'mouseEnter'})" onmouseleave="vscode.postMessage({type:'mouseLeave'})">
-                <div class="global-actions">
-                    <button class="global-btn" onclick="collapseAll()" title="Collapse all files">
-                        <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M9 9H4v1h5V9zM9 6H4v1h5V6zM9 3H4v1h5V3zM4 12h5v-1H4v1zM1 1v14h14V1H1zm13 13H2V2h12v12z"/></svg>
-                        Collapse All
-                    </button>
-                    <!-- Expand All Removed -->
-                    <button class="global-btn" onclick="clearAll()" title="Remove all bookmarks">
-                        <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
-                        Clear All
-                    </button>
+                <div class="global-actions-container">
+                    <div class="file-nav-bar">${headerButtonsHtml}</div>
+                    <div class="global-actions">
+                        <button class="global-btn" onclick="collapseAll()" title="Collapse all files">
+                            <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M9 9H4v1h5V9zM9 6H4v1h5V6zM9 3H4v1h5V3zM4 12h5v-1H4v1zM1 1v14h14V1H1zm13 13H2V2h12v12z"/></svg>
+                            Collapse All
+                        </button>
+                        <button class="global-btn" onclick="clearAll()" title="Remove all bookmarks">
+                            <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                            Clear All
+                        </button>
+                    </div>
                 </div>
                 <div class="content ${wordWrapEnabled ? 'word-wrap' : ''}">
                     ${finalHtml}
@@ -799,6 +857,19 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
                     // Restore ID map for jumps
                     const itemsMap = ${JSON.stringify(itemsMap)};
+                    
+                    // State Management for scroll position
+                    let state = vscode.getState() || {};
+
+                    function saveState() {
+                        vscode.setState(state);
+                    }
+
+                    // On line click, save this as the last active line for this file
+                    function markActiveLine(itemId, uriStr) {
+                        state[uriStr] = itemId;
+                        saveState();
+                    }
 
                     function jumpTo(id) {
                         const item = itemsMap[id];
@@ -807,61 +878,195 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         }
                     }
 
-                    function removeLineBookmars(ids, event) {
-                        if (event) event.stopPropagation();
-                        // Remove all bookmarks on this line.
-                        ids.forEach(id => {
-                            const item = itemsMap[id];
-                            if (item) {
-                                vscode.postMessage({ type: 'remove', item: item });
-                            }
-                        });
+                    function focusFile(uriStr) {
+                         vscode.postMessage({ type: 'focusFile', uriString: uriStr });
                     }
 
-                    function copyAll() {
-                        vscode.postMessage({ type: 'copyAll' });
+                    window.addEventListener('message', event => {
+                        const message = event.data;
+                        switch (message.type) {
+                            case 'setActive':
+                                updateActiveState(message.uriString);
+                                break;
+                        }
+                    });
+
+                    function updateActiveState(uriStr) {
+                        // 1. Remove old active classes
+                        const activeFiles = document.querySelectorAll('.file-section.active-file');
+                        activeFiles.forEach(el => el.classList.remove('active-file'));
+                        
+                        const activeBtns = document.querySelectorAll('.file-nav-btn.active');
+                        activeBtns.forEach(el => el.classList.remove('active'));
+
+                        if (uriStr) {
+                            // 2. Add active classes
+                            const section = document.getElementById('section-' + uriStr);
+                            if (section) {
+                                section.classList.add('active-file');
+                                section.classList.remove('folded'); // Ensure unfolded
+                            }
+
+                            const btn = document.querySelector('.file-nav-btn[data-uri="' + uriStr + '"]');
+                            if (btn) btn.classList.add('active');
+                            
+                            // 3. Smart Scroll
+                            scrollToUri(uriStr);
+                        }
                     }
-                    function openAll() {
-                         vscode.postMessage({ type: 'openAll' });
+
+                    // Alias for button click, also focuses VS Code editor side
+                    function focusFileScroll(uriStr) {
+                        // Instant Scroll first
+                        scrollToUri(uriStr);
+                        
+                        // Focus in editor
+                        vscode.postMessage({ type: 'focusFile', uriString: uriStr });
                     }
+
+                    function scrollToUri(uriStr) {
+                        const el = document.getElementById('section-' + uriStr);
+                        if (el) {
+                             const rect = el.getBoundingClientRect();
+                             const isVisible = (
+                                rect.top >= 0 &&
+                                rect.left >= 0 &&
+                                rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+                                rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+                             );
+
+                             if (!isVisible) {
+                                 // Check if we have a saved line ID for this file
+                                 let scrolled = false;
+                                 if (state[uriStr]) {
+                                     // Find the line element by data-id
+                                     // Note: We need data-id on log lines for this selector to work
+                                     const savedLineEl = el.querySelector('.log-line[data-id="' + state[uriStr] + '"]');
+                                     if (savedLineEl) {
+                                         savedLineEl.scrollIntoView({ behavior: 'auto', block: 'center' }); // Instant
+                                         scrolled = true;
+                                     }
+                                 }
+
+                                 if (!scrolled) {
+                                     // Fallback: Scroll to file section (header/first item)
+                                     const firstLine = el.querySelector('.log-line');
+                                     if (firstLine) {
+                                         firstLine.scrollIntoView({ behavior: 'auto', block: 'center' });
+                                     } else {
+                                         el.scrollIntoView({ behavior: 'auto', block: 'start' });
+                                     }
+                                 }
+                             }
+                        }
+                    }
+
+                    function removeLineBookmars(ids, event) {
+                        event.stopPropagation();
+                         if (Array.isArray(ids)) {
+                            ids.forEach(id => {
+                                const item = itemsMap[id];
+                                if (item) {
+                                    vscode.postMessage({ type: 'remove', item: item });
+                                }
+                            });
+                        }
+                    }
+
+                    function removeGroup(groupId, event) {
+                        event.stopPropagation();
+                         vscode.postMessage({ type: 'removeGroup', groupId: groupId });
+                    }
+
                     function collapseAll() {
                         vscode.postMessage({ type: 'collapseAll' });
                     }
+
                     function clearAll() {
                         vscode.postMessage({ type: 'clearAll' });
                     }
-                    function removeGroup(groupId, event) {
-                        if (event) event.stopPropagation();
-                        vscode.postMessage({ type: 'removeGroup', groupId: groupId });
+                    
+                     function toggleWordWrap() {
+                        vscode.postMessage({ type: 'toggleWordWrap' });
                     }
-                    function focusFile(uriStr) {
-                         if (event) event.stopPropagation();
-                         vscode.postMessage({ type: 'focusFile', uriString: uriStr });
-                    }
+
                     function removeFile(uriStr) {
-                         if (event) event.stopPropagation();
-                         vscode.postMessage({ type: 'removeFile', uriString: uriStr });
+                         event.stopPropagation();
+                        vscode.postMessage({ type: 'removeFile', uriString: uriStr });
                     }
-                    function copyFile(uriStr) {
-                         if (event) event.stopPropagation();
+
+                     function copyFile(uriStr) {
+                         event.stopPropagation();
                          vscode.postMessage({ type: 'copyAll', uriString: uriStr });
                     }
+
                     function openFile(uriStr) {
-                         if (event) event.stopPropagation();
+                        event.stopPropagation();
                          vscode.postMessage({ type: 'openAll', uriString: uriStr });
                     }
-                    function toggleWordWrap() {
-                         if (event) event.stopPropagation();
-                         vscode.postMessage({ type: 'toggleWordWrap' });
-                    }
-                    function toggleFold(uriStr) {
-                        if (event) event.stopPropagation();
+
+                     function toggleFold(uriStr) {
+                         event.stopPropagation();
                          vscode.postMessage({ type: 'toggleFold', uriString: uriStr });
                     }
+
                     function toggleLineNumbers(uriStr) {
-                        if (event) event.stopPropagation();
-                        vscode.postMessage({ type: 'toggleLineNumbers', uriString: uriStr });
+                        event.stopPropagation();
+                         vscode.postMessage({ type: 'toggleLineNumbers', uriString: uriStr });
                     }
+
+                    // Auto-Scroll to Active File on Load
+                    window.addEventListener('load', () => {
+                        const activeEl = document.querySelector('.file-section.active-file');
+                        if (activeEl) {
+                             // Smart scroll on load? 
+                             // Wait for layout
+                            setTimeout(() => {
+                                // Get Active URI from active element ID? ID="section-..."
+                                const id = activeEl.id;
+                                if (id && id.startsWith('section-')) {
+                                    const uriStr = id.substring(8);
+                                    
+                                     // Check visibility first
+                                    const rect = activeEl.getBoundingClientRect();
+                                    const isVisible = (
+                                        rect.top >= 0 &&
+                                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
+                                    );
+                                    
+                                    if (!isVisible) {
+                                         // Reuse logic
+                                         let scrolled = false;
+                                         if (state[uriStr]) {
+                                             const savedLineEl = activeEl.querySelector('.log-line[data-id="' + state[uriStr] + '"]');
+                                             if (savedLineEl) {
+                                                 savedLineEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+                                                 scrolled = true;
+                                             }
+                                         }
+                                         
+                                         if (!scrolled) {
+                                              const firstLine = activeEl.querySelector('.log-line');
+                                             if (firstLine) {
+                                                 firstLine.scrollIntoView({ behavior: 'auto', block: 'center' });
+                                             } else {
+                                                 activeEl.scrollIntoView({ behavior: 'auto', block: 'center' });
+                                             }
+                                         }
+                                    }
+                                }
+                            }, 100);
+                        }
+                        
+                        // Also scroll Active Button into view in the nav bar
+                         const activeBtn = document.querySelector('.file-nav-btn.active');
+                        if (activeBtn) {
+                             setTimeout(() => {
+                                 activeBtn.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+                            }, 100);
+                        }
+                    });
+
                 </script>
             </body>
             </html>`;

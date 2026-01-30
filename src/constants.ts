@@ -189,6 +189,26 @@ export const Constants = {
         HierarchyOpenOriginal: 'logmagnifier.hierarchy.openOriginal',
         HierarchyShowQuickPick: 'logmagnifier.hierarchy.showQuickPick',
         HierarchyShowFullTree: 'logmagnifier.hierarchy.showFullTree',
+
+        // Shell Commander
+        AddShellGroup: 'logmagnifier.addShellGroup',
+        ImportShellGroup: 'logmagnifier.importShellGroup',
+        ExportShellGroup: 'logmagnifier.exportShellGroup',
+        AddShellFolder: 'logmagnifier.addShellFolder',
+        AddShellCommand: 'logmagnifier.addShellCommand',
+        ExecuteShellCommand: 'logmagnifier.executeShellCommand',
+        EditShellItem: 'logmagnifier.editShellItem',
+        DeleteShellItem: 'logmagnifier.deleteShellItem',
+        RefreshShellView: 'logmagnifier.refreshShellView',
+        ExpandAllShellGroups: 'logmagnifier.expandAllShellGroups',
+        CollapseAllShellGroups: 'logmagnifier.collapseAllShellGroups',
+        ReloadShellCommander: 'logmagnifier.reloadShellCommander',
+        ClearAllShellConfigs: 'logmagnifier.clearAllShellConfigs',
+        OpenShellGroupConfig: 'logmagnifier.openShellGroupConfig',
+        EditShellDescription: 'logmagnifier.editShellDescription',
+        EditShellGroupReadme: 'logmagnifier.editShellGroupReadme',
+        RenameShellGroup: 'logmagnifier.renameShellGroup',
+        OpenGlobalShellConfig: 'logmagnifier.openGlobalShellConfig',
     },
 
     Views: {
@@ -196,6 +216,7 @@ export const Constants = {
         QuickAccess: 'logmagnifier-quick-access',
         Filters: 'logmagnifier-filters',
         RegexFilters: 'logmagnifier-regex-filters',
+        ShellCommander: 'logmagnifier-shell-commander',
         ADBDevices: 'logmagnifier-adb-devices',
         Bookmark: 'logmagnifier-bookmark',
     },
@@ -285,6 +306,7 @@ export const Constants = {
         FilterGroups: 'logmagnifier.filterGroups',
         FilterProfiles: 'logmagnifier.filterProfiles',
         ActiveProfile: 'logmagnifier.activeProfile',
+        ShellConfigPaths: 'logmagnifier.shellConfigPaths',
         Bookmarks: 'logmagnifier.bookmarks',
     },
 

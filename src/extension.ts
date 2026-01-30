@@ -18,6 +18,9 @@ import { JsonPrettyService } from './services/JsonPrettyService';
 import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { SourceMapService } from './services/SourceMapService';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
+import { ShellCommanderService } from './services/ShellCommanderService';
+import { ShellCommanderTreeDataProvider } from './views/ShellCommanderTreeDataProvider';
+import { ShellCommanderCommandManager } from './services/ShellCommanderCommandManager';
 import { Constants } from './constants';
 import { FilterGroup, FilterItem } from './models/Filter';
 import { FileHierarchyService } from './services/FileHierarchyService';
@@ -127,7 +130,15 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.window.registerTreeDataProvider(Constants.Views.ADBDevices, adbDeviceTreeProvider);
     new AdbCommandManager(context, adbService, adbDeviceTreeProvider);
 
-    // Deferred initialization is now handled lazily by AdbDeviceTreeProvider.getChildren()
+    // Shell Commander
+    const shellCommanderService = new ShellCommanderService(context);
+    const shellCommanderTreeDataProvider = new ShellCommanderTreeDataProvider(shellCommanderService);
+    const shellCommanderTreeView = vscode.window.createTreeView(Constants.Views.ShellCommander, {
+        treeDataProvider: shellCommanderTreeDataProvider,
+        dragAndDropController: shellCommanderTreeDataProvider,
+        showCollapseAll: false
+    });
+    new ShellCommanderCommandManager(context, shellCommanderService, shellCommanderTreeView);
 
     // Log Bookmark
     const bookmarkService = new LogBookmarkService(context);

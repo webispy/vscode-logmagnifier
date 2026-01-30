@@ -26,7 +26,7 @@ export class EditorUtils {
                     const sizeMB = (size || 0) / (1024 * 1024);
 
                     if (sizeMB > 50) {
-                        vscode.window.showErrorMessage(`Cannot ${operationName}: File is too large (>50MB) for VS Code extension support.`);
+                        vscode.window.showErrorMessage(`Cannot ${operationName}: File is too large (>50MB). Please reduce file size or use a different viewer.`);
                         return undefined;
                     }
                 }

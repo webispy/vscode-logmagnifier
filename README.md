@@ -92,12 +92,15 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - Click any bookmark to jump to that line in the editor.
     - Click the 'x' icon to remove a bookmark.
 3.  **Manage Bookmarks**:
+    - **Quick File Switch**: Click the file tabs in the header to instantly jump between bookmarked files.
     - **Add Tags**: Right-click a bookmark to add a custom keywoard tag (e.g., `#error`, `#login`) which is displayed next to the line number.
     - **Toggle Word Wrap**: Use the "Word Wrap" icon in the view title or `Alt+Z` (when view is focused) to toggle wrapping for long log lines.
     - **Clear All**: Use the "Clear All" icon to remove all bookmarks for the current file.
     - **Remove**: Click the 'x' icon to remove a single bookmark.
-4.  **Persistence**:
-    - Bookmarks are automatically saved for each file and restored when you reopen the workspace.
+4.  **Persistence & Layout**:
+    - Bookmarks are saved and restored across sessions.
+    - **LIFO Ordering**: Newest bookmark files always appear at the top.
+    - **Smart Scroll**: View maintains position and expanded/collapsed state for each file independently.
 
 ## Requirements
 

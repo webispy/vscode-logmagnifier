@@ -1,4 +1,4 @@
-# LogMagnifier
+# LogMagnifier - test
 
 A powerful log analysis tool for Visual Studio Code, featuring advanced log filtering and diverse highlighting options.
 

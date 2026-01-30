@@ -321,7 +321,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             const canGoBack = (this._bookmarkService as any).canGoBack(uriStr);
             const canGoForward = (this._bookmarkService as any).canGoForward(uriStr);
             const lineCount = (this._bookmarkService as any).getFileActiveLinesCount(uriStr);
-            const groupCount = (this._bookmarkService as any).getFileHistoryGroupsCount(uriStr);
+
 
             // Group items by line
             const lineItemsMap = new Map<number, typeof items>();
@@ -427,7 +427,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
                             <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFile('${uriStr}')" title="${filename}">${filename}</span>
-                            <div class="stats-label">Ln:${lineCount}, Gr:${groupCount}</div>
+
                             <div class="header-tags">
                                  ${tagsHtml}
                             </div>
@@ -654,17 +654,8 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         opacity: 1;
                         background-color: var(--vscode-editor-selectionBackground);
                     }
-                    .stats-label {
-                        font-size: 9px;
-                        color: var(--vscode-descriptionForeground);
-                        margin: 0 4px;
-                        white-space: nowrap;
-                        flex-shrink: 0;
-                    }
-                    .file-section.active-file .stats-label {
-                        color: var(--vscode-list-activeSelectionForeground);
-                        opacity: 0.8;
-                    }
+
+
 
                     .content {
                         flex: 1;

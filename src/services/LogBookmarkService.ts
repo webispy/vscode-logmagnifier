@@ -9,8 +9,7 @@ export class LogBookmarkService implements vscode.Disposable {
     private _bookmarks: Map<string, BookmarkItem[]> = new Map();
     // History stack of active bookmark IDs in each file (URI -> steps)
     private _fileOrder: string[] = [];
-    private _history: Map<string, string[][]> = new Map();
-    private _historyIndices: Map<string, number> = new Map();
+
     private _onDidChangeBookmarks: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeBookmarks: vscode.Event<void> = this._onDidChangeBookmarks.event;
     private _onDidAddBookmark: vscode.EventEmitter<vscode.Uri> = new vscode.EventEmitter<vscode.Uri>();
@@ -63,11 +62,10 @@ export class LogBookmarkService implements vscode.Disposable {
             return undefined;
         }
 
-        const activeIds = this.getActiveIds(key);
         if (matchText) {
-            return bookmarks.find(b => b.line === line && activeIds.has(b.id) && b.matchText === matchText);
+            return bookmarks.find(b => b.line === line && b.matchText === matchText);
         }
-        return bookmarks.find(b => b.line === line && activeIds.has(b.id));
+        return bookmarks.find(b => b.line === line);
     }
 
     public toggleBookmark(editor: vscode.TextEditor, line: number): BookmarkResult {
@@ -120,11 +118,9 @@ export class LogBookmarkService implements vscode.Disposable {
             }
 
             const list = this._bookmarks.get(key)!;
-            const currentActiveIds = this.getActiveIds(key);
 
             const isDuplicate = list.some(b =>
                 b.line === line &&
-                currentActiveIds.has(b.id) &&
                 b.matchText === matchText
             );
 
@@ -145,10 +141,6 @@ export class LogBookmarkService implements vscode.Disposable {
 
             list.push(bookmark);
             list.sort((a, b) => a.line - b.line);
-
-            currentActiveIds.add(bookmark.id);
-
-            this.pushToHistory(key, Array.from(currentActiveIds));
 
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
@@ -177,13 +169,13 @@ export class LogBookmarkService implements vscode.Disposable {
         }
 
         const list = this._bookmarks.get(key)!;
+
         let addedCount = 0;
-        const currentActiveIds = this.getActiveIds(key);
         const groupId = options?.groupId || Date.now().toString();
 
         for (const line of lines) {
             // Check if EXACT exists
-            if (list.some(b => b.line === line && currentActiveIds.has(b.id) && b.matchText === matchText)) {
+            if (list.some(b => b.line === line && b.matchText === matchText)) {
                 continue;
             }
 
@@ -198,14 +190,11 @@ export class LogBookmarkService implements vscode.Disposable {
             };
 
             list.push(bookmark);
-            currentActiveIds.add(bookmark.id);
             addedCount++;
         }
 
         if (addedCount > 0) {
             list.sort((a, b) => a.line - b.line);
-
-            this.pushToHistory(key, Array.from(currentActiveIds));
 
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
@@ -218,24 +207,24 @@ export class LogBookmarkService implements vscode.Disposable {
 
     public removeBookmark(item: BookmarkItem) {
         const key = item.uri.toString();
-        const currentActiveIds = this.getActiveIds(key);
-        if (currentActiveIds.has(item.id)) {
-            currentActiveIds.delete(item.id);
-            this.pushToHistory(key, Array.from(currentActiveIds));
-            this._onDidChangeBookmarks.fire();
-            this.refreshAllDecorations();
-            this.saveToState();
+        const bookmarks = this._bookmarks.get(key);
+        if (bookmarks) {
+            const index = bookmarks.findIndex(b => b.id === item.id);
+            if (index !== -1) {
+                bookmarks.splice(index, 1);
+                this._onDidChangeBookmarks.fire();
+                this.refreshAllDecorations();
+                this.saveToState();
+            }
         }
     }
 
     public removeBookmarksForUri(uri: vscode.Uri) {
         const key = uri.toString();
 
-        // Completely remove from bookmarks map and history to prevent memory leaks
+        // Completely remove from bookmarks map
         if (this._bookmarks.has(key)) {
             this._bookmarks.delete(key);
-            this._history.delete(key);
-            this._historyIndices.delete(key);
 
             // Remove from file order
             this._fileOrder = this._fileOrder.filter(k => k !== key);
@@ -248,8 +237,6 @@ export class LogBookmarkService implements vscode.Disposable {
 
     public removeAllBookmarks() {
         this._bookmarks.clear();
-        this._history.clear();
-        this._historyIndices.clear();
         this._fileOrder = [];
         this._onDidChangeBookmarks.fire();
         this.refreshAllDecorations();
@@ -257,19 +244,15 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public removeBookmarkGroup(groupId: string) {
-        const removedIds = new Set<string>();
+        let anyRemoved = false;
 
         // 1. Remove from master bookmark list
         for (const [uri, items] of this._bookmarks.entries()) {
-            const filtered = items.filter(item => {
-                if (item.groupId === groupId) {
-                    removedIds.add(item.id);
-                    return false;
-                }
-                return true;
-            });
+            const initialLength = items.length;
+            const filtered = items.filter(item => item.groupId !== groupId);
 
-            if (filtered.length !== items.length) {
+            if (filtered.length !== initialLength) {
+                anyRemoved = true;
                 if (filtered.length === 0) {
                     this._bookmarks.delete(uri);
                     // Update file order if file is empty
@@ -280,95 +263,15 @@ export class LogBookmarkService implements vscode.Disposable {
             }
         }
 
-        if (removedIds.size === 0) {
-            return;
-        }
-
-        // 2. Purge from all history steps across all files
-        for (const [uriKey, fileHistory] of this._history.entries()) {
-            const historyIndex = this._historyIndices.get(uriKey) ?? -1;
-            const newHistory: string[][] = [];
-
-            for (let i = 0; i < fileHistory.length; i++) {
-                const step = fileHistory[i];
-                const filteredStep = step.filter(id => !removedIds.has(id));
-
-                // Deduplicate: don't add if it's identical to the previous step after filtering
-                if (newHistory.length === 0 || JSON.stringify(newHistory[newHistory.length - 1]) !== JSON.stringify(filteredStep)) {
-                    newHistory.push(filteredStep);
-                }
-            }
-
-            if (newHistory.length === 0 || (newHistory.length === 1 && newHistory[0].length === 0)) {
-                this._history.delete(uriKey);
-                this._historyIndices.delete(uriKey);
-            } else {
-                this._history.set(uriKey, newHistory);
-                this._historyIndices.set(uriKey, newHistory.length > 0 ? Math.min(historyIndex, newHistory.length - 1) : -1);
-            }
-        }
-
-        this._onDidChangeBookmarks.fire();
-        this.refreshAllDecorations();
-        this.saveToState();
-    }
-
-    private getActiveIds(uriKey: string): Set<string> {
-        const historySteps = this._history.get(uriKey);
-        const historyIndex = this._historyIndices.get(uriKey) ?? -1;
-        if (historySteps && historyIndex >= 0 && historyIndex < historySteps.length) {
-            return new Set(historySteps[historyIndex]);
-        }
-        return new Set();
-    }
-
-    private pushToHistory(uriKey: string, ids: string[]) {
-        let historySteps = this._history.get(uriKey) || [];
-        let historyIndex = this._historyIndices.get(uriKey) ?? -1;
-
-        // Clear future history if we were in a back state
-        if (historyIndex < historySteps.length - 1) {
-            historySteps = historySteps.slice(0, historyIndex + 1);
-        }
-        historySteps.push(ids);
-        historyIndex++;
-
-        this._history.set(uriKey, historySteps);
-        this._historyIndices.set(uriKey, historyIndex);
-    }
-
-
-
-    public canGoBack(uriKey: string): boolean {
-        const historyIndex = this._historyIndices.get(uriKey) ?? -1;
-        return historyIndex > 0;
-    }
-
-    public canGoForward(uriKey: string): boolean {
-        const historySteps = this._history.get(uriKey);
-        const historyIndex = this._historyIndices.get(uriKey) ?? -1;
-        return historySteps ? historyIndex < historySteps.length - 1 : false;
-    }
-
-    public back(uriKey: string) {
-        if (this.canGoBack(uriKey)) {
-            const index = this._historyIndices.get(uriKey)!;
-            this._historyIndices.set(uriKey, index - 1);
+        if (anyRemoved) {
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
             this.saveToState();
         }
     }
 
-    public forward(uriKey: string) {
-        if (this.canGoForward(uriKey)) {
-            const index = this._historyIndices.get(uriKey)!;
-            this._historyIndices.set(uriKey, index + 1);
-            this._onDidChangeBookmarks.fire();
-            this.refreshAllDecorations();
-            this.saveToState();
-        }
-    }
+
+
 
     public getActiveLinesCount(): number {
         // Legacy/Global count: sum of all files
@@ -380,8 +283,8 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getFileActiveLinesCount(uriKey: string): number {
-        const activeIds = this.getActiveIds(uriKey);
-        return activeIds.size;
+        const bookmarks = this._bookmarks.get(uriKey);
+        return bookmarks ? bookmarks.length : 0;
     }
 
     public isWordWrapEnabled(): boolean {
@@ -415,11 +318,10 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getFileHistoryGroupsCount(uriKey: string): number {
-        const activeIds = this.getActiveIds(uriKey);
         const bookmarks = this._bookmarks.get(uriKey) || [];
         const uniqueGroupIds = new Set<string>();
         for (const item of bookmarks) {
-            if (item.groupId && activeIds.has(item.id)) {
+            if (item.groupId) {
                 uniqueGroupIds.add(item.groupId);
             }
         }
@@ -431,13 +333,10 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getBookmarks(): Map<string, BookmarkItem[]> {
-        const filteredMap = new Map<string, BookmarkItem[]>();
-        for (const [uri, items] of this._bookmarks) {
-            const activeIds = this.getActiveIds(uri);
-            const activeItems = items.filter(item => activeIds.has(item.id));
-            filteredMap.set(uri, activeItems);
-        }
-        return filteredMap;
+        // Return a cleaner copy? Or just the map.
+        // For compatibility with previous map<string, BookmarkItem[]>, we can just return _bookmarks
+        // filtering is not needed if we assume _bookmarks is the source of truth.
+        return this._bookmarks;
     }
 
     /*
@@ -489,31 +388,21 @@ export class LogBookmarkService implements vscode.Disposable {
         }
         await this.context.globalState.update(Constants.GlobalState.Bookmarks, bookmarksData);
 
-        // Convert Map to Object for storage
-        const historyObj: Record<string, string[][]> = {};
-        for (const [k, v] of this._history.entries()) { historyObj[k] = v; }
-        const indicesObj: Record<string, number> = {};
-        for (const [k, v] of this._historyIndices.entries()) { indicesObj[k] = v; }
-
         // Convert _includeLineNumbers Map to Object for storage
         const lnObj: Record<string, boolean> = {};
         for (const [k, v] of this._includeLineNumbers.entries()) { lnObj[k] = v; }
 
-        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_history_map', historyObj);
-        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_indices_map', indicesObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_include_ln_map', lnObj);
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_wordWrap', this._isWordWrapEnabled);
 
         // Save file order
         await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_fileOrder', this._fileOrder);
 
-        this.logger.info(`Saved bookmarks to state. Files with history: ${this._history.size}`);
+        this.logger.info(`Saved bookmarks to state. Files with bookmarks: ${this._bookmarks.size}`);
     }
 
     private loadFromState() {
         const bookmarksData = this.context.globalState.get<{ [key: string]: any[] }>(Constants.GlobalState.Bookmarks);
-        // Old history format (global)
-        const oldHistoryData = this.context.globalState.get<{ history: string[][], index: number }>(Constants.GlobalState.Bookmarks + '_history');
 
         if (bookmarksData) {
             for (const key in bookmarksData) {
@@ -546,8 +435,6 @@ export class LogBookmarkService implements vscode.Disposable {
             }
         }
 
-        const historyMapData = this.context.globalState.get<Record<string, string[][]>>(Constants.GlobalState.Bookmarks + '_history_map');
-        const indicesMapData = this.context.globalState.get<Record<string, number>>(Constants.GlobalState.Bookmarks + '_indices_map');
         const lnMapData = this.context.globalState.get<Record<string, boolean>>(Constants.GlobalState.Bookmarks + '_include_ln_map');
 
         // Load file order
@@ -565,83 +452,6 @@ export class LogBookmarkService implements vscode.Disposable {
             }
         }
 
-        if (historyMapData && indicesMapData) {
-            for (const key in historyMapData) {
-                // Sanitize history: only keep IDs that actually exist in _bookmarks for this file
-                const allValidIds = new Set<string>();
-                this._bookmarks.get(key)?.forEach(item => allValidIds.add(item.id));
-
-                let sanitizedHistory = historyMapData[key].map(step =>
-                    step.filter(id => allValidIds.has(id))
-                );
-
-                let index = indicesMapData[key] ?? -1;
-
-                // Sanitize legacy initial empty state (ensureInitialHistory artifact)
-                if (sanitizedHistory.length > 0 && sanitizedHistory[0].length === 0) {
-                    sanitizedHistory.shift();
-                    index--;
-                }
-
-                // Ensure index is valid after shift
-                if (sanitizedHistory.length === 0) {
-                    index = -1;
-                } else if (index < 0) {
-                    index = Math.max(-1, index);
-                }
-
-                this._history.set(key, sanitizedHistory);
-                this._historyIndices.set(key, index);
-            }
-        } else if (oldHistoryData && Array.isArray(oldHistoryData.history)) {
-            // Handle migration from old global history to per-file history
-            // This is a best-effort migration. The global history will be applied to all files.
-            this.logger.info("Migrating old global bookmark history to per-file history.");
-            const allValidIds = new Set<string>();
-            for (const items of this._bookmarks.values()) {
-                items.forEach(item => allValidIds.add(item.id));
-            }
-
-            const sanitizedGlobalHistory = oldHistoryData.history.map(step =>
-                step.filter(id => allValidIds.has(id))
-            );
-            const globalHistoryIndex = typeof oldHistoryData.index === 'number' ? oldHistoryData.index : sanitizedGlobalHistory.length - 1;
-
-            for (const uriKey of this._bookmarks.keys()) {
-                // For each file, filter the global history to only include IDs relevant to that file
-                const fileSpecificIds = new Set(this._bookmarks.get(uriKey)?.map(b => b.id) || []);
-                const fileHistory = sanitizedGlobalHistory.map(step => step.filter(id => fileSpecificIds.has(id)));
-
-                // Remove duplicate steps that might arise from filtering
-                const uniqueFileHistory: string[][] = [];
-                for (const step of fileHistory) {
-                    if (uniqueFileHistory.length === 0 || JSON.stringify(uniqueFileHistory[uniqueFileHistory.length - 1]) !== JSON.stringify(step)) {
-                        uniqueFileHistory.push(step);
-                    }
-                }
-
-                this._history.set(uriKey, uniqueFileHistory);
-                // Try to map the global index to the file-specific history
-                let fileIndex = -1;
-                if (uniqueFileHistory.length > 0) {
-                    // Find the closest step in uniqueFileHistory to the globalHistoryIndex
-                    // This is a heuristic, as direct mapping might not be possible
-                    fileIndex = Math.min(globalHistoryIndex, uniqueFileHistory.length - 1);
-                    if (fileIndex < 0) { fileIndex = 0; }
-                }
-                this._historyIndices.set(uriKey, fileIndex);
-            }
-            // Clear old global state after migration
-            this.context.globalState.update(Constants.GlobalState.Bookmarks + '_history', undefined);
-        } else {
-            // Reconstruct initial history per file if missing (no old global history either)
-            for (const [uriKey, bookmarks] of this._bookmarks.entries()) {
-                const allIds = bookmarks.map(i => i.id);
-                this._history.set(uriKey, [allIds]);
-                this._historyIndices.set(uriKey, 0);
-            }
-        }
-
         const wordWrapData = this.context.globalState.get<boolean>(Constants.GlobalState.Bookmarks + '_wordWrap');
         if (wordWrapData !== undefined) {
             this._isWordWrapEnabled = wordWrapData;
@@ -649,6 +459,6 @@ export class LogBookmarkService implements vscode.Disposable {
 
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
         this._onDidChangeBookmarks.fire();
-        this.logger.info(`[Bookmark] Loaded bookmarks from state. Files with bookmarks: ${this._bookmarks.size}, Files with history: ${this._history.size}`);
+        this.logger.info(`[Bookmark] Loaded bookmarks from state. Files with bookmarks: ${this._bookmarks.size}`);
     }
 }

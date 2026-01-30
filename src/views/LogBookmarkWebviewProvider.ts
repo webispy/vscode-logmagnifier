@@ -240,7 +240,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         } catch (e) {
             this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                 Error loading bookmarks: ${e}<br/>
-                <button onclick="acquireVsCodeApi().postMessage({type: 'back'})">Try Back</button>
+                Error loading bookmarks: ${e}<br/>
             </div></body></html>`;
         }
     }
@@ -315,8 +315,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 </span>
             `).join('');
 
-            const canGoBack = (this._bookmarkService as any).canGoBack(uriStr);
-            const canGoForward = (this._bookmarkService as any).canGoForward(uriStr);
+
             const lineCount = (this._bookmarkService as any).getFileActiveLinesCount(uriStr);
 
 

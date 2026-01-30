@@ -126,12 +126,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     case 'clearAll':
                         vscode.commands.executeCommand(Constants.Commands.RemoveAllBookmarks);
                         break;
-                    case 'back':
-                        this._bookmarkService.back(data.uriString);
-                        break;
-                    case 'forward':
-                        this._bookmarkService.forward(data.uriString);
-                        break;
+
                     case 'removeGroup':
                         vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkGroup, data.groupId);
                         break;
@@ -432,12 +427,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
                             <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFile('${uriStr}')" title="${filename}">${filename}</span>
-                            <button class="nav-btn" onclick="back('${uriStr}')" title="Back" ${canGoBack ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M11.354 1.646l-6 6 6 6 .708-.708L6.773 7.646l5.289-5.292z"/></svg>
-                            </button>
-                            <button class="nav-btn" onclick="forward('${uriStr}')" title="Forward" ${canGoForward ? '' : 'disabled'}>
-                                <svg viewBox="0 0 16 16"><path fill="currentColor" d="M4.646 1.646l6 6-6 6-.708-.708 5.292-5.292-5.289-5.292z"/></svg>
-                            </button>
                             <div class="stats-label">Ln:${lineCount}, Gr:${groupCount}</div>
                             <div class="header-tags">
                                  ${tagsHtml}
@@ -849,14 +838,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     }
                     function clearAll() {
                         vscode.postMessage({ type: 'clearAll' });
-                    }
-                    function back(uriStr) {
-                         if (event) event.stopPropagation();
-                         vscode.postMessage({ type: 'back', uriString: uriStr });
-                    }
-                    function forward(uriStr) {
-                         if (event) event.stopPropagation();
-                         vscode.postMessage({ type: 'forward', uriString: uriStr });
                     }
                     function removeGroup(groupId, event) {
                         if (event) event.stopPropagation();

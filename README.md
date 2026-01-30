@@ -37,6 +37,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
+  - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 
 ## Usage
 
@@ -106,6 +107,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 This extension contributes the following settings:
 
+* `logmagnifier.jsonPreview.enabled`: Enable automatic JSON preview update when active line changes. (Default: `false`)
+* `logmagnifier.jsonPreview.maxLines`: Maximum number of lines allowed in selection for JSON preview triggers to prevent freezing. (Default: `10`)
 * `logmagnifier.regex.enableHighlight`: Enable highlighting for Regex filters in the editor. (Default: `false`)
 * `logmagnifier.editor.navigationAnimation`: Enable visual flash animation when navigating to search matches. (Default: `true`)
 * `logmagnifier.regex.highlightColor`: Background color for Regex highlight. Can be a color string, a preset name, or an object with `light`/`dark` values.

@@ -182,8 +182,6 @@ export const Constants = {
         CopyBookmarkFile: 'logmagnifier.copyBookmarkFile',
         OpenBookmarkFile: 'logmagnifier.openBookmarkFile',
         RemoveBookmarkGroup: 'logmagnifier.removeBookmarkGroup',
-
-        // ... (existing commands)
     },
 
     Views: {
@@ -410,8 +408,6 @@ export const Constants = {
         AdbPath: 'adb',
         AdbDefaultOptions: '-v threadtime',
     },
-
-    // Add other constants as needed
 } as const;
 
 export type FilterType = typeof Constants.FilterTypes.Include | typeof Constants.FilterTypes.Exclude;

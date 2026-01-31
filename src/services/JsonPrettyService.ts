@@ -145,7 +145,6 @@ export class JsonPrettyService {
             }
 
 
-
             // Update Tree View (Webview)
             // Prioritize valid JSONs, but fallback to lenient parsing for invalid ones
             // JSON Webview is now always enabled for this command
@@ -175,14 +174,13 @@ export class JsonPrettyService {
 
                 // Extract source info
                 const sourceUri = editor.document.uri.toString();
-                // If selection is single line, use that. 
+                // If selection is single line, use that.
                 // However, logProcessor extracted based on selection.active.line usually, or current line.
                 // Since this command uses active selection:
                 const sourceLine = selection.active.line;
 
                 this.jsonTreeWebview.show(results, 'JSON Preview', 'valid', tabSize, sourceUri, sourceLine, silent);
             }
-
 
 
         } catch (error) {
@@ -283,23 +281,6 @@ export class JsonPrettyService {
         }
 
         return null;
-    }
-
-    private formatOutput(original: string, jsons: ExtractedJson[]): string {
-        let output = original.trimRight() + '\n\n\n';
-
-        for (const item of jsons) {
-            if (item.type === 'valid') {
-                output += JSON.stringify(item.parsed, null, 2) + '\n\n';
-            } else if (item.type === 'invalid') {
-                output += '// [INVALID JSON]\n';
-                output += this.bestEffortFormat(item.text) + '\n\n';
-            } else if (item.type === 'incomplete') {
-                output += '// [INCOMPLETE JSON]\n';
-                output += this.bestEffortFormat(item.text) + '\n\n';
-            }
-        }
-        return output;
     }
 
     private bestEffortFormat(text: string): string {

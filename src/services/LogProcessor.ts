@@ -195,7 +195,7 @@ export class LogProcessor {
                 }
             }
 
-            // Includes: OR logic between groups. 
+            // Includes: OR logic between groups.
             // If any group has include filters, we enter "include mode".
             if (group.includes.length > 0) {
                 anyIncludeDefined = true;
@@ -209,24 +209,12 @@ export class LogProcessor {
             }
         }
 
-        // Final determination: 
+        // Final determination:
         // 1. If no include filters are defined anywhere, we include everything (that wasn't excluded).
         // 2. If include filters are defined, we only include if at least ONE matched.
         const isMatched = !anyIncludeDefined || matchFound;
 
         return { isMatched, contextLines: maxContext };
-    }
-
-    /**
-     * Checks if a line matches filters and returns the required context lines.
-     * Legacy method: Wrapper around checkMatchCompiled for backward compatibility.
-     */
-    public checkMatch(line: string, groups: FilterGroup[]): { isMatched: boolean, contextLines: number } {
-        // Optimization: if we are calling this in a loop for many lines, it's better to use checkMatchCompiled
-        // with pre-compiled groups.
-        const activeGroups = groups.filter(g => g.isEnabled);
-        const compiled = this.compileGroups(activeGroups);
-        return this.checkMatchCompiled(line, compiled);
     }
 
 }

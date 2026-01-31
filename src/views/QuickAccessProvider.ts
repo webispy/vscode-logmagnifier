@@ -91,7 +91,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
     public toggleFileSizeUnit(): void {
         const size = this.getFileSize();
-        // If undefined (error/no file), just toggle blindly or do nothing? 
+        // If undefined (error/no file), just toggle blindly or do nothing?
         // If we can't determine size, we can't check for 0. Let's assume size is 0 if undefined.
         const safeSize = size ?? 0;
 
@@ -159,7 +159,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         // Add a visual indicator for state beyond just text
         // We could use checkmark icon overlay, but for now Description + ContextValue is good.
         // Or we could change the icon color via ThemeColor if VS Code API supported it easily on TreeItems.
-        // Let's stick to standard icons but maybe change the icon itself if off? 
+        // Let's stick to standard icons but maybe change the icon itself if off?
         // User requested "buttons", so keeping the semantic icon is better.
 
         item.command = {

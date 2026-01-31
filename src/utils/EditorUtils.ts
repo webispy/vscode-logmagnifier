@@ -7,7 +7,7 @@ export class EditorUtils {
     /**
      * Tries to resolve the active text editor, prioritizing the active tab for large files
      * to prevent falling back to incorrect visible editors.
-     * 
+     *
      * @param lastActiveEditor Optional fallback if no active editor is directly found
      * @param operationName Optional name of the operation for specific error messages (e.g. "add bookmark")
      * @returns The active text editor, or undefined if none found or file is too large

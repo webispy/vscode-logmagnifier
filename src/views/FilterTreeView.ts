@@ -181,7 +181,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             return;
         }
 
-        // Item Reordering/Moving (activeItem is FilterItem) 
+        // Item Reordering/Moving (activeItem is FilterItem)
         // When we get here, activeItem is definitely NOT a group because of the check above.
         const activeFilterItem = activeItem as FilterItem;
 

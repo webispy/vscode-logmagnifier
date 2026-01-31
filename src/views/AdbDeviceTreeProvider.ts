@@ -17,7 +17,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
     }
 
     public initialize() {
-        // Kept for backward compatibility or manual refresh if needed, 
+        // Kept for backward compatibility or manual refresh if needed,
         // but getChildren handles lazy load now.
         if (!this.initialized) {
             this.refreshDevices();

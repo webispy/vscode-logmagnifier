@@ -74,9 +74,9 @@ export class JsonTreeWebview {
                     --row-hover-bg: var(--vscode-list-hoverBackground);
                     --row-focus-bg: var(--vscode-list-activeSelectionBackground);
                     --row-focus-fg: var(--vscode-list-activeSelectionForeground);
-                    
+
                     /* Stronger highlights */
-                    --highlight-bg: #ea5c00; 
+                    --highlight-bg: #ea5c00;
                     --highlight-fg: #ffffff;
                     --current-match-bg: #007acc;
                     --current-match-fg: #ffffff;
@@ -121,7 +121,7 @@ export class JsonTreeWebview {
                     display: flex;
                     justify-content: flex-start;
                     align-items: center;
-                    flex-wrap: wrap; 
+                    flex-wrap: wrap;
                     gap: 8px;
                     padding-bottom: 8px;
                     border-bottom: 1px solid var(--vscode-widget-border);
@@ -153,7 +153,7 @@ export class JsonTreeWebview {
                     z-index: 20;
                     justify-content: flex-start;
                 }
-                
+
                 .search-wrapper {
                     position: relative;
                     display: flex;
@@ -177,7 +177,7 @@ export class JsonTreeWebview {
                 input[type="text"]:focus {
                     outline: 1px solid var(--vscode-focusBorder);
                 }
-                
+
                 .count-overlay {
                     position: absolute;
                     right: 6px;
@@ -194,7 +194,7 @@ export class JsonTreeWebview {
                     overflow: hidden;
                     text-overflow: ellipsis;
                 }
-                
+
                 .search-actions {
                     display: flex;
                     gap: 4px;
@@ -226,7 +226,7 @@ export class JsonTreeWebview {
                      padding: 5px 10px;
                      display: inline-block; /* revert flex center for text? or keep flex but auto width */
                 }
-                
+
                 button:hover {
                     background-color: var(--vscode-button-hoverBackground);
                 }
@@ -234,7 +234,7 @@ export class JsonTreeWebview {
                     opacity: 0.5;
                     cursor: not-allowed;
                 }
-                
+
                 input[type="number"]:focus {
                     outline: 1px solid var(--vscode-focusBorder);
                 }
@@ -263,13 +263,13 @@ export class JsonTreeWebview {
                     cursor: pointer;
                     font-size: 16px; /* Larger symbol */
                     font-weight: bold;
-                    border-radius: 0; 
+                    border-radius: 0;
                 }
-                
+
                 .depth-btn:hover {
                     background-color: var(--vscode-list-hoverBackground);
                 }
-                
+
                 .depth-btn:active {
                    background-color: var(--vscode-list-activeSelectionBackground);
                    color: var(--vscode-list-activeSelectionForeground);
@@ -290,12 +290,12 @@ export class JsonTreeWebview {
                 }
 
                 /* Text Label Buttons */
-                
+
                 .tree-root {
                     user-select: text; /* Allow selection */
                     padding-top: 4px;
                 }
-                
+
                 .text-block.compact-wrap {
                     white-space: pre-wrap;
                     word-break: break-all;
@@ -310,7 +310,7 @@ export class JsonTreeWebview {
                     white-space: pre-wrap; /* Allow wrapping if needed, but usually single line */
                     font-family: var(--vscode-editor-font-family);
                 }
-                
+
                 .tree-row:hover {
                     background-color: var(--row-hover-bg);
                 }
@@ -320,7 +320,7 @@ export class JsonTreeWebview {
                     color: var(--row-focus-fg);
                     outline: none;
                 }
-                
+
                 .arrow {
                     display: inline-block;
                     width: 20px;
@@ -332,21 +332,20 @@ export class JsonTreeWebview {
                     transition: transform 0.1s;
                     flex-shrink: 0;
                 }
-                
+
                 .arrow::before {
-                    content: '▶'; 
+                    content: '▶';
                     display: inline-block;
                     font-size: 12px;
                 }
-                
+
                 .expanded > .tree-row > .arrow::before {
                     transform: rotate(90deg);
                 }
-                
 
 
                 .leaf-spacer {
-                    width: 20px; 
+                    width: 20px;
                     display: inline-block;
                     flex-shrink: 0;
                 }
@@ -368,7 +367,7 @@ export class JsonTreeWebview {
                 .value.number { color: var(--number-color); }
                 .value.boolean { color: var(--boolean-color); }
                 .value.null { color: var(--null-color); }
-                
+
                 .focused .value { color: inherit; }
 
                 .meta {
@@ -376,7 +375,7 @@ export class JsonTreeWebview {
                     font-size: 0.9em;
                     margin-left: 5px;
                 }
-                
+
                 .children { display: none; }
                 .expanded > .children { display: block; }
 
@@ -420,7 +419,7 @@ export class JsonTreeWebview {
                 <button id="btn-toggle-view">Beautifier</button>
                 <button id="btn-reveal">Go to Definition</button>
             </div>
-            
+
             <div id="tree-container" class="tree-root" tabindex="0"></div>
             <div id="text-container" class="text-root" tabindex="0"></div>
 
@@ -456,11 +455,11 @@ export class JsonTreeWebview {
                 let sourceUri = '${sourceUri || ''}';
                 let sourceLine = ${sourceLine ?? -1};
                 let currentDepth = ${expansionDepth};
-                
+
                 let focusedRowDetails = null;
                 let isCompact = false;
                 let isTreeView = true;
-                
+
                 // Search State
                 let searchMatches = [];
                 let currentMatchIndex = -1;
@@ -477,7 +476,7 @@ export class JsonTreeWebview {
 
                 function render() {
                     treeContainer.innerHTML = '';
-                    
+
                     const items = getItems();
                     if (items.length === 0) return;
 
@@ -485,7 +484,7 @@ export class JsonTreeWebview {
                     items.forEach((item, index) => {
                         renderMultiRootItem(treeContainer, item.data, item.status, index + 1);
                     });
-                    
+
                     // Render Text
                     renderTextContainer();
                 }
@@ -503,10 +502,10 @@ export class JsonTreeWebview {
                 function renderTextItem(parent, data, text, status, index, rawData) {
                     const wrapper = document.createElement('div');
                     wrapper.style.marginBottom = '30px';
-                    wrapper.dataset.originalText = text; 
+                    wrapper.dataset.originalText = text;
                     // Store raw JSON if valid, to allow re-beautifying
-                    wrapper.dataset.jsonData = (status === 'valid' && rawData) ? JSON.stringify(rawData) : ''; 
-                    
+                    wrapper.dataset.jsonData = (status === 'valid' && rawData) ? JSON.stringify(rawData) : '';
+
                     const header = document.createElement('div');
                     header.style.marginBottom = '4px';
 
@@ -518,7 +517,7 @@ export class JsonTreeWebview {
 
                     const pre = document.createElement('div');
                     pre.className = 'text-block';
-                    
+
                     if (status === 'valid' && rawData) {
                          // Use rawData for correct structure
                          if (isCompact) {
@@ -589,40 +588,40 @@ export class JsonTreeWebview {
                      if (isTreeView) {
                         treeContainer.style.display = 'block';
                         textContainer.style.display = 'none';
-                        
+
                         const depthControl = document.querySelector('.depth-control');
-                        
+
                         // Toolbar State: Tree View
                         // Order: Expand, Collapse, Beautifier, Go to Definition
                         if (depthControl) depthControl.style.display = 'inline-flex';
-                        
+
                         btnCompact.style.display = 'none';
-                        
+
                         btnToggleView.textContent = 'Beautifier';
                         btnToggleView.style.display = 'inline-flex';
-                        
+
                         btnReveal.textContent = 'Go to Definition';
-                        btnReveal.style.display = 'inline-flex'; 
+                        btnReveal.style.display = 'inline-flex';
                         updateRecallButton(); // Will hide if no source
 
                         document.querySelector('.bottom-toolbar').style.display = 'flex';
                     } else {
                         const depthControl = document.querySelector('.depth-control');
-                        
+
                         // Toolbar State: Text View
-                         // If switching to Text View, ensure label is correct. 
+                         // If switching to Text View, ensure label is correct.
                          // isCompact state is preserved.
                          btnCompact.textContent = isCompact ? 'Beautifier' : 'Compact';
                          btnCompact.style.display = 'inline-flex';
-                        
+
                         treeContainer.style.display = 'none';
                         textContainer.style.display = 'block';
-                        
+
                         // Order: Compact (above), Preview, Go to Definition
                         btnToggleView.textContent = 'Preview';
-                        
+
                         if (depthControl) depthControl.style.display = 'none';
-                        
+
                         // Show Reveal (Go to Definition) in Text View as well
                         if (sourceUri && sourceLine >= 0) {
                              btnReveal.textContent = 'Go to Definition';
@@ -634,11 +633,11 @@ export class JsonTreeWebview {
                         document.querySelector('.bottom-toolbar').style.display = 'none';
                     }
                 }
-                
+
                 function toggleCompact() {
                     isCompact = !isCompact;
                     renderTextContainer();
-                    
+
                     if (isCompact) {
                         btnCompact.textContent = 'Beautifier';
                     } else {
@@ -658,33 +657,32 @@ export class JsonTreeWebview {
                     }
                     wrapper.style.marginBottom = '30px'; // Increased spacing
                     wrapper.style.borderLeft = 'none'; // Remove border
-                    
+
                     const header = document.createElement('div');
                     header.style.padding = '4px 0'; // Minimal padding
                     header.style.marginBottom = '4px';
-                    
+
                     // Status Badge for this item (No index, no arrow)
                     const badge = document.createElement('span');
                     badge.className = 'status-badge ' + (status === 'valid' ? 'status-valid' : 'status-invalid');
                     badge.textContent = status === 'valid' ? 'Valid JSON' : (status === 'no-json' ? 'No JSON' : 'Invalid JSON');
                     badge.style.marginRight = '0'; // Reset margin
                     header.appendChild(badge);
-                    
+
                     wrapper.appendChild(header);
-                    
+
                     if (status !== 'no-json') {
                         const content = document.createElement('div');
                         content.className = 'children';
-                        content.style.display = 'block'; 
-                        
+                        content.style.display = 'block';
+
                         // Root content is effectively at depth 0 relative to itself, but children start at 1
                         renderRootContent(content, data);
                         wrapper.appendChild(content);
                     }
-                    
+
                     parent.appendChild(wrapper);
                 }
-
 
 
                 function renderNode(parent, key, nodeData, depth, isRoot, isKeyError) {
@@ -697,7 +695,7 @@ export class JsonTreeWebview {
 
                     const node = document.createElement('div');
                     node.className = 'tree-node';
-                    
+
                     // Expand node if its depth is less than the current visible depth
                     if (depth < currentDepth) {
                         node.classList.add('expanded');
@@ -705,7 +703,7 @@ export class JsonTreeWebview {
 
                     const row = document.createElement('div');
                     row.className = 'tree-row';
-                    row.tabIndex = -1; 
+                    row.tabIndex = -1;
                     row.dataset.key = key;
                     row.style.paddingLeft = (depth * 20) + 'px';
 
@@ -730,16 +728,16 @@ export class JsonTreeWebview {
                     const keySpan = document.createElement('span');
                     keySpan.className = 'key';
                     if (isKeyError) keySpan.classList.add('error');
-                    
+
                     // Add brackets if array index
                     if (/^\\d+$/.test(key)) {
                             keySpan.textContent = '[' + key + ']';
                     } else {
                             keySpan.textContent = key;
                     }
-                    
+
                     row.appendChild(keySpan);
-                    
+
                     // Separator removed visually (display:none in CSS)
                     const sep = document.createElement('span');
                     sep.className = 'separator';
@@ -748,7 +746,7 @@ export class JsonTreeWebview {
 
                     if (!hasChildren) {
                         const valSpan = document.createElement('span');
-                        
+
                         valSpan.className = 'value ' + type;
                         if (isError) valSpan.classList.add('error');
 
@@ -757,7 +755,7 @@ export class JsonTreeWebview {
                         } else {
                             valSpan.textContent = String(value);
                         }
-                        
+
                         row.appendChild(valSpan);
                     } else {
                         if (isArray) {
@@ -772,7 +770,7 @@ export class JsonTreeWebview {
                         } else if (isObject) {
                              // Object meta? Usually just {}
                         }
-                        
+
                         if (isError) {
                              const errSpan = document.createElement('span');
                              errSpan.className = 'meta error';
@@ -786,7 +784,7 @@ export class JsonTreeWebview {
                     if (hasChildren) {
                         const childrenContainer = document.createElement('div');
                         childrenContainer.className = 'children';
-                        
+
                         if (isObject && nodeData.children) {
                             for (const child of nodeData.children) {
                                 renderNode(childrenContainer, child.key, child.value, depth + 1, false, child.isKeyError);
@@ -796,7 +794,7 @@ export class JsonTreeWebview {
                                 renderNode(childrenContainer, String(idx), item, depth + 1, false, false);
                             });
                         }
-                        
+
                         node.appendChild(childrenContainer);
                     }
 
@@ -807,7 +805,7 @@ export class JsonTreeWebview {
                     node.classList.toggle('expanded');
                     focusRow(node.querySelector('.tree-row'));
                 }
-                
+
                 function expand() {
                     currentDepth++;
                     updateExpansion();
@@ -821,7 +819,7 @@ export class JsonTreeWebview {
                         saveState();
                     }
                 }
-                
+
                 function saveState() {
                     vscode.postMessage({ command: 'saveState', expansionDepth: currentDepth });
                 }
@@ -847,7 +845,7 @@ export class JsonTreeWebview {
                     clearHighlights();
                     searchMatches = [];
                     currentMatchIndex = -1;
-                    
+
                     if (!query) {
                         updateSearchUI();
                         return;
@@ -881,39 +879,39 @@ export class JsonTreeWebview {
                     const text = domNode.textContent;
                     const lowerText = text.toLowerCase();
                     let lastIndex = 0;
-                    
+
                     // Allow multiple matches in same string
                     const fragments = [];
                     let matchIndex = lowerText.indexOf(query, lastIndex);
-                    
-                    if (matchIndex === -1) return; 
+
+                    if (matchIndex === -1) return;
 
                     // We need to rebuild innerHTML
                     domNode.innerHTML = '';
-                    
+
                     while (matchIndex !== -1) {
                          const before = text.substring(lastIndex, matchIndex);
                          const match = text.substring(matchIndex, matchIndex + query.length);
-                         
+
                          domNode.appendChild(document.createTextNode(before));
-                         
+
                          const span = document.createElement('span');
                          span.className = 'highlight';
                          span.textContent = match;
                          domNode.appendChild(span);
                          searchMatches.push(span);
-                         
+
                          lastIndex = matchIndex + query.length;
                          matchIndex = lowerText.indexOf(query, lastIndex);
                     }
-                    
+
                     const after = text.substring(lastIndex);
                     domNode.appendChild(document.createTextNode(after));
                 }
 
                 function jumpToMatch(index) {
                     if (index < 0 || index >= searchMatches.length) return;
-                    
+
                     if (currentMatchIndex >= 0 && searchMatches[currentMatchIndex]) {
                         searchMatches[currentMatchIndex].classList.remove('current-match');
                     }
@@ -921,7 +919,7 @@ export class JsonTreeWebview {
                     currentMatchIndex = index;
                     const match = searchMatches[currentMatchIndex];
                     match.classList.add('current-match');
-                    
+
                     // Ensure visibility only when navigating
                     ensureVisible(match);
 
@@ -929,10 +927,10 @@ export class JsonTreeWebview {
                     setTimeout(() => {
                         match.scrollIntoView({ block: 'center', behavior: 'auto' });
                     }, 50);
-                    
+
                     const row = match.closest('.tree-row');
                     if (row) focusRow(row);
-                    
+
                     updateSearchUI();
                 }
 
@@ -965,7 +963,7 @@ export class JsonTreeWebview {
                         btnNext.disabled = true;
                     }
                 }
-                
+
                 searchInput.addEventListener('input', () => performSearch());
                 searchInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -973,11 +971,11 @@ export class JsonTreeWebview {
                         // Jump to next match (or first if none selected)
                         let nextIndex = currentMatchIndex + 1;
                         if (e.shiftKey) nextIndex = currentMatchIndex - 1;
-                        
+
                         // Wrap
                         if (nextIndex >= searchMatches.length) nextIndex = 0;
                         if (nextIndex < 0) nextIndex = searchMatches.length - 1;
-                        
+
                         jumpToMatch(nextIndex);
                     }
                 });
@@ -1038,9 +1036,9 @@ export class JsonTreeWebview {
                         searchInput.focus();
                     }
                 });
-                
+
                 function getNextVisibleRow(currentRow) {
-                     const allRows = Array.from(document.querySelectorAll('.tree-row')); 
+                     const allRows = Array.from(document.querySelectorAll('.tree-row'));
                      let idx = allRows.indexOf(currentRow);
                      for (let i = idx + 1; i < allRows.length; i++) {
                          if (isVisible(allRows[i])) return allRows[i];
@@ -1058,12 +1056,12 @@ export class JsonTreeWebview {
                 }
 
                 function isVisible(el) {
-                    return el.offsetParent !== null; 
+                    return el.offsetParent !== null;
                 }
 
                 const btnCollapseEl = document.getElementById('btn-collapse');
                 if (btnCollapseEl) btnCollapseEl.addEventListener('click', collapse);
-                
+
                 const btnExpandEl = document.getElementById('btn-expand');
                 if (btnExpandEl) btnExpandEl.addEventListener('click', expand);
 
@@ -1077,11 +1075,11 @@ export class JsonTreeWebview {
                         btnReveal.style.display = 'none';
                     }
                 }
-                
+
                 btnReveal.addEventListener('click', () => {
                    if (sourceUri && sourceLine >= 0) {
                        vscode.postMessage({ command: 'reveal', uri: sourceUri, line: sourceLine });
-                   } 
+                   }
                 });
 
                 window.addEventListener('message', event => {
@@ -1096,13 +1094,13 @@ export class JsonTreeWebview {
                              currentDepth = message.expansionDepth;
                              if (depthDisplay) depthDisplay.textContent = 'Depth ' + currentDepth;
                         }
-                        
+
                         // Reset search on update
                         if (searchInput) {
                             searchInput.value = '';
-                            performSearch(); 
+                            performSearch();
                         }
-                        
+
                         // Always switch to Tree View on new content
                         isTreeView = true;
                         updateView();

@@ -271,8 +271,6 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
 
-
-
     public getActiveLinesCount(): number {
         // Legacy/Global count: sum of all files
         let total = 0;
@@ -333,9 +331,6 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getBookmarks(): Map<string, BookmarkItem[]> {
-        // Return a cleaner copy? Or just the map.
-        // For compatibility with previous map<string, BookmarkItem[]>, we can just return _bookmarks
-        // filtering is not needed if we assume _bookmarks is the source of truth.
         return this._bookmarks;
     }
 
@@ -353,10 +348,7 @@ export class LogBookmarkService implements vscode.Disposable {
     private updateDecorations(editor: vscode.TextEditor) {
         try {
             const key = editor.document.uri.toString();
-            // Reverted to using getBookmarks() to ensure consistency, though less efficient.
-            // TODO: Optimize this to single-file lookup once stability is confirmed.
-            const activeBookmarksMap = this.getBookmarks();
-            const activeBookmarks = activeBookmarksMap.get(key);
+            const activeBookmarks = this._bookmarks.get(key);
 
             if (activeBookmarks && activeBookmarks.length > 0) {
                 const ranges = activeBookmarks.map(b => new vscode.Range(b.line, 0, b.line, 0));

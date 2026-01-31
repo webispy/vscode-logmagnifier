@@ -579,7 +579,7 @@ export class AdbService {
                     this.logger.warn(`[ADB] Clear cache failed (might need debuggable app): ${err.message}`);
                     // We interpret 'run-as: package not debuggable' as a sort of failure but we resolve true so UI isn't blocked?
                     // actually resolve false to maybe warn user?
-                    // Detailed error often in stderr. 
+                    // Detailed error often in stderr.
                     resolve(false);
                     return;
                 }

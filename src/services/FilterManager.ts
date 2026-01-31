@@ -8,7 +8,6 @@ import { FilterStateService } from './FilterStateService';
 import * as crypto from 'crypto';
 
 
-
 export class FilterManager {
     private groups: FilterGroup[] = [];
     private colorPresets: ColorPreset[] = [];
@@ -60,17 +59,6 @@ export class FilterManager {
 
     private saveDebounceTimer: NodeJS.Timeout | undefined;
 
-    private ensureFilterMigration(filter: FilterItem): void {
-        if (filter.highlightMode === undefined) {
-            interface LegacyFilterItem {
-                enableFullLineHighlight?: boolean;
-            }
-            const legacy = filter as unknown as LegacyFilterItem;
-            filter.highlightMode = legacy.enableFullLineHighlight ? 1 : 0;
-            delete legacy.enableFullLineHighlight;
-        }
-    }
-
     private debouncedSaveToState() {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
@@ -78,16 +66,7 @@ export class FilterManager {
         this.saveDebounceTimer = setTimeout(async () => {
             try {
                 this.stateService.saveToState(this.groups);
-                // Also update active profile if needed, but ProfileManager handles separate persistence based on explicit actions usually.
-                // However, original code synced persistence to active profile on every internal change?
-                // Yes, "2. Auto-save to Active Profile" was in saveToState.
-                // We should replicate that behavior if we want auto-save.
-                // ProfileManager.updateProfileData does that.
-
                 const activeWrapper = this.profileManager.getActiveProfile();
-                // We need to call profileManager.updateProfileData(activeWrapper, this.groups)
-                // But wait, updateProfileData needs to be exposed or we use a public method?
-                // created ProfileManager.updateProfileData as public.
                 await this.profileManager.updateProfileData(activeWrapper, this.groups);
 
             } catch (e) {
@@ -97,7 +76,6 @@ export class FilterManager {
             }
         }, 300);
     }
-
 
 
     private initDefaultFilters(): void {
@@ -548,7 +526,7 @@ export class FilterManager {
             if (exists) {
                 this.logger.warn(`Cannot move filter: Duplicate exists in target group '${targetGroup.name}'`);
                 // Optionally show a UI message? For now, we just abort.
-                // Since this is a void method called from drop handler, we can't easily bubble up error message to UI 
+                // Since this is a void method called from drop handler, we can't easily bubble up error message to UI
                 // without changing architecture, but logging is good.
                 vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', activeFilter.keyword).replace('{1}', targetGroup.name));
                 return;
@@ -559,9 +537,9 @@ export class FilterManager {
         sourceGroup.filters.splice(activeIndex, 1);
 
         // Find insertion point in target
-        // If moving within same group, references might need adjustment if using index, 
+        // If moving within same group, references might need adjustment if using index,
         // but here we removed first, so indices shifting is handled.
-        // Wait, if source == target, and we removed 'activeFilter', 
+        // Wait, if source == target, and we removed 'activeFilter',
         // we need to find 'targetFilterId' index in the *modified* array
 
         // However, if we removed it, 'targetFilterId' might be the one we just removed? No, target is distinct.
@@ -761,11 +739,11 @@ export class FilterManager {
         }
 
         if (changed) {
-            // Optional: fire a general event if many things changed, 
+            // Optional: fire a general event if many things changed,
             // but for partial refresh we want specific events which we fired above.
-            // If the tree view needs a general "something changed, check everything" signal, 
+            // If the tree view needs a general "something changed, check everything" signal,
             // we could fire a void event here, but we are firing specific ones.
-            // this._onDidChangeResultCounts.fire(); 
+            // this._onDidChangeResultCounts.fire();
         }
     }
 
@@ -786,22 +764,7 @@ export class FilterManager {
     public async deleteProfile(name: string): Promise<boolean> {
         const success = await this.profileManager.deleteProfile(name);
         if (success) {
-            // Check if we need to switch to default active profile if the deleted one was active
-            // ProfileManager.deleteProfile updates state, but we need to update our in-memory groups
             if (this.profileManager.getActiveProfile() === Constants.Labels.DefaultProfile) {
-                // If we were on the deleted profile, we should have switched?
-                // ProfileManager.deleteProfile:
-                // if (this.getActiveProfile() === name) { switch to default ... }
-                // So now getActiveProfile() should be Default.
-                // We just need to load Default profile into memory.
-
-                // But wait, if we are here, we might have been on the deleted profile.
-                // We should check if our 'this.groups' effectively needs reload.
-                // Simpler: Just reload "Default" profile if current profile name matches deleted one?
-                // But ProfileManager already switched state.
-
-                // Let's just blindly reload FilterGroups from state?
-                // Or reload Default explicitly.
                 await this.loadProfile(Constants.Labels.DefaultProfile);
             }
         }
@@ -809,7 +772,6 @@ export class FilterManager {
     }
 
     public async saveProfile(name: string): Promise<void> {
-        // 'saveProfile' logic seems to be "Save current groups to profile 'name'"
         await this.profileManager.updateProfileData(name, this.groups);
     }
 
@@ -818,16 +780,6 @@ export class FilterManager {
         const tempGroups: FilterGroup[] = [];
         // We temporarily use this.groups to generate defaults or we can refactor initDefaultFilters.
         // For now, let's manually create the default group structure or just use empty if initDefaultFilters depends on this.groups state.
-        // initDefaultFilters checks if regex groups exist.
-        // Let's rely on ProfileManager to just store what we give it.
-
-        // We'll create a fresh set of defaults to save.
-        // Actually, simpler:
-        // 1. Create defaults in a temporary local array?
-        // initDefaultFilters pushes to this.groups.
-        // Let's clone current, clear this.groups, init defaults, save to profile, then load it?
-        // That effectively switches to it.
-
         const previousGroups = this.stateService.deepCopy(this.groups);
         this.groups = [];
         this.initDefaultFilters();
@@ -835,10 +787,7 @@ export class FilterManager {
         const success = await this.profileManager.createProfile(name, this.stateService.deepCopy(this.groups));
         if (success) {
             this.stateService.saveToState(this.groups);
-            // ProfileManager createProfile DOES NOT switch active profile automatically in the service?
-            // Checking service: createProfile just pushes to array.
-            // So we need to switch.
-            await this.profileManager.loadProfile(name); // This sets active profile state
+            await this.profileManager.loadProfile(name);
             this.invalidateCache();
             this._onDidChangeFilters.fire();
             this.logger.info(`Created and switched to new profile: ${name}`);

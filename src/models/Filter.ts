@@ -11,7 +11,7 @@ export interface FilterItem {
     highlightMode?: number; // 0: Word, 1: Line, 2: Full Line
     caseSensitive?: boolean;
     resultCount?: number;
-    contextLine?: number; // 0, 1, 3, 5, 10
+    contextLine?: number; // 0, 3, 5, 9
     excludeStyle?: 'line-through' | 'hidden'; // Default: line-through
 }
 

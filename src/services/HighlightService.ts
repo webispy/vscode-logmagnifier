@@ -306,7 +306,7 @@ export class HighlightService implements vscode.Disposable {
             // I'll keep it simple for now as requested.
 
             if (filter.isRegex) {
-                // Optimization: Avoid showing message repeatedly? 
+                // Optimization: Avoid showing message repeatedly?
                 // VS Code suppresses duplicate notifications usually.
                 vscode.window.showErrorMessage(
                     Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.keyword),
@@ -386,7 +386,6 @@ export class HighlightService implements vscode.Disposable {
         if (!editor || line < 0) {
             return;
         }
-
 
 
         // Cancel previous animation if active

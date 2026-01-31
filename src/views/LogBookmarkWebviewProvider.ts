@@ -488,7 +488,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         border-bottom: 1px solid var(--vscode-panel-border);
                         overflow: hidden;
                     }
-                    
+
                     .file-nav-bar {
                         display: flex;
                         align-items: center;
@@ -588,7 +588,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         font-weight: 700;
                     }
                     /* Ensure icons inherit color in active state */
-                    .file-section.active-file .action-btn, 
+                    .file-section.active-file .action-btn,
                     .file-section.active-file .nav-btn,
                     .file-section.active-file .fold-toggle {
                         color: var(--vscode-list-activeSelectionForeground);
@@ -638,7 +638,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         color: var(--vscode-breadcrumb-foreground);
                         padding: 1px 4px;
                         border-radius: 4px;
-                        
+
                         /* Layout & Overflow */
                         display: inline-block;
                         white-space: nowrap;
@@ -709,7 +709,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         opacity: 1;
                         background-color: var(--vscode-editor-selectionBackground);
                     }
-
 
 
                     .content {
@@ -856,7 +855,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
                     // Restore ID map for jumps
                     const itemsMap = ${JSON.stringify(itemsMap)};
-                    
+
                     // State Management for scroll position
                     let state = vscode.getState() || {};
 
@@ -894,7 +893,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         // 1. Remove old active classes
                         const activeFiles = document.querySelectorAll('.file-section.active-file');
                         activeFiles.forEach(el => el.classList.remove('active-file'));
-                        
+
                         const activeBtns = document.querySelectorAll('.file-nav-btn.active');
                         activeBtns.forEach(el => el.classList.remove('active'));
 
@@ -908,7 +907,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
                             const btn = document.querySelector('.file-nav-btn[data-uri="' + uriStr + '"]');
                             if (btn) btn.classList.add('active');
-                            
+
                             // 3. Smart Scroll
                             scrollToUri(uriStr);
                         }
@@ -918,7 +917,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     function focusFileScroll(uriStr) {
                         // Instant Scroll first
                         scrollToUri(uriStr);
-                        
+
                         // Focus in editor
                         vscode.postMessage({ type: 'focusFile', uriString: uriStr });
                     }
@@ -984,7 +983,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     function clearAll() {
                         vscode.postMessage({ type: 'clearAll' });
                     }
-                    
+
                      function toggleWordWrap() {
                         vscode.postMessage({ type: 'toggleWordWrap' });
                     }
@@ -1018,21 +1017,21 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     window.addEventListener('load', () => {
                         const activeEl = document.querySelector('.file-section.active-file');
                         if (activeEl) {
-                             // Smart scroll on load? 
+                             // Smart scroll on load?
                              // Wait for layout
                             setTimeout(() => {
                                 // Get Active URI from active element ID? ID="section-..."
                                 const id = activeEl.id;
                                 if (id && id.startsWith('section-')) {
                                     const uriStr = id.substring(8);
-                                    
+
                                      // Check visibility first
                                     const rect = activeEl.getBoundingClientRect();
                                     const isVisible = (
                                         rect.top >= 0 &&
                                         rect.bottom <= (window.innerHeight || document.documentElement.clientHeight)
                                     );
-                                    
+
                                     if (!isVisible) {
                                          // Reuse logic
                                          let scrolled = false;
@@ -1043,7 +1042,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                                  scrolled = true;
                                              }
                                          }
-                                         
+
                                          if (!scrolled) {
                                               const firstLine = activeEl.querySelector('.log-line');
                                              if (firstLine) {
@@ -1056,7 +1055,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                 }
                             }, 100);
                         }
-                        
+
                         // Also scroll Active Button into view in the nav bar
                          const activeBtn = document.querySelector('.file-nav-btn.active');
                         if (activeBtn) {

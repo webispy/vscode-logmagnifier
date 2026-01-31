@@ -549,7 +549,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(2)));
 
 
-
         const toggleCaseSensitivityHandler = (item: FilterItem) => {
             const groups = this.filterManager.getGroups();
             let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
@@ -603,7 +602,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus9, setContextLineHandler(9)));
 
 
-
         const changeColorHandler = async (item: any) => {
             const groups = this.filterManager.getGroups();
             let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
@@ -641,15 +639,11 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ChangeFilterColor.Prefix, changeColorHandler));
 
 
-
         // Register specific color commands to support specific tooltips
         const colorPresets = this.filterManager.getAvailableColors();
         colorPresets.forEach(colorId => {
             this.context.subscriptions.push(vscode.commands.registerCommand(`${Constants.Commands.ChangeFilterColor.Prefix}.${colorId}`, changeColorHandler));
         });
-
-
-
 
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleJsonPreview, async () => {

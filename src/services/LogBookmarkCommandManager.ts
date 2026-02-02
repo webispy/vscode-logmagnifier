@@ -137,6 +137,24 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    private processBookmarkMatches(editor: vscode.TextEditor, matchedLines: number[], matchText: string, maxMatches: number) {
+        if (matchedLines.length === 0) {
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);
+            return;
+        }
+
+        if (matchedLines.length > maxMatches) {
+            const truncatedLines = matchedLines.slice(0, maxMatches);
+            vscode.window.showWarningMessage(
+                `Found more than ${maxMatches} matches. Limited to ${maxMatches} bookmarks based on your settings.`
+            );
+            this.bookmarkService.addBookmarks(editor, truncatedLines, { matchText: matchText });
+        } else {
+            const count = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: matchText });
+            vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', count.toString()));
+        }
+    }
+
     private toggleBookmark() {
         const editor = this.getActiveEditor();
         if (!editor) { return; }
@@ -188,16 +206,7 @@ export class LogBookmarkCommandManager {
             }
             vscode.window.showInformationMessage(`Removed ${removedCount} bookmarks matching selection '${selectedText}'.`);
         } else {
-            if (matchedLines.length > MAX_MATCHES) {
-                const truncatedLines = matchedLines.slice(0, MAX_MATCHES);
-                vscode.window.showWarningMessage(
-                    `Found more than ${MAX_MATCHES} matches. Limited to ${MAX_MATCHES} bookmarks based on your settings.`
-                );
-                this.bookmarkService.addBookmarks(editor, truncatedLines, { matchText: selectedText });
-            } else {
-                const count = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: selectedText });
-                vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', count.toString()));
-            }
+            this.processBookmarkMatches(editor, matchedLines, selectedText, MAX_MATCHES);
         }
     }
 
@@ -225,20 +234,7 @@ export class LogBookmarkCommandManager {
         const matchedLines: number[] = [];
         this.findMatchingLines(editor.document, regex, MAX_MATCHES + 1, (line) => matchedLines.push(line));
 
-        if (matchedLines.length > 0) {
-            if (matchedLines.length > MAX_MATCHES) {
-                const truncatedLines = matchedLines.slice(0, MAX_MATCHES);
-                vscode.window.showWarningMessage(
-                    `Found more than ${MAX_MATCHES} matches. Limited to ${MAX_MATCHES} bookmarks based on your settings.`
-                );
-                this.bookmarkService.addBookmarks(editor, truncatedLines, { matchText: selectedText });
-            } else {
-                const count = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: selectedText });
-                vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', count.toString()));
-            }
-        } else {
-            vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);
-        }
+        this.processBookmarkMatches(editor, matchedLines, selectedText, MAX_MATCHES);
     }
 
     private async addMatchListToBookmark(filter: FilterItem) {
@@ -261,20 +257,7 @@ export class LogBookmarkCommandManager {
         const matchedLines: number[] = [];
         this.findMatchingLines(editor.document, regex, MAX_MATCHES + 1, (line) => matchedLines.push(line));
 
-        if (matchedLines.length > 0) {
-            if (matchedLines.length > MAX_MATCHES) {
-                const truncatedLines = matchedLines.slice(0, MAX_MATCHES);
-                vscode.window.showWarningMessage(
-                    `Found more than ${MAX_MATCHES} matches. Limited to ${MAX_MATCHES} bookmarks based on your settings.`
-                );
-                this.bookmarkService.addBookmarks(editor, truncatedLines, { matchText: keyword });
-            } else {
-                const count = this.bookmarkService.addBookmarks(editor, matchedLines, { matchText: keyword });
-                vscode.window.showInformationMessage(Constants.Messages.Info.AddedBookmarks.replace('{0}', count.toString()));
-            }
-        } else {
-            vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);
-        }
+        this.processBookmarkMatches(editor, matchedLines, keyword, MAX_MATCHES);
     }
 
     private removeBookmark(item: BookmarkItem) {

@@ -27,6 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
 	logger.info('LogMagnifier activated');
 
 	const filterManager = new FilterManager(context);
+	context.subscriptions.push(filterManager);
 
 	const quickAccessProvider = new QuickAccessProvider(filterManager);
 	const logProcessor = new LogProcessor();
@@ -38,6 +39,7 @@ export function activate(context: vscode.ExtensionContext) {
 	let lastProcessedDoc: vscode.TextDocument | undefined;
 
 	const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word');
+	context.subscriptions.push(wordTreeDataProvider);
 	const wordTreeView = vscode.window.createTreeView(Constants.Views.Filters, {
 		treeDataProvider: wordTreeDataProvider,
 		dragAndDropController: wordTreeDataProvider,
@@ -45,6 +47,7 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex');
+	context.subscriptions.push(regexTreeDataProvider);
 	const regexTreeView = vscode.window.createTreeView(Constants.Views.RegexFilters, {
 		treeDataProvider: regexTreeDataProvider,
 		dragAndDropController: regexTreeDataProvider,
@@ -96,6 +99,7 @@ export function activate(context: vscode.ExtensionContext) {
 
 	// ADB Devices
 	const adbService = new AdbService(logger);
+	context.subscriptions.push(adbService);
 	const adbDeviceTreeProvider = new AdbDeviceTreeProvider(adbService);
 	vscode.window.registerTreeDataProvider(Constants.Views.ADBDevices, adbDeviceTreeProvider);
 	new AdbCommandManager(context, adbService, adbDeviceTreeProvider);
@@ -106,7 +110,7 @@ export function activate(context: vscode.ExtensionContext) {
 	const bookmarkService = new LogBookmarkService(context);
 	context.subscriptions.push(bookmarkService);
 
-	const bookmarkWebviewProvider = new LogBookmarkWebviewProvider(context.extensionUri, bookmarkService);
+	const bookmarkWebviewProvider = new LogBookmarkWebviewProvider(context.extensionUri, bookmarkService, logger);
 	context.subscriptions.push(
 		vscode.window.registerWebviewViewProvider(Constants.Views.Bookmark, bookmarkWebviewProvider)
 	);
@@ -302,6 +306,7 @@ export function activate(context: vscode.ExtensionContext) {
 			resultCountService.clearCounts();
 			quickAccessProvider.refresh();
 		}
+		sourceMapService.unregister(doc.uri);
 	}));
 }
 

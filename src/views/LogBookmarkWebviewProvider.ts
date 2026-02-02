@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
+import { BookmarkWebviewMessage, SerializedBookmarkItem } from '../models/WebviewModels';
 import { Constants } from '../constants';
 import { Logger } from '../services/Logger';
 
@@ -12,7 +13,8 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
-        private readonly _bookmarkService: LogBookmarkService
+        private readonly _bookmarkService: LogBookmarkService,
+        private readonly _logger: Logger
     ) {
         this._bookmarkService.onDidChangeBookmarks(() => {
             this.updateContent();
@@ -85,13 +87,17 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 ]
             };
 
-            webviewView.webview.onDidReceiveMessage(data => {
+            webviewView.webview.onDidReceiveMessage((data: BookmarkWebviewMessage) => {
                 switch (data.type) {
                     case 'jump':
-                        this.jumpToBookmark(data.item);
+                        if (data.item) {
+                            this.jumpToBookmark(data.item);
+                        }
                         break;
                     case 'remove':
-                        this.removeBookmark(data.item);
+                        if (data.item) {
+                            this.removeBookmark(data.item);
+                        }
                         break;
                     case 'copyAll':
                         if (data.uriString) {
@@ -117,13 +123,19 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         break;
 
                     case 'removeGroup':
-                        vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkGroup, data.groupId);
+                        if (data.groupId) {
+                            vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkGroup, data.groupId);
+                        }
                         break;
                     case 'focusFile':
-                        this.focusFile(data.uriString);
+                        if (data.uriString) {
+                            this.focusFile(data.uriString);
+                        }
                         break;
                     case 'removeFile':
-                        this.removeBookmarkFile(data.uriString);
+                        if (data.uriString) {
+                            this.removeBookmarkFile(data.uriString);
+                        }
                         break;
                     case 'toggleWordWrap':
                         this._bookmarkService.toggleWordWrap();
@@ -135,22 +147,26 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);
                         break;
                     case 'toggleFold':
-                        if (this._foldedUris.has(data.uriString)) {
-                            this._foldedUris.delete(data.uriString);
-                        } else {
-                            this._foldedUris.add(data.uriString);
+                        if (data.uriString) {
+                            if (this._foldedUris.has(data.uriString)) {
+                                this._foldedUris.delete(data.uriString);
+                            } else {
+                                this._foldedUris.add(data.uriString);
+                            }
+                            this.updateContent();
                         }
-                        this.updateContent();
                         break;
                     case 'toggleLineNumbers':
-                        this._bookmarkService.toggleIncludeLineNumbers(data.uriString);
+                        if (data.uriString) {
+                            this._bookmarkService.toggleIncludeLineNumbers(data.uriString);
+                        }
                         break;
                 }
             });
 
             this.updateContent();
         } catch (e) {
-            console.error('Error resolving webview view:', e);
+            this._logger.error(`Error resolving webview view: ${e}`);
             webviewView.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                 Critical Error resolving view: ${e}
             </div></body></html>`;
@@ -167,20 +183,22 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     // expandAll removed per user request
 
-    private jumpToBookmark(item: any) {
+    private jumpToBookmark(item: SerializedBookmarkItem) {
         // Hydrate URI
         const hydratedItem: BookmarkItem = {
             ...item,
-            uri: vscode.Uri.parse(item.uriString)
+            uri: vscode.Uri.parse(item.uriString),
+            groupId: item.groupId || ''
         };
         vscode.commands.executeCommand(Constants.Commands.JumpToBookmark, hydratedItem);
     }
 
-    private removeBookmark(item: any) {
+    private removeBookmark(item: SerializedBookmarkItem) {
         // Hydrate URI
         const hydratedItem: BookmarkItem = {
             ...item,
-            uri: vscode.Uri.parse(item.uriString)
+            uri: vscode.Uri.parse(item.uriString),
+            groupId: item.groupId || ''
         };
         vscode.commands.executeCommand(Constants.Commands.RemoveBookmark, hydratedItem);
     }
@@ -207,7 +225,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 await vscode.window.showTextDocument(doc, { preview: true });
             }
         } catch (e) {
-            console.error('Error focusing file:', e);
+            this._logger.error(`Error focusing file: ${e}`);
         }
     }
 
@@ -240,7 +258,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         } catch (e) {
             this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                 Error loading bookmarks: ${e}<br/>
-                Error loading bookmarks: ${e}<br/>
             </div></body></html>`;
         }
     }
@@ -259,7 +276,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         }
 
         const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
-        const itemsMap: Record<string, any> = {};
+        const itemsMap: Record<string, SerializedBookmarkItem> = {};
         let filesHtml = '';
         let headerButtonsHtml = '';
 
@@ -316,7 +333,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             `).join('');
 
 
-            const lineCount = (this._bookmarkService as any).getFileActiveLinesCount(uriStr);
+            const lineCount = this._bookmarkService.getFileActiveLinesCount(uriStr);
 
 
             // Group items by line
@@ -334,7 +351,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             let fileLines = '';
             for (const line of sortedLines) {
                 const lineItems = lineItemsMap.get(line)!;
-                if (lineItems.length === 0) continue;
+                if (lineItems.length === 0) {
+                    continue;
+                }
 
                 // Use the first item for basic line info
                 const primaryItem = lineItems[0];
@@ -344,7 +363,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 // Collect all match texts for this line
                 const uniqueMatchTexts = new Set<string>();
                 lineItems.forEach(item => {
-                    if (item.matchText) uniqueMatchTexts.add(item.matchText);
+                    if (item.matchText) {
+                        uniqueMatchTexts.add(item.matchText);
+                    }
                 });
 
                 let safeContent = content; // Start with raw content
@@ -409,7 +430,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 fileLines += `
                     <div class="log-line" onclick="markActiveLine('${primaryItem.id}', '${uriStr}'); jumpTo('${primaryItem.id}')" data-id="${primaryItem.id}">
                         <div class="gutter">
-                            <span class="remove-btn" onclick="removeLineBookmars(${allIdsStr}, event)">×</span>
+                            <span class="remove-btn" onclick="removeLineBookmarks(${allIdsStr}, event)">×</span>
                             <span class="line-number">${paddedLine}</span>
                         </div>
                         <div class="line-content">${safeContent}</div>
@@ -959,7 +980,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         }
                     }
 
-                    function removeLineBookmars(ids, event) {
+                    function removeLineBookmarks(ids, event) {
                         event.stopPropagation();
                          if (Array.isArray(ids)) {
                             ids.forEach(id => {

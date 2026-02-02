@@ -4,16 +4,17 @@ import { FilterGroup, FilterItem } from '../models/Filter';
 
 type TreeItem = FilterGroup | FilterItem;
 
-export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>, vscode.TreeDragAndDropController<TreeItem> {
+export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>, vscode.TreeDragAndDropController<TreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
+    private disposables: vscode.Disposable[] = [];
 
     constructor(
         private filterManager: FilterManager,
         private mode: 'word' | 'regex'
     ) {
-        this.filterManager.onDidChangeFilters(() => this.refresh());
-        this.filterManager.onDidChangeResultCounts(() => this.refresh());
+        this.disposables.push(this.filterManager.onDidChangeFilters(() => this.refresh()));
+        this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));
     }
 
     refresh(element?: TreeItem): void {
@@ -297,5 +298,10 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
     private isGroup(item: TreeItem): item is FilterGroup {
         return (item as FilterGroup).filters !== undefined;
+    }
+
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
     }
 }

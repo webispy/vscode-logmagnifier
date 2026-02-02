@@ -54,22 +54,24 @@ export class ColorService {
     private getDefaultPresets(): ColorPreset[] {
         return [
             { id: 'color00', dark: 'rgba(0,0,0,0)', light: 'rgba(0,0,0,0)' }, // No Background (Bold only)
-            { id: 'color01', dark: '#b58900', light: '#b58900' }, // Yellow
-            { id: 'color02', dark: '#cb4b16', light: '#cb4b16' }, // Orange
-            { id: 'color03', dark: '#dc322f', light: '#dc322f' }, // Red
-            { id: 'color04', dark: '#d33682', light: '#d33682' }, // Magenta
-            { id: 'color05', dark: '#6c71c4', light: '#6c71c4' }, // Violet
-            { id: 'color06', dark: '#268bd2', light: '#268bd2' }, // Blue
-            { id: 'color07', dark: '#2aa198', light: '#2aa198' }, // Cyan
-            { id: 'color08', dark: '#859900', light: '#859900' }, // Green
-            { id: 'color09', dark: '#d3a339', light: '#d3a339' }, // Light Yellow
-            { id: 'color10', dark: '#e6653a', light: '#e6653a' }, // Light Orange
-            { id: 'color11', dark: '#f05e5b', light: '#f05e5b' }, // Light Red
-            { id: 'color12', dark: '#e86fac', light: '#e86fac' }, // Light Magenta
-            { id: 'color13', dark: '#8e93db', light: '#8e93db' }, // Light Violet
-            { id: 'color14', dark: '#5caae6', light: '#5caae6' }, // Light Blue
-            { id: 'color15', dark: '#5bcbc1', light: '#5bcbc1' }, // Light Cyan
-            { id: 'color16', dark: '#a3b830', light: '#a3b830' }  // Light Green
+            { id: 'color01', dark: '#b58900', light: '#A57900' }, // Yellow (Darkened for Light)
+            { id: 'color02', dark: '#cb4b16', light: '#B03B0F' }, // Orange (Darkened for Light)
+            { id: 'color03', dark: '#dc322f', light: '#C01C19' }, // Red (Darkened for Light)
+            { id: 'color04', dark: '#d33682', light: '#B31E6B' }, // Magenta (Darkened for Light)
+            { id: 'color05', dark: '#6c71c4', light: '#5055AB' }, // Violet (Darkened for Light)
+            { id: 'color06', dark: '#268bd2', light: '#1D70A8' }, // Blue (Darkened for Light)
+            { id: 'color07', dark: '#2aa198', light: '#1F8C82' }, // Cyan (Darkened for Light)
+            { id: 'color08', dark: '#859900', light: '#6C7D00' }, // Green (Darkened for Light)
+            // Lighter variants often need to become MUCH darker to be readable on white, or just distinct.
+            // Using slightly different shades
+            { id: 'color09', dark: '#d3a339', light: '#9D7620' }, // Light Yellow -> Darker Gold
+            { id: 'color10', dark: '#e6653a', light: '#C0461D' }, // Light Orange -> Darker Orange
+            { id: 'color11', dark: '#f05e5b', light: '#D03E3B' }, // Light Red -> Darker Red
+            { id: 'color12', dark: '#e86fac', light: '#C84F8C' }, // Light Magenta -> Darker Magenta
+            { id: 'color13', dark: '#8e93db', light: '#6E73BB' }, // Light Violet -> Darker Violet
+            { id: 'color14', dark: '#5caae6', light: '#3C8AC6' }, // Light Blue -> Darker Blue
+            { id: 'color15', dark: '#5bcbc1', light: '#3BA0A1' }, // Light Cyan -> Darker Cyan
+            { id: 'color16', dark: '#a3b830', light: '#839810' }  // Light Green -> Darker Green
         ];
     }
 

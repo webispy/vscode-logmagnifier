@@ -301,7 +301,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             }
 
             headerButtonsHtml += `
-                <button class="file-nav-btn ${isActive ? 'active' : ''}" data-uri="${uriStr}" onclick="focusFileScroll('${uriStr}')" title="${filename}">
+                <button class="file-nav-btn ${isActive ? 'active' : ''}" data-action="focusFileScroll" data-uri="${uriStr}" title="${filename}">
                     ${btnLabel}
                 </button>
             `;
@@ -328,7 +328,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 .map(([groupId, data]) => `
                 <span class="tag" title="${data.keyword} (${data.count} lines)">
                     <span class="tag-label">${data.keyword}</span>
-                    <span class="tag-remove" onclick="removeGroup('${groupId}', event)">×</span>
+                    <span class="tag-remove" data-action="removeGroup" data-group-id="${groupId}">×</span>
                 </span>
             `).join('');
 
@@ -428,9 +428,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
                 // Add data-id to lines for targeted scrolling
                 fileLines += `
-                    <div class="log-line" onclick="markActiveLine('${primaryItem.id}', '${uriStr}'); jumpTo('${primaryItem.id}')" data-id="${primaryItem.id}">
+                    <div class="log-line" data-action="lineClick" data-id="${primaryItem.id}" data-uri="${uriStr}">
                         <div class="gutter">
-                            <span class="remove-btn" onclick="removeLineBookmarks(${allIdsStr}, event)">×</span>
+                            <span class="remove-btn" data-action="removeLineBookmarks" data-ids='${allIdsStr}'>×</span>
                             <span class="line-number">${paddedLine}</span>
                         </div>
                         <div class="line-content">${safeContent}</div>
@@ -441,29 +441,29 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''}" id="section-${uriStr}">
                     <div class="file-header">
                         <div class="header-left">
-                            <button class="fold-toggle" onclick="toggleFold('${uriStr}')" title="Toggle Fold">
+                            <button class="fold-toggle" data-action="toggleFold" data-uri="${uriStr}" title="Toggle Fold">
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
-                            <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" onclick="focusFileScroll('${uriStr}')" title="${filename}">${filename}</span>
+                            <span class="file-name ${uriStr === this._lastAddedUri ? 'flash-active' : ''}" data-action="focusFileScroll" data-uri="${uriStr}" title="${filename}">${filename}</span>
 
                             <div class="header-tags">
                                  ${tagsHtml}
                             </div>
                         </div>
                         <div class="file-actions">
-                            <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" onclick="toggleWordWrap()" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" data-action="toggleWordWrap" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleWordWrapIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" onclick="toggleLineNumbers('${uriStr}')" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" data-action="toggleLineNumbers" data-uri="${uriStr}" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleLnIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" onclick="copyFile('${uriStr}')" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="copyFile" data-uri="${uriStr}" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${copyFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" onclick="openFile('${uriStr}')" title="Open File in Tab" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="openFile" data-uri="${uriStr}" title="Open File in Tab" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${openFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" onclick="removeFile('${uriStr}')" title="Clear Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="removeFile" data-uri="${uriStr}" title="Clear Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${removeFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                         </div>
@@ -854,15 +854,15 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     }
                 </style>
             </head>
-            <body onmouseenter="vscode.postMessage({type:'mouseEnter'})" onmouseleave="vscode.postMessage({type:'mouseLeave'})">
+            <body>
                 <div class="global-actions-container">
                     <div class="file-nav-bar">${headerButtonsHtml}</div>
                     <div class="global-actions">
-                        <button class="global-btn" onclick="collapseAll()" title="Collapse all files">
+                        <button class="global-btn" data-action="collapseAll" title="Collapse all files">
                             <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M9 9H4v1h5V9zM9 6H4v1h5V6zM9 3H4v1h5V3zM4 12h5v-1H4v1zM1 1v14h14V1H1zm13 13H2V2h12v12z"/></svg>
                             Collapse All
                         </button>
-                        <button class="global-btn" onclick="clearAll()" title="Remove all bookmarks">
+                        <button class="global-btn" data-action="clearAll" title="Remove all bookmarks">
                             <svg viewBox="0 0 16 16" width="16" height="16"><path fill="currentColor" d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
                             Clear All
                         </button>
@@ -884,22 +884,84 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                         vscode.setState(state);
                     }
 
-                    // On line click, save this as the last active line for this file
-                    function markActiveLine(itemId, uriStr) {
-                        state[uriStr] = itemId;
-                        saveState();
-                    }
 
-                    function jumpTo(id) {
-                        const item = itemsMap[id];
-                        if (item) {
-                            vscode.postMessage({ type: 'jump', item: item });
+                    // Global Mouse Listeners
+                    document.body.addEventListener('mouseenter', () => {
+                         vscode.postMessage({ type: 'mouseEnter' });
+                    });
+                    document.body.addEventListener('mouseleave', () => {
+                         vscode.postMessage({ type: 'mouseLeave' });
+                    });
+
+                    // Global Event Delegation
+                    document.body.addEventListener('click', event => {
+                        const target = event.target.closest('[data-action]');
+                        if (!target) return;
+
+                        const action = target.getAttribute('data-action');
+                        const uriStr = target.getAttribute('data-uri');
+                        const id = target.getAttribute('data-id');
+                        const groupId = target.getAttribute('data-group-id');
+
+                        switch (action) {
+                            case 'focusFileScroll':
+                                if (uriStr) focusFileScroll(uriStr);
+                                break;
+                            case 'removeGroup':
+                                if (groupId) vscode.postMessage({ type: 'removeGroup', groupId: groupId });
+                                break;
+                            case 'lineClick':
+                                if (id && uriStr) {
+                                    // Mark active line
+                                    state[uriStr] = id;
+                                    saveState();
+                                    // Jump
+                                    const item = itemsMap[id];
+                                    if (item) vscode.postMessage({ type: 'jump', item: item });
+                                }
+                                break;
+                            case 'removeLineBookmarks':
+                                const idsStr = target.getAttribute('data-ids');
+                                if (idsStr) {
+                                    try {
+                                        const ids = JSON.parse(idsStr);
+                                        if (Array.isArray(ids)) {
+                                            ids.forEach(itemId => {
+                                                const item = itemsMap[itemId];
+                                                if (item) vscode.postMessage({ type: 'remove', item: item });
+                                            });
+                                        }
+                                    } catch (e) {
+                                        console.error('Failed to parse ids', e);
+                                    }
+                                }
+                                break;
+                            case 'toggleFold':
+                                if (uriStr) vscode.postMessage({ type: 'toggleFold', uriString: uriStr });
+                                break;
+                            case 'toggleWordWrap':
+                                vscode.postMessage({ type: 'toggleWordWrap' });
+                                break;
+                            case 'toggleLineNumbers':
+                                if (uriStr) vscode.postMessage({ type: 'toggleLineNumbers', uriString: uriStr });
+                                break;
+                            case 'copyFile':
+                                if (uriStr) vscode.postMessage({ type: 'copyAll', uriString: uriStr });
+                                break;
+                            case 'openFile':
+                                if (uriStr) vscode.postMessage({ type: 'openAll', uriString: uriStr });
+                                break;
+                            case 'removeFile':
+                                if (uriStr) vscode.postMessage({ type: 'removeFile', uriString: uriStr });
+                                break;
+                            case 'collapseAll':
+                                vscode.postMessage({ type: 'collapseAll' });
+                                break;
+                            case 'clearAll':
+                                vscode.postMessage({ type: 'clearAll' });
+                                break;
                         }
-                    }
-
-                    function focusFile(uriStr) {
-                         vscode.postMessage({ type: 'focusFile', uriString: uriStr });
-                    }
+                    });
 
                     window.addEventListener('message', event => {
                         const message = event.data;
@@ -958,8 +1020,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                  // Check if we have a saved line ID for this file
                                  let scrolled = false;
                                  if (state[uriStr]) {
-                                     // Find the line element by data-id
-                                     // Note: We need data-id on log lines for this selector to work
                                      const savedLineEl = el.querySelector('.log-line[data-id="' + state[uriStr] + '"]');
                                      if (savedLineEl) {
                                          savedLineEl.scrollIntoView({ behavior: 'auto', block: 'center' }); // Instant
@@ -978,60 +1038,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                                  }
                              }
                         }
-                    }
-
-                    function removeLineBookmarks(ids, event) {
-                        event.stopPropagation();
-                         if (Array.isArray(ids)) {
-                            ids.forEach(id => {
-                                const item = itemsMap[id];
-                                if (item) {
-                                    vscode.postMessage({ type: 'remove', item: item });
-                                }
-                            });
-                        }
-                    }
-
-                    function removeGroup(groupId, event) {
-                        event.stopPropagation();
-                         vscode.postMessage({ type: 'removeGroup', groupId: groupId });
-                    }
-
-                    function collapseAll() {
-                        vscode.postMessage({ type: 'collapseAll' });
-                    }
-
-                    function clearAll() {
-                        vscode.postMessage({ type: 'clearAll' });
-                    }
-
-                     function toggleWordWrap() {
-                        vscode.postMessage({ type: 'toggleWordWrap' });
-                    }
-
-                    function removeFile(uriStr) {
-                         event.stopPropagation();
-                        vscode.postMessage({ type: 'removeFile', uriString: uriStr });
-                    }
-
-                     function copyFile(uriStr) {
-                         event.stopPropagation();
-                         vscode.postMessage({ type: 'copyAll', uriString: uriStr });
-                    }
-
-                    function openFile(uriStr) {
-                        event.stopPropagation();
-                         vscode.postMessage({ type: 'openAll', uriString: uriStr });
-                    }
-
-                     function toggleFold(uriStr) {
-                         event.stopPropagation();
-                         vscode.postMessage({ type: 'toggleFold', uriString: uriStr });
-                    }
-
-                    function toggleLineNumbers(uriStr) {
-                        event.stopPropagation();
-                         vscode.postMessage({ type: 'toggleLineNumbers', uriString: uriStr });
                     }
 
                     // Auto-Scroll to Active File on Load

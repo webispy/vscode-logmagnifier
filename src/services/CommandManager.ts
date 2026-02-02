@@ -353,16 +353,10 @@ export class CommandManager {
                 if (match.index < offset) {
                     verifyLastMatch = match;
                 } else {
-                    // Found a match after offset, so we can stop if we only care about before
-                    // But we also need lastInFile for wrapping, so we must continue unless we cache it?
-                    // Just continue to end to be safe for wrapping logic or optimize?
-                    // Optimization: If we have a 'before' match, we don't *need* lastInFile unless we wrap.
-                    // If we don't have a 'before' match, we wrap to lastInFile.
-                    // So we only need to scan to end if verifyLastMatch is undefined.
-                    if (verifyLastMatch) {
-                        // Optimization: We could break here if we don't need wrapping to last file match.
-                        // For now we scan all to be safe for wrapping logic.
-                    }
+                    // Found a match after offset.
+                    // If we found a 'before' match (verifyLastMatch), we have our target.
+                    // If not, we might wrap to the last match in the file (lastInFile).
+                    // We continue scanning to find the true lastInFile.
                 }
             }
 
@@ -557,6 +551,7 @@ export class CommandManager {
             vscode.window.showInformationMessage(Constants.Messages.Info.NoSourceMapping);
         }
     }
+
     private registerFilterGroupCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilterGroup, async () => {
             const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterGroupName });
@@ -645,7 +640,7 @@ export class CommandManager {
                     await vscode.env.clipboard.writeText(text);
                     vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsSingleLine.replace('{0}', enabledFilters.length.toString()));
                 } else {
-                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
+                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItemsToCopy);
                 }
             }
         }));
@@ -658,7 +653,7 @@ export class CommandManager {
                     await vscode.env.clipboard.writeText(text);
                     vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsTags.replace('{0}', enabledFilters.length.toString()));
                 } else {
-                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
+                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItemsToCopy);
                 }
             }
         }));
@@ -951,6 +946,7 @@ export class CommandManager {
             }
         }));
     }
+
     private registerViewCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllWordGroups, async () => {
             await this.expandAllGroups(false);

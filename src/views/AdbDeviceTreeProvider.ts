@@ -1,4 +1,3 @@
-
 import * as vscode from 'vscode';
 
 import { AdbService } from '../services/AdbService';

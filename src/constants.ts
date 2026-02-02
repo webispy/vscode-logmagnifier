@@ -353,6 +353,7 @@ export const Constants = {
             ImportSuccess: 'Successfully imported {0} {1} filter groups.',
             NoSourceMapping: 'No source mapping found for this line.',
             FallbackToOpen: 'Failed to open text document (likely too large), falling back to vscode.open: {0}',
+            AllBookmarksCopied: 'All bookmarks copied to clipboard.',
 
         },
         Warn: {
@@ -366,6 +367,10 @@ export const Constants = {
             NoMatchingFilters: 'No matching filters found in the selected file.',
             FilterAlreadyExistsInGroup: 'Filter \'{0}\' already exists in group \'{1}\'.',
             AppNotRunning: 'App {0} is not running. Starting logcat without PID filter.',
+            OriginalFileClosed: 'LogMagnifier: Original file is closed or not available.',
+            JsonPreviewLimited: 'JSON Preview limited to first {0} selected lines.',
+            FoundMoreThanMaxMatches: 'Found more than {0} matches. Limited to {0} bookmarks based on your settings.',
+            FilteredLogViewBookmark: 'Note: This is a filtered log view. Bookmarks added here may be lost if you re-apply filters or close this temporary file.',
         },
         Error: {
             InvalidTagFormat: 'Invalid Tag format. Use "Tag" or "Tag:Priority" (V, D, I, W, E, F, S)',

@@ -640,7 +640,7 @@ export class CommandManager {
                     await vscode.env.clipboard.writeText(text);
                     vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsSingleLine.replace('{0}', enabledFilters.length.toString()));
                 } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItemsToCopy);
+                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
                 }
             }
         }));
@@ -653,7 +653,7 @@ export class CommandManager {
                     await vscode.env.clipboard.writeText(text);
                     vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsTags.replace('{0}', enabledFilters.length.toString()));
                 } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItemsToCopy);
+                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
                 }
             }
         }));

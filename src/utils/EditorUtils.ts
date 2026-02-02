@@ -26,7 +26,7 @@ export class EditorUtils {
                     const sizeMB = (size || 0) / (1024 * 1024);
 
                     if (sizeMB > 50) {
-                        vscode.window.showErrorMessage(`Cannot ${operationName}: File is too large (>50MB). Please reduce file size or use a different viewer.`);
+                        vscode.window.showErrorMessage(Constants.Messages.Error.FileTooLarge.replace('{0}', operationName));
                         return undefined;
                     }
                 }
@@ -52,7 +52,7 @@ export class EditorUtils {
      * @param onError Optional callback to handle errors
      * @returns The size in bytes, or undefined if it cannot be determined
      */
-    public static getFileSize(uri: vscode.Uri, onError?: (error: any) => void): number | undefined {
+    public static getFileSize(uri: vscode.Uri, onError?: (error: unknown) => void): number | undefined {
         try {
             if (uri.scheme === 'file') {
                 if (fs.existsSync(uri.fsPath)) {

@@ -167,7 +167,7 @@ export class LogProcessor {
                     const adjustedMapping = lineMapping.map(l => l - 1);
                     resolve({ outputPath, processed, matched, lineMapping: adjustedMapping });
 
-                } catch (e: any) {
+                } catch (e: unknown) {
                     reject(e);
                 }
             })();

@@ -201,7 +201,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
                 return item;
             } else if (element.actionType === 'showTouches') {
-                const enabled = element.meta?.enabled === true;
+                const enabled = element.meta?.enabled === 'true';
                 const label = enabled ? 'Show Touches: On' : 'Show Touches: Off';
                 const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
                 item.contextValue = enabled ? 'controlDeviceAction_showTouches_on' : 'controlDeviceAction_showTouches_off';
@@ -275,7 +275,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 return [
                     { type: 'controlDeviceAction', actionType: 'screenshot', device: element.device } as ControlDeviceActionItem,
                     { type: 'controlDeviceAction', actionType: 'screenRecord', device: element.device } as ControlDeviceActionItem,
-                    { type: 'controlDeviceAction', actionType: 'showTouches', device: element.device, meta: { enabled: showTouchesState } } as ControlDeviceActionItem
+                    { type: 'controlDeviceAction', actionType: 'showTouches', device: element.device, meta: { enabled: String(showTouchesState) } } as ControlDeviceActionItem
                 ];
             })();
         } else if (this.isSessionGroup(element)) {

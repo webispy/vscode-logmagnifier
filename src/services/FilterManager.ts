@@ -717,9 +717,10 @@ export class FilterManager implements vscode.Disposable {
             } else {
                 throw new Error(Constants.Messages.Error.ImportInvalidFormat);
             }
-        } catch (e: any) {
-            this.logger.error(`Import failed: ${e.message}`);
-            return { count: 0, error: e.message };
+        } catch (e: unknown) {
+            const errorMessage = e instanceof Error ? e.message : String(e);
+            this.logger.error(`Import failed: ${errorMessage}`);
+            return { count: 0, error: errorMessage };
         }
     }
 

@@ -75,7 +75,7 @@ export interface ControlDeviceActionItem {
     type: 'controlDeviceAction';
     actionType: ControlDeviceActionType;
     device: AdbDevice;
-    meta?: any;
+    meta?: Record<string, string>;
 }
 
 export interface MessageItem {

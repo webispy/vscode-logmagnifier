@@ -55,8 +55,8 @@ export function activate(context: vscode.ExtensionContext) {
 	});
 
 	// Sync expansion state
-	const isGroup = (item: any): item is import('./models/Filter').FilterGroup => {
-		return item && typeof item === 'object' && Array.isArray((item as import('./models/Filter').FilterGroup).filters);
+	const isGroup = (item: unknown): item is import('./models/Filter').FilterGroup => {
+		return typeof item === 'object' && item !== null && Array.isArray((item as import('./models/Filter').FilterGroup).filters);
 	};
 
 	const setupExpansionSync = (view: vscode.TreeView<any>) => {

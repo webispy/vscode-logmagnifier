@@ -93,7 +93,7 @@ export class LogBookmarkCommandManager {
                 editBuilder.replace(fullRange, allLines.join('\n'));
             });
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to open all bookmarks: ${e}`);
+            vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', String(e)));
         }
     }
 
@@ -204,7 +204,7 @@ export class LogBookmarkCommandManager {
                     removedCount++;
                 }
             }
-            vscode.window.showInformationMessage(`Removed ${removedCount} bookmarks matching selection '${selectedText}'.`);
+            vscode.window.showInformationMessage(Constants.Messages.Info.RemovedBookmarks.replace('{0}', removedCount.toString()).replace('{1}', selectedText));
         } else {
             this.processBookmarkMatches(editor, matchedLines, selectedText, MAX_MATCHES);
         }

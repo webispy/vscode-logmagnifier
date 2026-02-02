@@ -340,7 +340,6 @@ export const Constants = {
             CopiedItemsSingleLine: 'Copied {0} items to clipboard (single line).',
             CopiedItemsTags: 'Copied {0} items as tags to clipboard.',
             NoEnabledItems: 'No enabled items to copy (excluded filters ignored).',
-            NoEnabledItemsToCopy: 'No enabled items to copy (excluded filters ignored).',
             ProfileDeleted: 'Profile \'{0}\' deleted.',
             ProfileCreated: 'Profile \'{0}\' created and activated.',
             ProfileDuplicated: 'Profile duplicated as \'{0}\'.',
@@ -354,6 +353,7 @@ export const Constants = {
             NoSourceMapping: 'No source mapping found for this line.',
             FallbackToOpen: 'Failed to open text document (likely too large), falling back to vscode.open: {0}',
             AllBookmarksCopied: 'All bookmarks copied to clipboard.',
+            RemovedBookmarks: 'Removed {0} bookmarks matching selection \'{1}\'.',
 
         },
         Warn: {
@@ -397,6 +397,8 @@ export const Constants = {
             ImportFailed: 'Failed to import filters: {0}',
             ReadFilterFileFailed: 'Failed to read filter file: {0}',
             JumpToSourceFailed: 'Failed to jump to source: {0}',
+            FileTooLarge: 'Cannot {0}: File is too large (>50MB). Please reduce file size or use a different viewer.',
+            FailedToOpenBookmarks: 'Failed to open all bookmarks: {0}',
 
             ImportInvalidFormat: 'Invalid filter data format: expected an object with a "groups" array.',
             InvalidFilterPattern: 'Invalid filter pattern: "{0}"',

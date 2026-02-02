@@ -1,4 +1,3 @@
-
 export interface AdbDevice {
     id: string;      // Serial number
     type: string;    // device, offline, unauthorized

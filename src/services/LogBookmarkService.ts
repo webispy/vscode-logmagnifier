@@ -104,7 +104,7 @@ export class LogBookmarkService implements vscode.Disposable {
             const sourceMapService = SourceMapService.getInstance();
             if (sourceMapService.hasMapping(uri)) {
                 // We show a warning but allow adding the bookmark
-                vscode.window.showWarningMessage('Note: This is a filtered log view. Bookmarks added here may be lost if you re-apply filters or close this temporary file.');
+                vscode.window.showWarningMessage(Constants.Messages.Warn.FilteredLogViewBookmark);
             }
 
             // LIFO Sorting: Move to top of file order

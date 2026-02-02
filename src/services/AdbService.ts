@@ -1,4 +1,3 @@
-
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority } from '../models/AdbModels';
@@ -866,7 +865,7 @@ export class AdbService implements vscode.Disposable {
                     return;
                 } else if (result.size === 0 && attempts >= maxAttempts) {
                     this.logger.error(`[ADB] File size is still 0 after ${maxAttempts} attempts.`);
-                    vscode.window.showErrorMessage('Screen recording file is empty.');
+                    vscode.window.showErrorMessage(Constants.Messages.Error.RecordingEmpty);
                     return;
                 }
 
@@ -898,7 +897,7 @@ export class AdbService implements vscode.Disposable {
                 cp.exec(pullCmd, async (err) => {
                     if (err) {
                         this.logger.error(`[ADB] Failed to pull recording: ${err.message}`);
-                        vscode.window.showErrorMessage('Failed to retrieve screen recording.');
+                        vscode.window.showErrorMessage(Constants.Messages.Error.RetrieveRecordingFailed);
                     } else {
                         this.logger.info(`[ADB] Video pulled successfully to ${localPath}`);
                         const uri = vscode.Uri.file(localPath);

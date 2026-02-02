@@ -70,7 +70,7 @@ export class LogBookmarkCommandManager {
         }
 
         vscode.env.clipboard.writeText(allLines.join('\n'));
-        vscode.window.showInformationMessage('All bookmarks copied to clipboard.');
+        vscode.window.showInformationMessage(Constants.Messages.Info.AllBookmarksCopied);
     }
 
     private async openAllBookmarks() {
@@ -146,7 +146,7 @@ export class LogBookmarkCommandManager {
         if (matchedLines.length > maxMatches) {
             const truncatedLines = matchedLines.slice(0, maxMatches);
             vscode.window.showWarningMessage(
-                `Found more than ${maxMatches} matches. Limited to ${maxMatches} bookmarks based on your settings.`
+                Constants.Messages.Warn.FoundMoreThanMaxMatches.replace(/\{0\}/g, maxMatches.toString())
             );
             this.bookmarkService.addBookmarks(editor, truncatedLines, { matchText: matchText });
         } else {

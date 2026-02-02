@@ -1,4 +1,3 @@
-
 import * as vscode from 'vscode';
 import { AdbService } from './AdbService';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';

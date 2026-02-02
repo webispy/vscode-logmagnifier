@@ -74,7 +74,7 @@ export class JsonPrettyService {
                     // Flash the line
                     this.highlightService.flashLine(editor, event.line);
                 } else {
-                    vscode.window.showWarningMessage('LogMagnifier: Original file is closed or not available.');
+                    vscode.window.showWarningMessage(Constants.Messages.Warn.OriginalFileClosed);
                 }
             } catch (e) {
                 this.logger.error('Failed to reveal line: ' + e);
@@ -129,7 +129,7 @@ export class JsonPrettyService {
                 text = editor.document.getText(limitedRange);
 
                 // Show warning
-                vscode.window.showWarningMessage(`JSON Preview limited to first ${maxLines} selected lines.`);
+                vscode.window.showWarningMessage(Constants.Messages.Warn.JsonPreviewLimited.replace('{0}', maxLines.toString()));
             }
 
             const jsons = this.extractJsons(text);

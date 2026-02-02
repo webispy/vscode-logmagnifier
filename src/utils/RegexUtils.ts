@@ -1,10 +1,12 @@
 export class RegexUtils {
+    // Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex.
     private static cache: Map<string, RegExp> = new Map();
     private static readonly MAX_CACHE_SIZE = 500;
     private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 
     /**
      * Creates a RegExp object safely with caching.
+     * Returns a NEW RegExp instance every time to avoid shared 'lastIndex' state bugs.
      * @param keyword The pattern or search text.
      * @param isRegex Whether the keyword is a regex pattern.
      * @param caseSensitive Whether the search should be case sensitive.
@@ -14,10 +16,11 @@ export class RegexUtils {
         const key = `${keyword}_${isRegex}_${caseSensitive}`;
         if (RegexUtils.cache.has(key)) {
             // LRU: Refresh by deleting and re-inserting
-            const regex = RegexUtils.cache.get(key)!;
+            const proto = RegexUtils.cache.get(key)!;
             RegexUtils.cache.delete(key);
-            RegexUtils.cache.set(key, regex);
-            return regex;
+            RegexUtils.cache.set(key, proto);
+            // Clone: new RegExp(regex) creates a copy with lastIndex = 0
+            return new RegExp(proto);
         }
 
         try {
@@ -38,7 +41,7 @@ export class RegexUtils {
                 }
             }
             RegexUtils.cache.set(key, regex);
-            return regex;
+            return new RegExp(regex);
 
         } catch (e) {
             // Return a regex that matches nothing

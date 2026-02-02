@@ -340,6 +340,7 @@ export const Constants = {
             CopiedItemsSingleLine: 'Copied {0} items to clipboard (single line).',
             CopiedItemsTags: 'Copied {0} items as tags to clipboard.',
             NoEnabledItems: 'No enabled items to copy (excluded filters ignored).',
+            NoEnabledItemsToCopy: 'No enabled items to copy (excluded filters ignored).',
             ProfileDeleted: 'Profile \'{0}\' deleted.',
             ProfileCreated: 'Profile \'{0}\' created and activated.',
             ProfileDuplicated: 'Profile duplicated as \'{0}\'.',
@@ -351,6 +352,8 @@ export const Constants = {
             ExportGroupSuccess: 'Group \'{0}\' exported successfully to {1}',
             ImportSuccess: 'Successfully imported {0} {1} filter groups.',
             NoSourceMapping: 'No source mapping found for this line.',
+            FallbackToOpen: 'Failed to open text document (likely too large), falling back to vscode.open: {0}',
+
         },
         Warn: {
             UninstallConfirm: 'Are you sure you want to uninstall {0}?',
@@ -392,6 +395,7 @@ export const Constants = {
 
             ImportInvalidFormat: 'Invalid filter data format: expected an object with a "groups" array.',
             InvalidFilterPattern: 'Invalid filter pattern: "{0}"',
+            InvalidRegularExpression: 'Invalid Regular Expression',
             LogcatStartFailed: 'Failed to start logcat process: {0}',
             RecordingFailed: 'Screen recording failed: {0}',
             RecordingEmpty: 'Screen recording file is empty.',
@@ -410,4 +414,4 @@ export const Constants = {
     },
 } as const;
 
-export type FilterType = typeof Constants.FilterTypes.Include | typeof Constants.FilterTypes.Exclude;
+

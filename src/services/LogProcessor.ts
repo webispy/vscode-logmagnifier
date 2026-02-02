@@ -1,6 +1,8 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as readline from 'readline';
+import * as os from 'os';
+import * as path from 'path';
 import { FilterGroup, FilterItem } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 import { CircularBuffer } from '../utils/CircularBuffer';
@@ -63,8 +65,6 @@ export class LogProcessor {
             const compiledGroups = this.compileGroups(activeGroups);
 
             // Path and stream setup
-            const os = require('os');
-            const path = require('path');
             const tmpDir = os.tmpdir();
             const prefix = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.TempFilePrefix) || Constants.Defaults.TempFilePrefix;
             const now = new Date();

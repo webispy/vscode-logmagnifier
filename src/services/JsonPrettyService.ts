@@ -15,7 +15,6 @@ interface ExtractedJson {
 }
 
 export class JsonPrettyService {
-    private lenientParser = new LenientJsonParser();
     private _lastActiveEditor: vscode.TextEditor | undefined;
 
     constructor(
@@ -158,8 +157,9 @@ export class JsonPrettyService {
                         raw: json.parsed // Pass raw object for correct re-stringification
                     };
                 } else {
+                    const parser = new LenientJsonParser();
                     return {
-                        data: this.lenientParser.parse(json.text),
+                        data: parser.parse(json.text),
                         status: 'invalid' as const,
                         text: this.bestEffortFormat(json.text)
                     };

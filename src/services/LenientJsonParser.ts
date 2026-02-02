@@ -26,8 +26,8 @@ export class LenientJsonParser {
     constructor() { }
 
     public static toParsedNode(data: any): ParsedNode {
-        if (data === null) return { type: 'null', value: null };
-        if (data === undefined) return { type: 'undefined' };
+        if (data === null) { return { type: 'null', value: null }; }
+        if (data === undefined) { return { type: 'undefined' }; }
 
         if (Array.isArray(data)) {
             const items = data.map(item => this.toParsedNode(item));
@@ -42,9 +42,9 @@ export class LenientJsonParser {
             return { type: 'object', children };
         }
 
-        if (typeof data === 'string') return { type: 'string', value: data };
-        if (typeof data === 'number') return { type: 'number', value: data };
-        if (typeof data === 'boolean') return { type: 'boolean', value: data };
+        if (typeof data === 'string') { return { type: 'string', value: data }; }
+        if (typeof data === 'number') { return { type: 'number', value: data }; }
+        if (typeof data === 'boolean') { return { type: 'boolean', value: data }; }
 
         return { type: 'string', value: String(data) };
     }
@@ -113,7 +113,7 @@ export class LenientJsonParser {
                 key = this.parseUnquotedString();
                 // Unquoted key is invalid strict JSON, but maybe not "Error" in lenient?
                 // User wants "Invalid JSON" tags marked. Unquoted key is definitely invalid.
-                if (key) isKeyError = true;
+                if (key) { isKeyError = true; }
             }
 
             if (!key) {

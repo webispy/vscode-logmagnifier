@@ -73,6 +73,491 @@ export class CommandManager {
 
     private registerCommands() {
 
+        this.registerFilterGroupCommands();
+        this.registerFilterItemCommands();
+        this.registerViewCommands();
+        this.registerPropertyToggleCommands();
+        this.registerEditorToggleCommands();
+        this.registerExportImportCommands();
+        this.registerNavigateCommands();
+        this.registerProfileCommands();
+    }
+
+    private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {
+        const group = this.filterManager.findGroupByFilterId(item.id);
+        if (group) {
+            if (action === 'enable' && !item.isEnabled) {
+                this.filterManager.toggleFilter(group.id, item.id);
+                this.logger.info(`Filter enabled: ${item.keyword}`);
+            } else if (action === 'disable' && item.isEnabled) {
+                this.filterManager.toggleFilter(group.id, item.id);
+                this.logger.info(`Filter disabled: ${item.keyword}`);
+            } else if (action === 'toggle') {
+                this.filterManager.toggleFilter(group.id, item.id);
+                this.logger.info(`Filter toggled: ${item.keyword}`);
+            }
+        }
+    }
+
+    private async ensureGroupId(group: FilterGroup | undefined, isRegex: boolean): Promise<string | undefined> {
+        if (group?.id) {
+            return group.id;
+        }
+
+        const groups = this.filterManager.getGroups().filter(g => isRegex ? g.isRegex : !g.isRegex);
+        if (groups.length === 0) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.NoFilterGroups.replace('{0}', isRegex ? 'Regex' : 'Word'));
+            return undefined;
+        }
+        const selected = await vscode.window.showQuickPick(groups.map(g => ({ label: g.name, id: g.id })), { placeHolder: `Select ${isRegex ? 'Regex' : 'Word'} Filter Group` });
+        return selected?.id;
+    }
+
+    private isProcessing = false;
+
+    private async applyFilter(filterType?: 'word' | 'regex') {
+        if (this.isProcessing) {
+            return;
+        }
+        this.isProcessing = true;
+
+        try {
+            const activeGroups = this.filterManager.getGroups().filter(g => {
+                if (!g.isEnabled) {
+                    return false;
+                }
+                if (filterType === 'word') {
+                    return !g.isRegex;
+                }
+                if (filterType === 'regex') {
+                    return g.isRegex;
+                }
+                return true;
+            });
+
+            if (activeGroups.length === 0) {
+                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', filterType || 'filter'));
+                return;
+            }
+
+            let document: vscode.TextDocument | undefined = vscode.window.activeTextEditor?.document;
+            let filePathFromTab: string | undefined;
+
+            if (!document) {
+                const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+                if (activeTab && activeTab.input instanceof vscode.TabInputText) {
+                    const uri = activeTab.input.uri;
+                    if (uri.scheme === 'file') {
+                        filePathFromTab = uri.fsPath;
+                    } else if (uri.scheme === 'untitled') {
+                        try {
+                            const doc = await vscode.workspace.openTextDocument(uri);
+                            document = doc;
+                        } catch (e) { this.logger.error(String(e)); }
+                    }
+                }
+
+                // Fallback removed: Do not search for random background files.
+                // If the user has no active tab/editor, we should not guess.
+            }
+
+            if (!document && !filePathFromTab) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveFile);
+                return;
+            }
+
+            let outputPath = '';
+            let stats = { processed: 0, matched: 0 };
+            const sourceName = document ? (document.fileName || 'Untitled') : (filePathFromTab || 'Large File');
+
+            await vscode.window.withProgress({
+                location: vscode.ProgressLocation.Notification,
+                title: `Applying ${filterType || ''} Filters on ${sourceName}...`,
+                cancellable: false
+            }, async (progress) => {
+                try {
+                    let targetPath = filePathFromTab || document?.uri.fsPath;
+                    let tempInputPath: string | undefined;
+
+                    // Handle Untitled Files: Write to temp file first to use standard processor
+                    if (document && document.isUntitled) {
+                        const tmpDir = os.tmpdir();
+                        const randomSuffix = Math.random().toString(36).substring(7);
+                        tempInputPath = path.join(tmpDir, `vscode_loglens_untitled_${randomSuffix}.log`);
+
+                        try {
+                            fs.writeFileSync(tempInputPath, document.getText(), 'utf8');
+                            targetPath = tempInputPath;
+                        } catch (e) {
+                            this.logger.error(`Failed to create temp file for untitled document: ${e}`);
+                            throw new Error("Failed to process untitled file");
+                        }
+                    }
+
+                    if (!targetPath) {
+                        throw new Error("Could not check active file path");
+                    }
+
+                    // Determine total line count for padding
+                    let totalLineCount = 999999;
+                    if (document) {
+                        totalLineCount = document.lineCount;
+                    }
+
+                    try {
+                        const result = await this.logProcessor.processFile(targetPath, activeGroups, {
+                            prependLineNumbers: this._prependLineNumbersEnabled,
+                            totalLineCount: totalLineCount
+                        });
+                        outputPath = result.outputPath;
+                        stats.processed = result.processed;
+                        stats.matched = result.matched;
+
+                        // Register Source Map
+                        // If generated from a specific document, use its URI.
+                        // If generated from a file path (without doc), use file URI.
+                        let sourceUri: vscode.Uri | undefined;
+                        if (document) {
+                            sourceUri = document.uri;
+                        } else if (filePathFromTab) {
+                            sourceUri = vscode.Uri.file(filePathFromTab);
+                        }
+
+                        // Handle strict untitled file mapping:
+                        // If we created a temp input file for untitled doc, we still mapped lines from that content.
+                        // But the USER sees the 'untitled:Untitled-1' document.
+                        // Ideally we map back to the 'untitled:...' URI so opening it works if tab is open.
+                        // If tab is closed, we can't reopen 'untitled:' content easily unless we saved it?
+                        // Actually, SourceMapService stores the URI. clicking 'jumping' opens that URI.
+                        // If 'untitled', VSCode tries to find that open valid document.
+
+                        if (sourceUri && result.lineMapping) {
+                            const outputUri = vscode.Uri.file(outputPath);
+                            this.sourceMapService.register(outputUri, sourceUri, result.lineMapping);
+                        }
+
+                    } finally {
+                        // Cleanup temp input file if we created one
+                        if (tempInputPath && fs.existsSync(tempInputPath)) {
+                            try {
+                                fs.unlinkSync(tempInputPath);
+                            } catch (e) { /* ignore cleanup error */ }
+                        }
+                    }
+                } catch (error) {
+                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', error as string));
+                    return;
+                }
+            });
+
+            const message = `Filtered ${stats.processed.toLocaleString()} lines. Matched ${stats.matched.toLocaleString()} lines.`;
+            if (stats.matched === 0) {
+                vscode.window.showWarningMessage(Constants.Messages.Warn.EmptyImport.replace('{0}', message));
+            } else {
+                const timeout = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<number>(Constants.Configuration.StatusBarTimeout) || 5000;
+                vscode.window.setStatusBarMessage(message, timeout);
+            }
+
+            if (outputPath) {
+                try {
+                    const newDoc = await vscode.workspace.openTextDocument(outputPath);
+                    await vscode.window.showTextDocument(newDoc, { preview: false });
+
+                    // Force language to log to ensure syntax highlighting works
+                    if (newDoc.languageId !== 'log') {
+                        try {
+                            await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
+                        } catch (e) { /* ignore */ }
+                    }
+                } catch (e) {
+                    this.logger.info(Constants.Messages.Info.FallbackToOpen.replace('{0}', String(e)));
+                    await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
+                }
+            }
+        } finally {
+            this.isProcessing = false;
+        }
+    }
+
+    private async findMatch(item: FilterItem | undefined, direction: 'next' | 'previous') {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+
+        // If no item passed (via shortcut), try to get from TreeView selection
+        if (!item) {
+            const selection = this.wordTreeView.selection;
+            if (selection && selection.length > 0) {
+                const selected = selection[0];
+                // Ensure it is a FilterItem (not a Group) and it is enabled
+                if ('keyword' in selected) { // Simple check for FilterItem
+                    item = selected as FilterItem;
+                }
+            }
+        }
+
+        if (!item) {
+            vscode.window.showInformationMessage(Constants.Messages.Info.SelectFilterFirst);
+            return;
+        }
+
+        if (!item.isEnabled) {
+            vscode.window.showInformationMessage(Constants.Messages.Info.FilterDisabled.replace('{0}', item.keyword));
+            return;
+        }
+
+        const document = editor.document;
+        const selection = editor.selection;
+
+        // Use RegexUtils
+        const isRegex = !!item.isRegex;
+        const caseSensitive = !!item.caseSensitive;
+        const regex = RegexUtils.create(item.keyword, isRegex, caseSensitive);
+
+        const fullText = document.getText();
+        let targetMatch: { index: number, text: string } | undefined;
+
+        if (direction === 'next') {
+            const offset = document.offsetAt(selection.active);
+            regex.lastIndex = offset;
+
+            let match = regex.exec(fullText);
+
+            // If we found a match exactly at offset, we might want the next one
+            if (match && match.index === offset) {
+                match = regex.exec(fullText);
+            }
+
+            if (match) {
+                targetMatch = { index: match.index, text: match[0] };
+            } else {
+                // Wrap: start from beginning
+                regex.lastIndex = 0;
+                match = regex.exec(fullText);
+                if (match) {
+                    targetMatch = { index: match.index, text: match[0] };
+                }
+            }
+        } else {
+            // Previous
+            const offset = document.offsetAt(selection.active);
+            regex.lastIndex = 0;
+            let match: RegExpExecArray | null;
+            let verifyLastMatch: RegExpExecArray | undefined;
+            let lastInFile: RegExpExecArray | undefined;
+
+            // Iterate to find candidate
+            while ((match = regex.exec(fullText)) !== null) {
+                lastInFile = match;
+                if (match.index < offset) {
+                    verifyLastMatch = match;
+                } else {
+                    // Found a match after offset, so we can stop if we only care about before
+                    // But we also need lastInFile for wrapping, so we must continue unless we cache it?
+                    // Just continue to end to be safe for wrapping logic or optimize?
+                    // Optimization: If we have a 'before' match, we don't *need* lastInFile unless we wrap.
+                    // If we don't have a 'before' match, we wrap to lastInFile.
+                    // So we only need to scan to end if verifyLastMatch is undefined.
+                    if (verifyLastMatch) {
+                        // Optimization: We could break here if we don't need wrapping to last file match.
+                        // For now we scan all to be safe for wrapping logic.
+                    }
+                }
+            }
+
+            if (verifyLastMatch) {
+                targetMatch = { index: verifyLastMatch.index, text: verifyLastMatch[0] };
+            } else if (lastInFile) {
+                // Wrap to last match in file
+                targetMatch = { index: lastInFile.index, text: lastInFile[0] };
+            }
+        }
+
+        if (targetMatch) {
+            const startPos = document.positionAt(targetMatch.index);
+            const endPos = document.positionAt(targetMatch.index + targetMatch.text.length);
+            const range = new vscode.Range(startPos, endPos);
+
+            editor.selection = new vscode.Selection(startPos, endPos);
+            editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+
+            // Trigger Flash Animation
+            // Pass the filter color from the item
+            this.highlightService.flashLine(editor, startPos.line, item.color);
+        }
+    }
+
+    private async handleExport(mode: 'word' | 'regex') {
+        const filtersJson = this.filterManager.exportFilters(mode);
+        const fileName = `logmagnifier_${mode}_filters.json`;
+
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
+
+        // Fallback to homedir if Downloads doesn't exist
+        if (!fs.existsSync(downloadsPath)) {
+            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
+        }
+
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: defaultUri,
+            filters: { 'JSON': ['json'] },
+            title: mode === 'word' ? Constants.Prompts.ExportWordFilters : Constants.Prompts.ExportRegexFilters
+        });
+
+        if (uri) {
+            try {
+                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
+                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Word' : 'Regex').replace('{1}', uri.fsPath));
+            } catch (err) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            }
+        }
+    }
+
+    private async handleExportGroup(group: FilterGroup) {
+        if (!group) {
+            return;
+        }
+
+        const filtersJson = this.filterManager.exportGroup(group.id);
+        if (!filtersJson) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', group.name));
+            return;
+        }
+
+        const safeName = group.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const fileName = `logmagnifier_group_${safeName}.json`;
+
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
+
+        // Fallback to homedir if Downloads doesn't exist
+        if (!fs.existsSync(downloadsPath)) {
+            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
+        }
+
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: defaultUri,
+            filters: { 'JSON': ['json'] },
+            title: Constants.Prompts.ExportGroup.replace('{0}', group.name)
+        });
+
+        if (uri) {
+            try {
+                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
+                vscode.window.showInformationMessage(Constants.Messages.Info.ExportGroupSuccess.replace('{0}', group.name).replace('{1}', uri.fsPath));
+            } catch (err) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            }
+        }
+    }
+
+    private async handleImport(mode: 'word' | 'regex') {
+        const uris = await vscode.window.showOpenDialog({
+            canSelectMany: false,
+            filters: { 'JSON': ['json'] },
+            title: mode === 'word' ? Constants.Prompts.ImportWordFilters : Constants.Prompts.ImportRegexFilters
+        });
+
+        if (uris && uris.length > 0) {
+            try {
+                const json = fs.readFileSync(uris[0].fsPath, 'utf8');
+
+                const choice = await vscode.window.showQuickPick(
+                    [Constants.ImportModes.Merge, Constants.ImportModes.Overwrite],
+                    { placeHolder: Constants.Prompts.SelectImportMode }
+                );
+
+                if (!choice) {
+                    return;
+                }
+
+                const overwrite = choice === Constants.ImportModes.Overwrite;
+                const result = this.filterManager.importFilters(json, mode, overwrite);
+
+                if (result.error) {
+                    vscode.window.showErrorMessage(Constants.Messages.Error.ImportFailed.replace('{0}', result.error));
+                } else if (result.count === 0) {
+                    vscode.window.showWarningMessage(Constants.Messages.Warn.NoMatchingFilters);
+                } else {
+                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Word' : 'Regex'));
+                }
+            } catch (err) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            }
+        }
+    }
+
+    private async expandAllGroups(isRegex: boolean) {
+        this.logger.info(`CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
+        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
+
+        for (const group of groups) {
+            this.filterManager.setGroupExpanded(group.id, true);
+            try {
+                await treeView.reveal(group, { expand: true, focus: false, select: false });
+            } catch (e) {
+                this.logger.warn(`Failed to expand group ${group.name}: ${e}`);
+            }
+        }
+    }
+
+    private async collapseAllGroups(isRegex: boolean) {
+        this.logger.info(`CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
+        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
+        const viewId = isRegex ? Constants.Views.RegexFilters : Constants.Views.Filters;
+
+        // Update persistence state
+        for (const group of groups) {
+            this.filterManager.setGroupExpanded(group.id, false);
+        }
+
+        if (groups.length > 0) {
+            try {
+                // Ensure view has focus
+                await treeView.reveal(groups[0], { select: false, focus: true, expand: undefined });
+                // Call the view-specific collapse command
+                await vscode.commands.executeCommand(`workbench.actions.treeView.${viewId}.collapseAll`);
+            } catch (e) {
+                this.logger.warn(`Failed to execute native collapse: ${e}`);
+            }
+        }
+    }
+
+    private async jumpToSource() {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+
+        const position = editor.selection.active;
+        const location = this.sourceMapService.getOriginalLocation(editor.document.uri, position.line);
+
+        if (location) {
+            try {
+                // Open document
+                const doc = await vscode.workspace.openTextDocument(location.uri);
+                const sourceEditor = await vscode.window.showTextDocument(doc, { preview: true });
+
+                // Reveal range
+                const range = new vscode.Range(location.range.start, location.range.start);
+                sourceEditor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+                sourceEditor.selection = new vscode.Selection(range.start, range.start);
+
+                // Flash line
+                this.highlightService.flashLine(sourceEditor, range.start.line);
+            } catch (e) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.JumpToSourceFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
+            }
+        } else {
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoSourceMapping);
+        }
+    }
+    private registerFilterGroupCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilterGroup, async () => {
             const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterGroupName });
             if (name) {
@@ -83,10 +568,6 @@ export class CommandManager {
             }
         }));
 
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.JumpToSource, () => this.jumpToSource()));
-
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddRegexFilterGroup, async () => {
             const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterRegexFilterGroupName });
             if (name) {
@@ -96,7 +577,6 @@ export class CommandManager {
                 }
             }
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RenameFilterGroup, async (group: FilterGroup) => {
             if (!group) {
@@ -111,15 +591,93 @@ export class CommandManager {
             }
         }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleGroup, (group: FilterGroup) => {
+            if (group) {
+                this.filterManager.toggleGroup(group.id);
+                this.logger.info(`Group toggled: ${group.name}`);
+            }
+        }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableGroup, (group: FilterGroup) => {
+            if (group && !group.isEnabled) {
+                this.filterManager.toggleGroup(group.id);
+                this.logger.info(`Group enabled: ${group.name}`);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableGroup, (group: FilterGroup) => {
+            if (group && group.isEnabled) {
+                this.filterManager.toggleGroup(group.id);
+                this.logger.info(`Group disabled: ${group.name}`);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableAllItemsInGroup, (group: FilterGroup) => {
+            if (group) {
+                this.filterManager.enableAllFiltersInGroup(group.id);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableAllItemsInGroup, (group: FilterGroup) => {
+            if (group) {
+                this.filterManager.disableAllFiltersInGroup(group.id);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItems, async (group: FilterGroup) => {
+            if (group) {
+                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
+                if (enabledFilters.length > 0) {
+                    const text = enabledFilters.map(f => f.keyword).join('\n');
+                    await vscode.env.clipboard.writeText(text);
+                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItems.replace('{0}', enabledFilters.length.toString()));
+                } else {
+                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
+                }
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsSingleLine, async (group: FilterGroup) => {
+            if (group) {
+                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
+                if (enabledFilters.length > 0) {
+                    const text = enabledFilters.map(f => f.keyword).join(' '); // Use space as delimiter
+                    await vscode.env.clipboard.writeText(text);
+                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsSingleLine.replace('{0}', enabledFilters.length.toString()));
+                } else {
+                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
+                }
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsWithTag, async (group: FilterGroup) => {
+            if (group) {
+                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
+                if (enabledFilters.length > 0) {
+                    const text = enabledFilters.map(f => `tag:${f.keyword}`).join(' ');
+                    await vscode.env.clipboard.writeText(text);
+                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsTags.replace('{0}', enabledFilters.length.toString()));
+                } else {
+                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
+                }
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteGroup, (item: FilterGroup | undefined) => {
+            if (item) {
+                vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item);
+            }
+        }));
+    }
+
+    private registerFilterItemCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EditFilterItem, async (item: FilterItem) => {
             if (!item) {
                 return;
             }
 
             // Find parent group to determine context (needed for updates)
-            const groups = this.filterManager.getGroups();
-            const group = groups.find(g => g.filters.some(f => f.id === item.id));
+            const group = this.filterManager.findGroupByFilterId(item.id);
 
             if (!group) {
                 return;
@@ -144,7 +702,7 @@ export class CommandManager {
                             new RegExp(value);
                             return null;
                         } catch (e) {
-                            return 'Invalid Regular Expression';
+                            return Constants.Messages.Error.InvalidRegularExpression;
                         }
                     }
                 });
@@ -175,27 +733,6 @@ export class CommandManager {
             }
         }));
 
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllWordGroups, async () => {
-            await this.expandAllGroups(false);
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllRegexGroups, async () => {
-            await this.expandAllGroups(true);
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllWordGroups, async () => {
-            await this.collapseAllGroups(false);
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllRegexGroups, async () => {
-            await this.collapseAllGroups(true);
-        }));
-
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilter, async (group: FilterGroup | undefined) => {
             const targetGroupId = await this.ensureGroupId(group, false);
             if (!targetGroupId) {
@@ -213,7 +750,6 @@ export class CommandManager {
                 vscode.window.showErrorMessage(Constants.Messages.Error.FilterExistsInGroup.replace('{0}', keyword).replace('{1}', type));
             }
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddRegexFilter, async (group: FilterGroup | undefined) => {
             const targetGroupId = await this.ensureGroupId(group, true);
@@ -233,7 +769,7 @@ export class CommandManager {
                         new RegExp(value);
                         return null;
                     } catch (e) {
-                        return 'Invalid Regular Expression';
+                        return Constants.Messages.Error.InvalidRegularExpression;
                     }
                 }
             });
@@ -246,7 +782,6 @@ export class CommandManager {
                 vscode.window.showErrorMessage(Constants.Messages.Error.RegexFilterExists.replace('{0}', pattern).replace('{1}', nickname || ''));
             }
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionToFilter, async () => {
             const editor = vscode.window.activeTextEditor;
@@ -271,7 +806,7 @@ export class CommandManager {
                     targetGroupId = focusedItem.id;
                 } else {
                     // It is an item, find its parent group
-                    const parentGroup = this.filterManager.getGroups().find(g => g.filters.some(f => f.id === focusedItem.id));
+                    const parentGroup = this.filterManager.findGroupByFilterId(focusedItem.id);
                     if (parentGroup) {
                         targetGroupId = parentGroup.id;
                     }
@@ -325,7 +860,6 @@ export class CommandManager {
             }
         }));
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveMatchesWithSelection, async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.selection.isEmpty) {
@@ -341,7 +875,6 @@ export class CommandManager {
             const doc = editor.document;
             const fullText = doc.getText();
             // Split by newline to process lines without object overhead
-            // Note: This naive split assumes standard line endings. doc.eol could be used but split regex is safer for mixed.
             const lines = fullText.split(/\r?\n/);
 
             const rangesToDelete: vscode.Range[] = [];
@@ -350,7 +883,6 @@ export class CommandManager {
             for (let i = 0; i < lines.length; i++) {
                 if (lines[i].includes(selectedText)) {
                     // Create range for the entire line including the line break
-                    // deleting from (i, 0) to (i+1, 0) effectively removes the line
                     rangesToDelete.push(new vscode.Range(i, 0, i + 1, 0));
                     matchCount++;
                 }
@@ -384,110 +916,62 @@ export class CommandManager {
             vscode.window.showInformationMessage(Constants.Messages.Info.RemovedLines.replace('{0}', matchCount.toString()).replace('{1}', selectedText));
         }));
 
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyJsonPretty, async () => {
-            await this.jsonPrettyService.execute();
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleGroup, (group: FilterGroup) => {
-            if (group) {
-                this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group toggled: ${group.name}`);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableGroup, (group: FilterGroup) => {
-            if (group && !group.isEnabled) {
-                this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group enabled: ${group.name}`);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableGroup, (group: FilterGroup) => {
-            if (group && group.isEnabled) {
-                this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group disabled: ${group.name}`);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableAllItemsInGroup, (group: FilterGroup) => {
-            if (group) {
-                this.filterManager.enableAllFiltersInGroup(group.id);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableAllItemsInGroup, (group: FilterGroup) => {
-            if (group) {
-                this.filterManager.disableAllFiltersInGroup(group.id);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItems, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => f.keyword).join('\n');
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItems.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
-                }
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsSingleLine, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => f.keyword).join(' '); // Use space as delimiter
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsSingleLine.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
-                }
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsWithTag, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => `tag:${f.keyword}`).join(' ');
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsTags.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage('No enabled items to copy (excluded filters ignored).');
-                }
-            }
-        }));
-
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'enable');
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'disable');
         }));
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilter, (item: FilterItem) => {
             this.handleFilterToggle(item, 'toggle');
         }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateFilter, (item: FilterGroup | undefined) => {
+            // Pass the item (Group) to the AddFilter command so it knows where to add
+            vscode.commands.executeCommand(Constants.Commands.AddFilter, item);
+        }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateRegexFilter, (item: FilterGroup | undefined) => {
+            vscode.commands.executeCommand(Constants.Commands.AddRegexFilter, item);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteFilter, async (item: FilterGroup | FilterItem) => {
+            if (!item) {
+                return;
+            }
+            if ((item as FilterGroup).filters !== undefined) {
+                this.filterManager.removeGroup(item.id);
+            } else {
+                const group = this.filterManager.findGroupByFilterId(item.id);
+                if (group) {
+                    this.filterManager.removeFilter(group.id, item.id);
+                }
+            }
+        }));
+    }
+    private registerViewCommands() {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllWordGroups, async () => {
+            await this.expandAllGroups(false);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllRegexGroups, async () => {
+            await this.expandAllGroups(true);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllWordGroups, async () => {
+            await this.collapseAllGroups(false);
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllRegexGroups, async () => {
+            await this.collapseAllGroups(true);
+        }));
+    }
+
+    private registerPropertyToggleCommands() {
         const toggleFilterTypeHandler = (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterType(targetGroup.id, item.id);
@@ -499,8 +983,7 @@ export class CommandManager {
 
 
         const setFilterTypeHandler = (type: FilterType) => (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterType(targetGroup.id, item.id, type);
             }
@@ -511,8 +994,7 @@ export class CommandManager {
 
 
         const setExcludeStyleHandler = (style: 'line-through' | 'hidden') => (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterExcludeStyle(targetGroup.id, item.id, style);
             }
@@ -523,14 +1005,12 @@ export class CommandManager {
 
 
         const toggleHighlightModeHandler = (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterHighlightMode(targetGroup.id, item.id);
             }
         };
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Word, toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
@@ -538,8 +1018,7 @@ export class CommandManager {
 
 
         const setHighlightModeHandler = (mode: number) => (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterHighlightMode(targetGroup.id, item.id, mode);
             }
@@ -550,22 +1029,19 @@ export class CommandManager {
 
 
         const toggleCaseSensitivityHandler = (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterCaseSensitivity(targetGroup.id, item.id);
             }
         };
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
 
         const setCaseSensitivityHandler = (enable: boolean) => (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterCaseSensitivity(targetGroup.id, item.id, enable);
             }
@@ -575,8 +1051,7 @@ export class CommandManager {
 
 
         const toggleContextLineHandler = (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterContextLine(targetGroup.id, item.id);
@@ -590,8 +1065,7 @@ export class CommandManager {
 
 
         const setContextLineHandler = (lines: number) => (item: FilterItem) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterContextLine(targetGroup.id, item.id, lines);
             }
@@ -602,9 +1076,8 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus9, setContextLineHandler(9)));
 
 
-        const changeColorHandler = async (item: any) => {
-            const groups = this.filterManager.getGroups();
-            let targetGroup = groups.find(g => g.filters.some(f => f.id === item.id));
+        const changeColorHandler = async (item: FilterItem) => {
+            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 const presets = this.filterManager.getColorPresets();
@@ -635,75 +1108,19 @@ export class CommandManager {
             }
         };
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ChangeFilterColor.Prefix, changeColorHandler));
-
 
         // Register specific color commands to support specific tooltips
         const colorPresets = this.filterManager.getAvailableColors();
         colorPresets.forEach(colorId => {
             this.context.subscriptions.push(vscode.commands.registerCommand(`${Constants.Commands.ChangeFilterColor.Prefix}.${colorId}`, changeColorHandler));
         });
+    }
 
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleJsonPreview, async () => {
-            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
-            const current = config.get<boolean>(Constants.Configuration.JsonPreviewEnabled);
-            const newValue = !current;
-            await config.update(Constants.Configuration.JsonPreviewEnabled, newValue, vscode.ConfigurationTarget.Global);
-            this.quickAccessProvider.refresh();
-
-            if (newValue) {
-                this.jsonPrettyService.execute(true);
-            }
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateFilter, (item: any) => {
-            // Pass the item (Group) to the AddFilter command so it knows where to add
-            vscode.commands.executeCommand(Constants.Commands.AddFilter, item);
-        }));
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateRegexFilter, (item: any) => {
-            vscode.commands.executeCommand(Constants.Commands.AddRegexFilter, item);
-        }));
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteGroup, (item: any) => {
-            vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item);
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteFilter, async (item: FilterGroup | FilterItem) => {
-            if (!item) {
-                return;
-            }
-            if ((item as FilterGroup).filters !== undefined) {
-                this.filterManager.removeGroup(item.id);
-            } else {
-                const groups = this.filterManager.getGroups();
-                for (const g of groups) {
-                    if (g.filters.find(f => f.id === item.id)) {
-                        this.filterManager.removeFilter(g.id, item.id);
-                        break;
-                    }
-                }
-            }
-        }));
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.NextMatch, async (item: FilterItem) => {
-            await this.findMatch(item, 'next');
-        }));
-
-
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PreviousMatch, async (item: FilterItem) => {
-            await this.findMatch(item, 'previous');
-        }));
-
-
+    private registerEditorToggleCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Enable, () => {
             this.setPrependLineNumbersEnabled(true);
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Disable, () => {
             this.setPrependLineNumbersEnabled(false);
@@ -778,20 +1195,48 @@ export class CommandManager {
             this.quickAccessProvider.toggleFileSizeUnit();
         }));
 
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleJsonPreview, async () => {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+            const current = config.get<boolean>(Constants.Configuration.JsonPreviewEnabled);
+            const newValue = !current;
+            await config.update(Constants.Configuration.JsonPreviewEnabled, newValue, vscode.ConfigurationTarget.Global);
+            this.quickAccessProvider.refresh();
 
+            if (newValue) {
+                this.jsonPrettyService.execute(true);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyJsonPretty, async () => {
+            await this.jsonPrettyService.execute();
+        }));
+    }
+
+    private registerExportImportCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportWordFilters, () => this.handleExport('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportGroup, (group: FilterGroup) => this.handleExportGroup(group)));
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportWordFilters, () => this.handleImport('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportRegexFilters, () => this.handleImport('regex')));
+    }
 
+    private registerNavigateCommands() {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.JumpToSource, () => this.jumpToSource()));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.NextMatch, async (item: FilterItem) => {
+            await this.findMatch(item, 'next');
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PreviousMatch, async (item: FilterItem) => {
+            await this.findMatch(item, 'previous');
+        }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyWordFilter, () => this.applyFilter('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyRegexFilter, () => this.applyFilter('regex')));
+    }
 
-
+    private registerProfileCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ManageProfiles, async () => {
             const activeProfile = this.filterManager.getActiveProfile();
             const profilesMetadata = this.filterManager.getProfilesMetadata();
@@ -912,472 +1357,5 @@ export class CommandManager {
 
             quickPick.show();
         }));
-    }
-
-    private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {
-        const groups = this.filterManager.getGroups();
-        for (const g of groups) {
-            if (g.filters.find(f => f.id === item.id)) {
-                if (action === 'enable' && !item.isEnabled) {
-                    this.filterManager.toggleFilter(g.id, item.id);
-                    this.logger.info(`Filter enabled: ${item.keyword}`);
-                } else if (action === 'disable' && item.isEnabled) {
-                    this.filterManager.toggleFilter(g.id, item.id);
-                    this.logger.info(`Filter disabled: ${item.keyword}`);
-                } else if (action === 'toggle') {
-                    this.filterManager.toggleFilter(g.id, item.id);
-                    this.logger.info(`Filter toggled: ${item.keyword}`);
-                }
-                break;
-            }
-        }
-    }
-
-    private async ensureGroupId(group: FilterGroup | undefined, isRegex: boolean): Promise<string | undefined> {
-        if (group?.id) {
-            return group.id;
-        }
-
-        const groups = this.filterManager.getGroups().filter(g => isRegex ? g.isRegex : !g.isRegex);
-        if (groups.length === 0) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoFilterGroups.replace('{0}', isRegex ? 'Regex' : 'Word'));
-            return undefined;
-        }
-        const selected = await vscode.window.showQuickPick(groups.map(g => ({ label: g.name, id: g.id })), { placeHolder: `Select ${isRegex ? 'Regex' : 'Word'} Filter Group` });
-        return selected?.id;
-    }
-
-    private isProcessing = false;
-
-    private async applyFilter(filterType?: 'word' | 'regex') {
-        if (this.isProcessing) {
-            return;
-        }
-        this.isProcessing = true;
-
-        try {
-            const activeGroups = this.filterManager.getGroups().filter(g => {
-                if (!g.isEnabled) {
-                    return false;
-                }
-                if (filterType === 'word') {
-                    return !g.isRegex;
-                }
-                if (filterType === 'regex') {
-                    return g.isRegex;
-                }
-                return true;
-            });
-
-            if (activeGroups.length === 0) {
-                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', filterType || 'filter'));
-                return;
-            }
-
-            let document: vscode.TextDocument | undefined = vscode.window.activeTextEditor?.document;
-            let filePathFromTab: string | undefined;
-
-            if (!document) {
-                const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                    const uri = activeTab.input.uri;
-                    if (uri.scheme === 'file') {
-                        filePathFromTab = uri.fsPath;
-                    } else if (uri.scheme === 'untitled') {
-                        try {
-                            const doc = await vscode.workspace.openTextDocument(uri);
-                            document = doc;
-                        } catch (e) { console.error(e); }
-                    }
-                }
-
-                // Fallback removed: Do not search for random background files.
-                // If the user has no active tab/editor, we should not guess.
-            }
-
-            if (!document && !filePathFromTab) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveFile);
-                return;
-            }
-
-            let outputPath = '';
-            let inMemoryContent = '';
-            let stats = { processed: 0, matched: 0 };
-            const sourceName = document ? (document.fileName || 'Untitled') : (filePathFromTab || 'Large File');
-
-            await vscode.window.withProgress({
-                location: vscode.ProgressLocation.Notification,
-                title: `Applying ${filterType || ''} Filters on ${sourceName}...`,
-                cancellable: false
-            }, async (progress) => {
-                try {
-                    let targetPath = filePathFromTab || document?.uri.fsPath;
-                    let tempInputPath: string | undefined;
-
-                    // Handle Untitled Files: Write to temp file first to use standard processor
-                    if (document && document.isUntitled) {
-                        const tmpDir = os.tmpdir();
-                        const randomSuffix = Math.random().toString(36).substring(7);
-                        tempInputPath = path.join(tmpDir, `vscode_loglens_untitled_${randomSuffix}.log`);
-
-                        try {
-                            fs.writeFileSync(tempInputPath, document.getText(), 'utf8');
-                            targetPath = tempInputPath;
-                        } catch (e) {
-                            this.logger.error(`Failed to create temp file for untitled document: ${e}`);
-                            throw new Error("Failed to process untitled file");
-                        }
-                    }
-
-                    if (!targetPath) {
-                        throw new Error("Could not check active file path");
-                    }
-
-                    // Determine total line count for padding
-                    let totalLineCount = 999999;
-                    if (document) {
-                        totalLineCount = document.lineCount;
-                    }
-
-                    try {
-                        const result = await this.logProcessor.processFile(targetPath, activeGroups, {
-                            prependLineNumbers: this._prependLineNumbersEnabled,
-                            totalLineCount: totalLineCount
-                        });
-                        outputPath = result.outputPath;
-                        stats.processed = result.processed;
-                        stats.matched = result.matched;
-
-                        // Register Source Map
-                        // If generated from a specific document, use its URI.
-                        // If generated from a file path (without doc), use file URI.
-                        let sourceUri: vscode.Uri | undefined;
-                        if (document) {
-                            sourceUri = document.uri;
-                        } else if (filePathFromTab) {
-                            sourceUri = vscode.Uri.file(filePathFromTab);
-                        }
-
-                        // Handle strict untitled file mapping:
-                        // If we created a temp input file for untitled doc, we still mapped lines from that content.
-                        // But the USER sees the 'untitled:Untitled-1' document.
-                        // Ideally we map back to the 'untitled:...' URI so opening it works if tab is open.
-                        // If tab is closed, we can't reopen 'untitled:' content easily unless we saved it?
-                        // Actually, SourceMapService stores the URI. clicking 'jumping' opens that URI.
-                        // If 'untitled', VSCode tries to find that open valid document.
-
-                        if (sourceUri && result.lineMapping) {
-                            const outputUri = vscode.Uri.file(outputPath);
-                            this.sourceMapService.register(outputUri, sourceUri, result.lineMapping);
-                        }
-
-                    } finally {
-                        // Cleanup temp input file if we created one
-                        if (tempInputPath && fs.existsSync(tempInputPath)) {
-                            try {
-                                fs.unlinkSync(tempInputPath);
-                            } catch (e) { /* ignore cleanup error */ }
-                        }
-                    }
-                } catch (error) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', error as string));
-                    return;
-                }
-            });
-
-            const message = `Filtered ${stats.processed.toLocaleString()} lines. Matched ${stats.matched.toLocaleString()} lines.`;
-            if (stats.matched === 0) {
-                vscode.window.showWarningMessage(Constants.Messages.Warn.EmptyImport.replace('{0}', message));
-            } else {
-                const timeout = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<number>(Constants.Configuration.StatusBarTimeout) || 5000;
-                vscode.window.setStatusBarMessage(message, timeout);
-            }
-
-            if (outputPath) {
-                try {
-                    const newDoc = await vscode.workspace.openTextDocument(outputPath);
-                    await vscode.window.showTextDocument(newDoc, { preview: false });
-
-                    // Force language to log to ensure syntax highlighting works
-                    if (newDoc.languageId !== 'log') {
-                        try {
-                            await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
-                        } catch (e) { /* ignore */ }
-                    }
-                } catch (e) {
-                    this.logger.info(`Failed to open text document (likely too large), falling back to vscode.open: ${e}`);
-                    await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
-                }
-            }
-        } finally {
-            this.isProcessing = false;
-        }
-    }
-
-    private async findMatch(item: FilterItem | undefined, direction: 'next' | 'previous') {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return;
-        }
-
-        // If no item passed (via shortcut), try to get from TreeView selection
-        if (!item) {
-            const selection = this.wordTreeView.selection;
-            if (selection && selection.length > 0) {
-                const selected = selection[0];
-                // Ensure it is a FilterItem (not a Group) and it is enabled
-                if ('keyword' in selected) { // Simple check for FilterItem
-                    item = selected as FilterItem;
-                }
-            }
-        }
-
-        if (!item) {
-            vscode.window.showInformationMessage('Please select a filter in the Word Filters view first.');
-            return;
-        }
-
-        if (!item.isEnabled) {
-            vscode.window.showInformationMessage(`Filter '${item.keyword}' is disabled.`);
-            return;
-        }
-
-        const document = editor.document;
-        const selection = editor.selection;
-
-        // Use RegexUtils
-        const isRegex = !!item.isRegex;
-        const caseSensitive = !!item.caseSensitive;
-        const regex = RegexUtils.create(item.keyword, isRegex, caseSensitive);
-
-        const fullText = document.getText();
-        const matches = Array.from(fullText.matchAll(regex));
-
-        if (matches.length === 0) {
-            vscode.window.showInformationMessage('No matches found for: ' + item.keyword);
-            return;
-        }
-
-        let targetMatch: { index: number, text: string } | undefined;
-
-        if (direction === 'next') {
-            const offset = document.offsetAt(selection.active);
-            let nextM = matches.find(m => m.index! > offset);
-
-            if (!nextM) {
-                nextM = matches.find(m => m.index! <= offset && (m.index! + m[0].length) > offset);
-                // Wrap
-                const currentStart = document.offsetAt(selection.start);
-                const currentEnd = document.offsetAt(selection.end);
-                if (!nextM || (nextM.index === currentStart && (nextM.index + nextM[0].length) === currentEnd)) {
-                    nextM = matches[0];
-                }
-            }
-            targetMatch = { index: nextM.index!, text: nextM[0] };
-        } else {
-            const offset = document.offsetAt(selection.active);
-            const matchesBefore = matches.filter(m => m.index! < offset);
-
-            if (matchesBefore.length > 0) {
-                let prevM = matchesBefore[matchesBefore.length - 1];
-
-                const currentStart = document.offsetAt(selection.start);
-                const currentEnd = document.offsetAt(selection.end);
-                if (prevM.index === currentStart && (prevM.index + prevM[0].length) === currentEnd) {
-                    if (matchesBefore.length > 1) {
-                        prevM = matchesBefore[matchesBefore.length - 2];
-                    } else {
-                        prevM = matches[matches.length - 1]; // Wrap
-                    }
-                }
-                targetMatch = { index: prevM.index!, text: prevM[0] };
-            } else {
-                const lastM = matches[matches.length - 1];
-                targetMatch = { index: lastM.index!, text: lastM[0] };
-            }
-        }
-
-        if (targetMatch) {
-            const startPos = document.positionAt(targetMatch.index);
-            const endPos = document.positionAt(targetMatch.index + targetMatch.text.length);
-            const range = new vscode.Range(startPos, endPos);
-
-            editor.selection = new vscode.Selection(startPos, endPos);
-            editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-
-            // Trigger Flash Animation
-            // Pass the filter color from the item
-            this.highlightService.flashLine(editor, startPos.line, item.color);
-        }
-    }
-
-    private async handleExport(mode: 'word' | 'regex') {
-        const filtersJson = this.filterManager.exportFilters(mode);
-        const fileName = `logmagnifier_${mode}_filters.json`;
-
-        const downloadsPath = path.join(os.homedir(), 'Downloads');
-        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
-
-        // Fallback to homedir if Downloads doesn't exist
-        if (!fs.existsSync(downloadsPath)) {
-            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
-        }
-
-        const uri = await vscode.window.showSaveDialog({
-            defaultUri: defaultUri,
-            filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ExportWordFilters : Constants.Prompts.ExportRegexFilters
-        });
-
-        if (uri) {
-            try {
-                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
-                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Word' : 'Regex').replace('{1}', uri.fsPath));
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', err as string));
-            }
-        }
-    }
-
-    private async handleExportGroup(group: FilterGroup) {
-        if (!group) {
-            return;
-        }
-
-        const filtersJson = this.filterManager.exportGroup(group.id);
-        if (!filtersJson) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', group.name));
-            return;
-        }
-
-        const safeName = group.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const fileName = `logmagnifier_group_${safeName}.json`;
-
-        const downloadsPath = path.join(os.homedir(), 'Downloads');
-        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
-
-        // Fallback to homedir if Downloads doesn't exist
-        if (!fs.existsSync(downloadsPath)) {
-            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
-        }
-
-        const uri = await vscode.window.showSaveDialog({
-            defaultUri: defaultUri,
-            filters: { 'JSON': ['json'] },
-            title: Constants.Prompts.ExportGroup.replace('{0}', group.name)
-        });
-
-        if (uri) {
-            try {
-                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
-                vscode.window.showInformationMessage(Constants.Messages.Info.ExportGroupSuccess.replace('{0}', group.name).replace('{1}', uri.fsPath));
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', err as string));
-            }
-        }
-    }
-
-    private async handleImport(mode: 'word' | 'regex') {
-        const uris = await vscode.window.showOpenDialog({
-            canSelectMany: false,
-            filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ImportWordFilters : Constants.Prompts.ImportRegexFilters
-        });
-
-        if (uris && uris.length > 0) {
-            try {
-                const json = fs.readFileSync(uris[0].fsPath, 'utf8');
-
-                const choice = await vscode.window.showQuickPick(
-                    [Constants.ImportModes.Merge, Constants.ImportModes.Overwrite],
-                    { placeHolder: Constants.Prompts.SelectImportMode }
-                );
-
-                if (!choice) {
-                    return;
-                }
-
-                const overwrite = choice === Constants.ImportModes.Overwrite;
-                const result = this.filterManager.importFilters(json, mode, overwrite);
-
-                if (result.error) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.ImportFailed.replace('{0}', result.error));
-                } else if (result.count === 0) {
-                    vscode.window.showWarningMessage(Constants.Messages.Warn.NoMatchingFilters);
-                } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Word' : 'Regex'));
-                }
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', err as string));
-            }
-        }
-    }
-
-    private async expandAllGroups(isRegex: boolean) {
-        this.logger.info(`CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
-        const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
-        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
-
-        for (const group of groups) {
-            this.filterManager.setGroupExpanded(group.id, true);
-            try {
-                await treeView.reveal(group, { expand: true, focus: false, select: false });
-            } catch (e) {
-                this.logger.warn(`Failed to expand group ${group.name}: ${e}`);
-            }
-        }
-    }
-
-    private async collapseAllGroups(isRegex: boolean) {
-        this.logger.info(`CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
-        const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
-        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
-        const viewId = isRegex ? Constants.Views.RegexFilters : Constants.Views.Filters;
-
-        // Update persistence state
-        for (const group of groups) {
-            this.filterManager.setGroupExpanded(group.id, false);
-        }
-
-        if (groups.length > 0) {
-            try {
-                // Ensure view has focus
-                await treeView.reveal(groups[0], { select: false, focus: true, expand: undefined });
-                // Call the view-specific collapse command
-                await vscode.commands.executeCommand(`workbench.actions.treeView.${viewId}.collapseAll`);
-            } catch (e) {
-                this.logger.warn(`Failed to execute native collapse: ${e}`);
-            }
-        }
-    }
-
-    private async jumpToSource() {
-        const editor = vscode.window.activeTextEditor;
-        if (!editor) {
-            return;
-        }
-
-        const position = editor.selection.active;
-        const location = this.sourceMapService.getOriginalLocation(editor.document.uri, position.line);
-
-        if (location) {
-            try {
-                // Open document
-                const doc = await vscode.workspace.openTextDocument(location.uri);
-                const sourceEditor = await vscode.window.showTextDocument(doc, { preview: true });
-
-                // Reveal range
-                const range = new vscode.Range(location.range.start, location.range.start);
-                sourceEditor.revealRange(range, vscode.TextEditorRevealType.InCenter);
-                sourceEditor.selection = new vscode.Selection(range.start, range.start);
-
-                // Flash line
-                this.highlightService.flashLine(sourceEditor, range.start.line);
-            } catch (e) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.JumpToSourceFailed.replace('{0}', e as string));
-            }
-        } else {
-            vscode.window.showInformationMessage(Constants.Messages.Info.NoSourceMapping);
-        }
     }
 }

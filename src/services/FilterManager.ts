@@ -8,7 +8,7 @@ import { FilterStateService } from './FilterStateService';
 import * as crypto from 'crypto';
 
 
-export class FilterManager {
+export class FilterManager implements vscode.Disposable {
     private groups: FilterGroup[] = [];
     private colorPresets: ColorPreset[] = [];
     private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
@@ -139,6 +139,10 @@ export class FilterManager {
 
     public getPresetById(id: string): ColorPreset | undefined {
         return this.colorService.getPresetById(id);
+    }
+
+    public findGroupByFilterId(filterId: string): FilterGroup | undefined {
+        return this.groups.find(g => g.filters.some(f => f.id === filterId));
     }
 
     public addGroup(name: string, isRegex: boolean = false): FilterGroup | undefined {
@@ -820,5 +824,13 @@ export class FilterManager {
         return false;
     }
 
-
+    public dispose() {
+        if (this.saveDebounceTimer) {
+            clearTimeout(this.saveDebounceTimer);
+            this.saveDebounceTimer = undefined;
+        }
+        this._onDidChangeFilters.dispose();
+        this._onDidChangeResultCounts.dispose();
+        this._onDidChangeProfile.dispose();
+    }
 }

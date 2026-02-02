@@ -5,6 +5,9 @@ import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem } from '../models/AdbModels';
 import * as crypto from 'crypto';
 import { Constants } from '../constants';
+import * as os from 'os';
+import * as path from 'path';
+import { TargetAppItem, SessionGroupItem } from '../models/AdbModels';
 
 export class AdbCommandManager {
     constructor(
@@ -20,12 +23,12 @@ export class AdbCommandManager {
             await this.treeProvider.refreshDevices();
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddLogcatSession, async (arg: any) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddLogcatSession, async (arg: SessionGroupItem | AdbDevice) => {
             let device: AdbDevice | undefined;
-            if (arg.type === 'sessionGroup') {
-                device = arg.device;
+            if ('type' in arg && arg.type === 'sessionGroup') {
+                device = (arg as SessionGroupItem).device;
             } else {
-                device = arg as AdbDevice; // Fallback or direct device call
+                device = arg as AdbDevice;
             }
 
             if (!device) {
@@ -134,8 +137,7 @@ export class AdbCommandManager {
             this.adbService.removeTag(session.id, tag.id);
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PickTargetApp, async (item: any) => {
-            // item is TargetAppItem
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PickTargetApp, async (item: TargetAppItem) => {
             const device = item.device;
             if (!device) {
                 return;
@@ -253,96 +255,19 @@ export class AdbCommandManager {
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlDumpsys, async (item: ControlActionItem) => {
-            if (item && item.device && item.device.targetApp) {
-                try {
-                    const result = await this.adbService.runDumpsysPackage(item.device.id, item.device.targetApp);
-                    if (result) {
-                        // Create a URI with a unique title: "Dumpsys pkg: <package> (<HMS>)"
-                        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
-                        const uri = vscode.Uri.from({ scheme: Constants.Schemes.Untitled, path: `Dumpsys pkg: ${item.device.targetApp} (${timestamp})` });
-                        const doc = await vscode.workspace.openTextDocument(uri);
-
-                        // Replace content
-                        const edit = new vscode.WorkspaceEdit();
-                        const fullRange = new vscode.Range(
-                            doc.positionAt(0),
-                            doc.positionAt(doc.getText().length)
-                        );
-                        edit.replace(uri, fullRange, result);
-                        await vscode.workspace.applyEdit(edit);
-
-                        await vscode.window.showTextDocument(doc);
-                    } else {
-                        vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysNoOutput);
-                    }
-                } catch (e: any) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysFailed.replace('{0}', e.message));
-                }
-            }
+            await this.executeDumpsysCommand(item, (d, p) => this.adbService.runDumpsysPackage(d, p), "pkg");
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlDumpsysMeminfo, async (item: ControlActionItem) => {
-            if (item && item.device && item.device.targetApp) {
-                try {
-                    const result = await this.adbService.runDumpsysMeminfo(item.device.id, item.device.targetApp);
-                    if (result) {
-                        // Create a URI with a unique title: "Dumpsys mem: <package> (<HMS>)"
-                        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
-                        const uri = vscode.Uri.from({ scheme: Constants.Schemes.Untitled, path: `Dumpsys mem: ${item.device.targetApp} (${timestamp})` });
-                        const doc = await vscode.workspace.openTextDocument(uri);
-
-                        // Replace content
-                        const edit = new vscode.WorkspaceEdit();
-                        const fullRange = new vscode.Range(
-                            doc.positionAt(0),
-                            doc.positionAt(doc.getText().length)
-                        );
-                        edit.replace(uri, fullRange, result);
-                        await vscode.workspace.applyEdit(edit);
-
-                        await vscode.window.showTextDocument(doc);
-                    } else {
-                        vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysNoOutput);
-                    }
-                } catch (e: any) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysFailed.replace('{0}', e.message));
-                }
-            }
+            await this.executeDumpsysCommand(item, (d, p) => this.adbService.runDumpsysMeminfo(d, p), "mem");
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlDumpsysActivity, async (item: ControlActionItem) => {
-            if (item && item.device && item.device.targetApp) {
-                try {
-                    const result = await this.adbService.runDumpsysActivity(item.device.id, item.device.targetApp);
-                    if (result) {
-                        // Create a URI with a unique title: "Dumpsys act: <package> (<HMS>)"
-                        const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
-                        const uri = vscode.Uri.from({ scheme: Constants.Schemes.Untitled, path: `Dumpsys act: ${item.device.targetApp} (${timestamp})` });
-                        const doc = await vscode.workspace.openTextDocument(uri);
-
-                        // Replace content
-                        const edit = new vscode.WorkspaceEdit();
-                        const fullRange = new vscode.Range(
-                            doc.positionAt(0),
-                            doc.positionAt(doc.getText().length)
-                        );
-                        edit.replace(uri, fullRange, result);
-                        await vscode.workspace.applyEdit(edit);
-
-                        await vscode.window.showTextDocument(doc);
-                    } else {
-                        vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysNoOutput);
-                    }
-                } catch (e: any) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysFailed.replace('{0}', e.message));
-                }
-            }
+            await this.executeDumpsysCommand(item, (d, p) => this.adbService.runDumpsysActivity(d, p), "act");
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlScreenshot, async (item: ControlDeviceActionItem) => {
             if (item && item.device) {
-                const os = require('os');
-                const path = require('path');
                 const tmpDir = os.tmpdir();
                 // Format: screenshot_YYYYMMDD_HHMMSS.png
                 const now = new Date();
@@ -381,6 +306,40 @@ export class AdbCommandManager {
             }
         }));
     }
+    private async executeDumpsysCommand(
+        item: ControlActionItem,
+        commandFn: (deviceId: string, pkg: string) => Promise<string>,
+        titlePrefix: string
+    ) {
+        if (item && item.device && item.device.targetApp) {
+            try {
+                const result = await commandFn(item.device.id, item.device.targetApp);
+                if (result) {
+                    // Create a URI with a unique title: "Dumpsys <prefix>: <package> (<HMS>)"
+                    const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
+                    const uri = vscode.Uri.from({ scheme: Constants.Schemes.Untitled, path: `Dumpsys ${titlePrefix}: ${item.device.targetApp} (${timestamp})` });
+                    const doc = await vscode.workspace.openTextDocument(uri);
+
+                    // Replace content
+                    const edit = new vscode.WorkspaceEdit();
+                    const fullRange = new vscode.Range(
+                        doc.positionAt(0),
+                        doc.positionAt(doc.getText().length)
+                    );
+                    edit.replace(uri, fullRange, result);
+                    await vscode.workspace.applyEdit(edit);
+
+                    await vscode.window.showTextDocument(doc);
+                } else {
+                    vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysNoOutput);
+                }
+            } catch (e) {
+                const errorMessage = e instanceof Error ? e.message : String(e);
+                vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysFailed.replace('{0}', errorMessage));
+            }
+        }
+    }
+
 
     private parseTagInput(input: string): LogcatTag | undefined {
         const parts = input.split(':');

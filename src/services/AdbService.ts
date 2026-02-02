@@ -3,11 +3,13 @@ import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority } from '../models/AdbModels';
 import * as crypto from 'crypto';
+import * as os from 'os';
+import * as path from 'path';
 
 import { Logger } from './Logger';
 import { Constants } from '../constants';
 
-export class AdbService {
+export class AdbService implements vscode.Disposable {
     private sessions: Map<string, LogcatSession> = new Map();
     private processes: Map<string, cp.ChildProcess> = new Map();
     private buffers: Map<string, string[]> = new Map();
@@ -877,8 +879,6 @@ export class AdbService {
     }
 
     private async pullRecording(deviceId: string, remotePath: string) {
-        const os = require('os');
-        const path = require('path');
         const tmpDir = os.tmpdir();
         const now = new Date();
         const filename = `screenrecord_${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}.mp4`;
@@ -956,5 +956,24 @@ export class AdbService {
     public async toggleShowTouches(deviceId: string): Promise<void> {
         const current = await this.getShowTouchesState(deviceId);
         await this.setShowTouchesState(deviceId, !current);
+    }
+
+
+    public dispose() {
+        this.flushTimers.forEach(timer => clearInterval(timer));
+        this.flushTimers.clear();
+
+        this.processes.forEach(proc => proc.kill());
+        this.processes.clear();
+
+        this.recordingProcesses.forEach(info => {
+            if (info.process) {
+                info.process.kill();
+            }
+        });
+        this.recordingProcesses.clear();
+
+        this._onDidChangeSessions.dispose();
+        this._onDidReceiveLog.dispose();
     }
 }

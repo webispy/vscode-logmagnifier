@@ -1,0 +1,7 @@
+2023-10-27 10:00:00.000 INFO  [Main] Application started
+2023-10-27 10:00:01.000 DEBUG [Network] Connecting to server...
+2023-10-27 10:00:01.500 INFO  [Network] Connected
+2023-10-27 10:00:02.000 ERROR [DB] Connection failed
+2023-10-27 10:00:02.100 INFO  [DB] Retrying connection...
+2023-10-27 10:00:03.000 ERROR [DB] Connection failed again
+2023-10-27 10:00:04.000 INFO  [Main] Shutting down

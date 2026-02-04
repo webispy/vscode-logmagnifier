@@ -82,11 +82,10 @@ export class JsonPrettyService {
         });
     }
 
-    public async execute(silent: boolean = false) {
+    public async execute(silent: boolean = false, targetEditor?: vscode.TextEditor) {
         try {
-            let editor = vscode.window.activeTextEditor;
+            let editor = targetEditor || vscode.window.activeTextEditor;
 
-            // Manual invocation logic for better UX
             if (!silent && !editor) {
                 editor = EditorUtils.getActiveEditor(this._lastActiveEditor, 'open JSON Preview');
 
@@ -104,6 +103,11 @@ export class JsonPrettyService {
 
             if (!selection.isEmpty) {
                 text = editor.document.getText(selection);
+
+                // Fallback to full line check if selection (e.g. from Find Widget) is not JSON
+                if (silent && !text.includes('{') && !text.includes('[')) {
+                    text = editor.document.lineAt(selection.active.line).text;
+                }
             } else {
                 text = editor.document.lineAt(selection.active.line).text;
             }
@@ -112,7 +116,7 @@ export class JsonPrettyService {
                 if (!silent) {
                     vscode.window.showInformationMessage(Constants.Messages.Info.NoTextToProcess);
                 }
-                // If silent (auto-update), we might still want to clear the view if it was open
+
                 if (silent) {
                     this.clearWebview(editor);
                 }
@@ -133,6 +137,7 @@ export class JsonPrettyService {
             }
 
             const jsons = this.extractJsons(text);
+
             if (jsons.length === 0) {
                 if (!silent) {
                     vscode.window.showInformationMessage(Constants.Messages.Info.NoJsonFound);

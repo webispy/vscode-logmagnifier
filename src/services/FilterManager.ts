@@ -804,6 +804,30 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    public async duplicateProfile(name: string): Promise<boolean> {
+        // Just save detailed current groups to the new profile name
+        // This effectively duplicates the current state
+        try {
+            // Check if profile exists first to prevent overwrite if desired,
+            // but createProfile already checks this.
+            // saveProfile updates if exists, createProfile checks collision.
+            // We want 'Create copy' semantic, so fail if exists.
+
+            // Check existence via profile manager logic or just try create
+            const profiles = this.profileManager.getProfileNames();
+            if (profiles.includes(name)) {
+                return false;
+            }
+
+            await this.profileManager.updateProfileData(name, this.groups);
+            this.logger.info(`Duplicated current profile to: ${name}`);
+            return true;
+        } catch (e) {
+            this.logger.error(`Failed to duplicate profile: ${e}`);
+            return false;
+        }
+    }
+
     public async loadProfile(name: string): Promise<boolean> {
         const groups = await this.profileManager.loadProfile(name);
 

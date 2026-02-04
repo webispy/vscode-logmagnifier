@@ -83,9 +83,7 @@ export class ProfileManager {
     }
 
     public async updateProfileData(name: string, groups: FilterGroup[]) {
-        if (name === Constants.Labels.DefaultProfile) {
-            return; // Default profile uses standard state mechanism, not profile array
-        }
+        // We allow saving Default Profile so it persists when switching away.
 
         let profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const index = profiles.findIndex(p => p.name === name);
@@ -137,21 +135,25 @@ export class ProfileManager {
     }
 
     public async loadProfile(name: string): Promise<FilterGroup[] | undefined> {
-        if (name === Constants.Labels.DefaultProfile) {
-            // Caller should load from default state
-            // But we can implicitly switch active profile state here?
-            await this.context.globalState.update(Constants.GlobalState.ActiveProfile, Constants.Labels.DefaultProfile);
-            this._onDidChangeProfile.fire();
-            return undefined; // Signal to load from default storage
-        }
+        // Update active profile immediately? 
+        // If we return undefined, FilterManager handles the rest, but we want to return groups if found.
 
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const profile = profiles.find(p => p.name === name);
+
         if (profile) {
             await this.context.globalState.update(Constants.GlobalState.ActiveProfile, name);
             this._onDidChangeProfile.fire();
             return profile.groups;
         }
+
+        // If not found and it IS Default Profile, verify we switch active state anyway
+        if (name === Constants.Labels.DefaultProfile) {
+            await this.context.globalState.update(Constants.GlobalState.ActiveProfile, Constants.Labels.DefaultProfile);
+            this._onDidChangeProfile.fire();
+            return undefined; // FilterManager will init defaults
+        }
+
         return undefined;
     }
 }

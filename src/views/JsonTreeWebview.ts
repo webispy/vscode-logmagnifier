@@ -55,11 +55,13 @@ export class JsonTreeWebview {
 
     private getHtmlForWebview(data: any, status: 'valid' | 'invalid' | 'no-json', tabSize: number = 2, sourceUri?: string, sourceLine?: number, expansionDepth: number = 1): string {
         const initialData = JSON.stringify(data);
+        const nonce = getNonce();
 
         return `<!DOCTYPE html>
         <html lang="en">
         <head>
             <meta charset="UTF-8">
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${this.panel?.webview.cspSource || 'vscode-resource:'} 'unsafe-inline'; script-src 'nonce-${nonce}';">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>JSON Preview</title>
             <style>
@@ -434,7 +436,7 @@ export class JsonTreeWebview {
                 </div>
             </div>
 
-            <script>
+            <script nonce="${nonce}">
                 const vscode = acquireVsCodeApi();
                 const searchInput = document.getElementById('search-input');
                 const btnPrev = document.getElementById('btn-prev');
@@ -1118,4 +1120,13 @@ export class JsonTreeWebview {
         </body>
         </html>`;
     }
+}
+
+function getNonce() {
+    let text = '';
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }

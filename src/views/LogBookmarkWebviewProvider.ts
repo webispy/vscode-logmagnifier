@@ -264,6 +264,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     private getHtmlForWebview(webview: vscode.Webview) {
         const bookmarksMap = this._bookmarkService.getBookmarks();
+
         // Use getFileKeys for insertion order sorting (LIFO)
         let sortedUris = this._bookmarkService.getFileKeys();
 
@@ -285,6 +286,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const removeFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'trash.svg'));
         const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'copy.svg'));
         const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'link-external.svg'));
+
+        // Generate a nonce
+        const nonce = getNonce();
 
         for (const uriStr of sortedUris) {
             const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
@@ -483,6 +487,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             <html lang="en">
             <head>
                 <meta charset="UTF-8">
+                <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; img-src ${webview.cspSource} data:;">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Log Bookmarks</title>
                 <style>
@@ -871,7 +876,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 <div class="content ${wordWrapEnabled ? 'word-wrap' : ''}">
                     ${finalHtml}
                 </div>
-                <script>
+                <script nonce="${nonce}">
                     const vscode = acquireVsCodeApi();
 
                     // Restore ID map for jumps
@@ -1096,4 +1101,13 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             </body>
             </html>`;
     }
+}
+
+function getNonce() {
+    let text = '';
+    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < 32; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
 }

@@ -523,6 +523,11 @@
         "icon": "$(trash)"
       },
       {
+        "command": "logmagnifier.clearAllData",
+        "title": "Clear All Persistent Data",
+        "icon": "$(trash)"
+      },
+      {
         "command": "logmagnifier.enableGroup",
         "title": "Enable",
         "icon": "$(circle-large-outline)",

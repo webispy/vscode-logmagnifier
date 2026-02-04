@@ -136,6 +136,7 @@ export const Constants = {
         ControlStartScreenRecord: 'logmagnifier.control.startScreenRecord',
         ControlStopScreenRecord: 'logmagnifier.control.stopScreenRecord',
         ControlToggleShowTouches: 'logmagnifier.control.toggleShowTouches',
+        ClearAllData: 'logmagnifier.clearAllData',
 
         // Bookmark
         AddBookmark: 'logmagnifier.addBookmark',
@@ -255,6 +256,8 @@ export const Constants = {
         ExportGroup: 'Export Group: {0}',
         ImportWordFilters: 'Import Word Filters',
         ImportRegexFilters: 'Import Regex Filters',
+        ConfirmClearAllData: 'Are you sure you want to clear ALL persistent data? This includes all profiles, filters, and bookmarks. This action cannot be undone.',
+        ReloadConfirm: 'Reload window now to apply changes?',
     },
 
     PlaceHolders: {
@@ -332,6 +335,7 @@ export const Constants = {
             UninstallCompleted: 'Uninstall completed. Please refresh the device list.',
             ClearStorageCompleted: 'Clear storage completed. Please refresh if needed.',
             ClearCacheCompleted: 'Clear cache completed. Please refresh if needed.',
+            ClearAllDataCompleted: 'All data cleared.',
             RecordingStarted: 'Recording started... (Max 3 mins)',
             SelectTextFirst: 'Please select some text first.',
             NoMatchesForText: 'No matches found for \'{0}\'.',

@@ -122,6 +122,36 @@ export class CommandManager {
         this.registerExportImportCommands();
         this.registerNavigateCommands();
         this.registerProfileCommands();
+        this.registerClearDataCommand();
+    }
+
+    private registerClearDataCommand() {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ClearAllData, async () => {
+            const answer = await vscode.window.showWarningMessage(
+                Constants.Prompts.ConfirmClearAllData,
+                { modal: true },
+                'Yes'
+            );
+
+            if (answer === 'Yes') {
+                // Clear all globalState
+                const keys = this.context.globalState.keys();
+                for (const key of keys) {
+                    this.logger.info(`Clearing globalState key: ${key}`);
+                    await this.context.globalState.update(key, undefined);
+                }
+
+                // Show success and ask for reload
+                const reload = await vscode.window.showInformationMessage(
+                    Constants.Messages.Info.ClearAllDataCompleted,
+                    Constants.Prompts.ReloadConfirm
+                );
+
+                if (reload === Constants.Prompts.ReloadConfirm) {
+                    vscode.commands.executeCommand('workbench.action.reloadWindow');
+                }
+            }
+        }));
     }
 
     private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {

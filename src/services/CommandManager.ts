@@ -44,11 +44,14 @@ export class CommandManager {
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
 
+    private debounceTimer: NodeJS.Timeout | undefined;
+
     private registerEventListeners() {
         this.context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(event => {
             const editor = event.textEditor;
-            // Only trigger if it is the active editor
-            if (editor !== vscode.window.activeTextEditor) {
+
+            // Ignore output channels to prevent recursive loops (logging triggers change -> triggers preview -> logs more)
+            if (editor.document.uri.scheme === 'output') {
                 return;
             }
 
@@ -63,12 +66,50 @@ export class CommandManager {
             const currentUriStr = editor.document.uri.toString();
 
             if (currentLine !== this.lastActiveLine || currentUriStr !== this.lastUriStr) {
-                this.lastActiveLine = currentLine;
-                this.lastUriStr = currentUriStr;
-                // Execute silent
-                this.jsonPrettyService.execute(true);
+                this.triggerJsonPreviewUpdate(editor, currentLine, currentUriStr);
             }
         }));
+
+        this.context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
+            const activeEditor = vscode.window.activeTextEditor;
+            // Only proceed if the change happened in the active editor
+            if (!activeEditor || activeEditor.document !== event.document) {
+                return;
+            }
+
+            // Ignore output channels
+            if (activeEditor.document.uri.scheme === 'output') {
+                return;
+            }
+
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+            const enabled = config.get<boolean>(Constants.Configuration.JsonPreviewEnabled);
+
+            if (!enabled) {
+                return;
+            }
+
+            const currentLine = activeEditor.selection.active.line;
+            const currentUriStr = activeEditor.document.uri.toString();
+
+            this.triggerJsonPreviewUpdate(activeEditor, currentLine, currentUriStr);
+        }));
+    }
+
+    private triggerJsonPreviewUpdate(editor: vscode.TextEditor, currentLine: number, currentUriStr: string) {
+        // Cancel previous pending update
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
+            this.debounceTimer = undefined;
+        }
+
+        this.lastActiveLine = currentLine;
+        this.lastUriStr = currentUriStr;
+
+        this.debounceTimer = setTimeout(() => {
+            this.jsonPrettyService.execute(true, editor);
+            this.debounceTimer = undefined;
+        }, 50);
     }
 
     private registerCommands() {

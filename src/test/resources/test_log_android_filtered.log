@@ -1,0 +1,18 @@
+02-04 13:00:06.717  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:00:06.719  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:00:06.808  9122  9122 D InputMethodManagerUtils: startInputInner - Id : 0
+02-04 13:00:06.808  9122  9122 I InputMethodManager: startInputInner - IInputMethodManagerGlobalInvoker.startInputOrWindowGainedFocus
+02-04 13:00:06.813  9122  9122 I InputMethodManager: handleMessage: setImeVisibility visible=false
+02-04 13:00:06.813  9122  9122 D InsetsController: hide(ime(), fromIme=false)
+02-04 13:00:06.813  9122  9122 I ImeTracker: com.nullable.slrclub:e319aa6b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+02-04 13:00:06.829  9122 22124 D InputTransport: Input channel constructed: 'ClientS', fd=178
+02-04 13:00:18.432  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:01:32.816  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:01:32.817  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:01:32.875  9122  9122 D InputMethodManagerUtils: startInputInner - Id : 0
+02-04 13:01:32.875  9122  9122 I InputMethodManager: startInputInner - IInputMethodManagerGlobalInvoker.startInputOrWindowGainedFocus
+02-04 13:01:32.879  9122  9122 I InputMethodManager: handleMessage: setImeVisibility visible=false
+02-04 13:01:32.879  9122  9122 D InsetsController: hide(ime(), fromIme=false)
+02-04 13:01:32.879  9122  9122 I ImeTracker: com.nullable.slrclub:cd722d6b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+02-04 13:01:32.883  9122 30704 D InputTransport: Input channel constructed: 'ClientS', fd=212
+02-04 13:01:34.379  9122  9122 I AdFit3.19.5: Request Banner AD

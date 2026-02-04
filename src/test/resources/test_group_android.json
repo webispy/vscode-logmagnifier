@@ -1,0 +1,40 @@
+{
+    "version": "1.5.4-dev.20260202055315",
+    "groups": [
+        {
+            "name": "tmp",
+            "filters": [
+                {
+                    "keyword": "Access denied",
+                    "type": "include",
+                    "isEnabled": true,
+                    "isRegex": false,
+                    "color": "color13",
+                    "contextLine": 0
+                },
+                {
+                    "keyword": "MainActivity",
+                    "type": "exclude",
+                    "isEnabled": true,
+                    "isRegex": false,
+                    "color": "color13",
+                    "contextLine": 0,
+                    "excludeStyle": "hidden"
+                },
+                {
+                    "keyword": "ime()",
+                    "type": "include",
+                    "isEnabled": true,
+                    "isRegex": false,
+                    "color": "color05",
+                    "contextLine": 3,
+                    "highlightMode": 1,
+                    "caseSensitive": true
+                }
+            ],
+            "isEnabled": true,
+            "isRegex": false,
+            "isExpanded": true
+        }
+    ]
+}

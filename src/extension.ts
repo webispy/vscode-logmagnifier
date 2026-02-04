@@ -308,6 +308,14 @@ export function activate(context: vscode.ExtensionContext) {
 		}
 		sourceMapService.unregister(doc.uri);
 	}));
+
+	return {
+		filterManager,
+		bookmarkService,
+		highlightService,
+		sourceMapService,
+		adbService
+	};
 }
 
 export function deactivate() {

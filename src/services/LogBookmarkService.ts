@@ -49,7 +49,7 @@ export class LogBookmarkService implements vscode.Disposable {
 
         // Remove bookmarks for untitled files when they are closed
         vscode.workspace.onDidCloseTextDocument(doc => {
-            if (doc.uri.scheme === Constants.Schemes.Untitled || doc.uri.scheme === 'untitled') {
+            if (doc.uri.scheme === Constants.Schemes.Untitled) {
                 this.removeBookmarksForUri(doc.uri);
             }
         }, null, context.subscriptions);
@@ -364,6 +364,7 @@ export class LogBookmarkService implements vscode.Disposable {
     public dispose() {
         this.decorationType.dispose();
         this._onDidChangeBookmarks.dispose();
+        this._onDidAddBookmark.dispose();
     }
 
     private async saveToState() {

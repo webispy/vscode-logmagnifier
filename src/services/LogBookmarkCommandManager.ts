@@ -293,7 +293,7 @@ export class LogBookmarkCommandManager {
             editor.selection = new vscode.Selection(range.start, range.start);
             this.highlightService.flashLine(editor, item.line, Constants.Configuration.Bookmark.HighlightColor);
         } catch (e) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', e as string));
+            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', String(e)));
         }
     }
 

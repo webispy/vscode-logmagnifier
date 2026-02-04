@@ -14,8 +14,9 @@ interface ExtractedJson {
     error?: string;
 }
 
-export class JsonPrettyService {
+export class JsonPrettyService implements vscode.Disposable {
     private _lastActiveEditor: vscode.TextEditor | undefined;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(
         private logger: Logger,
@@ -24,18 +25,18 @@ export class JsonPrettyService {
         private highlightService: HighlightService
     ) {
         // Track active editor
-        vscode.window.onDidChangeActiveTextEditor(editor => {
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
                 this._lastActiveEditor = editor;
             }
-        });
+        }));
 
         // Initialize with current if available
         if (vscode.window.activeTextEditor) {
             this._lastActiveEditor = vscode.window.activeTextEditor;
         }
 
-        this.jsonTreeWebview.onDidRevealLine(async event => {
+        this._disposables.push(this.jsonTreeWebview.onDidRevealLine(async event => {
             try {
                 const targetUriStr = event.uri;
                 let targetViewColumn: vscode.ViewColumn | undefined;
@@ -79,7 +80,12 @@ export class JsonPrettyService {
             } catch (e) {
                 this.logger.error('Failed to reveal line: ' + e);
             }
-        });
+        }));
+    }
+
+    public dispose() {
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
     }
 
     public async execute(silent: boolean = false, targetEditor?: vscode.TextEditor) {
@@ -201,7 +207,19 @@ export class JsonPrettyService {
         let startIndex = 0;
 
         while (startIndex < text.length) {
-            const firstOpen = text.indexOf('{', startIndex);
+            // Find both object start '{' and array start '['
+            const firstOpenObj = text.indexOf('{', startIndex);
+            const firstOpenArr = text.indexOf('[', startIndex);
+
+            let firstOpen = -1;
+            if (firstOpenObj !== -1 && firstOpenArr !== -1) {
+                firstOpen = Math.min(firstOpenObj, firstOpenArr);
+            } else if (firstOpenObj !== -1) {
+                firstOpen = firstOpenObj;
+            } else {
+                firstOpen = firstOpenArr;
+            }
+
             if (firstOpen === -1) {
                 break;
             }
@@ -269,9 +287,9 @@ export class JsonPrettyService {
             }
 
             if (!inString) {
-                if (char === '{') {
+                if (char === '{' || char === '[') {
                     braceCount++;
-                } else if (char === '}') {
+                } else if (char === '}' || char === ']') {
                     braceCount--;
                     if (braceCount === 0) {
                         return { text: text.substring(start, textIndex + 1), endIndex: textIndex, complete: true };

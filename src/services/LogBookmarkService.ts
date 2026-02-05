@@ -337,7 +337,13 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getBookmarks(): Map<string, BookmarkItem[]> {
-        return new Map(this._bookmarks);
+        // Return a defensive copy: new Map with new Arrays for values
+        // This prevents consumers from mutating the internal arrays (e.g. push/pop)
+        const copy = new Map<string, BookmarkItem[]>();
+        for (const [key, value] of this._bookmarks) {
+            copy.set(key, [...value]);
+        }
+        return copy;
     }
 
     /*

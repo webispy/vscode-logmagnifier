@@ -92,11 +92,7 @@ export class ColorService {
     }
 
     public assignColor(group: FilterGroup): string {
-        // Simple round-robin or hash based on group name to pick a color
-        // But for new items we might want next available?
-        // Current logic in original code was just picking from presets.
-        // Let's implement a "next color" logic or random which is deterministic.
-        // Hash code:
+        // Deterministically assign a color based on the group name's hash
         let hash = 0;
         for (let i = 0; i < group.name.length; i++) {
             hash = group.name.charCodeAt(i) + ((hash << 5) - hash);

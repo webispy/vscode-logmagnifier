@@ -316,7 +316,7 @@ export class CommandManager {
                         }
                     }
                 } catch (error) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', error as string));
+                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', error instanceof Error ? error.message : String(error)));
                     return;
                 }
             });

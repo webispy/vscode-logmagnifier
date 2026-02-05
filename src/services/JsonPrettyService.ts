@@ -271,22 +271,25 @@ export class JsonPrettyService implements vscode.Disposable {
         for (; textIndex < text.length; textIndex++) {
             const char = text[textIndex];
 
-            if (escape) {
-                escape = false;
-                continue;
-            }
+            if (inString) {
+                if (escape) {
+                    escape = false;
+                    continue;
+                }
+                if (char === '\\') {
+                    escape = true;
+                    continue;
+                }
+                if (char === '"') {
+                    inString = false;
+                    continue;
+                }
+            } else {
+                if (char === '"') {
+                    inString = true;
+                    continue;
+                }
 
-            if (char === '\\') {
-                escape = true;
-                continue;
-            }
-
-            if (char === '"') {
-                inString = !inString;
-                continue;
-            }
-
-            if (!inString) {
                 if (char === '{' || char === '[') {
                     braceCount++;
                 } else if (char === '}' || char === ']') {

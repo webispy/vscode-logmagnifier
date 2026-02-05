@@ -45,17 +45,6 @@ export class ProfileManager {
             let wordCount = 0, regexCount = 0;
             if (p.groups) {
                 p.groups.forEach(g => {
-                    // Check group regex? No, original code checked 'g.isRegex' on the group level?
-                    // Original: p.groups.filter(g => !g.isRegex).length
-                    // Wait, original logic in FilterManager was:
-                    // wordCount: p.groups.filter(g => !g.isRegex).length
-                    // regexCount: p.groups.filter(g => g.isRegex).length
-
-                    // It counted GROUPS, not filters?
-                    // Let's check original code in Step 167 view.
-                    // "wordCount: p.groups.filter(g => !g.isRegex).length"
-                    // Yes, it counted groups.
-
                     if (g.isRegex) {
                         regexCount++;
                     } else {
@@ -135,8 +124,7 @@ export class ProfileManager {
     }
 
     public async loadProfile(name: string): Promise<FilterGroup[] | undefined> {
-        // Update active profile immediately? 
-        // If we return undefined, FilterManager handles the rest, but we want to return groups if found.
+        // Update active profile immediately if found.
 
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const profile = profiles.find(p => p.name === name);

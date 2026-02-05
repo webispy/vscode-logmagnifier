@@ -9,6 +9,10 @@ export interface ColorPreset {
     light: string;
 }
 
+/**
+ * Service for managing highlight color presets.
+ * Provides Solarized-inspired colors and manages color assignment for filter groups.
+ */
 export class ColorService {
     private colorPresets: ColorPreset[] = [];
     private colorPresetsMap: Map<string, ColorPreset> = new Map();

@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.5.5]
+
+### Added
+- **Data Management**: Added "Clear All Persistent Data" command to reset all extension state (Filters, Profiles, Bookmarks).
+- **CI**: Added Codecov support for test coverage reporting.
+- **Documentation**: Added CI/CD and Marketplace badges to README.
+
+### Changed
+- **Performance**: Optimized Auto JSON Preview with debouncing for smoother experience.
+- **Internal**: Refactored code to remove dependencies and improve type safety.
+
+### Fixed
+- **Security**: Prevented potential ADB command injection vulnerabilities.
+- **Security**: Enforced Content Security Policy (CSP) in webviews.
+- **Stability**: Resolved memory leaks and logic errors in bookmark handling.
+
 ## [1.5.4]
 
 ### Changed

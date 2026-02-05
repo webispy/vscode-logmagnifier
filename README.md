@@ -26,6 +26,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Organized Context Menus**: Intuitive submenus for managing filter types, case sensitivity, and highlight modes.
 - **Selection to Filter**: Quickly add selected text as a new filter via the editor context menu.
 - **Persistence**: Filters are automatically saved and restored when VS Code restarts.
+- **Clear Data**: Command to wipe all persistent data (filters, bookmarks, profiles) for a fresh start.
 - **Import/Export**: Share and backup your filter configurations via JSON files.
 - **Quick Access**: Toggle Word Wrap (active tab), Minimap, Sticky Scroll, and view File Size from the sidebar.
 - **ADB Logcat Integration**: Directly view and filter Android logs within VS Code.

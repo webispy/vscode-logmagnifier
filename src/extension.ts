@@ -36,6 +36,13 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
 
+    const refreshHighlightsForEditor = async (editor: vscode.TextEditor) => {
+        const counts = await highlightService.updateHighlights(editor);
+        if (counts) {
+            resultCountService.updateCounts(counts);
+        }
+    };
+
     let lastProcessedDoc: vscode.TextDocument | undefined;
 
     const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word');
@@ -165,10 +172,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             quickAccessProvider.refresh();
 
-            const counts = await highlightService.updateHighlights(editor);
-            if (counts) {
-                resultCountService.updateCounts(counts);
-            }
+            await refreshHighlightsForEditor(editor);
             lastProcessedDoc = editor.document;
         } else {
             // Fallback for large files where activeTextEditor is undefined
@@ -202,10 +206,7 @@ export function activate(context: vscode.ExtensionContext) {
         if (vscode.window.activeTextEditor) {
             const scheme = vscode.window.activeTextEditor.document.uri.scheme;
             if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
-                const counts = await highlightService.updateHighlights(vscode.window.activeTextEditor);
-                if (counts) {
-                    resultCountService.updateCounts(counts);
-                }
+                await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                 lastProcessedDoc = vscode.window.activeTextEditor.document;
             }
         }
@@ -220,10 +221,7 @@ export function activate(context: vscode.ExtensionContext) {
             if (vscode.window.activeTextEditor) {
                 const scheme = vscode.window.activeTextEditor.document.uri.scheme;
                 if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
-                    const counts = await highlightService.updateHighlights(vscode.window.activeTextEditor);
-                    if (counts) {
-                        resultCountService.updateCounts(counts);
-                    }
+                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                     lastProcessedDoc = vscode.window.activeTextEditor.document;
                 }
             }
@@ -252,10 +250,7 @@ export function activate(context: vscode.ExtensionContext) {
 
         // Initial highlight (async)
         (async () => {
-            const counts = await highlightService.updateHighlights(editor);
-            if (counts) {
-                resultCountService.updateCounts(counts);
-            }
+            await refreshHighlightsForEditor(editor);
         })();
         lastProcessedDoc = editor.document;
     }
@@ -277,10 +272,7 @@ export function activate(context: vscode.ExtensionContext) {
 
             debounceTimer = setTimeout(async () => {
                 if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
-                    const counts = await highlightService.updateHighlights(vscode.window.activeTextEditor);
-                    if (counts) {
-                        resultCountService.updateCounts(counts);
-                    }
+                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                     lastProcessedDoc = vscode.window.activeTextEditor.document;
                 }
             }, 500);

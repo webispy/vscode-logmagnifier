@@ -242,15 +242,14 @@ export const Constants = {
         EnterSessionName: 'Enter Session Name',
         EnterTagTimestamp: 'Enter Tag and Priority (e.g. MyApp:D)',
         EditTag: 'Edit Tag',
-        UninstallConfirm: 'Are you sure you want to uninstall {0}?',
-        ClearStorageConfirm: 'Are you sure you want to clear storage for {0}?',
+
         EnterNewGroupName: 'Enter new group name',
         EnterNickname: 'Enter Name (Nickname)',
         EnterNewKeyword: 'Enter new keyword',
         EnterNewProfileName: 'Enter name for new profile',
         EnterDuplicateProfileName: 'Enter name for duplicated profile',
         SelectOccurrencesHighlightMode: 'Select Occurrences Highlight Mode (Current: {0})',
-        ConfirmDeleteProfile: 'Are you sure you want to delete profile \'{0}\'?',
+
         ExportWordFilters: 'Export Word Filters',
         ExportRegexFilters: 'Export Regex Filters',
         ExportGroup: 'Export Group: {0}',

@@ -58,9 +58,9 @@ export class LogBookmarkCommandManager {
         this.bookmarkService.removeBookmarkGroup(groupId);
     }
 
-    private copyAllBookmarks() {
+    private getAllBookmarksContent(): string | null {
         const bookmarksMap = this.bookmarkService.getBookmarks();
-        if (bookmarksMap.size === 0) { return; }
+        if (bookmarksMap.size === 0) { return null; }
 
         const allLines: string[] = [];
         const sortedUris = Array.from(bookmarksMap.keys()).sort();
@@ -68,21 +68,30 @@ export class LogBookmarkCommandManager {
             const items = bookmarksMap.get(uri)!;
             items.forEach(b => allLines.push(`Line ${b.line + 1}: ${b.content}`));
         }
+        return allLines.join('\n');
+    }
 
-        vscode.env.clipboard.writeText(allLines.join('\n'));
-        vscode.window.showInformationMessage(Constants.Messages.Info.AllBookmarksCopied);
+    private getBookmarksContentForUri(uri: vscode.Uri, withLineNumber: boolean): string | null {
+        const bookmarksMap = this.bookmarkService.getBookmarks();
+        const bookmarks = bookmarksMap.get(uri.toString());
+
+        if (bookmarks && bookmarks.length > 0) {
+            return bookmarks.map(b => withLineNumber ? `Line ${b.line + 1}: ${b.content}` : b.content).join('\n');
+        }
+        return null;
+    }
+
+    private copyAllBookmarks() {
+        const content = this.getAllBookmarksContent();
+        if (content) {
+            vscode.env.clipboard.writeText(content);
+            vscode.window.showInformationMessage(Constants.Messages.Info.AllBookmarksCopied);
+        }
     }
 
     private async openAllBookmarks() {
-        const bookmarksMap = this.bookmarkService.getBookmarks();
-        if (bookmarksMap.size === 0) { return; }
-
-        const allLines: string[] = [];
-        const sortedUris = Array.from(bookmarksMap.keys()).sort();
-        for (const uri of sortedUris) {
-            const items = bookmarksMap.get(uri)!;
-            items.forEach(b => allLines.push(`Line ${b.line + 1}: ${b.content}`));
-        }
+        const content = this.getAllBookmarksContent();
+        if (!content) { return; }
 
         const untitledUri = vscode.Uri.parse(`untitled:All Bookmarks`);
         try {
@@ -90,7 +99,7 @@ export class LogBookmarkCommandManager {
             const editor = await vscode.window.showTextDocument(doc);
             await editor.edit(editBuilder => {
                 const fullRange = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
-                editBuilder.replace(fullRange, allLines.join('\n'));
+                editBuilder.replace(fullRange, content);
             });
         } catch (e) {
             vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', String(e)));
@@ -179,8 +188,7 @@ export class LogBookmarkCommandManager {
         const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
         const MAX_MATCHES = config.get<number>(Constants.Configuration.Bookmark.MaxMatches, 500);
 
-        const escapedText = selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedText);
+        const regex = RegexUtils.create(selectedText, false, true);
 
         const matchedLines: number[] = [];
         this.findMatchingLines(editor.document, regex, MAX_MATCHES + 1, (line) => matchedLines.push(line));
@@ -228,8 +236,7 @@ export class LogBookmarkCommandManager {
         const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
         const MAX_MATCHES = config.get<number>(Constants.Configuration.Bookmark.MaxMatches, 500);
 
-        const escapedText = selectedText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(escapedText);
+        const regex = RegexUtils.create(selectedText, false, true);
 
         const matchedLines: number[] = [];
         this.findMatchingLines(editor.document, regex, MAX_MATCHES + 1, (line) => matchedLines.push(line));
@@ -307,11 +314,9 @@ export class LogBookmarkCommandManager {
         if (!uri) {
             return;
         }
-        const bookmarksMap = this.bookmarkService.getBookmarks();
-        const bookmarks = bookmarksMap.get(uri.toString());
+        const content = this.getBookmarksContentForUri(uri, withLineNumber);
 
-        if (bookmarks && bookmarks.length > 0) {
-            const content = bookmarks.map(b => withLineNumber ? `Line ${b.line + 1}: ${b.content}` : b.content).join('\n');
+        if (content) {
             await vscode.env.clipboard.writeText(content);
             vscode.window.showInformationMessage(Constants.Messages.Info.BookmarksCopied);
         }
@@ -321,11 +326,9 @@ export class LogBookmarkCommandManager {
         if (!uri) {
             return;
         }
-        const bookmarksMap = this.bookmarkService.getBookmarks();
-        const bookmarks = bookmarksMap.get(uri.toString());
+        const content = this.getBookmarksContentForUri(uri, withLineNumber);
 
-        if (bookmarks && bookmarks.length > 0) {
-            const content = bookmarks.map(b => withLineNumber ? `Line ${b.line + 1}: ${b.content}` : b.content).join('\n');
+        if (content) {
             const filename = uri.path.split('/').pop() || 'file';
             const docName = `Bookmark: ${filename}`;
 
@@ -346,7 +349,7 @@ export class LogBookmarkCommandManager {
                     editBuilder.replace(fullRange, content);
                 });
             } catch (e) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', e as string));
+                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', String(e)));
             }
         }
     }

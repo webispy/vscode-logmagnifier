@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import { BookmarkItem, BookmarkResult } from '../models/Bookmark';
 import { Constants } from '../constants';
 import { SourceMapService } from './SourceMapService';
@@ -78,6 +79,17 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    private updateFileOrder(key: string) {
+        if (this._fileOrder.includes(key)) {
+            this._fileOrder = this._fileOrder.filter(k => k !== key);
+        }
+        this._fileOrder.unshift(key);
+    }
+
+    private createBookmarkId(): string {
+        return crypto.randomUUID();
+    }
+
     public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string, groupId?: string }): BookmarkResult {
         try {
             const matchText = options?.matchText;
@@ -108,10 +120,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
 
             // LIFO Sorting: Move to top of file order
-            if (this._fileOrder.includes(key)) {
-                this._fileOrder = this._fileOrder.filter(k => k !== key);
-            }
-            this._fileOrder.unshift(key);
+            this.updateFileOrder(key);
 
             if (!this._bookmarks.has(key)) {
                 this._bookmarks.set(key, []);
@@ -131,7 +140,7 @@ export class LogBookmarkService implements vscode.Disposable {
             const lineContent = doc.lineAt(line).text;
             const groupId = options?.groupId || Date.now().toString();
             const bookmark: BookmarkItem = {
-                id: Date.now().toString() + Math.random().toString().slice(2),
+                id: this.createBookmarkId(),
                 uri: uri,
                 line: line,
                 content: lineContent,
@@ -159,10 +168,7 @@ export class LogBookmarkService implements vscode.Disposable {
         const key = uri.toString();
 
         // LIFO Sorting: Move to top of file order
-        if (this._fileOrder.includes(key)) {
-            this._fileOrder = this._fileOrder.filter(k => k !== key);
-        }
-        this._fileOrder.unshift(key);
+        this.updateFileOrder(key);
 
         if (!this._bookmarks.has(key)) {
             this._bookmarks.set(key, []);
@@ -181,7 +187,7 @@ export class LogBookmarkService implements vscode.Disposable {
 
             const lineContent = editor.document.lineAt(line).text;
             const bookmark: BookmarkItem = {
-                id: Date.now().toString() + Math.random().toString().slice(2),
+                id: this.createBookmarkId(),
                 uri: uri,
                 line: line,
                 content: lineContent,
@@ -331,7 +337,7 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public getBookmarks(): Map<string, BookmarkItem[]> {
-        return this._bookmarks;
+        return new Map(this._bookmarks);
     }
 
     /*

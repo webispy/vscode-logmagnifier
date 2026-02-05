@@ -9,7 +9,7 @@ import * as vscode from 'vscode';
 
 /**
  * LogProcessor Integration Test Suite
- * 
+ *
  * Verifies the end-to-end log processing and filtering logic using real file I/O.
  * Uses a sample log file (src/test/resources/sample.log) and expected output.
  */
@@ -113,7 +113,7 @@ suite('LogProcessor Integration Test Suite', () => {
     test('processFile: Enabled/Disabled Filters', async () => {
         const filterGroup = createGroup('toggle-group', 'Toggle');
 
-        // Add disabled "ERROR" filter. 
+        // Add disabled "ERROR" filter.
         // Since no active includes are present, it should match EVERYTHING (default behavior when no includes defined).
         const disabledFilter = createFilter('disabled-error', 'ERROR', 'include', false);
         filterGroup.filters.push(disabledFilter);

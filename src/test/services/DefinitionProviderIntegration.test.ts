@@ -9,8 +9,8 @@ import { FilterGroup } from '../../models/Filter';
 
 /**
  * FilteredLogDefinitionProvider Integration Test Suite
- * 
- * Verifies that the Go to Definition feature correctly maps filtered log lines 
+ *
+ * Verifies that the Go to Definition feature correctly maps filtered log lines
  * back to their original locations in the source log file.
  */
 suite('FilteredLogDefinitionProvider Integration Test Suite', () => {

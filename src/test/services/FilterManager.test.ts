@@ -7,7 +7,7 @@ import { MockExtensionContext } from '../utils/Mocks';
 
 /**
  * FilterManager Test Suite
- * 
+ *
  * Strategy:
  * - Mocks ExtensionContext and GlobalState (Memento) to test persistence without VS Code API.
  * - Handles 'initDefaultFilters' behavior where removing the last regex group triggers default re-creation.
@@ -37,7 +37,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             }
         });
 
-        // Now we only have 'Safe Group'. We can leave it or try to remove it inside tests if needed, 
+        // Now we only have 'Safe Group'. We can leave it or try to remove it inside tests if needed,
         // but 'removeGroup(safeGroup)' would trigger defaults again.
         // So let's just make sure our tests expect 'Safe Group' or we work around it.
 

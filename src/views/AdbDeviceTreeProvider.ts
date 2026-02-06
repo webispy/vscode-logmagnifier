@@ -3,7 +3,6 @@ import * as vscode from 'vscode';
 import { AdbService } from '../services/AdbService';
 import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlAppItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, MessageItem } from '../models/AdbModels';
 
-
 export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<AdbTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
@@ -288,7 +287,13 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     // Type guards
     private isDevice(element: AdbTreeItem): element is AdbDevice {
-        return 'id' in element && 'type' in element && 'model' in element && !('priority' in element) && !('tags' in element);
+        if (!('type' in element)) { return false; }
+        const t = element.type;
+        // AdbDevice 'type' is dynamic (device, offline, etc.), so we check it's NOT one of our internal structural types
+        return t !== 'targetApp' && t !== 'sessionGroup' &&
+            t !== 'controlApp' && t !== 'dumpsysGroup' &&
+            t !== 'controlAction' && t !== 'controlDevice' &&
+            t !== 'controlDeviceAction' && t !== 'message';
     }
 
     private isTargetApp(element: AdbTreeItem): element is TargetAppItem {

@@ -8,7 +8,6 @@ import { RegexUtils } from '../utils/RegexUtils';
 import { CircularBuffer } from '../utils/CircularBuffer';
 import { Constants } from '../constants';
 
-
 export interface CompiledGroup {
     includes: { regex: RegExp, contextLine: number }[];
     excludes: RegExp[];

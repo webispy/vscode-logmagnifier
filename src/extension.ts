@@ -255,7 +255,6 @@ export function activate(context: vscode.ExtensionContext) {
         lastProcessedDoc = editor.document;
     }
 
-
     // Update counts when text changes
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {

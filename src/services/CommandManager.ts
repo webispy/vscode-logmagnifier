@@ -1048,7 +1048,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Include, toggleFilterTypeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Exclude, toggleFilterTypeHandler));
 
-
         const setFilterTypeHandler = (type: FilterType) => (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
@@ -1059,7 +1058,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Include, setFilterTypeHandler(Constants.FilterTypes.Include)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Exclude, setFilterTypeHandler(Constants.FilterTypes.Exclude)));
 
-
         const setExcludeStyleHandler = (style: 'line-through' | 'hidden') => (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
@@ -1069,7 +1067,6 @@ export class CommandManager {
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.LineThrough, setExcludeStyleHandler('line-through')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.Hidden, setExcludeStyleHandler('hidden')));
-
 
         const toggleHighlightModeHandler = (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -1083,7 +1080,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
 
-
         const setHighlightModeHandler = (mode: number) => (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
@@ -1093,7 +1089,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Word, setHighlightModeHandler(0)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Line, setHighlightModeHandler(1)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(2)));
-
 
         const toggleCaseSensitivityHandler = (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -1106,7 +1101,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
-
         const setCaseSensitivityHandler = (enable: boolean) => (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
@@ -1115,7 +1109,6 @@ export class CommandManager {
         };
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterCaseSensitivity.On, setCaseSensitivityHandler(true)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterCaseSensitivity.Off, setCaseSensitivityHandler(false)));
-
 
         const toggleContextLineHandler = (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -1130,7 +1123,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus5, toggleContextLineHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus9, toggleContextLineHandler));
 
-
         const setContextLineHandler = (lines: number) => (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
@@ -1141,7 +1133,6 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus3, setContextLineHandler(3)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus5, setContextLineHandler(5)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus9, setContextLineHandler(9)));
-
 
         const changeColorHandler = async (item: FilterItem) => {
             let targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -1193,11 +1184,9 @@ export class CommandManager {
             this.setPrependLineNumbersEnabled(false);
         }));
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleWordWrap, async () => {
             await vscode.commands.executeCommand('editor.action.toggleWordWrap');
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleMinimap, async () => {
             const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
@@ -1205,13 +1194,11 @@ export class CommandManager {
             await config.update(Constants.Configuration.Editor.MinimapEnabled, !current, vscode.ConfigurationTarget.Global);
         }));
 
-
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleStickyScroll, async () => {
             const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
             const current = config.get<boolean>(Constants.Configuration.Editor.StickyScrollEnabled);
             await config.update(Constants.Configuration.Editor.StickyScrollEnabled, !current, vscode.ConfigurationTarget.Global);
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleOccurrencesHighlight, async (value?: boolean | string) => {
             const config = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section);
@@ -1256,7 +1243,6 @@ export class CommandManager {
                 this.quickAccessProvider.refresh();
             }
         }));
-
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFileSizeUnit, () => {
             this.quickAccessProvider.toggleFileSizeUnit();

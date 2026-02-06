@@ -423,5 +423,3 @@ export const Constants = {
         AdbDefaultOptions: '-v threadtime',
     },
 } as const;
-
-

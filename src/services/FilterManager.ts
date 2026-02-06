@@ -7,7 +7,6 @@ import { ProfileManager, FilterProfile } from './ProfileManager';
 import { FilterStateService } from './FilterStateService';
 import * as crypto from 'crypto';
 
-
 export class FilterManager implements vscode.Disposable {
     private groups: FilterGroup[] = [];
     private colorPresets: ColorPreset[] = [];
@@ -76,7 +75,6 @@ export class FilterManager implements vscode.Disposable {
             }
         }, 300);
     }
-
 
     private initDefaultFilters(): void {
         const hasRegexGroups = this.groups.some(g => g.isRegex);
@@ -264,7 +262,6 @@ export class FilterManager implements vscode.Disposable {
         if (group) {
             const filter = group.filters.find(f => f.id === filterId);
             if (filter) {
-
 
                 // Cycle: 0 (Word) -> 1 (Line) -> 2 (Whole Line) -> 0
                 filter.highlightMode = ((filter.highlightMode ?? 0) + 1) % 3;
@@ -468,7 +465,6 @@ export class FilterManager implements vscode.Disposable {
         if (group) {
             const filter = group.filters.find(f => f.id === filterId);
             if (filter) {
-
 
                 if (filter.highlightMode !== mode) {
                     filter.highlightMode = mode;

@@ -358,7 +358,9 @@ export class HighlightService implements vscode.Disposable {
 
     private getEffectiveLineColor(text: string): string | undefined {
         const activeGroups = this.filterManager.getGroups().filter(g => g.isEnabled);
-        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+        const enableRegexHighlight = config.get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
+        const defaultColor = config.get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
 
         // Check all filters to find a match
         for (const group of activeGroups) {
@@ -373,7 +375,6 @@ export class HighlightService implements vscode.Disposable {
                 try {
                     const regex = RegexUtils.create(filter.keyword, !!filter.isRegex, !!filter.caseSensitive);
                     if (regex.test(text)) {
-                        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
                         return filter.color || (typeof defaultColor === 'string' ? defaultColor : undefined);
                     }
                 } catch (e) { }
@@ -386,7 +387,6 @@ export class HighlightService implements vscode.Disposable {
         if (!editor || line < 0) {
             return;
         }
-
 
         // Cancel previous animation if active
         if (this.activeFlashTimeout) {

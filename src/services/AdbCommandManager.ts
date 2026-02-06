@@ -339,7 +339,6 @@ export class AdbCommandManager {
         }
     }
 
-
     private parseTagInput(input: string): LogcatTag | undefined {
         const parts = input.split(':');
         const name = parts[0].trim();

@@ -62,7 +62,6 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return item;
     }
 
-
     private createSeparator(): vscode.TreeItem {
         const item = new vscode.TreeItem('', vscode.TreeItemCollapsibleState.None);
         item.label = '──────────────';
@@ -200,7 +199,6 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
         return item;
     }
-
 
     private createFileSizeItem(): vscode.TreeItem {
         const size = this.getFileSize();

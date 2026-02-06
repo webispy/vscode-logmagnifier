@@ -154,7 +154,6 @@ export class JsonPrettyService implements vscode.Disposable {
                 return;
             }
 
-
             // Update Tree View (Webview)
             // Prioritize valid JSONs, but fallback to lenient parsing for invalid ones
             // JSON Webview is now always enabled for this command
@@ -192,7 +191,6 @@ export class JsonPrettyService implements vscode.Disposable {
 
                 this.jsonTreeWebview.show(results, 'JSON Preview', 'valid', tabSize, sourceUri, sourceLine, silent);
             }
-
 
         } catch (error) {
             this.logger.error(`JsonPrettyService error: ${error}`);

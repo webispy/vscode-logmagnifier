@@ -25,8 +25,6 @@ export class AdbService implements vscode.Disposable {
     constructor(private logger: Logger) { }
 
     private deviceTargetApps: Map<string, string> = new Map(); // deviceId -> packageName
-
-
     private getAdbPath(): string {
         return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) || Constants.Defaults.AdbPath;
     }
@@ -197,7 +195,6 @@ export class AdbService implements vscode.Disposable {
     private async findPid(deviceId: string, search: string): Promise<string | undefined> {
         return new Promise((resolve) => {
             const adbPath = this.getAdbPath();
-            // Try pidof first (fastest)
             // Try pidof first (fastest)
             cp.execFile(adbPath, ['-s', deviceId, 'shell', 'pidof', '-s', search], (err, stdout) => {
                 if (!err && stdout.trim()) {
@@ -646,13 +643,12 @@ export class AdbService implements vscode.Disposable {
     }
 
     public async captureScreenshot(deviceId: string, localOutputPath: string): Promise<boolean> {
-        return new Promise(async (resolve) => {
+        return new Promise((resolve) => {
             const adbPath = this.getAdbPath();
             const remotePath = `/data/local/tmp/vscode_screenshot_${Date.now()}.png`;
 
             this.logger.info(`[ADB] Capturing screenshot on ${deviceId} to ${remotePath}`);
 
-            // 1. Capture to remote temp file
             // 1. Capture to remote temp file
             const captureArgs = ['-s', deviceId, 'shell', 'screencap', '-p', remotePath];
             this.logger.info(`[ADB] Command: ${adbPath} ${captureArgs.join(' ')}`);
@@ -849,7 +845,7 @@ export class AdbService implements vscode.Disposable {
                 const lsCmd = `${adbPath} -s ${deviceId} shell ls -l ${remotePath}`;
 
                 const result = await new Promise<{ size: number, output: string }>((resolve) => {
-                    cp.exec(lsCmd, (err, stdout) => {
+                    cp.execFile(adbPath, ['-s', deviceId, 'shell', 'ls', '-l', remotePath], (err, stdout) => {
                         attempts++;
                         let size = 0;
                         if (stdout) {
@@ -903,7 +899,7 @@ export class AdbService implements vscode.Disposable {
                 const pullCmd = `${adbPath} -s ${deviceId} pull ${remotePath} "${localPath}"`;
                 this.logger.info(`[ADB] Pulling video: ${pullCmd}`);
 
-                cp.exec(pullCmd, async (err) => {
+                cp.execFile(adbPath, ['-s', deviceId, 'pull', remotePath, localPath], async (err) => {
                     if (err) {
                         this.logger.error(`[ADB] Failed to pull recording: ${err.message}`);
                         vscode.window.showErrorMessage(Constants.Messages.Error.RetrieveRecordingFailed);
@@ -914,8 +910,7 @@ export class AdbService implements vscode.Disposable {
                     }
 
                     // Cleanup remote
-                    const cleanupCmd = `${adbPath} -s ${deviceId} shell rm ${remotePath}`;
-                    cp.exec(cleanupCmd, (cleanupErr) => {
+                    cp.execFile(adbPath, ['-s', deviceId, 'shell', 'rm', remotePath], (cleanupErr) => {
                         if (cleanupErr) {
                             this.logger.warn(`[ADB] Failed to cleanup remote file: ${cleanupErr.message}`);
                         } else {
@@ -933,7 +928,7 @@ export class AdbService implements vscode.Disposable {
             const adbPath = this.getAdbPath();
             const cmd = `${adbPath} -s ${deviceId} shell settings get system show_touches`;
             this.logger.info(`[ADB] Getting show_touches: ${cmd}`);
-            cp.exec(cmd, (err, stdout) => {
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'settings', 'get', 'system', 'show_touches'], (err, stdout) => {
                 if (err) {
                     this.logger.error(`[ADB] Failed to get show_touches: ${err.message}`);
                     resolve(false);
@@ -951,7 +946,7 @@ export class AdbService implements vscode.Disposable {
             const value = enable ? '1' : '0';
             const cmd = `${adbPath} -s ${deviceId} shell settings put system show_touches ${value}`;
             this.logger.info(`[ADB] Setting show_touches: ${cmd}`);
-            cp.exec(cmd, (err) => {
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'settings', 'put', 'system', 'show_touches', value], (err) => {
                 if (err) {
                     this.logger.error(`[ADB] Failed to set show_touches: ${err.message}`);
                 }

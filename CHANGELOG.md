@@ -1,5 +1,12 @@
 # Change Log
 
+## [1.5.6]
+
+### Refactor
+- **Internal**: Converted file operations to asynchronous to improve performance and stability.
+- **Cleanup**: Extensive code cleanup including removal of unused variables and stale comments.
+- **Quality**: Improved type safety and linting compliance across the codebase.
+
 ## [1.5.5]
 
 ### Added

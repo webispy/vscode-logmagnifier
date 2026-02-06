@@ -377,7 +377,7 @@ export class HighlightService implements vscode.Disposable {
                     if (regex.test(text)) {
                         return filter.color || (typeof defaultColor === 'string' ? defaultColor : undefined);
                     }
-                } catch (e) { }
+                } catch (e) { /* ignore invalid regex */ }
             }
         }
         return undefined;

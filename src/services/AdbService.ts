@@ -842,7 +842,6 @@ export class AdbService implements vscode.Disposable {
 
         const checkLoop = async () => {
             while (attempts < maxAttempts) {
-                const lsCmd = `${adbPath} -s ${deviceId} shell ls -l ${remotePath}`;
 
                 const result = await new Promise<{ size: number, output: string }>((resolve) => {
                     cp.execFile(adbPath, ['-s', deviceId, 'shell', 'ls', '-l', remotePath], (err, stdout) => {
@@ -960,7 +959,6 @@ export class AdbService implements vscode.Disposable {
         const current = await this.getShowTouchesState(deviceId);
         await this.setShowTouchesState(deviceId, !current);
     }
-
 
     public dispose() {
         this.flushTimers.forEach(timer => clearInterval(timer));

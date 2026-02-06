@@ -215,5 +215,4 @@ export class LogProcessor {
 
         return { isMatched, contextLines: maxContext };
     }
-
 }

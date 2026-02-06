@@ -276,7 +276,6 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
-
     public getActiveLinesCount(): number {
         // Legacy/Global count: sum of all files
         let total = 0;

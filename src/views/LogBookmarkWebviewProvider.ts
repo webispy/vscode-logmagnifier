@@ -365,9 +365,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                     // Create a combined regex: (match1|match2|...)
                     // Escape each match text
                     const escapedMatches = Array.from(uniqueMatchTexts).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-                    // distinct matching logic handled by simple joining?
-                    // Be careful about overlapping matches. Detailed tokenization is better but complex.
-                    // Simple approach: Construct one regex.
+                    // Construct one regex to handle all matches.
                     // Sort by length destending to match longest first (e.g. "Error" vs "Error Code")
                     escapedMatches.sort((a, b) => b.length - a.length);
 

@@ -49,9 +49,7 @@ export class SourceMapService {
         }
 
         // Create a range for the target line (start to end of line)
-        // Since we don't have the original document open, we can just point to the start of the line.
-        // If the document is opened, we can refine this, but for now (0, 0) is sufficient to jump.
-        // Ideally, we want to jump to the start of the line.
+        // Point to the start of the line (0, 0)
         const position = new vscode.Position(originalLine, 0);
         return new vscode.Location(mapping.sourceUri, position);
     }

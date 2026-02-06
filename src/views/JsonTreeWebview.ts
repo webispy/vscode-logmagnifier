@@ -187,9 +187,7 @@ export class JsonTreeWebview {
                     top: 50%;
                     transform: translateY(-50%);
                     font-size: 13px; /* Same as input font size */
-                    color: var(--button-hover-bg); /* Distinct color, reusing a variable or set specific */
-                    color: #007acc; /* Example distinct color (VSCode Blue approx) or use var */
-                    color: var(--vscode-textLink-foreground); /* Better distinct theme-aware color */
+                    color: var(--vscode-textLink-foreground);
                     pointer-events: none; /* Let clicks pass through to input */
                     white-space: nowrap;
                     text-align: right;

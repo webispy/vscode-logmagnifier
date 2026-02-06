@@ -67,8 +67,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         item.label = '──────────────';
         item.contextValue = 'separator';
         item.tooltip = undefined;
-        // Make it unclickable/disabled appearance if possible, but VS Code TreeItem doesn't have "disabled" state that prevents selection easily without command.
-        // We just don't assign a command.
+        // Separator item with no command.
         return item;
     }
 
@@ -90,8 +89,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
     public toggleFileSizeUnit(): void {
         const size = this.getFileSize();
-        // If undefined (error/no file), just toggle blindly or do nothing?
-        // If we can't determine size, we can't check for 0. Let's assume size is 0 if undefined.
+        // Treat undefined size (error/no file) as 0.
         const safeSize = size ?? 0;
 
         const order: ('bytes' | 'kb' | 'mb')[] = ['bytes', 'kb', 'mb'];
@@ -156,10 +154,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         // item.description = isEnabled ? 'On' : 'Off'; // Moved to label for clarity
         item.iconPath = new vscode.ThemeIcon(iconId);
         // Add a visual indicator for state beyond just text
-        // We could use checkmark icon overlay, but for now Description + ContextValue is good.
-        // Or we could change the icon color via ThemeColor if VS Code API supported it easily on TreeItems.
-        // Let's stick to standard icons but maybe change the icon itself if off?
-        // User requested "buttons", so keeping the semantic icon is better.
+        // Use standard icons with text status indicator.
 
         item.command = {
             command: commandId,

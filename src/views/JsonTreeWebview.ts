@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { getNonce } from '../utils/WebviewUtils';
 
 export class JsonTreeWebview {
     private panel: vscode.WebviewPanel | undefined;
@@ -1122,11 +1123,3 @@ export class JsonTreeWebview {
     }
 }
 
-function getNonce() {
-    let text = '';
-    const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-}

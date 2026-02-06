@@ -134,7 +134,7 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         assert.ok(command, 'Command should be created');
     });
 
-    test('executeShellCommand creates and reuses terminal', async () => {
+    test('executeShellCommand creates and reuses terminal with interruption', async () => {
         const groupName = 'Exec Group';
         await service.createGroup(groupName, configPath);
         let group = service.groups.find(g => g.label === groupName)!;
@@ -147,40 +147,81 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         group = service.groups.find(g => g.label === groupName)!;
         const command = (group.children[0] as ShellFolder).children[0] as ShellCommand;
 
-        // Mock Terminal
+        const sentTexts: string[] = [];
         const mockTerminal = {
             name: 'Mock Terminal',
             show: () => { },
             sendText: (text: string) => {
-                assert.strictEqual(text, 'echo run');
-            }
+                sentTexts.push(text);
+            },
+            exitStatus: undefined
         } as unknown as vscode.Terminal;
 
-        let createdTerminal = false;
+        let createdTerminalCount = 0;
         manager.uiMock.createTerminal.setHandler(() => {
-            createdTerminal = true;
+            createdTerminalCount++;
             return mockTerminal;
         });
 
         manager.uiMock.terminals.push(mockTerminal);
-
-        // Ensure we bypass "Open Editor" by mocking workspace?
-        // executeShellCommand tries to find active editor.
-        // It calls openCommandEditor -> showTextDocument.
         manager.uiMock.showTextDocument.setHandler(() => ({} as vscode.TextEditor));
 
+        // First execution (new terminal)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (manager as any).executeShellCommand(command);
 
-        assert.ok(createdTerminal, 'Should create terminal');
+        assert.strictEqual(createdTerminalCount, 1, 'Should create terminal');
+        assert.deepStrictEqual(sentTexts, ['echo run'], 'Should send only command on first run');
 
-        // Test Reuse
-        createdTerminal = false; // Reset flag
-        // uiMock.createTerminal shouldn't be called if reuse works?
-        // But manager logic checks its own map `commandTerminals`.
-
+        // Second execution (reuse)
+        sentTexts.length = 0;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (manager as any).executeShellCommand(command);
-        assert.strictEqual(createdTerminal, false, 'Should reuse terminal');
+
+        assert.strictEqual(createdTerminalCount, 1, 'Should NOT create new terminal');
+        assert.deepStrictEqual(sentTexts, ['\u0003', 'echo run'], 'Should send Ctrl+C before command on reuse');
+    });
+
+    test('executeShellCommand ignores dead terminal and creates new one', async () => {
+        const groupName = 'Dead Term Group';
+        await service.createGroup(groupName, configPath);
+        let group = service.groups.find(g => g.label === groupName)!;
+        await service.addFolder(group, 'Folder');
+        group = service.groups.find(g => g.label === groupName)!;
+        const folder = group.children[0] as ShellFolder;
+        await service.addCommand(folder, 'Cmd', 'ls');
+        const command = (service.groups.find(g => g.label === groupName)!.children[0] as ShellFolder).children[0] as ShellCommand;
+
+        const deadTerminal = {
+            name: 'Dead Terminal',
+            show: () => { },
+            sendText: () => { },
+            exitStatus: { code: 1 } // dead
+        } as unknown as vscode.Terminal;
+
+        const healthyTerminal = {
+            name: 'Healthy Terminal',
+            show: () => { },
+            sendText: () => { },
+            exitStatus: undefined
+        } as unknown as vscode.Terminal;
+
+        manager.uiMock.terminals.push(deadTerminal);
+        // Put it in the manager's map to simulate it was being used
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (manager as any).commandTerminals.set(command.id, deadTerminal);
+
+        let createdHealthy = false;
+        manager.uiMock.createTerminal.setHandler(() => {
+            createdHealthy = true;
+            return healthyTerminal;
+        });
+        manager.uiMock.showTextDocument.setHandler(() => ({} as vscode.TextEditor));
+
+        // Execute
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (manager as any).executeShellCommand(command);
+
+        assert.ok(createdHealthy, 'Should create new terminal because the old one was dead');
     });
 });

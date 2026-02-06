@@ -315,7 +315,7 @@ export class ShellCommanderCommandManager {
             const commandId = item.id;
             const root = this.getRootGroup(item);
             const groupName = root.label;
-            this.sendToTerminal(commandText, commandId, item.label, groupName);
+            await this.sendToTerminal(commandText, commandId, item.label, groupName);
         }
     }
 
@@ -327,7 +327,7 @@ export class ShellCommanderCommandManager {
         return current as ShellGroup;
     }
 
-    private sendToTerminal(text: string, commandId: string, label: string, groupName: string) {
+    private async sendToTerminal(text: string, commandId: string, label: string, groupName: string) {
         const config = vscode.workspace.getConfiguration('logmagnifier');
         const strategy = config.get<string>('shellCommander.terminalReuseStrategy', 'perFolder'); // Default updated
 
@@ -388,32 +388,45 @@ export class ShellCommanderCommandManager {
         }
 
         let terminal = this.commandTerminals.get(terminalKey);
+        let isReused = false;
 
-        // Check if terminal exists and is not closed
+        // Check if terminal exists and is healthy
         if (terminal) {
-            // Check via exitStatus (if defined it might be dead) or active terminals list
             const isTerminalOpen = this._ui.terminals.some(t => t === terminal);
-            if (!isTerminalOpen) {
+            const isDead = terminal.exitStatus !== undefined;
+
+            if (!isTerminalOpen || isDead) {
                 terminal = undefined;
                 this.commandTerminals.delete(terminalKey);
+            } else {
+                isReused = true;
             }
         }
 
         // Fallback: search by name in active terminals if map lookup failed (e.g. after reload)
-        // Only do this for Global/Group/Folder reuse to avoid grabbing a wrong one for PerCommand if names coincide (unlikely but safe)
         if (!terminal && (strategy === 'global' || strategy === 'perGroup' || strategy === 'perFolder')) {
-            terminal = this._ui.terminals.find(t => t.name === terminalName);
+            terminal = this._ui.terminals.find(t => t.name === terminalName && t.exitStatus === undefined);
             if (terminal) {
                 this.commandTerminals.set(terminalKey, terminal);
+                isReused = true;
             }
         }
 
         if (!terminal) {
             terminal = this._ui.createTerminal({ name: terminalName });
             this.commandTerminals.set(terminalKey, terminal);
+            isReused = false; // New terminal doesn't need interruption
         }
 
         terminal.show(true);
+
+        if (isReused) {
+            // Interrupt any running process (Ctrl+C)
+            terminal.sendText('\u0003');
+            // Small delay to allow shell to return to prompt
+            await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
         terminal.sendText(text);
     }
 

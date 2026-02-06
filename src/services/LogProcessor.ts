@@ -87,7 +87,6 @@ export class LogProcessor {
             const lineMapping: number[] = [];
 
             // Padding calculation
-
             const prependLineNumbers = options?.prependLineNumbers || false;
             const totalLineCount = options?.totalLineCount || DEFAULT_MAX_LINE_COUNT;
             const padding = totalLineCount.toString().length;

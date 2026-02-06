@@ -33,15 +33,15 @@ export class LogBookmarkCommandManager {
     }
 
     private registerCommands(context: vscode.ExtensionContext) {
-        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddBookmark, () => this.addBookmark()));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddBookmark, async () => await this.addBookmark()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmark, (item: BookmarkItem) => this.removeBookmark(item)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.JumpToBookmark, (item: BookmarkItem) => this.jumpToBookmark(item)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddMatchListToBookmark, (filter: FilterItem) => this.addMatchListToBookmark(filter)));
-        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionMatchesToBookmark, () => this.addSelectionMatchesToBookmark()));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionMatchesToBookmark, async () => await this.addSelectionMatchesToBookmark()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmarkFile, (uri: vscode.Uri) => this.removeBookmarkFile(uri)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyBookmarkFile, (uri: vscode.Uri, withLineNumber: boolean) => this.copyBookmarkFile(uri, withLineNumber)));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenBookmarkFile, (uri: vscode.Uri, withLineNumber: boolean) => this.openBookmarkFile(uri, withLineNumber)));
-        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmark, () => this.toggleBookmark()));
+        context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleBookmark, async () => await this.toggleBookmark()));
 
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyAllBookmarks, () => this.copyAllBookmarks()));
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenAllBookmarks, () => this.openAllBookmarks()));
@@ -50,8 +50,8 @@ export class LogBookmarkCommandManager {
         context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RemoveBookmarkGroup, (groupId: string) => this.removeBookmarkGroup(groupId)));
     }
 
-    private getActiveEditor(): vscode.TextEditor | undefined {
-        return EditorUtils.getActiveEditor(this._lastActiveEditor, 'add bookmark');
+    private async getActiveEditor(): Promise<vscode.TextEditor | undefined> {
+        return EditorUtils.getActiveEditorAsync(this._lastActiveEditor, 'add bookmark');
     }
 
     private removeBookmarkGroup(groupId: string) {
@@ -116,8 +116,8 @@ export class LogBookmarkCommandManager {
         vscode.window.setStatusBarMessage(`Bookmark Word Wrap: ${enabled ? 'Enabled' : 'Disabled'}`, 3000);
     }
 
-    private addBookmark() {
-        const editor = this.getActiveEditor();
+    private async addBookmark() {
+        const editor = await this.getActiveEditor();
         if (!editor) { return; }
 
         const line = editor.selection.active.line;
@@ -164,8 +164,8 @@ export class LogBookmarkCommandManager {
         }
     }
 
-    private toggleBookmark() {
-        const editor = this.getActiveEditor();
+    private async toggleBookmark() {
+        const editor = await this.getActiveEditor();
         if (!editor) { return; }
 
         const selection = editor.selection;
@@ -218,8 +218,8 @@ export class LogBookmarkCommandManager {
         }
     }
 
-    private addSelectionMatchesToBookmark() {
-        const editor = this.getActiveEditor();
+    private async addSelectionMatchesToBookmark() {
+        const editor = await this.getActiveEditor();
         if (!editor) { return; }
 
         const selection = editor.selection;
@@ -249,7 +249,7 @@ export class LogBookmarkCommandManager {
             return;
         }
 
-        const editor = this.getActiveEditor();
+        const editor = await this.getActiveEditor();
         if (!editor) { return; }
 
         const keyword = filter.keyword;

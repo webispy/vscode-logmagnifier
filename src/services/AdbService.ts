@@ -576,7 +576,6 @@ export class AdbService implements vscode.Disposable {
             // Note: This only works for debuggable apps or rooted devices usually via run-as
             // For non-debuggable apps without root, clearing just cache isn't easily possible via adb without pm clear
             // But we try nonetheless.
-            // const cmd = `${adbPath} -s ${deviceId} shell run-as ${packageName} rm -rf cache code_cache`;
             cp.execFile(adbPath, ['-s', deviceId, 'shell', 'run-as', packageName, 'rm', '-rf', 'cache', 'code_cache'], (err, stdout) => {
                 if (err) {
                     this.logger.warn(`[ADB] Clear cache failed (might need debuggable app): ${err.message}`);

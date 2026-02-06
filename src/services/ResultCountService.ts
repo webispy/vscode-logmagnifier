@@ -1,4 +1,3 @@
-
 import { FilterManager } from './FilterManager';
 
 export class ResultCountService {

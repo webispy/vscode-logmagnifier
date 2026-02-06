@@ -93,7 +93,7 @@ export class JsonPrettyService implements vscode.Disposable {
             let editor = targetEditor || vscode.window.activeTextEditor;
 
             if (!silent && !editor) {
-                editor = EditorUtils.getActiveEditor(this._lastActiveEditor, 'open JSON Preview');
+                editor = await EditorUtils.getActiveEditorAsync(this._lastActiveEditor, 'open JSON Preview');
 
                 if (!editor) {
                     return;

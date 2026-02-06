@@ -12,7 +12,15 @@ export class EditorUtils {
      * @param operationName Optional name of the operation for specific error messages (e.g. "add bookmark")
      * @returns The active text editor, or undefined if none found or file is too large
      */
-    public static getActiveEditor(lastActiveEditor?: vscode.TextEditor, operationName: string = 'perform operation'): vscode.TextEditor | undefined {
+    /**
+     * Tries to resolve the active text editor, prioritizing the active tab for large files
+     * to prevent falling back to incorrect visible editors.
+     *
+     * @param lastActiveEditor Optional fallback if no active editor is directly found
+     * @param operationName Optional name of the operation for specific error messages (e.g. "add bookmark")
+     * @returns Promise resolving to the active text editor, or undefined if none found or file is too large
+     */
+    public static async getActiveEditorAsync(lastActiveEditor?: vscode.TextEditor, operationName: string = 'perform operation'): Promise<vscode.TextEditor | undefined> {
         let editor = vscode.window.activeTextEditor;
 
         if (!editor) {
@@ -22,7 +30,7 @@ export class EditorUtils {
             if (activeTab && activeTab.input instanceof vscode.TabInputText) {
                 const uri = activeTab.input.uri;
                 if (uri.scheme === 'file') {
-                    const size = this.getFileSize(uri);
+                    const size = await this.getFileSizeAsync(uri);
                     const sizeMB = (size || 0) / (1024 * 1024);
 
                     if (sizeMB > 50) {
@@ -50,13 +58,19 @@ export class EditorUtils {
      * Gets the size of a file in bytes, safely handling errors.
      * @param uri The URI of the file
      * @param onError Optional callback to handle errors
-     * @returns The size in bytes, or undefined if it cannot be determined
+     * @returns Promise resolving to the size in bytes, or undefined if it cannot be determined
      */
-    public static getFileSize(uri: vscode.Uri, onError?: (error: unknown) => void): number | undefined {
+    public static async getFileSizeAsync(uri: vscode.Uri, onError?: (error: unknown) => void): Promise<number | undefined> {
         try {
             if (uri.scheme === 'file') {
-                if (fs.existsSync(uri.fsPath)) {
-                    return fs.statSync(uri.fsPath).size;
+                try {
+                    const stat = await vscode.workspace.fs.stat(uri);
+                    return stat.size;
+                } catch {
+                    // Fallback to node fs if workspace fs fails (though workspace.fs is preferred)
+                    if (fs.existsSync(uri.fsPath)) {
+                        return fs.statSync(uri.fsPath).size;
+                    }
                 }
             }
         } catch (error) {

@@ -22,7 +22,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return element;
     }
 
-    getChildren(element?: vscode.TreeItem): Thenable<vscode.TreeItem[]> {
+    async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
         if (element) {
             return Promise.resolve([]);
         }
@@ -45,7 +45,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
             this.createToggleItem(Constants.Labels.StickyScroll, !!stickyScrollEnabled, Constants.Commands.ToggleStickyScroll, 'pinned'),
             this.createToggleItem(Constants.Labels.JsonPreview, !!lmConfig.get<boolean>(Constants.Configuration.JsonPreviewEnabled), Constants.Commands.ToggleJsonPreview, 'json'),
             this.createOccurrencesHighlightItem(config),
-            this.createFileSizeItem(),
+            await this.createFileSizeItem(),
             this.createSeparator(),
             this.createProfileItem()
         ]);
@@ -87,8 +87,8 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
     private fileSizeUnit: 'bytes' | 'kb' | 'mb' = 'bytes';
 
-    public toggleFileSizeUnit(): void {
-        const size = this.getFileSize();
+    public async toggleFileSizeUnit(): Promise<void> {
+        const size = await this.getFileSize();
         // Treat undefined size (error/no file) as 0.
         const safeSize = size ?? 0;
 
@@ -123,13 +123,13 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         this.refresh();
     }
 
-    private getFileSize(): number | undefined {
+    private async getFileSize(): Promise<number | undefined> {
         const editor = vscode.window.activeTextEditor;
 
         // 1. Try active text editor
         if (editor) {
             if (editor.document.uri.scheme === 'file') {
-                return EditorUtils.getFileSize(editor.document.uri, (e) => {
+                return EditorUtils.getFileSizeAsync(editor.document.uri, (e) => {
                     Logger.getInstance().error(`Error getting file size: ${e}`);
                 });
             } else if (editor.document.uri.scheme === 'untitled') {
@@ -141,7 +141,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
         if (activeTab && activeTab.input instanceof vscode.TabInputText) {
             const uri = activeTab.input.uri;
-            return EditorUtils.getFileSize(uri, (e) => {
+            return EditorUtils.getFileSizeAsync(uri, (e) => {
                 Logger.getInstance().error(`Error getting file size from tab: ${e}`);
             });
         }
@@ -195,8 +195,8 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return item;
     }
 
-    private createFileSizeItem(): vscode.TreeItem {
-        const size = this.getFileSize();
+    private async createFileSizeItem(): Promise<vscode.TreeItem> {
+        const size = await this.getFileSize();
         const hasFile = size !== undefined;
         // Default to 0 if undefined for safety in calculations, though logic handles hasFile check
         const safeSize = size ?? 0;

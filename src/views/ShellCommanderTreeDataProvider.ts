@@ -2,7 +2,6 @@ import * as vscode from 'vscode';
 import { ShellCommanderService } from '../services/ShellCommanderService';
 import { ShellItem, ShellGroup, ShellFolder, ShellCommand } from '../models/ShellCommander';
 import { Constants } from '../constants';
-import * as path from 'path';
 
 export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<ShellItem>, vscode.TreeDragAndDropController<ShellItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<ShellItem | undefined | null | void> = new vscode.EventEmitter<ShellItem | undefined | null | void>();
@@ -84,14 +83,12 @@ export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<S
         return treeItem;
     }
 
-
-
     // Drag/Drop implementation stub - can be expanded later
-    handleDrag(source: readonly ShellItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
+    handleDrag(_source: readonly ShellItem[], _dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void | Thenable<void> {
         // Implementation for drag
     }
 
-    handleDrop(target: ShellItem | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
+    handleDrop(_target: ShellItem | undefined, _dataTransfer: vscode.DataTransfer, _token: vscode.CancellationToken): void | Thenable<void> {
         // Implementation for drop
     }
     getParent(element: ShellItem): vscode.ProviderResult<ShellItem> {

@@ -22,7 +22,21 @@ export class ShellCommanderCommandManager {
         );
     }
 
-    private registerCommands() {
+    // Exposed for testing
+    protected _ui = {
+        showInputBox: vscode.window.showInputBox,
+        showInformationMessage: vscode.window.showInformationMessage,
+        showErrorMessage: vscode.window.showErrorMessage,
+        showWarningMessage: vscode.window.showWarningMessage,
+        showOpenDialog: vscode.window.showOpenDialog,
+        showSaveDialog: vscode.window.showSaveDialog,
+        createTerminal: vscode.window.createTerminal,
+        showTextDocument: vscode.window.showTextDocument,
+        get terminals() { return vscode.window.terminals; }
+    };
+
+
+    protected registerCommands() {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(Constants.Commands.OpenGlobalShellConfig, this.openGlobalShellConfig, this),
             vscode.commands.registerCommand(Constants.Commands.AddShellGroup, this.addShellGroup, this),
@@ -46,7 +60,7 @@ export class ShellCommanderCommandManager {
     }
 
     private async addShellGroup() {
-        const name = await vscode.window.showInputBox({
+        const name = await this._ui.showInputBox({
             placeHolder: "Enter Group Name (e.g. 'Android', 'Frontend', 'Backend')",
             prompt: "Creates a new Group in the default storage."
         });
@@ -65,14 +79,14 @@ export class ShellCommanderCommandManager {
 
         try {
             await this.shellService.createGroup(name, defaultPath);
-            vscode.window.showInformationMessage(`Created group '${name}' in default storage.`);
+            this._ui.showInformationMessage(`Created group '${name}' in default storage.`);
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to create group: ${e}`);
+            this._ui.showErrorMessage(`Failed to create group: ${e}`);
         }
     }
 
     private async importShellGroup() {
-        const uris = await vscode.window.showOpenDialog({
+        const uris = await this._ui.showOpenDialog({
             canSelectFiles: true,
             canSelectMany: true,
             defaultUri: vscode.Uri.file(path.join(os.homedir(), 'Downloads')),
@@ -121,7 +135,7 @@ export class ShellCommanderCommandManager {
                         importedTotal++;
                     }
                 } catch (e) {
-                    vscode.window.showErrorMessage(`Failed to import ${uri.fsPath}: ${e}`);
+                    this._ui.showErrorMessage(`Failed to import ${uri.fsPath}: ${e}`);
                 }
             }
 
@@ -134,7 +148,7 @@ export class ShellCommanderCommandManager {
                 } else {
                     await this.shellService.refresh();
                 }
-                vscode.window.showInformationMessage(`Imported ${importedTotal} groups to global storage.`);
+                this._ui.showInformationMessage(`Imported ${importedTotal} groups to global storage.`);
             }
         }
     }
@@ -143,11 +157,11 @@ export class ShellCommanderCommandManager {
         // NOTE: Parameter `group` ignored as we now do bulk export of ALL groups.
         const currentConfigs = this.shellService.getAllGroupsConfigs();
         if (currentConfigs.length === 0) {
-            vscode.window.showInformationMessage("No Shell Groups to export.");
+            this._ui.showInformationMessage("No Shell Groups to export.");
             return;
         }
 
-        const uri = await vscode.window.showSaveDialog({
+        const uri = await this._ui.showSaveDialog({
             defaultUri: vscode.Uri.file(path.join(os.homedir(), 'Downloads', 'logmagnifier_shell_cmds.json')),
             filters: { 'JSON': ['json'] },
             saveLabel: 'Export All Shell Groups'
@@ -187,9 +201,9 @@ export class ShellCommanderCommandManager {
                 }
 
                 fs.writeFileSync(uri.fsPath, JSON.stringify(finalConfigs, null, 2), 'utf-8');
-                vscode.window.showInformationMessage(`Successfully exported ${finalConfigs.length} groups to ${uri.fsPath}`);
+                this._ui.showInformationMessage(`Successfully exported ${finalConfigs.length} groups to ${uri.fsPath}`);
             } catch (e) {
-                vscode.window.showErrorMessage(`Failed to export: ${e}`);
+                this._ui.showErrorMessage(`Failed to export: ${e}`);
             }
         }
     }
@@ -218,7 +232,7 @@ export class ShellCommanderCommandManager {
             return;
         }
 
-        const name = await vscode.window.showInputBox({ placeHolder: 'Folder Name' });
+        const name = await this._ui.showInputBox({ placeHolder: 'Folder Name' });
         if (name) {
             await this.shellService.addFolder(parent, name);
         }
@@ -229,11 +243,11 @@ export class ShellCommanderCommandManager {
             return;
         }
         if (parent.kind === 'group') {
-            vscode.window.showWarningMessage("Please add commands inside a folder.");
+            this._ui.showWarningMessage("Please add commands inside a folder.");
             return;
         }
 
-        const label = await vscode.window.showInputBox({ placeHolder: 'Command Label' });
+        const label = await this._ui.showInputBox({ placeHolder: 'Command Label' });
         if (!label) {
             return;
         }
@@ -247,7 +261,7 @@ export class ShellCommanderCommandManager {
 
         if (newItem) {
             await this.editShellItem(newItem);
-            vscode.window.showInformationMessage(`Created '${label}'. Edit the script file and save to update.`);
+            this._ui.showInformationMessage(`Created '${label}'. Edit the script file and save to update.`);
         }
     }
 
@@ -378,7 +392,7 @@ export class ShellCommanderCommandManager {
         // Check if terminal exists and is not closed
         if (terminal) {
             // Check via exitStatus (if defined it might be dead) or active terminals list
-            const isTerminalOpen = vscode.window.terminals.some(t => t === terminal);
+            const isTerminalOpen = this._ui.terminals.some(t => t === terminal);
             if (!isTerminalOpen) {
                 terminal = undefined;
                 this.commandTerminals.delete(terminalKey);
@@ -388,14 +402,14 @@ export class ShellCommanderCommandManager {
         // Fallback: search by name in active terminals if map lookup failed (e.g. after reload)
         // Only do this for Global/Group/Folder reuse to avoid grabbing a wrong one for PerCommand if names coincide (unlikely but safe)
         if (!terminal && (strategy === 'global' || strategy === 'perGroup' || strategy === 'perFolder')) {
-            terminal = vscode.window.terminals.find(t => t.name === terminalName);
+            terminal = this._ui.terminals.find(t => t.name === terminalName);
             if (terminal) {
                 this.commandTerminals.set(terminalKey, terminal);
             }
         }
 
         if (!terminal) {
-            terminal = vscode.window.createTerminal({ name: terminalName });
+            terminal = this._ui.createTerminal({ name: terminalName });
             this.commandTerminals.set(terminalKey, terminal);
         }
 
@@ -408,7 +422,7 @@ export class ShellCommanderCommandManager {
             return;
         }
 
-        const label = await vscode.window.showInputBox({ value: item.label, placeHolder: 'Name' });
+        const label = await this._ui.showInputBox({ value: item.label, placeHolder: 'Name' });
         if (!label) {
             return;
         }
@@ -464,7 +478,7 @@ export class ShellCommanderCommandManager {
         this.activeEditors.set(tempPath, item.id);
 
         const doc = await vscode.workspace.openTextDocument(tempPath);
-        await vscode.window.showTextDocument(doc, { preserveFocus: true });
+        await this._ui.showTextDocument(doc, { preserveFocus: true });
     }
 
     private findItemById(groups: ShellGroup[], id: string): ShellItem | undefined {
@@ -496,7 +510,7 @@ export class ShellCommanderCommandManager {
     }
 
     private async deleteShellItem(item: ShellCommand | ShellFolder | ShellGroup) {
-        const confirm = await vscode.window.showWarningMessage(`Delete '${item.label}'?`, { modal: true }, 'Yes');
+        const confirm = await this._ui.showWarningMessage(`Delete '${item.label}'?`, { modal: true }, 'Yes');
         if (confirm !== 'Yes') {
             return;
         }
@@ -518,9 +532,9 @@ export class ShellCommanderCommandManager {
         }
         try {
             const document = await vscode.workspace.openTextDocument(group.configPath);
-            await vscode.window.showTextDocument(document);
+            await this._ui.showTextDocument(document);
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to open config file: ${e}`);
+            this._ui.showErrorMessage(`Failed to open config file: ${e}`);
         }
     }
 
@@ -556,7 +570,7 @@ export class ShellCommanderCommandManager {
             fs.writeFileSync(tempPath, description, 'utf8');
 
             const doc = await vscode.workspace.openTextDocument(tempPath);
-            await vscode.window.showTextDocument(doc);
+            await this._ui.showTextDocument(doc);
 
             // Setup a one-time save listener (or persistent one? one-time bound to this specific file is safer for this session)
             // But activeEditors map approach is better if we want to support multiple open descriptions?
@@ -574,7 +588,7 @@ export class ShellCommanderCommandManager {
             // If kind is Command -> update command.
 
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to open editor: ${e}`);
+            this._ui.showErrorMessage(`Failed to open editor: ${e}`);
         }
     }
 
@@ -583,7 +597,7 @@ export class ShellCommanderCommandManager {
             return;
         }
 
-        const newName = await vscode.window.showInputBox({
+        const newName = await this._ui.showInputBox({
             placeHolder: "Enter new group name",
             value: group.label
         });
@@ -593,14 +607,14 @@ export class ShellCommanderCommandManager {
         }
 
         if (this.shellService.groups.some(g => g.label === newName)) {
-            vscode.window.showErrorMessage(`Group '${newName}' already exists.`);
+            this._ui.showErrorMessage(`Group '${newName}' already exists.`);
             return;
         }
 
         try {
             await this.shellService.renameGroup(group, newName);
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to rename group: ${e}`);
+            this._ui.showErrorMessage(`Failed to rename group: ${e}`);
         }
     }
 
@@ -609,15 +623,15 @@ export class ShellCommanderCommandManager {
         const configPath = path.join(storagePath, 'logmagnifier_shell_cmds.json');
 
         if (!fs.existsSync(configPath)) {
-            vscode.window.showInformationMessage("Global configuration file does not exist yet.");
+            this._ui.showInformationMessage("Global configuration file does not exist yet.");
             return;
         }
 
         try {
             const document = await vscode.workspace.openTextDocument(configPath);
-            await vscode.window.showTextDocument(document);
+            await this._ui.showTextDocument(document);
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to open global config: ${e}`);
+            this._ui.showErrorMessage(`Failed to open global config: ${e}`);
         }
     }
 
@@ -633,9 +647,9 @@ export class ShellCommanderCommandManager {
 
             await this.shellService.loadConfig();
             await this.refreshShellView();
-            vscode.window.showInformationMessage("Shell Commander reloaded.");
+            this._ui.showInformationMessage("Shell Commander reloaded.");
         } catch (e) {
-            vscode.window.showErrorMessage(`Failed to reload Shell Commander: ${e}`);
+            this._ui.showErrorMessage(`Failed to reload Shell Commander: ${e}`);
         }
     }
 

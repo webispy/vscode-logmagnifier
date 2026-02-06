@@ -204,6 +204,12 @@ export class ShellCommanderService {
 
         // 3. Resolve Target Parent in Live Root
         let targetParent: ShellGroup | ShellFolder = liveRoot;
+
+        // Skip the root matching segment
+        if (pathFromRoot.length > 0 && pathFromRoot[0] === liveRoot.label) {
+            pathFromRoot.shift();
+        }
+
         for (const segmentName of pathFromRoot) {
             const found = targetParent.children.find(c => c.kind === 'folder' && c.label === segmentName) as ShellFolder;
             if (!found) {
@@ -601,6 +607,12 @@ export class ShellCommanderService {
             }
 
             this.saveConfigToFile(filePath, configs);
+
+            // Remove old group instance to prevent duplication or stale state
+            const index = this._groups.indexOf(group);
+            if (index !== -1) {
+                this._groups.splice(index, 1);
+            }
 
             // Reload to reflect changes
             await this.loadGroup(filePath);

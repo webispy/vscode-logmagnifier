@@ -92,12 +92,10 @@ suite('FilteredLogDefinitionProvider Integration Test Suite', () => {
     });
 
     test('provideDefinition: should return undefined for document without mapping', async () => {
-        const dummyUri = vscode.Uri.file(path.join(resourcesDir, 'dummy.log'));
         // Ensure dummy.log exists or use a mock
         const doc = await vscode.workspace.openTextDocument(androidLogPath); // reuse existing doc but check against dummy logic
 
         // Use a URI that is NOT registered
-        const unregisteredUri = vscode.Uri.parse('file:///unregistered.log');
         // We can't easily "fake" the URI of an open document in VS Code API without saving it,
         // but FilteredLogDefinitionProvider checks document.uri.
 

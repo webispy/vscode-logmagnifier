@@ -19,6 +19,7 @@ import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { SourceMapService } from './services/SourceMapService';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
 import { Constants } from './constants';
+import { FilterGroup, FilterItem } from './models/Filter';
 
 let debounceTimer: NodeJS.Timeout | undefined;
 
@@ -66,7 +67,7 @@ export function activate(context: vscode.ExtensionContext) {
         return typeof item === 'object' && item !== null && Array.isArray((item as import('./models/Filter').FilterGroup).filters);
     };
 
-    const setupExpansionSync = (view: vscode.TreeView<any>) => {
+    const setupExpansionSync = (view: vscode.TreeView<FilterGroup | FilterItem>) => {
         context.subscriptions.push(view.onDidExpandElement(e => {
             if (isGroup(e.element)) {
                 filterManager.setGroupExpanded(e.element.id, true);

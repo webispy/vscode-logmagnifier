@@ -9,7 +9,7 @@ export class JsonTreeWebview {
 
     constructor(private readonly context: vscode.ExtensionContext) { }
 
-    public show(data: any, title: string = 'JSON Preview', status: 'valid' | 'invalid' | 'no-json' = 'valid', tabSize: number = 2, sourceUri?: string, sourceLine?: number, preserveFocus: boolean = false) {
+    public show(data: unknown, title: string = 'JSON Preview', status: 'valid' | 'invalid' | 'no-json' = 'valid', tabSize: number = 2, sourceUri?: string, sourceLine?: number, preserveFocus: boolean = false) {
         if (this.panel) {
             const expansionDepth = this.context.globalState.get<number>('jsonPreview.expansionDepth', 1);
             this.panel.reveal(vscode.ViewColumn.Beside, preserveFocus);
@@ -54,7 +54,7 @@ export class JsonTreeWebview {
         return !!this.panel;
     }
 
-    private getHtmlForWebview(data: any, status: 'valid' | 'invalid' | 'no-json', tabSize: number = 2, sourceUri?: string, sourceLine?: number, expansionDepth: number = 1): string {
+    private getHtmlForWebview(data: unknown, status: 'valid' | 'invalid' | 'no-json', tabSize: number = 2, sourceUri?: string, sourceLine?: number, expansionDepth: number = 1): string {
         const initialData = JSON.stringify(data);
         const nonce = getNonce();
 

@@ -134,8 +134,6 @@ suite('Bookmark Integration Test Suite', () => {
         const editor = await vscode.window.showTextDocument(androidLogUri);
         bookmarkService.addBookmark(editor, 10);
 
-        const key = androidLogUri.toString();
-
         // 1. Toggle Word Wrap
         const initialWordWrap = bookmarkService.isWordWrapEnabled();
         await vscode.commands.executeCommand(Constants.Commands.ToggleBookmarkWordWrap);

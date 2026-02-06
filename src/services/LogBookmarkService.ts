@@ -379,7 +379,7 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     private async saveToState() {
-        const bookmarksData: { [key: string]: any[] } = {};
+        const bookmarksData: { [key: string]: unknown[] } = {};
         for (const [key, bookmarks] of this._bookmarks) {
             bookmarksData[key] = bookmarks.map(b => ({
                 id: b.id,
@@ -406,11 +406,12 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     private loadFromState() {
-        const bookmarksData = this.context.globalState.get<{ [key: string]: any[] }>(Constants.GlobalState.Bookmarks);
+        const bookmarksData = this.context.globalState.get<{ [key: string]: unknown[] }>(Constants.GlobalState.Bookmarks);
 
         if (bookmarksData) {
             for (const key in bookmarksData) {
-                const bookmarks = bookmarksData[key].map(b => {
+                const bookmarks = bookmarksData[key].map(item => {
+                    const b = item as Record<string, unknown>; // Safe cast after check
                     try {
                         if (!b || typeof b !== 'object') {
                             return null;
@@ -420,12 +421,12 @@ export class LogBookmarkService implements vscode.Disposable {
                         }
 
                         return {
-                            id: b.id,
-                            uri: vscode.Uri.parse(b.uri),
+                            id: b.id as string,
+                            uri: vscode.Uri.parse(b.uri as string),
                             line: typeof b.line === 'number' ? b.line : 0,
-                            content: b.content || '',
-                            groupId: b.groupId || Date.now().toString(), // Fallback for old bookmarks
-                            matchText: b.matchText
+                            content: (b.content as string) || '',
+                            groupId: (b.groupId as string) || Date.now().toString(), // Fallback for old bookmarks
+                            matchText: b.matchText as string | undefined
                         } as BookmarkItem;
                     } catch (e) {
                         this.logger.error(`Error parsing bookmark from state: ${e}`);

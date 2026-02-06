@@ -6,9 +6,19 @@ import { FilterItem } from '../models/Filter';
 import { Logger } from './Logger';
 import { RegexUtils } from '../utils/RegexUtils';
 
+export type HighlightColor = string | { light: string; dark: string };
+
+export interface DecorationConfig {
+    colorNameOrValue: HighlightColor | undefined;
+    isFullLine: boolean;
+    textDecoration?: string;
+    fontWeight?: string;
+    textColor?: string;
+}
+
 export class HighlightService implements vscode.Disposable {
     // Map of color string -> DecorationType
-    private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: any }> = new Map();
+    private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;
 
@@ -17,7 +27,7 @@ export class HighlightService implements vscode.Disposable {
         private logger: Logger
     ) { }
 
-    private getDecorationKey(colorNameOrValue: string | { light: string, dark: string } | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, textColor?: string): string {
+    private getDecorationKey(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, textColor?: string): string {
         let colorKey = 'undefined';
         if (typeof colorNameOrValue === 'string') {
             const preset = this.filterManager.getPresetById(colorNameOrValue);
@@ -33,7 +43,7 @@ export class HighlightService implements vscode.Disposable {
         return `${colorKey}_${isFullLine}_${textDecoration || ''}_${fontWeight || 'auto'}_${textColor || 'auto'}`;
     }
 
-    private getDecorationInfo(colorNameOrValue: string | { light: string, dark: string } | undefined, isFullLine: boolean = false, textDecoration?: string, fontWeight?: string, textColor?: string): { decoration: vscode.TextEditorDecorationType, config: any } {
+    private getDecorationInfo(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean = false, textDecoration?: string, fontWeight?: string, textColor?: string): { decoration: vscode.TextEditorDecorationType, config: DecorationConfig } {
         const key = this.getDecorationKey(colorNameOrValue, isFullLine, textDecoration, fontWeight, textColor);
 
         if (!this.decorationTypes.has(key)) {
@@ -203,7 +213,7 @@ export class HighlightService implements vscode.Disposable {
         text: string,
         filter: FilterItem,
         groupId: string,
-        defaultColor: any,
+        defaultColor: HighlightColor,
         rangesByDeco: Map<string, vscode.Range[]>,
         matchCounts: Map<string, number>,
         offset: number
@@ -213,7 +223,7 @@ export class HighlightService implements vscode.Disposable {
         }
 
         const isExclude = filter.type === 'exclude';
-        const decoRequests: { color: any, isFullLine: boolean, textDecoration?: string, fontWeight?: string, useLineRange: boolean, textColor?: string }[] = [];
+        const decoRequests: { color: HighlightColor | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, useLineRange: boolean, textColor?: string }[] = [];
 
         if (isExclude) {
             const style = filter.excludeStyle || 'line-through';

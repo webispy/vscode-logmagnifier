@@ -7,7 +7,7 @@
  */
 export interface ParsedNode {
     type: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null' | 'undefined';
-    value?: any;
+    value?: unknown;
     children?: ParsedProperty[];
     items?: ParsedNode[];
     isError?: boolean;
@@ -25,7 +25,7 @@ export class LenientJsonParser {
 
     constructor() { }
 
-    public static toParsedNode(data: any): ParsedNode {
+    public static toParsedNode(data: unknown): ParsedNode {
         if (data === null) { return { type: 'null', value: null }; }
         if (data === undefined) { return { type: 'undefined' }; }
 
@@ -35,9 +35,10 @@ export class LenientJsonParser {
         }
 
         if (typeof data === 'object') {
-            const children: ParsedProperty[] = Object.keys(data).map(key => ({
+            const obj = data as Record<string, unknown>;
+            const children: ParsedProperty[] = Object.keys(obj).map(key => ({
                 key,
-                value: this.toParsedNode(data[key])
+                value: this.toParsedNode(obj[key])
             }));
             return { type: 'object', children };
         }

@@ -3,9 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { LogProcessor } from '../../services/LogProcessor';
 import { FilterGroup, FilterItem, FilterType } from '../../models/Filter';
-import { Constants } from '../../constants';
 // Mock VS Codde
-import * as vscode from 'vscode';
 
 /**
  * LogProcessor Integration Test Suite

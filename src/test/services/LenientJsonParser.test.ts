@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import { LenientJsonParser, ParsedNode } from '../../services/LenientJsonParser';
+import { LenientJsonParser } from '../../services/LenientJsonParser';
 
 suite('LenientJsonParser Test Suite', () => {
     let parser: LenientJsonParser;

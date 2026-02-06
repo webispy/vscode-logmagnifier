@@ -3,7 +3,7 @@ import { Constants } from '../constants';
 import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
 import { Logger } from './Logger';
 import { ColorService, ColorPreset } from './ColorService';
-import { ProfileManager, FilterProfile } from './ProfileManager';
+import { ProfileManager } from './ProfileManager';
 import { FilterStateService } from './FilterStateService';
 import * as crypto from 'crypto';
 
@@ -615,11 +615,11 @@ export class FilterManager implements vscode.Disposable {
         const groupsToExport = this.groups
             .filter(g => mode === 'regex' ? g.isRegex : !g.isRegex)
             .map(g => {
-                const { resultCount, id, ...rest } = g;
+                const { resultCount: _1, id: _2, ...rest } = g;
                 return {
                     ...rest,
                     filters: g.filters.map(f => {
-                        const { resultCount: itemResultCount, id: itemId, ...itemRest } = f;
+                        const { resultCount: _3, id: _4, ...itemRest } = f;
                         return itemRest;
                     })
                 };
@@ -640,11 +640,11 @@ export class FilterManager implements vscode.Disposable {
             return undefined;
         }
 
-        const { resultCount, id, ...rest } = group;
+        const { resultCount: _1, id: _2, ...rest } = group;
         const exportedGroup = {
             ...rest,
             filters: group.filters.map(f => {
-                const { resultCount: itemResultCount, id: itemId, ...itemRest } = f;
+                const { resultCount: _3, id: _4, ...itemRest } = f;
                 return itemRest;
             })
         };
@@ -778,7 +778,6 @@ export class FilterManager implements vscode.Disposable {
 
     public async createProfile(name: string): Promise<boolean> {
         // Create new profile with default filters (fresh start)
-        const tempGroups: FilterGroup[] = [];
         // We temporarily use this.groups to generate defaults or we can refactor initDefaultFilters.
         // For now, let's manually create the default group structure or just use empty if initDefaultFilters depends on this.groups state.
         const previousGroups = this.stateService.deepCopy(this.groups);

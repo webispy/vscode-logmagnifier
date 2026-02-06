@@ -160,7 +160,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         }
 
         const activeItem = transferItem.value as TreeItem;
-        let targetItem = target;
+        const targetItem = target;
 
         // Group Reordering
         if (this.isGroup(activeItem)) {

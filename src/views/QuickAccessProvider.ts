@@ -176,7 +176,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
     private createOccurrencesHighlightItem(config: vscode.WorkspaceConfiguration): vscode.TreeItem {
         const value = config.get<boolean | string>('occurrencesHighlight');
 
-        let label = Constants.Labels.OccurrencesHighlight;
+        const label = Constants.Labels.OccurrencesHighlight;
         let description = 'Off';
         let iconId = 'search-stop';
 

@@ -12,11 +12,11 @@ export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider 
 
     constructor(private sourceMapService: SourceMapService) { }
 
-    public provideDefinition(
+    public async provideDefinition(
         document: vscode.TextDocument,
         position: vscode.Position,
-        token: vscode.CancellationToken
-    ): vscode.ProviderResult<vscode.Definition | vscode.DefinitionLink[]> {
+        _token: vscode.CancellationToken
+    ): Promise<vscode.Definition | vscode.DefinitionLink[] | undefined> {
 
         // Check cache first
         if (this.lastResult &&

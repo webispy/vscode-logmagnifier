@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
-import { AdbDevice, LogcatSession, LogcatTag, LogPriority } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag } from '../models/AdbModels';
 import * as crypto from 'crypto';
 import * as os from 'os';
 import * as path from 'path';
@@ -30,11 +30,11 @@ export class AdbService implements vscode.Disposable {
     }
 
     public async getDevices(): Promise<AdbDevice[]> {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve, _reject) => {
             const adbPath = this.getAdbPath();
             this.logger.info(`[ADB] Executing: ${adbPath} devices -l`);
 
-            cp.execFile(adbPath, ['devices', '-l'], async (err, stdout, stderr) => {
+            cp.execFile(adbPath, ['devices', '-l'], async (err, stdout, _stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Error running adb devices: ${err.message}`);
                     resolve([]);
@@ -85,7 +85,7 @@ export class AdbService implements vscode.Disposable {
                             } else {
                                 device.targetApp = storedTarget;
                             }
-                        } catch (e) {
+                        } catch (_e) {
                             this.logger.warn(`[ADB] Failed to check running apps for ${device.id}, keeping stored target.`);
                             device.targetApp = storedTarget;
                         }
@@ -120,7 +120,7 @@ export class AdbService implements vscode.Disposable {
                 args.push(filter);
             }
 
-            cp.execFile(adbPath, args, (err, stdout) => {
+            cp.execFile(adbPath, args, (err, stdout, _stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Error getting packages: ${err.message}`);
                     resolve(new Set());
@@ -479,7 +479,7 @@ export class AdbService implements vscode.Disposable {
 
     // Buffering Logic
     private bufferLogs(sessionId: string, lines: string[]) {
-        let buffer = this.buffers.get(sessionId) || [];
+        const buffer = this.buffers.get(sessionId) || [];
         // Filter out empty lines if needed
         const newLines = lines.filter(l => l.length > 0);
         buffer.push(...newLines);
@@ -576,7 +576,7 @@ export class AdbService implements vscode.Disposable {
             // Note: This only works for debuggable apps or rooted devices usually via run-as
             // For non-debuggable apps without root, clearing just cache isn't easily possible via adb without pm clear
             // But we try nonetheless.
-            const cmd = `${adbPath} -s ${deviceId} shell run-as ${packageName} rm -rf cache code_cache`;
+            // const cmd = `${adbPath} -s ${deviceId} shell run-as ${packageName} rm -rf cache code_cache`;
             cp.execFile(adbPath, ['-s', deviceId, 'shell', 'run-as', packageName, 'rm', '-rf', 'cache', 'code_cache'], (err, stdout) => {
                 if (err) {
                     this.logger.warn(`[ADB] Clear cache failed (might need debuggable app): ${err.message}`);
@@ -597,7 +597,7 @@ export class AdbService implements vscode.Disposable {
             const cmd = `${adbPath} -s ${deviceId} shell dumpsys package ${packageName}`;
             this.logger.info(`[ADB] Running dumpsys: ${cmd}`);
 
-            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'package', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'package', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, _stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Dumpsys failed: ${err.message}`);
                     reject(err);
@@ -614,7 +614,7 @@ export class AdbService implements vscode.Disposable {
             const cmd = `${adbPath} -s ${deviceId} shell dumpsys meminfo ${packageName}`;
             this.logger.info(`[ADB] Running dumpsys meminfo: ${cmd}`);
 
-            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'meminfo', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'meminfo', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, _stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Dumpsys meminfo failed: ${err.message}`);
                     reject(err);
@@ -631,7 +631,7 @@ export class AdbService implements vscode.Disposable {
             const cmd = `${adbPath} -s ${deviceId} shell dumpsys activity ${packageName}`;
             this.logger.info(`[ADB] Running dumpsys activity: ${cmd}`);
 
-            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'activity', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'activity', packageName], { maxBuffer: 1024 * 1024 * 10 }, (err, stdout, _stderr) => {
                 if (err) {
                     this.logger.error(`[ADB] Dumpsys activity failed: ${err.message}`);
                     reject(err);
@@ -671,7 +671,7 @@ export class AdbService implements vscode.Disposable {
                         // Try cleanup anyway
                         const cleanupArgs = ['-s', deviceId, 'shell', 'rm', remotePath];
                         this.logger.info(`[ADB] Command (cleanup): ${adbPath} ${cleanupArgs.join(' ')}`);
-                        cp.execFile(adbPath, cleanupArgs, (e) => { /* ignore */ });
+                        cp.execFile(adbPath, cleanupArgs, (_e) => { /* ignore */ });
                         resolve(false);
                         return;
                     }
@@ -795,7 +795,6 @@ export class AdbService implements vscode.Disposable {
 
         if (pid) {
             this.logger.info(`[ADB] Sending SIGINT to remote process ${pid}...`);
-            const killCmd = `${adbPath} -s ${deviceId} shell kill -2 ${pid}`;
 
             cp.execFile(adbPath, ['-s', deviceId, 'shell', 'kill', '-2', pid], (err) => {
                 if (err) {
@@ -893,7 +892,7 @@ export class AdbService implements vscode.Disposable {
             location: vscode.ProgressLocation.Notification,
             title: "Pulling screen recording...",
             cancellable: false
-        }, async (progress) => {
+        }, async (_progress) => {
             return new Promise<void>((resolve) => {
                 const pullCmd = `${adbPath} -s ${deviceId} pull ${remotePath} "${localPath}"`;
                 this.logger.info(`[ADB] Pulling video: ${pullCmd}`);

@@ -43,7 +43,7 @@ export class RegexUtils {
             RegexUtils.cache.set(key, regex);
             return new RegExp(regex);
 
-        } catch (e) {
+        } catch (_e) {
             // Return a regex that matches nothing
             return /(?!)/;
         }

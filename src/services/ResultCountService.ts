@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+
 import { FilterManager } from './FilterManager';
 
 export class ResultCountService {

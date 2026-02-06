@@ -74,7 +74,7 @@ export class ProfileManager {
     public async updateProfileData(name: string, groups: FilterGroup[]) {
         // We allow saving Default Profile so it persists when switching away.
 
-        let profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
+        const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const index = profiles.findIndex(p => p.name === name);
         if (index >= 0) {
             profiles[index].groups = groups;
@@ -108,7 +108,7 @@ export class ProfileManager {
     }
 
     public async createProfile(name: string, groupsCopy: FilterGroup[]): Promise<boolean> {
-        let profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
+        const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         if (profiles.some(p => p.name === name) || name === Constants.Labels.DefaultProfile) {
             return false;
         }

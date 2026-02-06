@@ -204,7 +204,6 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(filterManager.onDidChangeFilters(async () => {
         lastProcessedDoc = undefined; // Force update
         if (vscode.window.activeTextEditor) {
-            const scheme = vscode.window.activeTextEditor.document.uri.scheme;
             if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
                 await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                 lastProcessedDoc = vscode.window.activeTextEditor.document;
@@ -219,7 +218,6 @@ export function activate(context: vscode.ExtensionContext) {
             highlightService.refreshDecorationType();
             lastProcessedDoc = undefined; // Force update
             if (vscode.window.activeTextEditor) {
-                const scheme = vscode.window.activeTextEditor.document.uri.scheme;
                 if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
                     await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                     lastProcessedDoc = vscode.window.activeTextEditor.document;
@@ -258,7 +256,6 @@ export function activate(context: vscode.ExtensionContext) {
     // Update counts when text changes
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
         if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
-            const scheme = e.document.uri.scheme;
             if (!isSupportedScheme(e.document.uri)) {
                 return;
             }

@@ -24,7 +24,7 @@ export class FilterStateService {
     public deepCopy<T>(obj: T): T {
         try {
             return structuredClone(obj);
-        } catch (e) {
+        } catch (_e) {
             return JSON.parse(JSON.stringify(obj));
         }
     }

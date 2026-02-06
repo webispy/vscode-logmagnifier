@@ -238,14 +238,14 @@ export class CommandManager {
             }
 
             let outputPath = '';
-            let stats = { processed: 0, matched: 0 };
+            const stats = { processed: 0, matched: 0 };
             const sourceName = document ? (document.fileName || 'Untitled') : (filePathFromTab || 'Large File');
 
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: `Applying ${filterType || ''} Filters on ${sourceName}...`,
                 cancellable: false
-            }, async (progress) => {
+            }, async (_progress) => {
                 try {
                     let targetPath = filePathFromTab || document?.uri.fsPath;
                     let tempInputPath: string | undefined;
@@ -312,7 +312,7 @@ export class CommandManager {
                         if (tempInputPath && fs.existsSync(tempInputPath)) {
                             try {
                                 fs.unlinkSync(tempInputPath);
-                            } catch (e) { /* ignore cleanup error */ }
+                            } catch (_e) { /* ignore cleanup error */ }
                         }
                     }
                 } catch (error) {
@@ -338,7 +338,7 @@ export class CommandManager {
                     if (newDoc.languageId !== 'log') {
                         try {
                             await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
-                        } catch (e) { /* ignore */ }
+                        } catch (_e) { /* ignore */ }
                     }
                 } catch (e) {
                     this.logger.info(Constants.Messages.Info.FallbackToOpen.replace('{0}', String(e)));
@@ -767,7 +767,7 @@ export class CommandManager {
                         try {
                             new RegExp(value);
                             return null;
-                        } catch (e) {
+                        } catch (_e) {
                             return Constants.Messages.Error.InvalidRegularExpression;
                         }
                     }
@@ -834,7 +834,7 @@ export class CommandManager {
                     try {
                         new RegExp(value);
                         return null;
-                    } catch (e) {
+                    } catch (_e) {
                         return Constants.Messages.Error.InvalidRegularExpression;
                     }
                 }
@@ -1038,7 +1038,7 @@ export class CommandManager {
 
     private registerPropertyToggleCommands() {
         const toggleFilterTypeHandler = (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterType(targetGroup.id, item.id);
@@ -1049,7 +1049,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Exclude, toggleFilterTypeHandler));
 
         const setFilterTypeHandler = (type: FilterType) => (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterType(targetGroup.id, item.id, type);
             }
@@ -1059,7 +1059,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Exclude, setFilterTypeHandler(Constants.FilterTypes.Exclude)));
 
         const setExcludeStyleHandler = (style: 'line-through' | 'hidden') => (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterExcludeStyle(targetGroup.id, item.id, style);
             }
@@ -1069,7 +1069,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.Hidden, setExcludeStyleHandler('hidden')));
 
         const toggleHighlightModeHandler = (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterHighlightMode(targetGroup.id, item.id);
@@ -1081,7 +1081,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
 
         const setHighlightModeHandler = (mode: number) => (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterHighlightMode(targetGroup.id, item.id, mode);
             }
@@ -1091,7 +1091,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(2)));
 
         const toggleCaseSensitivityHandler = (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterCaseSensitivity(targetGroup.id, item.id);
@@ -1102,7 +1102,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
         const setCaseSensitivityHandler = (enable: boolean) => (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterCaseSensitivity(targetGroup.id, item.id, enable);
             }
@@ -1111,7 +1111,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterCaseSensitivity.Off, setCaseSensitivityHandler(false)));
 
         const toggleContextLineHandler = (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 this.filterManager.toggleFilterContextLine(targetGroup.id, item.id);
@@ -1124,7 +1124,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus9, toggleContextLineHandler));
 
         const setContextLineHandler = (lines: number) => (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterContextLine(targetGroup.id, item.id, lines);
             }
@@ -1135,7 +1135,7 @@ export class CommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterContextLine.PlusMinus9, setContextLineHandler(9)));
 
         const changeColorHandler = async (item: FilterItem) => {
-            let targetGroup = this.filterManager.findGroupByFilterId(item.id);
+            const targetGroup = this.filterManager.findGroupByFilterId(item.id);
 
             if (targetGroup) {
                 const presets = this.filterManager.getColorPresets();

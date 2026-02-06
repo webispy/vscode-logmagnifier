@@ -258,7 +258,6 @@ export class HighlightService implements vscode.Disposable {
             if (!rangesByDeco.has(key)) {
                 rangesByDeco.set(key, []);
             }
-            const info = this.getDecorationInfo(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
             return { key, useLineRange: req.useLineRange };
         });
 
@@ -377,7 +376,7 @@ export class HighlightService implements vscode.Disposable {
                     if (regex.test(text)) {
                         return filter.color || (typeof defaultColor === 'string' ? defaultColor : undefined);
                     }
-                } catch (e) { /* ignore invalid regex */ }
+                } catch (_e) { /* ignore invalid regex */ }
             }
         }
         return undefined;
@@ -407,7 +406,7 @@ export class HighlightService implements vscode.Disposable {
             colorToUse = this.getEffectiveLineColor(lineText);
         }
 
-        let decorationOptions: vscode.DecorationRenderOptions = {
+        const decorationOptions: vscode.DecorationRenderOptions = {
             isWholeLine: true,
             fontWeight: 'bold'
         };

@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
-import { FilterItem, FilterGroup } from '../models/Filter';
+import { FilterGroup } from '../models/Filter';
 
 // Solarized-inspired and distinct colors for highlights
 export interface ColorPreset {

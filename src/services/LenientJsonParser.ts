@@ -60,7 +60,7 @@ export class LenientJsonParser {
 
         try {
             return this.parseValue();
-        } catch (e) {
+        } catch (_e) {
             return { type: 'string', value: text, isError: true }; // Fallback
         }
     }
@@ -220,7 +220,7 @@ export class LenientJsonParser {
     }
 
     private parseNumber(): number {
-        let start = this.index;
+        const start = this.index;
         while (this.index < this.text.length) {
             const char = this.text[this.index];
             if (/[0-9eE\.\+\-]/.test(char)) {

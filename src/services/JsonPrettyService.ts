@@ -10,7 +10,7 @@ import { EditorUtils } from '../utils/EditorUtils';
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';
     text: string;
-    parsed?: any;
+    parsed?: unknown;
     error?: string;
 }
 

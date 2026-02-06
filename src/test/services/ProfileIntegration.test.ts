@@ -1,5 +1,5 @@
 import * as assert from 'assert';
-import * as vscode from 'vscode';
+
 import { FilterManager } from '../../services/FilterManager';
 import { Constants } from '../../constants';
 import { MockExtensionContext } from '../utils/Mocks';

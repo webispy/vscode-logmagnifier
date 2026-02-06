@@ -2,15 +2,15 @@ import * as vscode from 'vscode';
 
 // Mock Memento for GlobalState
 export class MockMemento implements vscode.Memento {
-    private storage = new Map<string, any>();
+    private storage = new Map<string, unknown>();
 
     get<T>(key: string): T | undefined;
     get<T>(key: string, defaultValue: T): T;
-    get(key: string, defaultValue?: any): any {
+    get(key: string, defaultValue?: unknown): unknown {
         return this.storage.has(key) ? this.storage.get(key) : defaultValue;
     }
 
-    update(key: string, value: any): Thenable<void> {
+    update(key: string, value: unknown): Thenable<void> {
         this.storage.set(key, value);
         return Promise.resolve();
     }
@@ -19,7 +19,7 @@ export class MockMemento implements vscode.Memento {
         return Array.from(this.storage.keys());
     }
 
-    setKeysForSync(keys: readonly string[]): void {
+    setKeysForSync(_keys: readonly string[]): void {
         // No-op
     }
 }
@@ -27,6 +27,7 @@ export class MockMemento implements vscode.Memento {
 // Mock ExtensionContext
 export class MockExtensionContext implements vscode.ExtensionContext {
     globalState: vscode.Memento & { setKeysForSync(keys: readonly string[]): void } = new MockMemento();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     subscriptions: { dispose(): any }[] = [];
     workspaceState: vscode.Memento = new MockMemento();
     extensionPath: string = '/mock/path';
@@ -40,7 +41,9 @@ export class MockExtensionContext implements vscode.ExtensionContext {
     globalStorageUri: vscode.Uri = vscode.Uri.file('/mock/globalStorage');
     logUri: vscode.Uri = vscode.Uri.file('/mock/log');
     extensionUri: vscode.Uri = vscode.Uri.file('/mock/path');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     environmentVariableCollection: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     extension: any = {
         packageJSON: {
             version: '0.0.0-test'
@@ -49,6 +52,8 @@ export class MockExtensionContext implements vscode.ExtensionContext {
     extensionMode: vscode.ExtensionMode = vscode.ExtensionMode.Test;
 
     // Missing properties from newer VS Code API, added as any to satisfy TS if needed
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     secrets: any;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     languageModelAccessInformation: any;
 }

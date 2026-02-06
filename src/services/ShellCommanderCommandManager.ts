@@ -35,7 +35,6 @@ export class ShellCommanderCommandManager {
         get terminals() { return vscode.window.terminals; }
     };
 
-
     protected registerCommands() {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(Constants.Commands.OpenGlobalShellConfig, this.openGlobalShellConfig, this),
@@ -313,30 +312,22 @@ export class ShellCommanderCommandManager {
         // 3. Execute immediately
         if (commandText.trim().length > 0) {
             const commandId = item.id;
-            const root = this.getRootGroup(item);
+            const root = this.shellService.getRootGroup(item);
             const groupName = root.label;
             await this.sendToTerminal(commandText, commandId, item.label, groupName);
         }
     }
 
-    private getRootGroup(item: ShellItem): ShellGroup {
-        let current = item;
-        while (current.parent) {
-            current = current.parent as ShellItem;
-        }
-        return current as ShellGroup;
-    }
-
     private async sendToTerminal(text: string, commandId: string, label: string, groupName: string) {
-        const config = vscode.workspace.getConfiguration('logmagnifier');
-        const strategy = config.get<string>('shellCommander.terminalReuseStrategy', 'perFolder'); // Default updated
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+        const strategy = config.get<string>(Constants.ShellCommander.TerminalReuseStrategySetting, Constants.ShellCommander.TerminalReuseStrategyDefault);
 
         let terminalKey = commandId;
         let terminalName = "";
 
         if (strategy === 'global') {
-            terminalKey = '__GLOBAL_SHELL_COMMANDER__';
-            terminalName = 'Shell: Commander';
+            terminalKey = Constants.ShellCommander.GlobalTerminalKey;
+            terminalName = Constants.ShellCommander.GlobalTerminalName;
         } else if (strategy === 'perGroup') {
             terminalKey = groupName || '__DEFAULT_GROUP__';
             terminalName = `Shell: [${groupName || 'General'}]`;
@@ -422,9 +413,9 @@ export class ShellCommanderCommandManager {
 
         if (isReused) {
             // Interrupt any running process (Ctrl+C)
-            terminal.sendText('\u0003');
+            terminal.sendText(Constants.ShellCommander.InterruptChar);
             // Small delay to allow shell to return to prompt
-            await new Promise(resolve => setTimeout(resolve, 200));
+            await new Promise(resolve => setTimeout(resolve, Constants.ShellCommander.InterruptDelayMs));
         }
 
         terminal.sendText(text);

@@ -7,8 +7,6 @@ export interface ShellItemBase {
     label: string;
 }
 
-
-
 export interface ShellCommand extends ShellItemBase {
     type: 'command';
     kind: 'command';

@@ -211,6 +211,16 @@ export const Constants = {
         OpenGlobalShellConfig: 'logmagnifier.openGlobalShellConfig',
     },
 
+    ShellCommander: {
+        DefaultConfigFilename: 'logmagnifier_shell_cmds.json',
+        GlobalTerminalKey: '__GLOBAL_SHELL_COMMANDER__',
+        GlobalTerminalName: 'Shell: Commander',
+        TerminalReuseStrategyDefault: 'perFolder',
+        TerminalReuseStrategySetting: 'shellCommander.terminalReuseStrategy',
+        InterruptChar: '\u0003',
+        InterruptDelayMs: 200,
+    },
+
     Views: {
         Container: 'logmagnifier-container',
         QuickAccess: 'logmagnifier-quick-access',

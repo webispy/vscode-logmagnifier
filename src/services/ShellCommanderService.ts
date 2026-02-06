@@ -318,7 +318,7 @@ export class ShellCommanderService {
         this._onDidChangeTreeData.fire();
     }
 
-    private getRootGroup(item: ShellItem): ShellGroup {
+    public getRootGroup(item: ShellItem): ShellGroup {
         let current = item;
         while (current.parent) {
             current = current.parent as ShellItem;

@@ -236,7 +236,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-
     private updateContent() {
         if (!this._view) {
             return;
@@ -259,7 +258,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         let sortedUris = this._bookmarkService.getFileKeys();
 
         // LIFO order implies no re-sorting of active file to top
-
 
         // Check active editor if not set (initial load)
         if (!this._activeUriStr && vscode.window.activeTextEditor) {
@@ -326,9 +324,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 </span>
             `).join('');
 
-
             const lineCount = this._bookmarkService.getFileActiveLinesCount(uriStr);
-
 
             // Group items by line
             const lineItemsMap = new Map<number, typeof items>();

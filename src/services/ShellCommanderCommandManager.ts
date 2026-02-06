@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ShellCommanderService } from './ShellCommanderService';
 import { Constants } from '../constants';
-import { ShellGroup, ShellFolder, ShellCommand, ShellItem } from '../models/ShellCommander';
+import { ShellGroup, ShellFolder, ShellCommand, ShellItem, ShellConfig } from '../models/ShellCommander';
 import { Logger } from './Logger';
 import * as os from 'os';
 import * as path from 'path';
@@ -87,7 +87,7 @@ export class ShellCommanderCommandManager {
                 fs.mkdirSync(storagePath, { recursive: true });
             }
 
-            let globalConfigs: any[] = [];
+            let globalConfigs: ShellConfig[] = [];
             if (fs.existsSync(defaultConfigPath)) {
                 try {
                     const content = fs.readFileSync(defaultConfigPath, 'utf-8');
@@ -139,7 +139,7 @@ export class ShellCommanderCommandManager {
         }
     }
 
-    private async exportShellGroup(group?: ShellGroup) {
+    private async exportShellGroup(_group?: ShellGroup) {
         // NOTE: Parameter `group` ignored as we now do bulk export of ALL groups.
         const currentConfigs = this.shellService.getAllGroupsConfigs();
         if (currentConfigs.length === 0) {
@@ -166,8 +166,8 @@ export class ShellCommanderCommandManager {
                         if (Array.isArray(existingConfigs)) {
                             // Merge logic:
                             // 1. Start with existing configs (Map by groupName)
-                            const mergedMap = new Map<string, any>();
-                            existingConfigs.forEach((c: any) => {
+                            const mergedMap = new Map<string, ShellConfig>();
+                            existingConfigs.forEach((c: ShellConfig) => {
                                 if (c && c.groupName) {
                                     mergedMap.set(c.groupName, c);
                                 }
@@ -305,7 +305,6 @@ export class ShellCommanderCommandManager {
         }
     }
 
-
     private getRootGroup(item: ShellItem): ShellGroup {
         let current = item;
         while (current.parent) {
@@ -331,8 +330,8 @@ export class ShellCommanderCommandManager {
             // Find parent folder name
             // ID structure is usually 'Group/Folder/SubFolder/Command'
             // But we can just use the parent ID or extract from item if we have it.
-            // However, sendToTerminal is generic. Let's rely on extracting from commandId if possible, 
-            // but we need the item for accurate folder name? 
+            // However, sendToTerminal is generic. Let's rely on extracting from commandId if possible,
+            // but we need the item for accurate folder name?
             // Actually, we can pass folderName? Or extract from ID.
             // Let's deduce folder path from ID by removing the last segment (command name).
             // Example ID: "Android / Common / ADB / adb devices" -> Path: "Android/Common/ADB"
@@ -355,7 +354,7 @@ export class ShellCommanderCommandManager {
             let displayName = displayFolder;
             if (segments.length > 1) {
                 // e.g. Android/Common/ADB -> Android/.../ADB ? or just ADB?
-                // User asked for "Folder specific". 
+                // User asked for "Folder specific".
                 // Let's stick to full path for uniqueness in Key, and [Group/.../Folder] for name?
                 // Actually user said "Same Folder command reuse", implying if I have Group1/Common and Group2/Common, they might want distinct or same?
                 // Usually distinct. Key = folderPath handles distinctness.
@@ -404,8 +403,8 @@ export class ShellCommanderCommandManager {
         terminal.sendText(text);
     }
 
-    private async editShellItem(item: ShellCommand | ShellFolder) {
-        if ((item as any).kind === 'group') {
+    private async editShellItem(item: ShellCommand | ShellFolder | ShellGroup) {
+        if (item.kind === 'group') {
             return;
         }
 
@@ -502,7 +501,7 @@ export class ShellCommanderCommandManager {
             return;
         }
 
-        if ((item as any).kind === 'group') {
+        if (item.kind === 'group') {
             await this.shellService.deleteGroup(item as ShellGroup);
         } else {
             await this.shellService.deleteItem(item as ShellCommand | ShellFolder);
@@ -562,12 +561,12 @@ export class ShellCommanderCommandManager {
             // Setup a one-time save listener (or persistent one? one-time bound to this specific file is safer for this session)
             // But activeEditors map approach is better if we want to support multiple open descriptions?
             // For description, let's keep it simple: On save, if it matches temp path, update.
-            // But we need to keep track of *which* item this file belongs to. 
+            // But we need to keep track of *which* item this file belongs to.
             // Reuse activeEditors logic? activeEditors maps path -> ID.
             this.activeEditors.set(tempPath, item.id);
 
             // We need to handle this in `handleSavedCommand` or separate method?
-            // handleSavedCommand expects it to be a command. 
+            // handleSavedCommand expects it to be a command.
             // Let's modify handleSavedCommand to check kind or add `handleSavedDescription`.
             // Actually, `handleSavedCommand` logic is: Find item by ID. Update item command.
             // If we use the same map, we can check item kind in the handler.

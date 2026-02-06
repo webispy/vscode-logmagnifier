@@ -89,7 +89,7 @@ export class ShellCommanderService {
                 } else if (json && typeof json === 'object') {
                     configs = [json];
                 }
-            } catch (e) {
+            } catch (_e) {
                 // If file is corrupt or empty, start fresh
                 configs = [];
             }
@@ -191,7 +191,6 @@ export class ShellCommanderService {
         this._onDidChangeTreeData.fire();
     }
 
-
     public async addFolder(parent: ShellGroup | ShellFolder, name: string): Promise<void> {
         // 1. Resolve Root and Path
         const root = this.getRootGroup(parent);
@@ -222,11 +221,7 @@ export class ShellCommanderService {
             parent: targetParent
         };
 
-        if (targetParent.kind === 'group') {
-            targetParent.children.push(newFolder);
-        } else {
-            targetParent.children.push(newFolder);
-        }
+        targetParent.children.push(newFolder);
 
         Logger.getInstance().info(`[addFolder] Successfully added folder '${name}' to '${targetParent.label}'`);
 
@@ -235,8 +230,6 @@ export class ShellCommanderService {
         await this.loadGroup(configPath);
         this._onDidChangeTreeData.fire();
     }
-
-
     public async addCommand(parent: ShellGroup | ShellFolder, label: string, command: string): Promise<void> {
         const root = this.getRootGroup(parent);
         if (!root) {
@@ -275,13 +268,13 @@ export class ShellCommanderService {
     }
 
     private getPathFromRoot(item: ShellItem): string[] {
-        const path: string[] = [];
+        const pathSegments: string[] = [];
         let current: ShellItem | undefined = item;
         while (current) {
-            path.unshift(current.label);
+            pathSegments.unshift(current.label);
             current = current.parent as ShellItem | undefined;
         }
-        return path;
+        return pathSegments;
     }
 
     public async updateItem(item: ShellCommand | ShellFolder, changes: { label?: string, command?: string }): Promise<void> {
@@ -304,10 +297,10 @@ export class ShellCommanderService {
             return;
         }
 
-        const p = parent as any;
+        const p = parent as ShellFolder;
 
         if (p.children && Array.isArray(p.children)) {
-            const idx = p.children.findIndex((c: any) => c.id === item.id);
+            const idx = p.children.findIndex((c: ShellItem) => c.id === item.id);
             if (idx !== -1) {
                 p.children.splice(idx, 1);
             }
@@ -385,7 +378,7 @@ export class ShellCommanderService {
                     continue;
                 }
 
-                // Skip if already loaded via another file? 
+                // Skip if already loaded via another file?
                 // Currently we allow same group name if different file, but here unified storage means same file has multiple.
                 // We should check if this specific group from this file is already loaded to avoid duplicates if reload happens?
                 // actually this._groups check below handles logic.
@@ -403,9 +396,6 @@ export class ShellCommanderService {
                 if (config.folders) {
                     group.children = this.mapConfigFoldersToModel(config.folders, group);
                 }
-
-
-
                 const existingIdx = this._groups.findIndex(g => g.label === group.label);
                 if (existingIdx !== -1) {
                     // Update existing group
@@ -484,7 +474,7 @@ export class ShellCommanderService {
                     if (Array.isArray(json)) {
                         configs = json;
                     } else if (json && typeof json === 'object') {
-                        // Legacy single object. 
+                        // Legacy single object.
                         // If saving the same group name, we overwrite (will become array of 1).
                         // If saving different group name, we keep old as element 0.
                         if (json.groupName !== group.label) {
@@ -493,7 +483,7 @@ export class ShellCommanderService {
                             configs = [];
                         }
                     }
-                } catch (readErr) {
+                } catch (_readErr) {
                     // Ignore read error, overwrite
                 }
             }

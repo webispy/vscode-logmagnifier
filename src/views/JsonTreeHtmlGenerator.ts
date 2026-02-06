@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+
 import * as path from 'path';
 import { getNonce } from '../utils/WebviewUtils';
 
@@ -21,7 +21,8 @@ export class JsonTreeHtmlGenerator {
 
         let html = '';
         try {
-            html = fs.readFileSync(templatePath.fsPath, 'utf8');
+            const templateBytes = await vscode.workspace.fs.readFile(templatePath);
+            html = new TextDecoder('utf-8').decode(templateBytes);
         } catch (err) {
             console.error('Failed to read JSON Tree template:', err);
             return `<html><body>Failed to load template. Error: ${err}</body></html>`;

@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { SerializedBookmarkItem } from '../models/WebviewModels';
@@ -201,9 +201,11 @@ export class LogBookmarkHtmlGenerator {
             finalHtml = '<div class="empty-state">No bookmarks. Right-click on a line to add.</div>';
         }
 
-        const templatePath = vscode.Uri.joinPath(this._extensionUri, 'resources', 'webview', 'log-bookmark-template.html').fsPath;
+        const templatePath = vscode.Uri.joinPath(this._extensionUri, 'resources', 'webview', 'log-bookmark-template.html');
         try {
-            let template = fs.readFileSync(templatePath, 'utf8');
+            const templateBytes = await vscode.workspace.fs.readFile(templatePath);
+            let template = new TextDecoder('utf-8').decode(templateBytes);
+
             template = template.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
             template = template.replace(/{{\s*NONCE\s*}}/g, nonce);
             template = template.replace(/{{\s*NAV_BAR\s*}}/g, headerButtonsHtml);

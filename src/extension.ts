@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
+
 import { FilterManager } from './services/FilterManager';
 import { FilterTreeDataProvider } from './views/FilterTreeView';
 import { QuickAccessProvider } from './views/QuickAccessProvider';
@@ -184,14 +184,20 @@ export function activate(context: vscode.ExtensionContext) {
                 const uri = activeTab.input.uri;
                 try {
                     if (uri.scheme === Constants.Schemes.File) {
-                        const stats = fs.statSync(uri.fsPath);
-                        const sizeMB = stats.size / (1024 * 1024);
-                        if (sizeMB > 50) {
-                            lastProcessedDoc = undefined;
-                            resultCountService.clearCounts();
-                            quickAccessProvider.refresh();
-                            logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
-                            vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
+                        // Use EditorUtils or direct async fs
+                        try {
+                            const stat = await vscode.workspace.fs.stat(uri);
+                            const sizeMB = stat.size / (1024 * 1024);
+                            if (sizeMB > 50) {
+                                lastProcessedDoc = undefined;
+                                resultCountService.clearCounts();
+                                quickAccessProvider.refresh();
+                                logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
+                                vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
+                            }
+                        } catch (e) {
+                            // Fallback only if needed, but workspace.fs should work for local files
+                            logger.error(`Error checking file size (async): ${e}`);
                         }
                     }
                 } catch (e) {

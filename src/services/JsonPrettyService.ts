@@ -177,16 +177,13 @@ export class JsonPrettyService implements vscode.Disposable {
             });
 
             if (results.length > 0) {
-                // Pass array of results. We update the signature of show later.
-                // TypeScript might complain until we update the interface.
+                // Pass array of results.
                 const options = editor.options;
                 const tabSize = typeof options.tabSize === 'number' ? options.tabSize : 2;
 
                 // Extract source info
                 const sourceUri = editor.document.uri.toString();
-                // If selection is single line, use that.
-                // However, logProcessor extracted based on selection.active.line usually, or current line.
-                // Since this command uses active selection:
+                // Use the active line from the selection
                 const sourceLine = selection.active.line;
 
                 this.jsonTreeWebview.show(results, 'JSON Preview', 'valid', tabSize, sourceUri, sourceLine, silent);

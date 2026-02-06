@@ -75,7 +75,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
-        context: vscode.WebviewViewResolveContext,
+        _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken,
     ) {
         this._view = webviewView;
@@ -255,7 +255,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         const bookmarksMap = this._bookmarkService.getBookmarks();
 
         // Use getFileKeys for insertion order sorting (LIFO)
-        let sortedUris = this._bookmarkService.getFileKeys();
+        const sortedUris = this._bookmarkService.getFileKeys();
 
         // LIFO order implies no re-sorting of active file to top
 
@@ -395,7 +395,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
 
                         safeContent = parts.join('');
 
-                    } catch (e) {
+                    } catch (_e) {
                         safeContent = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
                     }
                 } else {

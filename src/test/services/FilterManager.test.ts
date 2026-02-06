@@ -1,8 +1,5 @@
 import * as assert from 'assert';
-import * as vscode from 'vscode';
 import { FilterManager } from '../../services/FilterManager';
-import { FilterGroup, FilterItem, FilterType } from '../../models/Filter';
-import { Constants } from '../../constants';
 import { MockExtensionContext } from '../utils/Mocks';
 
 /**
@@ -85,7 +82,7 @@ suite('FilterManager Export/Import Test Suite', () => {
 
     test('Export All Filters (Regex Mode)', () => {
         // 1. Create Word Group (Should be ignored)
-        const wGroup = filterManager.addGroup('Word Group', false)!;
+        filterManager.addGroup('Word Group', false)!;
 
         // 2. Create Regex Group
         const rGroup = filterManager.addGroup('Regex Group', true)!;

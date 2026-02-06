@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import * as os from 'os';
 import * as path from 'path';
-import { FilterGroup, FilterItem } from '../models/Filter';
+import { FilterGroup } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 import { CircularBuffer } from '../utils/CircularBuffer';
 import { Constants } from '../constants';
@@ -85,9 +85,9 @@ export class LogProcessor {
 
             // Line Mapping: Index = Output Line Number, Value = Source Line Number
             const lineMapping: number[] = [];
-            let outputLineCounter = 0;
 
             // Padding calculation
+
             const prependLineNumbers = options?.prependLineNumbers || false;
             const totalLineCount = options?.totalLineCount || DEFAULT_MAX_LINE_COUNT;
             const padding = totalLineCount.toString().length;
@@ -104,7 +104,6 @@ export class LogProcessor {
                     return false;
                 }
                 lineMapping.push(originalIndex);
-                outputLineCounter++;
                 return true;
             };
 

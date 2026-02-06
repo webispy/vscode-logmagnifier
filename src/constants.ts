@@ -183,6 +183,12 @@ export const Constants = {
         CopyBookmarkFile: 'logmagnifier.copyBookmarkFile',
         OpenBookmarkFile: 'logmagnifier.openBookmarkFile',
         RemoveBookmarkGroup: 'logmagnifier.removeBookmarkGroup',
+
+        // File Hierarchy Navigation
+        HierarchyOpenParent: 'logmagnifier.hierarchy.openParent',
+        HierarchyOpenOriginal: 'logmagnifier.hierarchy.openOriginal',
+        HierarchyShowQuickPick: 'logmagnifier.hierarchy.showQuickPick',
+        HierarchyShowFullTree: 'logmagnifier.hierarchy.showFullTree',
     },
 
     Views: {

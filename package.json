@@ -483,6 +483,11 @@
         "command": "logmagnifier.bookmark.toggleWordWrap",
         "key": "ctrl+cmd+w",
         "when": "logmagnifier.bookmark.mouseOver || focusedView == logmagnifier-bookmark"
+      },
+      {
+        "command": "logmagnifier.hierarchy.showFullTree",
+        "key": "ctrl+cmd+t",
+        "when": "editorTextFocus"
       }
     ],
     "commands": [

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { LogBookmarkService } from './LogBookmarkService';
+import { FileHierarchyService } from './FileHierarchyService';
 import { BookmarkItem } from '../models/Bookmark';
 import { FilterItem } from '../models/Filter';
 import { HighlightService } from './HighlightService';
@@ -348,6 +349,12 @@ export class LogBookmarkCommandManager {
                 await editor.edit(editBuilder => {
                     editBuilder.replace(fullRange, content);
                 });
+
+                // Register with FileHierarchyService
+                // The 'uri' argument is the source file containing bookmarks (Parent)
+                // 'doc.uri' is the new untitled document (Child)
+                FileHierarchyService.getInstance().registerChild(uri, doc.uri, 'bookmark', docName);
+
             } catch (e) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', String(e)));
             }

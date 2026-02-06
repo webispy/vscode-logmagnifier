@@ -4,6 +4,7 @@ import * as readline from 'readline';
 import * as os from 'os';
 import * as path from 'path';
 import { FilterGroup } from '../models/Filter';
+import { FileHierarchyService } from './FileHierarchyService';
 import { RegexUtils } from '../utils/RegexUtils';
 import { CircularBuffer } from '../utils/CircularBuffer';
 import { Constants } from '../constants';
@@ -162,6 +163,12 @@ export class LogProcessor {
 
                     // Adjust mapping to be 0-based for VS Code Positions
                     const adjustedMapping = lineMapping.map(l => l - 1);
+
+                    // Register with FileHierarchyService
+                    const sourceUri = vscode.Uri.file(inputPath);
+                    const outputUri = vscode.Uri.file(outputPath);
+                    FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
+
                     resolve({ outputPath, processed, matched, lineMapping: adjustedMapping });
 
                 } catch (e: unknown) {

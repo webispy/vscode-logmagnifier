@@ -20,6 +20,9 @@ import { SourceMapService } from './services/SourceMapService';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
 import { Constants } from './constants';
 import { FilterGroup, FilterItem } from './models/Filter';
+import { FileHierarchyService } from './services/FileHierarchyService';
+import { NavigationCommandManager } from './services/NavigationCommandManager';
+import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
 
 let debounceTimer: NodeJS.Timeout | undefined;
 
@@ -104,6 +107,18 @@ export function activate(context: vscode.ExtensionContext) {
 
     const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
     new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
+
+    // File Hierarchy Service & Navigation
+    const fileHierarchyService = FileHierarchyService.getInstance();
+    fileHierarchyService.initialize(context);
+    new NavigationCommandManager(context, fileHierarchyService);
+    const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
+    context.subscriptions.push(
+        vscode.languages.registerCodeLensProvider(
+            [{ scheme: Constants.Schemes.File }, { scheme: Constants.Schemes.Untitled }],
+            hierarchyLensProvider
+        )
+    );
 
     // ADB Devices
     const adbService = new AdbService(logger);
@@ -302,6 +317,7 @@ export function activate(context: vscode.ExtensionContext) {
             quickAccessProvider.refresh();
         }
         sourceMapService.unregister(doc.uri);
+        // Hierarchy unregister handled above
     }));
 
     return {

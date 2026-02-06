@@ -44,8 +44,25 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
+- **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
+  - **CodeLens**: clickable "Original" and "Parent" links automatically appear at the top of filtered files.
+  - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (Ctrl+Cmd+T).
+  - **Persistence**: Navigation links and hierarchy are preserved even after restarting VS Code.
 
 ## Usage
+
+### File Hierarchy & Navigation
+
+1.  **CodeLens Navigation**:
+    - When you apply a filter, the new temporary file will have links at the **top line**:
+        - `[Original]`: Jump directly to the source log file.
+        - `[Parent]`: Jump to the immediate parent file (e.g., if you filtered a filter).
+        - `[Full Tree]`: Open the full hierarchy menu.
+2.  **Full Tree View**:
+    - Displays a recursive, indented tree view of all related files (Original, Filters, Bookmarks).
+    - Select any item to jump to it.
+3.  **Persistence**:
+    - You can confidently "Close" filter tabs. When you re-open them (e.g., via Bookmarks), the hierarchy and navigation links are automatically restored.
 
 ### Filter View
 

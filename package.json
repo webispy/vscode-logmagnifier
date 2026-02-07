@@ -1558,17 +1558,17 @@
         {
           "command": "logmagnifier.addShellGroup",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@1"
+          "group": "navigation@5"
         },
         {
           "command": "logmagnifier.openGlobalShellConfig",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@2"
+          "group": "navigation@6"
         },
         {
           "command": "logmagnifier.reloadShellCommander",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@3"
+          "group": "navigation@7"
         },
         {
           "command": "logmagnifier.importShellGroup",
@@ -1578,22 +1578,22 @@
         {
           "command": "logmagnifier.exportShellGroup",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@5"
+          "group": "navigation@3"
         },
         {
           "command": "logmagnifier.expandAllShellGroups",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@6"
+          "group": "navigation@1"
         },
         {
           "command": "logmagnifier.collapseAllShellGroups",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@9"
+          "group": "navigation@2"
         },
         {
           "command": "logmagnifier.clearAllShellConfigs",
           "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@10"
+          "group": "navigation@8"
         }
       ],
       "editor/context": [

@@ -494,12 +494,12 @@
       {
         "command": "logmagnifier.executeShellCommand",
         "key": "enter",
-        "when": "view == logmagnifier-shell-commander && viewItem == shellCommand"
+        "when": "focusedView == logmagnifier-shell-commander && viewItem == shellCommand"
       },
       {
         "command": "logmagnifier.executeShellCommand",
         "key": "space",
-        "when": "view == logmagnifier-shell-commander && viewItem == shellCommand"
+        "when": "focusedView == logmagnifier-shell-commander && viewItem == shellCommand"
       },
       {
         "command": "logmagnifier.applyJsonPretty",
@@ -525,6 +525,162 @@
         "command": "logmagnifier.hierarchy.showFullTree",
         "key": "ctrl+cmd+t",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "a",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "a"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "b",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "b"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "c",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "c"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "d",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "d"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "e",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "e"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "f",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "f"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "g",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "g"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "h",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "h"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "i",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "i"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "j",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "j"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "k",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "k"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "l",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "l"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "m",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "m"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "n",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "n"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "o",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "o"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "p",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "p"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "q",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "q"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "r",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "r"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "s",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "s"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "t",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "t"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "u",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "u"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "v",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "v"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "w",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "w"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "x",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "x"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "y",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "y"
+      },
+      {
+        "command": "logmagnifier.shellCommander.handleKey",
+        "key": "z",
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "z"
       }
     ],
     "commands": [
@@ -899,9 +1055,10 @@
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.createShellGroup",
-        "title": "New Group...",
-        "icon": "$(plus)"
+        "command": "logmagnifier.reloadShellCommander",
+        "title": "Reload Shell Commander",
+        "category": "LogMagnifier",
+        "icon": "$(sync)"
       },
       {
         "command": "logmagnifier.refreshShellView",
@@ -985,12 +1142,6 @@
         "title": "Show Configuration",
         "category": "LogMagnifier",
         "icon": "$(json)"
-      },
-      {
-        "command": "logmagnifier.reloadShellCommander",
-        "title": "Reload Shell Commander",
-        "category": "LogMagnifier",
-        "icon": "$(sync)"
       },
       {
         "command": "logmagnifier.clearAllShellConfigs",
@@ -1759,7 +1910,7 @@
         },
         {
           "command": "logmagnifier.addShellCommand",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellFolder",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellFolder || viewItem == shellGroup)",
           "group": "inline@1"
         },
         {

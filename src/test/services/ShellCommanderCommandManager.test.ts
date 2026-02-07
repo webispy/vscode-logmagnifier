@@ -58,7 +58,7 @@ suite('ShellCommanderCommandManager Test Suite', () => {
     let tempDir: string;
     let configPath: string;
 
-    setup(() => {
+    setup(async () => {
         mockContext = new MockExtensionContext();
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-logmagnifier-mgr-test-'));
         configPath = path.join(tempDir, 'logmagnifier_shell_cmds.json'); // Default path usage by manager
@@ -66,6 +66,7 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         mockContext.globalStorageUri = vscode.Uri.file(tempDir);
 
         service = new ShellCommanderService(mockContext);
+        await service.refresh();
         manager = new TestableCommandManager(mockContext, service);
     });
 
@@ -132,6 +133,53 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         const updatedFolder = group.children[0] as ShellFolder;
         const command = updatedFolder.children.find(c => c.label === cmdName);
         assert.ok(command, 'Command should be created');
+    });
+
+    test('addShellCommand with group parent auto-creates General folder', async () => {
+        const groupName = 'Group Parent Test';
+        await service.createGroup(groupName, configPath);
+        const group = service.groups.find(g => g.label === groupName)!;
+
+        // Mock InputBox for command label
+        const cmdName = 'Auto Cmd';
+        manager.uiMock.showInputBox.setHandler(() => cmdName);
+
+        // Mock text document checking
+        manager.uiMock.showTextDocument.setHandler(() => ({} as vscode.TextEditor));
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (manager as any).addShellCommand(group);
+
+        const updatedGroup = service.groups.find(g => g.label === groupName)!;
+        const folder = updatedGroup.children.find(c => c.label === 'General') as ShellFolder;
+        assert.ok(folder, 'General folder should be auto-created');
+        const command = folder.children.find(c => c.label === cmdName);
+        assert.ok(command, 'Command should be created inside General folder');
+    });
+
+    test('handleShellKey with c triggers addShellCommand', async () => {
+        const groupName = 'Key Test Group';
+        await service.createGroup(groupName, configPath);
+        const group = service.groups.find(g => g.label === groupName)!;
+
+        // Mock selection in treeView
+        // @ts-expect-error mock private property
+        manager.treeView = { selection: [group] };
+
+        // Mock InputBox for command label
+        const cmdName = 'Shortcut Cmd';
+        manager.uiMock.showInputBox.setHandler(() => cmdName);
+        manager.uiMock.showTextDocument.setHandler(() => ({} as vscode.TextEditor));
+
+        // Trigger key
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (manager as any).handleShellKey('c');
+
+        const updatedGroup = service.groups.find(g => g.label === groupName)!;
+        const folder = updatedGroup.children.find(c => c.label === 'General') as ShellFolder;
+        assert.ok(folder, 'Shortcut should have triggered folder creation');
+        const command = folder.children.find(c => c.label === cmdName);
+        assert.ok(command, 'Shortcut should have triggered command creation');
     });
 
     test('executeShellCommand creates and reuses terminal with interruption', async () => {

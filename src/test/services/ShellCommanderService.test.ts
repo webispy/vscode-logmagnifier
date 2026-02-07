@@ -13,7 +13,7 @@ suite('ShellCommanderService Test Suite', () => {
     let tempDir: string;
     let configPath: string;
 
-    setup(() => {
+    setup(async () => {
         mockContext = new MockExtensionContext();
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-logmagnifier-test-'));
         configPath = path.join(tempDir, 'test_shell_cmds.json');
@@ -22,6 +22,7 @@ suite('ShellCommanderService Test Suite', () => {
         mockContext.globalStorageUri = vscode.Uri.file(tempDir);
 
         service = new ShellCommanderService(mockContext);
+        await service.refresh();
     });
 
     teardown(() => {
@@ -30,8 +31,8 @@ suite('ShellCommanderService Test Suite', () => {
         }
     });
 
-    test('Initialization creates default config if none exists', () => {
-        // Service constructor should have created default config
+    test('Initialization creates default config if none exists', async () => {
+        // Service should have created default config and loaded it
         const groups = service.groups;
         assert.strictEqual(groups.length, 1);
         assert.strictEqual(groups[0].label, 'Any Group');
@@ -50,7 +51,9 @@ suite('ShellCommanderService Test Suite', () => {
         // Verify file content
         const fileContent = fs.readFileSync(configPath, 'utf-8');
         const json = JSON.parse(fileContent);
-        assert.strictEqual(json[0].groupName, groupName);
+        assert.strictEqual(json.groups[0].groupName, groupName);
+        assert.strictEqual(json.version, 1);
+        assert.ok(json.shortCutKeymap, 'Should have shortCutKeymap');
     });
 
     test('addFolder adds a folder to a group', async () => {
@@ -102,7 +105,7 @@ suite('ShellCommanderService Test Suite', () => {
         if (fs.existsSync(configPath)) {
             const content = fs.readFileSync(configPath, 'utf-8');
             const json = JSON.parse(content);
-            assert.strictEqual(json.length, 0);
+            assert.strictEqual(json.groups.length, 0);
         }
     });
 

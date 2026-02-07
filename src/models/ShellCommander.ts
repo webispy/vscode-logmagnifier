@@ -28,10 +28,25 @@ export interface ShellGroup extends ShellItemBase {
     children: (ShellFolder)[];
 }
 
+export interface ShellSystemConfig {
+    version: number;
+    shortCutKeymap: ShellShortCutKeymap;
+    groups: ShellConfig[];
+}
+
 export interface ShellConfig {
     groupName: string;
     descript?: string;
     folders: ShellFolderConfig[];
+}
+
+export interface ShellShortCutKeymap {
+    kbCreateGroup?: string;
+    kbCreateFolder?: string;
+    kbCreateCommand?: string;
+    kbDelete?: string;
+    kbEdit?: string;
+    kbView?: string;
 }
 
 export interface ShellFolderConfig {

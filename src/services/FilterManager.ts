@@ -671,48 +671,56 @@ export class FilterManager implements vscode.Disposable {
                 importedGroups = parsedData.groups;
                 importedVersion = parsedData.version;
                 this.logger.info(`Importing ${importedGroups.length} groups from JSON (File Version: ${importedVersion || 'unknown'}).`);
-
-                if (overwrite) {
-                    // Remove existing groups of the same mode
-                    this.groups = this.groups.filter(g => mode === 'regex' ? !g.isRegex : !!g.isRegex);
-                    this.logger.info(`Existing ${mode} filters cleared for overwrite.`);
-                }
-
-                let addedCount = 0;
-                for (const group of importedGroups) {
-                    // Validate group and ensure it matches the mode
-                    if (!!group.isRegex !== (mode === 'regex')) {
-                        continue;
-                    }
-
-                    // If not overwriting, we might want to ensure unique names or just append.
-                    // Usually append with a new ID is safer.
-                    const newGroupId = crypto.randomUUID();
-                    const newGroup: FilterGroup = {
-                        ...group,
-                        id: newGroupId,
-                        isExpanded: group.isExpanded ?? true,
-                        filters: group.filters.map(f => ({
-                            ...f,
-                            id: crypto.randomUUID()
-                        }))
-                    };
-
-                    this.groups.push(newGroup);
-                    addedCount++;
-                }
-
-                if (addedCount > 0) {
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
-
-                this.logger.info(`Import completed: ${addedCount} ${mode} filter groups added.`);
-                return { count: addedCount };
+            } else if (Array.isArray(parsedData)) {
+                // Old format: Root is an array of groups
+                importedGroups = parsedData;
+                this.logger.info(`Importing ${importedGroups.length} groups from JSON (Array format).`);
             } else {
                 throw new Error(Constants.Messages.Error.ImportInvalidFormat);
             }
+
+            if (overwrite) {
+                // Remove existing groups of the same mode
+                this.groups = this.groups.filter(g => mode === 'regex' ? !g.isRegex : !!g.isRegex);
+                this.logger.info(`Existing ${mode} filters cleared for overwrite.`);
+            }
+
+            let addedCount = 0;
+            for (const group of importedGroups) {
+                if (!group || typeof group !== 'object') {
+                    continue;
+                }
+
+                // Validate group and ensure it matches the mode
+                if (!!group.isRegex !== (mode === 'regex')) {
+                    continue;
+                }
+
+                // If not overwriting, we might want to ensure unique names or just append.
+                // Usually append with a new ID is safer.
+                const newGroupId = crypto.randomUUID();
+                const newGroup: FilterGroup = {
+                    ...group,
+                    id: newGroupId,
+                    isExpanded: group.isExpanded ?? true,
+                    filters: (group.filters || []).map(f => ({
+                        ...f,
+                        id: crypto.randomUUID()
+                    }))
+                };
+
+                this.groups.push(newGroup);
+                addedCount++;
+            }
+
+            if (addedCount > 0) {
+                this.debouncedSaveToState();
+                this.invalidateCache();
+                this._onDidChangeFilters.fire();
+            }
+
+            this.logger.info(`Import completed: ${addedCount} ${mode} filter groups added.`);
+            return { count: addedCount };
         } catch (e: unknown) {
             const errorMessage = e instanceof Error ? e.message : String(e);
             this.logger.error(`Import failed: ${errorMessage}`);

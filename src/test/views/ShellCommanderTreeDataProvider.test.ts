@@ -23,6 +23,7 @@ suite('ShellCommanderTreeDataProvider Test Suite', () => {
         mockContext.globalStorageUri = vscode.Uri.file(tempDir);
 
         service = new ShellCommanderService(mockContext);
+        await service.refresh();
         provider = new ShellCommanderTreeDataProvider(service);
 
         // Setup initial data

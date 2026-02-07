@@ -10,6 +10,7 @@ import * as fs from 'fs';
 export class ShellCommanderCommandManager {
     private activeEditors = new Map<string, string>(); // path -> commandId
     private commandTerminals = new Map<string, vscode.Terminal>(); // commandId -> Terminal
+    private isProcessingShortcut = false;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -54,7 +55,9 @@ export class ShellCommanderCommandManager {
             vscode.commands.registerCommand(Constants.Commands.EditShellDescription, this.editShellDescription, this),
             vscode.commands.registerCommand(Constants.Commands.RenameShellGroup, this.renameShellGroup, this),
             vscode.commands.registerCommand(Constants.Commands.ReloadShellCommander, this.reloadShellCommander, this),
-            vscode.commands.registerCommand(Constants.Commands.ClearAllShellConfigs, this.clearAllShellConfigs, this)
+            vscode.commands.registerCommand(Constants.Commands.ClearAllShellConfigs, this.clearAllShellConfigs, this),
+
+            vscode.commands.registerCommand(Constants.Commands.HandleShellKey, this.handleShellKey, this)
         );
     }
 
@@ -100,12 +103,25 @@ export class ShellCommanderCommandManager {
                 fs.mkdirSync(storagePath, { recursive: true });
             }
 
-            let globalConfigs: ShellConfig[] = [];
+            let systemConfig = {
+                version: 1,
+                shortCutKeymap: this.shellService.getKeymap() || {},
+                groups: [] as ShellConfig[]
+            };
+
             if (fs.existsSync(defaultConfigPath)) {
                 try {
                     const content = fs.readFileSync(defaultConfigPath, 'utf-8');
                     const parsed = JSON.parse(content);
-                    globalConfigs = Array.isArray(parsed) ? parsed : [parsed];
+                    if (parsed.version === 1 && parsed.groups) {
+                        systemConfig = parsed;
+                    } else if (Array.isArray(parsed)) {
+                        systemConfig.groups = parsed;
+                    } else if (parsed && typeof parsed === 'object' && parsed.groups && Array.isArray(parsed.groups)) {
+                        // V1-ish but maybe no version field
+                        systemConfig.groups = parsed.groups;
+                        if (parsed.shortCutKeymap) { systemConfig.shortCutKeymap = parsed.shortCutKeymap; }
+                    }
                 } catch (e) {
                     Logger.getInstance().error(`Failed to parse global config: ${e}`);
                 }
@@ -117,7 +133,17 @@ export class ShellCommanderCommandManager {
                 try {
                     const content = fs.readFileSync(uri.fsPath, 'utf-8');
                     const importedJson = JSON.parse(content);
-                    const toImport = Array.isArray(importedJson) ? importedJson : [importedJson];
+
+                    let toImport: ShellConfig[] = [];
+                    if (importedJson.version === 1 && importedJson.groups) {
+                        toImport = importedJson.groups;
+                    } else if (Array.isArray(importedJson)) {
+                        toImport = importedJson;
+                    } else if (importedJson && importedJson.groups && Array.isArray(importedJson.groups)) {
+                        toImport = importedJson.groups;
+                    } else if (importedJson && !Array.isArray(importedJson)) {
+                        toImport = [importedJson];
+                    }
 
                     for (const config of toImport) {
                         const groupName = config.groupName;
@@ -125,11 +151,11 @@ export class ShellCommanderCommandManager {
                             continue;
                         }
 
-                        const existingIdx = globalConfigs.findIndex(c => c.groupName === groupName);
+                        const existingIdx = systemConfig.groups.findIndex(c => c.groupName === groupName);
                         if (existingIdx !== -1) {
-                            globalConfigs[existingIdx] = config;
+                            systemConfig.groups[existingIdx] = config;
                         } else {
-                            globalConfigs.push(config);
+                            systemConfig.groups.push(config);
                         }
                         importedTotal++;
                     }
@@ -139,7 +165,7 @@ export class ShellCommanderCommandManager {
             }
 
             if (importedTotal > 0) {
-                fs.writeFileSync(defaultConfigPath, JSON.stringify(globalConfigs, null, 2), 'utf-8');
+                fs.writeFileSync(defaultConfigPath, JSON.stringify(systemConfig, null, 2), 'utf-8');
 
                 // Ensure default config is loaded/registered
                 if (!this.shellService.isConfigRegistered(defaultConfigPath)) {
@@ -148,6 +174,16 @@ export class ShellCommanderCommandManager {
                     await this.shellService.refresh();
                 }
                 this._ui.showInformationMessage(`Imported ${importedTotal} groups to global storage.`);
+
+                // Auto-expand imported groups
+                if (this.treeView) {
+                    for (const group of systemConfig.groups) {
+                        const targetGroup = this.shellService.groups.find(g => g.label === group.groupName);
+                        if (targetGroup) {
+                            this.treeView.reveal(targetGroup, { expand: true, select: false, focus: false });
+                        }
+                    }
+                }
             }
         }
     }
@@ -168,39 +204,56 @@ export class ShellCommanderCommandManager {
 
         if (uri) {
             try {
-                let finalConfigs = currentConfigs;
+                // Prepare final export object
+                const finalSystemConfig = {
+                    version: 1,
+                    shortCutKeymap: this.shellService.getKeymap() || {},
+                    groups: currentConfigs
+                };
 
                 // Unified Save: Merge with existing file if exists
                 if (fs.existsSync(uri.fsPath)) {
                     try {
                         const fileContent = fs.readFileSync(uri.fsPath, 'utf-8');
-                        const existingConfigs = JSON.parse(fileContent);
+                        const existingJson = JSON.parse(fileContent);
 
-                        if (Array.isArray(existingConfigs)) {
-                            // Merge logic:
-                            // 1. Start with existing configs (Map by groupName)
-                            const mergedMap = new Map<string, ShellConfig>();
-                            existingConfigs.forEach((c: ShellConfig) => {
-                                if (c && c.groupName) {
-                                    mergedMap.set(c.groupName, c);
-                                }
-                            });
+                        let existingGroups: ShellConfig[] = [];
+                        // let existingKeymap = finalSystemConfig.shortCutKeymap;
 
-                            // 2. Overwrite/Add current configs
-                            currentConfigs.forEach(c => {
-                                mergedMap.set(c.groupName, c);
-                            });
-
-                            finalConfigs = Array.from(mergedMap.values());
+                        if (existingJson.version === 1 && existingJson.groups) {
+                            existingGroups = existingJson.groups;
+                            // if (existingJson.shortCutKeymap) { existingKeymap = existingJson.shortCutKeymap; }
+                        } else if (Array.isArray(existingJson)) {
+                            existingGroups = existingJson;
                         }
+
+                        // Merge logic:
+                        // 1. Start with existing configs (Map by groupName)
+                        const mergedMap = new Map<string, ShellConfig>();
+                        existingGroups.forEach((c: ShellConfig) => {
+                            if (c && c.groupName) {
+                                mergedMap.set(c.groupName, c);
+                            }
+                        });
+
+                        // 2. Overwrite/Add current configs
+                        currentConfigs.forEach(c => {
+                            mergedMap.set(c.groupName, c);
+                        });
+
+                        finalSystemConfig.groups = Array.from(mergedMap.values());
+                        // Preserve keymap from file if we are merging? Or overwrite with current?
+                        // Usually export overwrites settings if they are part of the export.
+                        // But since keymap is now global, and we are exporting "Groups", maybe we should include current keymap.
+                        // Implemented above: finalSystemConfig initialized with current keymap.
                     } catch (readErr) {
                         Logger.getInstance().warn(`Failed to parse existing export file, overwriting: ${readErr}`);
                         // Fallback to overwriting if existing is corrupt/invalid
                     }
                 }
 
-                fs.writeFileSync(uri.fsPath, JSON.stringify(finalConfigs, null, 2), 'utf-8');
-                this._ui.showInformationMessage(`Successfully exported ${finalConfigs.length} groups to ${uri.fsPath}`);
+                fs.writeFileSync(uri.fsPath, JSON.stringify(finalSystemConfig, null, 2), 'utf-8');
+                this._ui.showInformationMessage(`Successfully exported ${finalSystemConfig.groups.length} groups to ${uri.fsPath}`);
             } catch (e) {
                 this._ui.showErrorMessage(`Failed to export: ${e}`);
             }
@@ -234,6 +287,14 @@ export class ShellCommanderCommandManager {
         const name = await this._ui.showInputBox({ placeHolder: 'Folder Name' });
         if (name) {
             await this.shellService.addFolder(parent, name);
+            // Auto-expand to show the new folder
+            if (this.treeView) {
+                const groups = this.shellService.groups;
+                const newFolder = this.findItemInGroups(groups, name, 'folder');
+                if (newFolder) {
+                    await this.treeView.reveal(newFolder, { expand: true, select: true, focus: true });
+                }
+            }
         }
     }
 
@@ -241,9 +302,31 @@ export class ShellCommanderCommandManager {
         if (!parent) {
             return;
         }
+
+        let targetFolder: ShellFolder;
+
         if (parent.kind === 'group') {
-            this._ui.showWarningMessage("Please add commands inside a folder.");
-            return;
+            // Find or create a 'General' folder in this group
+            const existingFolder = parent.children.find(c => c.kind === 'folder' && c.label === 'General') as ShellFolder;
+            if (existingFolder) {
+                targetFolder = existingFolder;
+            } else {
+                await this.shellService.addFolder(parent, 'General');
+                // Need to find the newly created folder in the refreshed service state
+                const refreshedGroup = this.shellService.groups.find(g => g.id === parent.id || g.label === parent.label);
+                if (!refreshedGroup) {
+                    this._ui.showErrorMessage("Failed to find group after folder creation.");
+                    return;
+                }
+                const newFolder = refreshedGroup.children.find(c => c.kind === 'folder' && c.label === 'General') as ShellFolder;
+                if (!newFolder) {
+                    this._ui.showErrorMessage("Failed to create 'General' folder.");
+                    return;
+                }
+                targetFolder = newFolder;
+            }
+        } else {
+            targetFolder = parent as ShellFolder;
         }
 
         const label = await this._ui.showInputBox({ placeHolder: 'Command Label' });
@@ -252,14 +335,16 @@ export class ShellCommanderCommandManager {
         }
 
         // 1. Add empty command (string type)
-        await this.shellService.addCommand(parent, label, "");
+        await this.shellService.addCommand(targetFolder, label, "");
 
         // 2. Find it to edit
         const groups = this.shellService.groups;
         const newItem = this.findItemInGroups(groups, label, 'command') as ShellCommand;
-
         if (newItem) {
-            await this.editShellItem(newItem);
+            if (this.treeView) {
+                await this.treeView.reveal(newItem, { expand: true, select: true, focus: true });
+            }
+            await this.openCommandEditor(newItem as ShellCommand, false);
             this._ui.showInformationMessage(`Created '${label}'. Edit the script file and save to update.`);
         }
     }
@@ -290,6 +375,9 @@ export class ShellCommanderCommandManager {
     }
 
     private async executeShellCommand(item: ShellCommand) {
+        if (this.isProcessingShortcut) {
+            return;
+        }
         if (!item || item.kind !== 'command') {
             return;
         }
@@ -307,7 +395,7 @@ export class ShellCommanderCommandManager {
         }
 
         // 2. Open the command in an editor so the user can see/edit it
-        await this.openCommandEditor(item);
+        await this.openCommandEditor(item, true);
 
         // 3. Execute immediately
         if (commandText.trim().length > 0) {
@@ -436,11 +524,11 @@ export class ShellCommanderCommandManager {
             const groups = this.shellService.groups;
             const newItem = this.findItemInGroups(groups, label, item.kind);
             if (newItem && newItem.kind === 'command') {
-                await this.openCommandEditor(newItem as ShellCommand);
+                await this.openCommandEditor(newItem as ShellCommand, false);
             }
         } else {
             if (item.kind === 'command') {
-                await this.openCommandEditor(item as ShellCommand);
+                await this.openCommandEditor(item as ShellCommand, false);
             }
         }
     }
@@ -469,7 +557,7 @@ export class ShellCommanderCommandManager {
         }
     }
 
-    private async openCommandEditor(item: ShellCommand) {
+    private async openCommandEditor(item: ShellCommand, preserveFocus: boolean = true) {
         const tempDir = os.tmpdir();
         const safeId = item.id.replace(/\//g, '_');
         // Use a simplified unique filename for all command executions
@@ -482,7 +570,7 @@ export class ShellCommanderCommandManager {
         this.activeEditors.set(tempPath, item.id);
 
         const doc = await vscode.workspace.openTextDocument(tempPath);
-        await this._ui.showTextDocument(doc, { preserveFocus: true });
+        await this._ui.showTextDocument(doc, { preserveFocus: preserveFocus });
     }
 
     private findItemById(groups: ShellGroup[], id: string): ShellItem | undefined {
@@ -669,4 +757,69 @@ export class ShellCommanderCommandManager {
             vscode.window.showInformationMessage("Shell Commander configurations reset to default.");
         }
     }
+
+    private async handleShellKey(key: string) {
+        if (!key) { return; }
+
+        // Ensure selection matches focus before acting
+        this.isProcessingShortcut = true;
+        await vscode.commands.executeCommand('list.select');
+        await vscode.commands.executeCommand('list.expand');
+        // Small delay to allow synchronous execution trigger to be suppressed
+        await new Promise(resolve => setTimeout(resolve, 0));
+        this.isProcessingShortcut = false;
+
+        const keymap = this.shellService.getKeymap();
+        if (!keymap) { return; }
+
+        let action: string | undefined;
+        // Reverse lookup: Find action for key
+        for (const [act, k] of Object.entries(keymap)) {
+            if (k === key) {
+                action = act;
+                break;
+            }
+        }
+
+        if (!action) { return; }
+
+        // Now use selection which should match what was focused
+        const target = this.treeView?.selection[0];
+
+        try {
+            switch (action) {
+                case 'kbCreateGroup':
+                    await this.addShellGroup();
+                    break;
+                case 'kbCreateFolder':
+                    if (target && (target.kind === 'group' || target.kind === 'folder')) {
+                        await this.addShellFolder(target as ShellGroup | ShellFolder);
+                    }
+                    break;
+                case 'kbCreateCommand':
+                    if (target && (target.kind === 'group' || target.kind === 'folder')) {
+                        await this.addShellCommand(target as ShellGroup | ShellFolder);
+                    }
+                    break;
+                case 'kbDelete':
+                    if (target) {
+                        await this.deleteShellItem(target);
+                    }
+                    break;
+                case 'kbEdit':
+                    if (target) {
+                        await this.editShellItem(target);
+                    }
+                    break;
+                case 'kbView':
+                    if (target) {
+                        await this.editShellDescription(target as ShellGroup | ShellFolder);
+                    }
+                    break;
+            }
+        } catch (e) {
+            this._ui.showErrorMessage(`Action failed: ${e}`);
+        }
+    }
+
 }

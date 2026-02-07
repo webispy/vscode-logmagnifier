@@ -1,14 +1,24 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ShellConfig, ShellGroup, ShellFolder, ShellCommand, ShellItem, ShellFolderConfig, ShellCommandConfig } from '../models/ShellCommander';
+import { ShellConfig, ShellGroup, ShellFolder, ShellCommand, ShellItem, ShellFolderConfig, ShellCommandConfig, ShellShortCutKeymap, ShellSystemConfig } from '../models/ShellCommander';
 import { Constants } from '../constants';
 import { Logger } from './Logger';
 
 export class ShellCommanderService {
     private _groups: ShellGroup[] = [];
+    private _globalKeymap: ShellShortCutKeymap | undefined;
     private _onDidChangeTreeData: vscode.EventEmitter<ShellItem | undefined | null | void> = new vscode.EventEmitter<ShellItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<ShellItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    private readonly DEFAULT_KEYMAP: ShellShortCutKeymap = {
+        kbCreateGroup: 'g',
+        kbCreateFolder: 'f',
+        kbCreateCommand: 'c',
+        kbDelete: 'd',
+        kbEdit: 'e',
+        kbView: 'i'
+    };
 
     constructor(private context: vscode.ExtensionContext) {
         if (this.configPaths.length === 0) {
@@ -29,6 +39,11 @@ export class ShellCommanderService {
         return this._groups;
     }
 
+    public getKeymap(): ShellShortCutKeymap | undefined {
+        // Return global keymap if loaded, otherwise default
+        return this._globalKeymap || this.DEFAULT_KEYMAP;
+    }
+
     public isConfigRegistered(filePath: string): boolean {
         return this.configPaths.includes(filePath);
     }
@@ -38,16 +53,22 @@ export class ShellCommanderService {
         this._onDidChangeTreeData.fire();
     }
 
-    private getDefaultConfig(): ShellConfig {
+    private getDefaultConfig(): ShellSystemConfig {
         return {
-            groupName: 'Any Group',
-            descript: "hello world. This is Shell Commander. You can freely use it for executing any scripts.",
-            folders: [
+            version: 1,
+            shortCutKeymap: this.DEFAULT_KEYMAP,
+            groups: [
                 {
-                    name: 'Simple',
-                    commands: [
-                        { label: 'single cmd', command: 'echo hiyo' },
-                        { label: 'multi cmds', command: "clear\njava -version\nls -l\n# comments\mecho 'what are you doing" }
+                    groupName: 'Any Group',
+                    descript: "hello world. This is Shell Commander. You can freely use it for executing any scripts.",
+                    folders: [
+                        {
+                            name: 'Simple',
+                            commands: [
+                                { label: 'single cmd', command: 'echo hiyo' },
+                                { label: 'multi cmds', command: "clear\njava -version\nls -l\n# comments\necho 'what are you doing" }
+                            ]
+                        }
                     ]
                 }
             ]
@@ -78,32 +99,18 @@ export class ShellCommanderService {
             folders: []
         };
 
-        let configs: ShellConfig[] = [];
-
-        if (fs.existsSync(filePath)) {
-            try {
-                const content = fs.readFileSync(filePath, 'utf-8');
-                const json = JSON.parse(content);
-                if (Array.isArray(json)) {
-                    configs = json;
-                } else if (json && typeof json === 'object') {
-                    configs = [json];
-                }
-            } catch (_e) {
-                // If file is corrupt or empty, start fresh
-                configs = [];
-            }
-        }
-
-        // Check for duplicate in file (though global check above should cover loaded ones)
-        if (configs.find(c => c.groupName === name)) {
-            throw new Error(`Group '${name}' already exists in file.`);
-        }
-
-        configs.push(newConfig);
-
+        // We need to load the full system config to add a group
         try {
-            this.saveConfigToFile(filePath, configs);
+            const systemConfig = await this.readSystemConfig(filePath);
+
+            // Check for duplicate in file
+            if (systemConfig.groups.find(c => c.groupName === name)) {
+                throw new Error(`Group '${name}' already exists in file.`);
+            }
+
+            systemConfig.groups.push(newConfig);
+            this.saveConfigToFile(filePath, systemConfig);
+
             this.addConfigPath(filePath);
             await this.loadGroup(filePath);
             this._onDidChangeTreeData.fire();
@@ -135,24 +142,16 @@ export class ShellCommanderService {
         }
 
         try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const json = JSON.parse(content);
-            let configs: ShellConfig[] = [];
+            const systemConfig = await this.readSystemConfig(filePath);
 
-            if (Array.isArray(json)) {
-                configs = json;
-            } else if (json && typeof json === 'object') {
-                configs = [json];
-            }
-
-            const updatedConfigs = configs.filter(c => c.groupName !== group.label);
+            const updatedConfigs = systemConfig.groups.filter(c => c.groupName !== group.label);
+            systemConfig.groups = updatedConfigs;
 
             if (updatedConfigs.length === 0) {
-                // If it's the last group in the file, write empty array and stop tracking file
-                fs.writeFileSync(filePath, JSON.stringify([], null, 2), 'utf-8');
-                this.removeConfigPath(filePath);
+                // Should we keep the file with empty groups but valid keymap?
+                this.saveConfigToFile(filePath, systemConfig);
             } else {
-                fs.writeFileSync(filePath, JSON.stringify(updatedConfigs, null, 2), 'utf-8');
+                this.saveConfigToFile(filePath, systemConfig);
             }
 
             const index = this._groups.indexOf(group);
@@ -232,7 +231,7 @@ export class ShellCommanderService {
         Logger.getInstance().info(`[addFolder] Successfully added folder '${name}' to '${targetParent.label}'`);
 
         const configPath = (liveRoot as ShellGroup).configPath;
-        this.saveGroup(liveRoot);
+        await this.saveGroup(liveRoot);
         await this.loadGroup(configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -268,7 +267,7 @@ export class ShellCommanderService {
             return a.kind === 'folder' ? -1 : 1;
         });
 
-        this.saveGroup(root);
+        await this.saveGroup(root);
         await this.loadGroup(root.configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -292,7 +291,7 @@ export class ShellCommanderService {
         }
 
         const root = this.getRootGroup(item);
-        this.saveGroup(root);
+        await this.saveGroup(root);
         await this.loadGroup(root.configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -313,7 +312,7 @@ export class ShellCommanderService {
         }
 
         const root = this.getRootGroup(parent as ShellItem);
-        this.saveGroup(root);
+        await this.saveGroup(root);
         await this.loadGroup(root.configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -362,6 +361,72 @@ export class ShellCommanderService {
         }
     }
 
+    private async readSystemConfig(filePath: string): Promise<ShellSystemConfig> {
+        if (!fs.existsSync(filePath)) {
+            return {
+                version: 1,
+                shortCutKeymap: this.DEFAULT_KEYMAP,
+                groups: []
+            };
+        }
+
+        const content = fs.readFileSync(filePath, 'utf-8');
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let json: any;
+        try {
+            json = JSON.parse(content);
+        } catch {
+            return {
+                version: 1,
+                shortCutKeymap: this.DEFAULT_KEYMAP,
+                groups: []
+            };
+        }
+
+        // Detect format
+        if (json.version === 1 && json.groups) {
+            return json as ShellSystemConfig;
+        }
+
+        // Migration logic
+        let configs: ShellConfig[] = [];
+        let keymap = this.DEFAULT_KEYMAP;
+
+        if (json && json.groups && Array.isArray(json.groups)) {
+            // Old V1-ish format (had groups array but maybe not version 1 explicit or keymap handling)
+            configs = json.groups;
+            if (json.shortCutKeymap) {
+                // Migrate keymap
+                keymap = this.migrateKeymap(json.shortCutKeymap);
+            }
+        } else if (Array.isArray(json)) {
+            configs = json;
+        } else if (json && typeof json === 'object') {
+            configs = [json];
+        }
+
+        return {
+            version: 1,
+            shortCutKeymap: keymap,
+            groups: configs
+        };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private migrateKeymap(km: any): ShellShortCutKeymap {
+        if (km.createGroup || km.createFolder || km.delete || km.createCommand) {
+            return {
+                kbCreateGroup: km.kbCreateGroup || km.createGroup,
+                kbCreateFolder: km.kbCreateFolder || km.createFolder,
+                kbCreateCommand: km.kbCreateCommand || km.createCommand,
+                kbDelete: km.kbDelete || km.delete,
+                kbEdit: km.kbEdit || km.edit,
+                kbView: km.kbView || km.view
+            };
+        }
+        return km as ShellShortCutKeymap;
+    }
+
     private async loadGroup(filePath: string): Promise<void> {
         if (!fs.existsSync(filePath)) {
             Logger.getInstance().warn(`Shell config file not found: ${filePath}`);
@@ -369,25 +434,17 @@ export class ShellCommanderService {
         }
 
         try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const json = JSON.parse(content);
+            const systemConfig = await this.readSystemConfig(filePath);
 
-            let configs: ShellConfig[] = [];
-            if (Array.isArray(json)) {
-                configs = json;
-            } else {
-                configs = [json as ShellConfig];
-            }
+            // Set global keymap if this is the first one or prioritised?
+            // User request implies one global keymap. For now, last loaded wins or first?
+            // Let's just set it.
+            this._globalKeymap = systemConfig.shortCutKeymap;
 
-            for (const config of configs) {
+            for (const config of systemConfig.groups) {
                 if (!config.groupName) {
                     continue;
                 }
-
-                // Skip if already loaded via another file?
-                // Currently we allow same group name if different file, but here unified storage means same file has multiple.
-                // We should check if this specific group from this file is already loaded to avoid duplicates if reload happens?
-                // actually this._groups check below handles logic.
 
                 const group: ShellGroup = {
                     id: this.generateId([config.groupName]),
@@ -404,7 +461,6 @@ export class ShellCommanderService {
                 }
                 const existingIdx = this._groups.findIndex(g => g.label === group.label);
                 if (existingIdx !== -1) {
-                    // Update existing group
                     this._groups[existingIdx] = group;
                 } else {
                     this._groups.push(group);
@@ -438,8 +494,6 @@ export class ShellCommanderService {
 
     private mapConfigCommandsToModel(commands: ShellCommandConfig[], parent: ShellFolder): ShellCommand[] {
         return commands.map(c => {
-            // Handle legacy array if present in JSON by joining?
-            // Users might have old config.
             let safeCommand = "";
             if (Array.isArray(c.command)) {
                 safeCommand = (c.command as string[]).join('\n');
@@ -460,7 +514,7 @@ export class ShellCommanderService {
         });
     }
 
-    private saveGroup(group: ShellGroup) {
+    private async saveGroup(group: ShellGroup) {
         const config: ShellConfig = {
             groupName: group.label,
             descript: group.description || "hello world. It is shell commander.",
@@ -470,46 +524,24 @@ export class ShellCommanderService {
         const filePath = group.configPath;
 
         try {
-            let configs: ShellConfig[] = [];
+            const systemConfig = await this.readSystemConfig(filePath);
 
-            // Read existing file to preserve other groups
-            if (fs.existsSync(filePath)) {
-                try {
-                    const content = fs.readFileSync(filePath, 'utf-8');
-                    const json = JSON.parse(content);
-                    if (Array.isArray(json)) {
-                        configs = json;
-                    } else if (json && typeof json === 'object') {
-                        // Legacy single object.
-                        // If saving the same group name, we overwrite (will become array of 1).
-                        // If saving different group name, we keep old as element 0.
-                        if (json.groupName !== group.label) {
-                            configs = [json];
-                        } else {
-                            configs = [];
-                        }
-                    }
-                } catch (_readErr) {
-                    // Ignore read error, overwrite
-                }
-            }
-
-            // Update or Add
-            const existingIdx = configs.findIndex(c => c.groupName === group.label);
+            // Update or Add group in system config
+            const existingIdx = systemConfig.groups.findIndex(c => c.groupName === group.label);
             if (existingIdx !== -1) {
-                configs[existingIdx] = config;
+                systemConfig.groups[existingIdx] = config;
             } else {
-                configs.push(config);
+                systemConfig.groups.push(config);
             }
 
-            this.saveConfigToFile(filePath, configs);
+            this.saveConfigToFile(filePath, systemConfig);
         } catch (e) {
             Logger.getInstance().error(`Failed to save shell config to ${filePath}: ${e}`);
             vscode.window.showErrorMessage(`Failed to save shell configuration: ${e}`);
         }
     }
 
-    private saveConfigToFile(filePath: string, config: ShellConfig | ShellConfig[]) {
+    private saveConfigToFile(filePath: string, config: ShellSystemConfig) {
         try {
             fs.writeFileSync(filePath, JSON.stringify(config, null, 2), 'utf-8');
         } catch (e) {
@@ -520,7 +552,7 @@ export class ShellCommanderService {
 
     private mapModelFoldersToConfig(folders: (ShellFolder | ShellCommand)[]): ShellFolderConfig[] {
         return folders
-            .filter(item => item.kind === 'folder') // Filter to keep only folders
+            .filter(item => item.kind === 'folder')
             .map(item => {
                 const f = item as ShellFolder;
                 const subFolders = f.children.filter(c => c.kind === 'folder') as ShellFolder[];
@@ -532,7 +564,6 @@ export class ShellCommanderService {
                 };
 
                 if (subFolders.length > 0) {
-                    // Recursive call needs to match type
                     config.folders = this.mapModelFoldersToConfig(subFolders);
                 }
                 if (commands.length > 0) {
@@ -547,7 +578,7 @@ export class ShellCommanderService {
 
     public async updateGroupDescription(group: ShellGroup, content: string): Promise<void> {
         group.description = content;
-        this.saveGroup(group);
+        await this.saveGroup(group);
         await this.loadGroup(group.configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -556,7 +587,7 @@ export class ShellCommanderService {
     public async updateFolderDescription(folder: ShellFolder, content: string): Promise<void> {
         folder.description = content;
         const root = this.getRootGroup(folder);
-        this.saveGroup(root);
+        await this.saveGroup(root);
         await this.loadGroup(root.configPath);
         this._onDidChangeTreeData.fire();
     }
@@ -568,6 +599,7 @@ export class ShellCommanderService {
             folders: this.mapModelFoldersToConfig(group.children.filter(child => child.kind === 'folder') as ShellFolder[])
         }));
     }
+
     public async renameGroup(group: ShellGroup, newName: string): Promise<void> {
         const filePath = group.configPath;
         if (!fs.existsSync(filePath)) {
@@ -575,38 +607,24 @@ export class ShellCommanderService {
         }
 
         try {
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const json = JSON.parse(content);
-            let configs: ShellConfig[] = [];
+            const systemConfig = await this.readSystemConfig(filePath);
 
-            if (Array.isArray(json)) {
-                configs = json;
-            } else if (json && typeof json === 'object') {
-                configs = [json];
-            }
-
-            const targetConfigIndex = configs.findIndex(c => c.groupName === group.label);
+            const targetConfigIndex = systemConfig.groups.findIndex(c => c.groupName === group.label);
             if (targetConfigIndex === -1) {
-                // It might be a legacy single file where filename was the key, but we loaded it.
-                // If single object and groupName matches, it's index 0.
-                if (configs.length === 1 && configs[0].groupName === group.label) {
-                    // match found
-                } else {
-                    throw new Error(`Group '${group.label}' not found in configuration file.`);
-                }
+                // If not found by name, it might be an issue, but readSystemConfig handles parsing.
+                // Assuming it must exist if group model exists.
+                throw new Error(`Group '${group.label}' not found in configuration file.`);
             }
 
             // Check if new name exists in file (except self)
-            if (configs.some((c, idx) => c.groupName === newName && idx !== targetConfigIndex)) {
+            if (systemConfig.groups.some((c, idx) => c.groupName === newName && idx !== targetConfigIndex)) {
                 throw new Error(`Group '${newName}' already exists in this file.`);
             }
 
             // Update Name
-            if (targetConfigIndex !== -1) {
-                configs[targetConfigIndex].groupName = newName;
-            }
+            systemConfig.groups[targetConfigIndex].groupName = newName;
 
-            this.saveConfigToFile(filePath, configs);
+            this.saveConfigToFile(filePath, systemConfig);
 
             // Remove old group instance to prevent duplication or stale state
             const index = this._groups.indexOf(group);

@@ -135,19 +135,20 @@ export class ShellCommanderCommandManager {
                     const importedJson = JSON.parse(content);
 
                     let toImport: ShellConfig[] = [];
-                    if (importedJson.version === 1 && importedJson.groups) {
+                    if (importedJson && importedJson.version === 1 && Array.isArray(importedJson.groups)) {
                         toImport = importedJson.groups;
                     } else if (Array.isArray(importedJson)) {
                         toImport = importedJson;
-                    } else if (importedJson && importedJson.groups && Array.isArray(importedJson.groups)) {
+                    } else if (importedJson && Array.isArray(importedJson.groups)) {
                         toImport = importedJson.groups;
-                    } else if (importedJson && !Array.isArray(importedJson)) {
+                    } else if (importedJson && typeof importedJson === 'object' && importedJson.groupName) {
                         toImport = [importedJson];
                     }
 
                     for (const config of toImport) {
                         const groupName = config.groupName;
                         if (!groupName) {
+                            Logger.getInstance().warn(`Skipping import of invalid shell config: missing groupName`);
                             continue;
                         }
 
@@ -662,7 +663,7 @@ export class ShellCommanderCommandManager {
             fs.writeFileSync(tempPath, description, 'utf8');
 
             const doc = await vscode.workspace.openTextDocument(tempPath);
-            await this._ui.showTextDocument(doc);
+            await this._ui.showTextDocument(doc, { preserveFocus: true });
 
             // Setup a one-time save listener (or persistent one? one-time bound to this specific file is safer for this session)
             // But activeEditors map approach is better if we want to support multiple open descriptions?
@@ -797,8 +798,11 @@ export class ShellCommanderCommandManager {
                     }
                     break;
                 case 'kbCreateCommand':
-                    if (target && (target.kind === 'group' || target.kind === 'folder')) {
-                        await this.addShellCommand(target as ShellGroup | ShellFolder);
+                    if (target) {
+                        const parent = target.kind === 'command' ? (target.parent as ShellFolder) : (target as ShellGroup | ShellFolder);
+                        if (parent) {
+                            await this.addShellCommand(parent);
+                        }
                     }
                     break;
                 case 'kbDelete':

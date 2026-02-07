@@ -260,12 +260,7 @@ export class ShellCommanderService {
         };
 
         targetFolder.children.push(newCommand);
-        targetFolder.children.sort((a, b) => {
-            if (a.kind === b.kind) {
-                return a.label.localeCompare(b.label);
-            }
-            return a.kind === 'folder' ? -1 : 1;
-        });
+        this.sortItems(targetFolder.children);
 
         await this.saveGroup(root);
         await this.loadGroup(root.configPath);
@@ -359,6 +354,7 @@ export class ShellCommanderService {
                 Logger.getInstance().error(`Error loading shell config from ${p}: ${err}`);
             }
         }
+        this._groups.sort((a, b) => a.label.localeCompare(b.label));
     }
 
     private async readSystemConfig(filePath: string): Promise<ShellSystemConfig> {
@@ -466,6 +462,7 @@ export class ShellCommanderService {
                     this._groups.push(group);
                 }
             }
+            this._groups.sort((a, b) => a.label.localeCompare(b.label));
         } catch (e) {
             Logger.getInstance().error(`Invalid JSON format in ${filePath}: ${e}`);
         }
@@ -488,6 +485,7 @@ export class ShellCommanderService {
             const commands = f.commands ? this.mapConfigCommandsToModel(f.commands, folder) : [];
 
             folder.children = [...subFolders, ...commands];
+            this.sortItems(folder.children);
             return folder;
         });
     }
@@ -638,5 +636,15 @@ export class ShellCommanderService {
         } catch (e) {
             throw new Error(`Failed to rename group: ${e}`);
         }
+    }
+
+    private sortItems(items: ShellItem[]): void {
+        items.sort((a, b) => {
+            if (a.kind === b.kind) {
+                return a.label.localeCompare(b.label);
+            }
+            // folders above commands
+            return a.kind === 'folder' ? -1 : 1;
+        });
     }
 }

@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
-import { FilterManager } from './FilterManager';
+import { FilterManager } from '../services/FilterManager';
 import { FilterGroup } from '../models/Filter';
-import { Logger } from './Logger';
+import { Logger } from '../services/Logger';
 
 export class FilterGroupCommandManager {
     constructor(

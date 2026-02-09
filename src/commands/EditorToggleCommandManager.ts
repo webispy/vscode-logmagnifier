@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
 import { QuickAccessProvider } from '../views/QuickAccessProvider';
-import { JsonPrettyService } from './JsonPrettyService';
+import { JsonPrettyService } from '../services/JsonPrettyService';
 
 export class EditorToggleCommandManager {
     constructor(

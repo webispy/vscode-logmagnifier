@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
-import { FilterManager } from './FilterManager';
+import { FilterManager } from '../services/FilterManager';
 import { FilterGroup } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
 import * as fs from 'fs';

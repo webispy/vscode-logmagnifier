@@ -3,7 +3,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as vscode from 'vscode';
-import { ShellCommanderCommandManager } from '../../services/ShellCommanderCommandManager';
+import { ShellCommanderCommandManager } from '../../commands/ShellCommanderCommandManager';
 import { ShellCommanderService } from '../../services/ShellCommanderService';
 import { MockExtensionContext } from '../utils/Mocks';
 import { ShellFolder, ShellCommand } from '../../models/ShellCommander';

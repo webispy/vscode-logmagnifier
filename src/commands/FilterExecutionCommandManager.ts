@@ -1,10 +1,10 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
-import { FilterManager } from './FilterManager';
-import { HighlightService } from './HighlightService';
-import { LogProcessor } from './LogProcessor';
-import { Logger } from './Logger';
-import { SourceMapService } from './SourceMapService';
+import { FilterManager } from '../services/FilterManager';
+import { HighlightService } from '../services/HighlightService';
+import { LogProcessor } from '../services/LogProcessor';
+import { Logger } from '../services/Logger';
+import { SourceMapService } from '../services/SourceMapService';
 import { FilterGroup, FilterItem } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 import * as fs from 'fs';

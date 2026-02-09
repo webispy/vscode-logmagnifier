@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { AdbService } from './AdbService';
+import { AdbService } from '../services/AdbService';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem } from '../models/AdbModels';
 import * as crypto from 'crypto';

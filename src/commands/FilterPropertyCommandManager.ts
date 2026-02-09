@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
-import { FilterManager } from './FilterManager';
+import { FilterManager } from '../services/FilterManager';
 import { FilterItem, FilterType } from '../models/Filter';
 
 export class FilterPropertyCommandManager {

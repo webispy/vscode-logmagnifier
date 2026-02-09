@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
-import { LogBookmarkService } from './LogBookmarkService';
-import { FileHierarchyService } from './FileHierarchyService';
+import { LogBookmarkService } from '../services/LogBookmarkService';
+import { FileHierarchyService } from '../services/FileHierarchyService';
 import { BookmarkItem } from '../models/Bookmark';
 import { FilterItem } from '../models/Filter';
-import { HighlightService } from './HighlightService';
+import { HighlightService } from '../services/HighlightService';
 import { Constants } from '../constants';
 import { RegexUtils } from '../utils/RegexUtils';
 import { EditorUtils } from '../utils/EditorUtils';

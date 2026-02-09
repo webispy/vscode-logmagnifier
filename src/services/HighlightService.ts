@@ -264,6 +264,7 @@ export class HighlightService implements vscode.Disposable {
         }
 
         const decoContexts = decoRequests.map(req => {
+            const { decoration: _ } = this.getDecorationInfo(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
             const key = this.getDecorationKey(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
             if (!rangesByDeco.has(key)) {
                 rangesByDeco.set(key, []);

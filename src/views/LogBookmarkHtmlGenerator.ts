@@ -159,8 +159,10 @@ export class LogBookmarkHtmlGenerator {
                     </div>`;
             }
 
+            const isDeleted = this._bookmarkService.isFileMissing(uriStr);
+
             filesHtml += `
-                <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''}" id="section-${uriStr}">
+                <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''} ${isDeleted ? 'deleted' : ''}" id="section-${uriStr}">
                     <div class="file-header">
                         <div class="header-left">
                             <button class="fold-toggle" data-action="toggleFold" data-uri="${uriStr}" title="Toggle Fold">

@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
+import * as fs from 'fs';
 import { BookmarkItem, BookmarkResult } from '../models/Bookmark';
 import { Constants } from '../constants';
 import { SourceMapService } from './SourceMapService';
@@ -23,6 +24,11 @@ export class LogBookmarkService implements vscode.Disposable {
 
     private context: vscode.ExtensionContext;
     private logger: Logger;
+
+    // Track missing files
+    private _missingFiles: Set<string> = new Set();
+    // Map of directory path -> FileSystemWatcher
+    private _fileWatchers: Map<string, vscode.FileSystemWatcher> = new Map();
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -54,6 +60,92 @@ export class LogBookmarkService implements vscode.Disposable {
                 this.removeBookmarksForUri(doc.uri);
             }
         }, null, context.subscriptions);
+    }
+
+    public isFileMissing(uriStr: string): boolean {
+        return this._missingFiles.has(uriStr);
+    }
+
+    private updateWatcher() {
+        // Identify all unique directories for current bookmarks
+        const directories = new Set<string>();
+        for (const key of this._bookmarks.keys()) {
+            try {
+                const uri = vscode.Uri.parse(key);
+                if (uri.scheme === 'file') {
+                    // Use standard path.dirname
+                    const dir = vscode.Uri.joinPath(uri, '..').fsPath;
+                    directories.add(dir);
+                }
+            } catch (_e) {
+                // Ignore non-file URIs or errors
+            }
+        }
+
+        // 1. Remove watchers for directories no longer needed
+        for (const [dir, watcher] of this._fileWatchers.entries()) {
+            if (!directories.has(dir)) {
+                watcher.dispose();
+                this._fileWatchers.delete(dir);
+            }
+        }
+
+        // 2. Create watchers for new directories
+        for (const dir of directories) {
+            if (!this._fileWatchers.has(dir)) {
+                try {
+                    // Watch for changes in this directory
+                    // patterns: * (all files)
+                    const pattern = new vscode.RelativePattern(dir, '*');
+                    const watcher = vscode.workspace.createFileSystemWatcher(pattern);
+
+                    watcher.onDidDelete(uri => this.handleFileDelete(uri));
+                    watcher.onDidCreate(uri => this.handleFileCreate(uri));
+
+                    this._fileWatchers.set(dir, watcher);
+                } catch (e) {
+                    this.logger.error(`Failed to create watcher for ${dir}: ${e}`);
+                }
+            }
+        }
+    }
+
+    private handleFileDelete(uri: vscode.Uri) {
+        const key = uri.toString();
+        if (this._bookmarks.has(key)) {
+            this._missingFiles.add(key);
+            this._onDidChangeBookmarks.fire();
+        }
+    }
+
+    private handleFileCreate(uri: vscode.Uri) {
+        const key = uri.toString();
+        if (this._bookmarks.has(key)) {
+            this._missingFiles.delete(key);
+            this._onDidChangeBookmarks.fire();
+        }
+    }
+
+    private async checkFilesExistence() {
+        const keys = Array.from(this._bookmarks.keys());
+        // Use Promise.all for parallel checking
+        const checkPromises = keys.map(async (key) => {
+            try {
+                const uri = vscode.Uri.parse(key);
+                if (uri.scheme === 'file') {
+                    try {
+                        await fs.promises.access(uri.fsPath);
+                        this._missingFiles.delete(key);
+                    } catch {
+                        this._missingFiles.add(key);
+                    }
+                }
+            } catch (e) {
+                this.logger.warn(`Error checking file existence for ${key}: ${e}`);
+            }
+        });
+
+        await Promise.all(checkPromises);
     }
 
     public getBookmarkAt(uri: vscode.Uri, line: number, matchText?: string): BookmarkItem | undefined {
@@ -124,7 +216,9 @@ export class LogBookmarkService implements vscode.Disposable {
 
             if (!this._bookmarks.has(key)) {
                 this._bookmarks.set(key, []);
+                this.updateWatcher();
             }
+            this._missingFiles.delete(key);
 
             const list = this._bookmarks.get(key)!;
 
@@ -172,7 +266,9 @@ export class LogBookmarkService implements vscode.Disposable {
 
         if (!this._bookmarks.has(key)) {
             this._bookmarks.set(key, []);
+            this.updateWatcher();
         }
+        this._missingFiles.delete(key);
 
         const list = this._bookmarks.get(key)!;
 
@@ -218,6 +314,10 @@ export class LogBookmarkService implements vscode.Disposable {
             const index = bookmarks.findIndex(b => b.id === item.id);
             if (index !== -1) {
                 bookmarks.splice(index, 1);
+                if (bookmarks.length === 0) {
+                    this._bookmarks.delete(key);
+                    this.updateWatcher();
+                }
                 this._onDidChangeBookmarks.fire();
                 this.refreshAllDecorations();
                 this.saveToState();
@@ -231,10 +331,12 @@ export class LogBookmarkService implements vscode.Disposable {
         // Completely remove from bookmarks map
         if (this._bookmarks.has(key)) {
             this._bookmarks.delete(key);
+            this._missingFiles.delete(key);
 
             // Remove from file order
             this._fileOrder = this._fileOrder.filter(k => k !== key);
 
+            this.updateWatcher();
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
             this.saveToState();
@@ -244,6 +346,8 @@ export class LogBookmarkService implements vscode.Disposable {
     public removeAllBookmarks() {
         this._bookmarks.clear();
         this._fileOrder = [];
+        this._missingFiles.clear();
+        this.updateWatcher();
         this._onDidChangeBookmarks.fire();
         this.refreshAllDecorations();
         this.saveToState();
@@ -251,6 +355,7 @@ export class LogBookmarkService implements vscode.Disposable {
 
     public removeBookmarkGroup(groupId: string) {
         let anyRemoved = false;
+        let keysRemoved = false;
 
         // 1. Remove from master bookmark list
         for (const [uri, items] of this._bookmarks.entries()) {
@@ -261,8 +366,10 @@ export class LogBookmarkService implements vscode.Disposable {
                 anyRemoved = true;
                 if (filtered.length === 0) {
                     this._bookmarks.delete(uri);
+                    this._missingFiles.delete(uri);
                     // Update file order if file is empty
                     this._fileOrder = this._fileOrder.filter(k => k !== uri);
+                    keysRemoved = true;
                 } else {
                     this._bookmarks.set(uri, filtered);
                 }
@@ -270,6 +377,9 @@ export class LogBookmarkService implements vscode.Disposable {
         }
 
         if (anyRemoved) {
+            if (keysRemoved) {
+                this.updateWatcher();
+            }
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
             this.saveToState();
@@ -376,6 +486,11 @@ export class LogBookmarkService implements vscode.Disposable {
         this.decorationType.dispose();
         this._onDidChangeBookmarks.dispose();
         this._onDidAddBookmark.dispose();
+
+        for (const watcher of this._fileWatchers.values()) {
+            watcher.dispose();
+        }
+        this._fileWatchers.clear();
     }
 
     private async saveToState() {
@@ -464,6 +579,10 @@ export class LogBookmarkService implements vscode.Disposable {
 
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
         this._onDidChangeBookmarks.fire();
+
+        this.checkFilesExistence();
+        this.updateWatcher();
+
         this.logger.info(`[Bookmark] Loaded bookmarks from state. Files with bookmarks: ${this._bookmarks.size}`);
     }
 }

@@ -445,6 +445,29 @@
             text-align: center;
             color: var(--vscode-descriptionForeground);
         }
+
+        /* Deleted File Styles */
+        .file-section.deleted {
+            opacity: 0.6;
+        }
+
+        .file-section.deleted .file-name {
+            text-decoration: line-through;
+            cursor: default;
+        }
+
+        .file-section.deleted .log-line {
+            pointer-events: none;
+            cursor: default;
+        }
+
+        /* Allow interacting with actions in deleted files */
+        .file-section.deleted .file-actions,
+        .file-section.deleted .fold-toggle,
+        .file-section.deleted .remove-btn,
+        .file-section.deleted .header-tags {
+            pointer-events: auto;
+        }
     </style>
 </head>
 
@@ -477,7 +500,7 @@
         const vscode = acquireVsCodeApi();
 
         // Restore ID map for jumps
-        const itemsMap = {{ITEMS_MAP}};
+        const itemsMap = {{ ITEMS_MAP }};
 
         // State Management for scroll position
         let state = vscode.getState() || {};
@@ -499,6 +522,16 @@
         document.body.addEventListener('click', event => {
             const target = event.target.closest('[data-action]');
             if (!target) return;
+
+            // Check if deleted
+            const section = target.closest('.file-section');
+            if (section && section.classList.contains('deleted')) {
+                const action = target.getAttribute('data-action');
+                // Only allow removal and folding
+                if (action !== 'removeGroup' && action !== 'removeFile' && action !== 'removeLineBookmarks' && action !== 'toggleFold') {
+                    return;
+                }
+            }
 
             const action = target.getAttribute('data-action');
             const uriStr = target.getAttribute('data-uri');

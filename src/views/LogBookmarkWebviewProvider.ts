@@ -194,6 +194,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
             uri: vscode.Uri.parse(item.uriString),
             groupId: item.groupId || ''
         };
+
+        if (this._bookmarkService.isFileMissing(hydratedItem.uri.toString())) {
+            vscode.window.showErrorMessage(`File not found: ${hydratedItem.uri.fsPath}`);
+            return;
+        }
+
         vscode.commands.executeCommand(Constants.Commands.JumpToBookmark, hydratedItem);
     }
 
@@ -211,6 +217,11 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         if (!uriStr) {
             return;
         }
+
+        if (this._bookmarkService.isFileMissing(uriStr)) {
+            return;
+        }
+
         try {
             const uri = vscode.Uri.parse(uriStr);
             const doc = await vscode.workspace.openTextDocument(uri);
@@ -239,23 +250,32 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
+    private _updateTimeout?: NodeJS.Timeout;
     private async updateContent() {
         if (!this._view) {
             return;
         }
 
-        try {
-            const html = await this._htmlGenerator.generateHtml(
-                this._view.webview,
-                this._activeUriStr,
-                this._lastAddedUri,
-                this._foldedUris
-            );
-            this._view.webview.html = html;
-        } catch (e) {
-            this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
-                Error loading bookmarks: ${e}<br/>
-            </div></body></html>`;
+        // Debounce updates to prevent UI flickering on mass changes
+        if (this._updateTimeout) {
+            clearTimeout(this._updateTimeout);
         }
+
+        this._updateTimeout = setTimeout(async () => {
+            if (!this._view) { return; }
+            try {
+                const html = await this._htmlGenerator.generateHtml(
+                    this._view.webview,
+                    this._activeUriStr,
+                    this._lastAddedUri,
+                    this._foldedUris
+                );
+                this._view.webview.html = html;
+            } catch (e) {
+                this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
+                    Error loading bookmarks: ${e}<br/>
+                </div></body></html>`;
+            }
+        }, 100);
     }
 }

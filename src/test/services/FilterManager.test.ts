@@ -102,6 +102,27 @@ suite('FilterManager Export/Import Test Suite', () => {
         // 4. Verify
         assert.strictEqual(parsed.groups.length, 1, 'Should only export 1 group');
         assert.strictEqual(parsed.groups[0].name, 'Regex Group');
+        assert.strictEqual(parsed.groups[0].isRegex, true);
+    });
+
+    test('Export Subset of Groups (Word Mode)', () => {
+        // 1. Create multiple groups
+        const g1 = filterManager.addGroup('Group 1', false)!;
+        filterManager.addGroup('Group 2', false); // Created but not exported
+        const g3 = filterManager.addGroup('Group 3', false)!;
+
+        // 2. Export only Group 1 and 3
+        const idsToExport = [g1.id, g3.id];
+        const json = filterManager.exportFilters('word', idsToExport);
+        const parsed = JSON.parse(json);
+
+        // 3. Verify
+        assert.strictEqual(parsed.groups.length, 2, 'Should export exactly 2 groups');
+
+        const exportedNames = parsed.groups.map((g: { name: string }) => g.name);
+        assert.ok(exportedNames.includes('Group 1'));
+        assert.ok(exportedNames.includes('Group 3'));
+        assert.ok(!exportedNames.includes('Group 2'));
     });
 
     test('Import Filters', () => {

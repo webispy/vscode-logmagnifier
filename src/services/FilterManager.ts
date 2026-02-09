@@ -611,9 +611,16 @@ export class FilterManager implements vscode.Disposable {
         this._onDidChangeFilters.fire();
     }
 
-    public exportFilters(mode: 'word' | 'regex'): string {
+    public exportFilters(mode: 'word' | 'regex', groupIds?: string[]): string {
         const groupsToExport = this.groups
-            .filter(g => mode === 'regex' ? g.isRegex : !g.isRegex)
+            .filter(g => {
+                const modeMatch = mode === 'regex' ? g.isRegex : !g.isRegex;
+                if (!modeMatch) { return false; }
+                if (groupIds) {
+                    return groupIds.includes(g.id);
+                }
+                return true;
+            })
             .map(g => {
                 const { resultCount: _1, id: _2, ...rest } = g;
                 return {

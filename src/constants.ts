@@ -286,6 +286,7 @@ export const Constants = {
         EnterNewKeyword: 'Enter new keyword',
         EnterNewProfileName: 'Enter name for new profile',
         EnterDuplicateProfileName: 'Enter name for duplicated profile',
+        SelectGroupsToExport: 'Select Filter Groups to Export',
         SelectOccurrencesHighlightMode: 'Select Occurrences Highlight Mode (Current: {0})',
 
         ExportWordFilters: 'Export Word Filters',
@@ -363,6 +364,7 @@ export const Constants = {
 
     Messages: {
         Info: {
+            NoGroupsToExport: 'No word/regex filter groups found to export.',
             NoTextToProcess: 'LogMagnifier: No text to process.',
             NoJsonFound: 'LogMagnifier: No JSON-like content found in the selection.',
             SelectTextToSearch: 'Please select a text to search for matches.',

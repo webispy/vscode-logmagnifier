@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Constants } from '../constants';
 import { FilterManager } from './FilterManager';
 import { HighlightService } from './HighlightService';
+import { IconUtils } from '../utils/IconUtils';
 import { ResultCountService } from './ResultCountService';
 import { LogProcessor } from './LogProcessor';
 import { Logger } from './Logger';
@@ -13,6 +14,11 @@ import * as os from 'os';
 import * as path from 'path';
 import { JsonPrettyService } from './JsonPrettyService';
 import { SourceMapService } from './SourceMapService';
+
+interface FilterGroupQuickPickItem extends vscode.QuickPickItem {
+    groupId: string;
+    isEnabled: boolean;
+}
 
 export class CommandManager {
     constructor(
@@ -454,7 +460,103 @@ export class CommandManager {
     }
 
     private async handleExport(mode: 'word' | 'regex') {
-        const filtersJson = this.filterManager.exportFilters(mode);
+        // Get all groups for the mode
+        const allGroups = this.filterManager.getGroups().filter(g => mode === 'regex' ? g.isRegex : !g.isRegex);
+
+        if (allGroups.length === 0) {
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoGroupsToExport);
+            return;
+        }
+
+        // Create QuickPick
+        const quickPick = vscode.window.createQuickPick();
+        quickPick.title = mode === 'word' ? Constants.Prompts.ExportWordFilters : Constants.Prompts.ExportRegexFilters;
+        quickPick.placeholder = Constants.Prompts.SelectGroupsToExport;
+        quickPick.canSelectMany = true; // Enable native checkboxes
+        quickPick.matchOnDescription = true;
+        quickPick.matchOnDetail = true;
+
+        // Add Buttons
+        quickPick.buttons = [
+            { iconPath: new vscode.ThemeIcon('checklist'), tooltip: 'Select All' },
+            { iconPath: new vscode.ThemeIcon('clear-all'), tooltip: 'Select None' },
+            { iconPath: new vscode.ThemeIcon('filter'), tooltip: 'Select Enabled Only' },
+            { iconPath: new vscode.ThemeIcon('export'), tooltip: 'Export' }
+        ];
+
+        // Prepare Items
+        const updateItems = () => {
+            quickPick.items = allGroups.map(g => {
+                // Icon Generation
+                const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                const strokeColor = isDark ? '#cccccc' : '#333333';
+                const dimmedColor = isDark ? '#555555' : '#cccccc';
+
+                const folderColor = g.isEnabled ? strokeColor : dimmedColor;
+                const overlayColor = g.isEnabled ? undefined : strokeColor;
+
+                const svg = IconUtils.generateGroupSvg(folderColor, overlayColor);
+                const iconUri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+
+                return {
+                    label: g.name,
+                    description: `${g.filters.length} filters${g.isEnabled ? '' : ' • Disabled'}`,
+                    picked: true, // Default to all selected
+                    groupId: g.id,
+                    isEnabled: g.isEnabled,
+                    iconPath: iconUri
+                } as FilterGroupQuickPickItem;
+            });
+
+            // Initialize selection to all
+            if (quickPick.items.length > 0) {
+                quickPick.selectedItems = quickPick.items;
+            }
+        };
+
+        updateItems();
+
+        // Handle Button Clicks
+        quickPick.onDidTriggerButton(async button => {
+            if (button.tooltip === 'Select All') {
+                quickPick.selectedItems = quickPick.items;
+            } else if (button.tooltip === 'Select None') {
+                quickPick.selectedItems = [];
+            } else if (button.tooltip === 'Select Enabled Only') {
+                const items = quickPick.items as FilterGroupQuickPickItem[];
+                quickPick.selectedItems = items.filter(i => i.isEnabled);
+            } else if (button.tooltip === 'Export') {
+                // Execute Export
+                const selectedItems = quickPick.selectedItems as FilterGroupQuickPickItem[];
+                if (selectedItems.length === 0) {
+                    vscode.window.showWarningMessage('No groups selected to export.');
+                    return;
+                }
+
+                quickPick.hide();
+                const selectedGroupIds = selectedItems.map(i => i.groupId);
+                await this.performExport(mode, selectedGroupIds);
+            }
+        });
+
+        // Trigger export on Accept (Enter key)
+        quickPick.onDidAccept(async () => {
+            const selectedItems = quickPick.selectedItems as FilterGroupQuickPickItem[];
+            if (selectedItems.length === 0) {
+                vscode.window.showWarningMessage('No groups selected to export.');
+                return;
+            }
+
+            quickPick.hide();
+            const selectedGroupIds = selectedItems.map(i => i.groupId);
+            await this.performExport(mode, selectedGroupIds);
+        });
+
+        quickPick.show();
+    }
+
+    private async performExport(mode: 'word' | 'regex', groupIds: string[]) {
+        const filtersJson = this.filterManager.exportFilters(mode, groupIds);
         const fileName = `logmagnifier_${mode}_filters.json`;
 
         const downloadsPath = path.join(os.homedir(), 'Downloads');

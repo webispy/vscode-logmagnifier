@@ -681,6 +681,11 @@
         "key": "z",
         "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
         "args": "z"
+      },
+      {
+        "command": "logmagnifier.openChromeInspect",
+        "key": "space",
+        "when": "focusedView == logmagnifier-adb-devices && logmagnifier.chromeInspectSelected"
       }
     ],
     "commands": [
@@ -1307,6 +1312,11 @@
         "icon": "$(check)"
       },
       {
+        "command": "logmagnifier.openChromeInspect",
+        "title": "Open Chrome Inspect",
+        "icon": "$(play)"
+      },
+      {
         "command": "logmagnifier.removeMatchesWithSelection",
         "title": "Remove Lines Matching Selection",
         "icon": "$(trash)"
@@ -1603,6 +1613,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "logmagnifier.openChromeInspect",
+          "when": "view == logmagnifier-adb-devices && viewItem == chromeInspect",
+          "group": "inline@1"
+        },
         {
           "command": "logmagnifier.previousMatch",
           "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",

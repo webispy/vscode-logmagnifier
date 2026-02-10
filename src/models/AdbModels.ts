@@ -78,9 +78,14 @@ export interface ControlDeviceActionItem {
     meta?: Record<string, string>;
 }
 
+export interface ChromeInspectItem {
+    type: 'chromeInspect';
+    device?: AdbDevice;
+}
+
 export interface MessageItem {
     type: 'message';
     message: string;
 }
 
-export type AdbTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem | ControlAppItem | ControlActionItem | DumpsysGroupItem | ControlDeviceItem | ControlDeviceActionItem | MessageItem;
+export type AdbTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem | ControlAppItem | ControlActionItem | DumpsysGroupItem | ControlDeviceItem | ControlDeviceActionItem | ChromeInspectItem | MessageItem;

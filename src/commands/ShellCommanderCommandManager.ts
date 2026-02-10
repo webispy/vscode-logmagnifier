@@ -46,6 +46,8 @@ export class ShellCommanderCommandManager {
             vscode.commands.registerCommand(Constants.Commands.AddShellCommand, this.addShellCommand, this),
             vscode.commands.registerCommand(Constants.Commands.ExecuteShellCommand, this.executeShellCommand, this),
             vscode.commands.registerCommand(Constants.Commands.EditShellItem, this.editShellItem, this),
+            vscode.commands.registerCommand(Constants.Commands.RenameShellFolder, this.editShellItem, this),
+            vscode.commands.registerCommand(Constants.Commands.RenameShellCommand, this.editShellItem, this),
             vscode.commands.registerCommand(Constants.Commands.DeleteShellItem, this.deleteShellItem, this),
             vscode.commands.registerCommand(Constants.Commands.RefreshShellView, this.refreshShellView, this),
             vscode.commands.registerCommand(Constants.Commands.ExpandAllShellGroups, this.expandAllShellGroups, this),

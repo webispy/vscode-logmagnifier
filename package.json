@@ -1055,6 +1055,16 @@
         "icon": "$(edit)"
       },
       {
+        "command": "logmagnifier.renameShellFolder",
+        "title": "Rename Folder",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "logmagnifier.renameShellCommand",
+        "title": "Rename...",
+        "icon": "$(edit)"
+      },
+      {
         "command": "logmagnifier.deleteShellItem",
         "title": "Delete",
         "icon": "$(trash)"
@@ -1581,14 +1591,14 @@
           "group": "navigation@7"
         },
         {
-          "command": "logmagnifier.importShellGroup",
-          "when": "view == logmagnifier-shell-commander",
-          "group": "navigation@4"
-        },
-        {
           "command": "logmagnifier.exportShellGroup",
           "when": "view == logmagnifier-shell-commander",
           "group": "navigation@3"
+        },
+        {
+          "command": "logmagnifier.importShellGroup",
+          "when": "view == logmagnifier-shell-commander",
+          "group": "navigation@4"
         },
         {
           "command": "logmagnifier.expandAllShellGroups",
@@ -1901,27 +1911,62 @@
         {
           "command": "logmagnifier.executeShellCommand",
           "when": "view == logmagnifier-shell-commander && viewItem == shellCommand",
-          "group": "inline@1"
+          "group": "1_execution"
         },
         {
-          "command": "logmagnifier.editShellDescription",
-          "when": "view == logmagnifier-shell-commander && (viewItem == shellGroup || viewItem == shellFolder)",
-          "group": "inline@2.5"
-        },
-        {
-          "command": "logmagnifier.renameShellGroup",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
-          "group": "inline@4"
+          "command": "logmagnifier.addShellCommand",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellFolder || viewItem == shellGroup)",
+          "group": "2_modification@1"
         },
         {
           "command": "logmagnifier.addShellFolder",
           "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
-          "group": "inline@1"
+          "group": "2_modification@2"
         },
         {
           "command": "logmagnifier.addShellFolder",
           "when": "view == logmagnifier-shell-commander && viewItem == shellFolder",
-          "group": "inline@2"
+          "group": "2_modification@2"
+        },
+        {
+          "command": "logmagnifier.editShellDescription",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellGroup || viewItem == shellFolder)",
+          "group": "3_config@1"
+        },
+        {
+          "command": "logmagnifier.renameShellGroup",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "group": "3_config@2"
+        },
+        {
+          "command": "logmagnifier.renameShellFolder",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellFolder",
+          "group": "3_config@2"
+        },
+        {
+          "command": "logmagnifier.renameShellCommand",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellCommand",
+          "group": "3_config@2"
+        },
+        {
+          "command": "logmagnifier.openShellGroupConfig",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "group": "4_json@1"
+        },
+        {
+          "command": "logmagnifier.exportShellGroup",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "group": "4_json@2"
+        },
+        {
+          "command": "logmagnifier.deleteShellItem",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellCommand || viewItem == shellFolder || viewItem == shellGroup)",
+          "group": "5_delete"
+        },
+        {
+          "command": "logmagnifier.executeShellCommand",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellCommand",
+          "group": "inline@1"
         },
         {
           "command": "logmagnifier.addShellCommand",
@@ -1929,9 +1974,24 @@
           "group": "inline@1"
         },
         {
+          "command": "logmagnifier.addShellFolder",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellFolder || viewItem == shellGroup)",
+          "group": "inline@2"
+        },
+        {
+          "command": "logmagnifier.editShellDescription",
+          "when": "view == logmagnifier-shell-commander && (viewItem == shellGroup || viewItem == shellFolder)",
+          "group": "inline@2.5"
+        },
+        {
           "command": "logmagnifier.editShellItem",
           "when": "view == logmagnifier-shell-commander && (viewItem == shellCommand || viewItem == shellFolder)",
           "group": "inline@3"
+        },
+        {
+          "command": "logmagnifier.renameShellGroup",
+          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "group": "inline@4"
         },
         {
           "command": "logmagnifier.deleteShellItem",

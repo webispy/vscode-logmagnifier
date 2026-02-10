@@ -43,9 +43,9 @@ jobs:
           mkdir -p review_results
           
           # Run Claude Code in non-interactive mode
-          # We use --print to get the output and redirect it to a file
-          # The prompt references the config file and asks for a full review
-          claude --non-interactive --allowed-tools "everything" -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." > review_results/review-report.md
+          # Using -p (or --print) automatically runs in non-interactive mode and prints the output.
+          # We use --dangerously-skip-permissions to avoid any interactive prompts in CI.
+          claude -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." --dangerously-skip-permissions > review_results/review-report.md
 
       - name: Upload Review Report
         if: steps.check_commits.outputs.skip != 'true'

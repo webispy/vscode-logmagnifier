@@ -174,4 +174,4 @@ Thanks to the following people who have contributed to this project:
 
 ## Credits
 
-All code in this project was written using **Google Antigravity**. Maintained by [webispy](https://github.com/webispy).
+All code in this project was written using **Google Antigravity** and **Claude Code**. Maintained by [webispy](https://github.com/webispy).

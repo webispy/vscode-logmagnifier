@@ -38,14 +38,19 @@ jobs:
         if: steps.check_commits.outputs.skip != 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CI: true
         run: |
+          set -x
+
           # Create a temporary directory for the report
           mkdir -p review_results
           
+          ls -l
+
           # Run Claude Code in non-interactive mode
-          # Using -p (or --print) automatically runs in non-interactive mode and prints the output.
-          # We use --dangerously-skip-permissions to avoid any interactive prompts in CI.
-          claude -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." --dangerously-skip-permissions > review_results/review-report.md
+          # Redirecting stderr to stdout (2>&1) to see any error messages in the CI logs.
+          # We use tee to show output in console and save to file.
+          claude -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." --dangerously-skip-permissions 2>&1 | tee review_results/review-report.md
 
       - name: Upload Review Report
         if: steps.check_commits.outputs.skip != 'true'

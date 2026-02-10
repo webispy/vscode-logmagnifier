@@ -136,6 +136,7 @@ export const Constants = {
         ControlStartScreenRecord: 'logmagnifier.control.startScreenRecord',
         ControlStopScreenRecord: 'logmagnifier.control.stopScreenRecord',
         ControlToggleShowTouches: 'logmagnifier.control.toggleShowTouches',
+        OpenChromeInspect: 'logmagnifier.openChromeInspect',
         ClearAllData: 'logmagnifier.clearAllData',
 
         // Bookmark

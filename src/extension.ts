@@ -127,8 +127,12 @@ export function activate(context: vscode.ExtensionContext) {
     const adbService = new AdbService(logger);
     context.subscriptions.push(adbService);
     const adbDeviceTreeProvider = new AdbDeviceTreeProvider(adbService);
-    vscode.window.registerTreeDataProvider(Constants.Views.ADBDevices, adbDeviceTreeProvider);
-    new AdbCommandManager(context, adbService, adbDeviceTreeProvider);
+    // vscode.window.registerTreeDataProvider(Constants.Views.ADBDevices, adbDeviceTreeProvider);
+    const adbTreeView = vscode.window.createTreeView(Constants.Views.ADBDevices, {
+        treeDataProvider: adbDeviceTreeProvider,
+        showCollapseAll: true
+    });
+    new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView);
 
     // Shell Commander
     const shellCommanderService = new ShellCommanderService(context);

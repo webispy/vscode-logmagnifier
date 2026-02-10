@@ -1,25 +1,44 @@
 import * as vscode from 'vscode';
 import { AdbService } from '../services/AdbService';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
-import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, SessionGroupItem } from '../models/AdbModels';
 import * as crypto from 'crypto';
 import { Constants } from '../constants';
 import * as os from 'os';
 import * as path from 'path';
-import { TargetAppItem, SessionGroupItem } from '../models/AdbModels';
+import * as cp from 'child_process';
 
 export class AdbCommandManager {
     constructor(
         private context: vscode.ExtensionContext,
         private adbService: AdbService,
-        private treeProvider: AdbDeviceTreeProvider
+        private adbDeviceTreeProvider: AdbDeviceTreeProvider,
+        private adbTreeView: vscode.TreeView<AdbTreeItem>
     ) {
         this.registerCommands();
+        this.registerSelectionListener();
+    }
+
+    private registerSelectionListener() {
+        this.context.subscriptions.push(this.adbTreeView.onDidChangeSelection(e => {
+            if (e.selection.length > 0) {
+                const item = e.selection[0];
+                // Check if it is Chrome Inspect item
+                // We use type guard or check property
+                if ('type' in item && item.type === 'chromeInspect') {
+                    vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', true);
+                } else {
+                    vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', false);
+                }
+            } else {
+                vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', false);
+            }
+        }));
     }
 
     private registerCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RefreshDevices, async () => {
-            await this.treeProvider.refreshDevices();
+            await this.adbDeviceTreeProvider.refreshDevices();
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddLogcatSession, async (arg: SessionGroupItem | AdbDevice) => {
@@ -215,7 +234,7 @@ export class AdbCommandManager {
                 const success = await this.adbService.uninstallApp(item.device.id, item.device.targetApp);
                 if (success) {
                     vscode.window.showInformationMessage(Constants.Messages.Info.UninstallCompleted);
-                    this.treeProvider.refreshDevices(); // Proactive refresh
+                    await this.adbDeviceTreeProvider.refreshDevices(); // Proactive refresh
                 } else {
                     vscode.window.showErrorMessage(Constants.Messages.Error.UninstallFailed);
                 }
@@ -302,6 +321,44 @@ export class AdbCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlToggleShowTouches, async (item: ControlDeviceActionItem) => {
             if (item && item.device) {
                 await this.adbService.toggleShowTouches(item.device.id);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.OpenChromeInspect, async () => {
+            try {
+                const devices = await this.adbService.getDevices();
+                const deviceCount = devices.length;
+
+                if (deviceCount > 0) {
+                    const chromeInspectUrl = 'chrome://inspect/#devices';
+                    let command = '';
+
+                    switch (process.platform) {
+                        case 'darwin':
+                            command = `open -a "Google Chrome" "${chromeInspectUrl}"`;
+                            break;
+                        case 'linux':
+                            command = `google-chrome "${chromeInspectUrl}"`;
+                            break;
+                        case 'win32':
+                            command = `start chrome "${chromeInspectUrl}"`;
+                            break;
+                        default:
+                            vscode.window.showInformationMessage(`Platform '${process.platform}' not fully supported. Please open '${chromeInspectUrl}' in Chrome manually.`);
+                            return;
+                    }
+
+                    cp.exec(command, (error) => {
+                        if (error) {
+                            vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
+                        }
+                    });
+
+                } else {
+                    vscode.window.showErrorMessage('❌ No connected Android devices found. Please check USB connection and debugging authorization.');
+                }
+            } catch (e) {
+                vscode.window.showErrorMessage(`Error checking devices: ${e}`);
             }
         }));
     }

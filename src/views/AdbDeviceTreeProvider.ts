@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { AdbService } from '../services/AdbService';
-import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlAppItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, MessageItem } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlAppItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
 
 export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();
@@ -145,6 +145,12 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             item.contextValue = 'controlDevice';
             item.iconPath = new vscode.ThemeIcon('tools');
             return item;
+        } else if (this.isChromeInspect(element)) {
+            const item = new vscode.TreeItem('Chrome Inspect', vscode.TreeItemCollapsibleState.None);
+            item.contextValue = 'chromeInspect';
+            item.iconPath = new vscode.ThemeIcon('vm-running');
+
+            return item;
         } else if (this.isControlDeviceAction(element)) {
             if (element.actionType === 'screenshot') {
                 const item = new vscode.TreeItem('Screenshot', vscode.TreeItemCollapsibleState.None);
@@ -226,6 +232,8 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     getChildren(element?: AdbTreeItem): vscode.ProviderResult<AdbTreeItem[]> {
         if (!element) {
+            const chromeInspectItem: ChromeInspectItem = { type: 'chromeInspect' };
+
             if (!this.initialized) {
                 this.initialized = true;
                 return this.adbService.getDevices().then(devices => {
@@ -233,13 +241,13 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                     if (this.devices.length === 0) {
                         return [{ type: 'message', message: 'No devices connected' } as MessageItem];
                     }
-                    return this.devices;
+                    return [chromeInspectItem, ...this.devices];
                 });
             }
             if (this.devices.length === 0) {
                 return [{ type: 'message', message: 'No devices connected' } as MessageItem];
             }
-            return this.devices;
+            return [chromeInspectItem, ...this.devices];
         } else if (this.isDevice(element)) {
             // Return TargetApp, potentially ControlApp, ControlDevice, and SessionGroup
             const children: AdbTreeItem[] = [
@@ -293,7 +301,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         return t !== 'targetApp' && t !== 'sessionGroup' &&
             t !== 'controlApp' && t !== 'dumpsysGroup' &&
             t !== 'controlAction' && t !== 'controlDevice' &&
-            t !== 'controlDeviceAction' && t !== 'message';
+            t !== 'controlDeviceAction' && t !== 'chromeInspect' && t !== 'message';
     }
 
     private isTargetApp(element: AdbTreeItem): element is TargetAppItem {
@@ -330,6 +338,10 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     private isControlDeviceAction(element: AdbTreeItem): element is ControlDeviceActionItem {
         return 'type' in element && element.type === 'controlDeviceAction';
+    }
+
+    private isChromeInspect(element: AdbTreeItem): element is ChromeInspectItem {
+        return 'type' in element && element.type === 'chromeInspect';
     }
 
     private isMessage(element: AdbTreeItem): element is MessageItem {

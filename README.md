@@ -42,6 +42,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Word Wrap**: Toggle word wrap specifically for the bookmark view.
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
+- **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
@@ -105,6 +106,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - **Start/Stop**: Use the Play/Stop icons to control log capture.
     - **Output**: Logs are streamed to a new editor document with a detailed header.
 
+### Log Analysis Workflows
+
+1.  **Automation**: Chain multiple profiles to analyze complex issues from various angles sequentially.
+2.  **Cumulative Filtering**: Each step in a workflow inherits filtered results from previous steps (Step N = Profile N applies to results of Step 0..N-1).
+3.  **Manage Workflows**:
+    - Click the **Workflows** icon (circuit board) in the activity bar.
+    - **Create/Rename**: Manage your analysis scenarios as Workflows.
+    - **Add Profiles**: Add existing Filter Profiles as steps.
+    - **Reorder**: Use the arrow icons to change execution order.
+    - **Run**: Click the **Play** icon to execute all steps automatically.
+4.  **Execution Feedback**: The sidebar visualizes step progress, indicating the currently active step and completion status.
+
 ### Log Bookmarks
 
 1.  **Add Bookmark**:
@@ -134,9 +147,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 This extension contributes the following settings:
 
 * `logmagnifier.jsonPreview.enabled`: Enable automatic JSON preview update when active line changes. (Default: `false`)
-* `logmagnifier.jsonPreview.maxLines`: Maximum number of lines allowed in selection for JSON preview triggers to prevent freezing. (Default: `10`)
+* `logmagnifier.jsonPreview.maxLines`: Maximum number of lines to process for JSON preview. Selections exceeding this limit will be truncated. (Default: `10`)
 * `logmagnifier.regex.enableHighlight`: Enable highlighting for Regex filters in the editor. (Default: `false`)
-* `logmagnifier.editor.navigationAnimation`: Enable visual flash animation when navigating to search matches. (Default: `true`)
 * `logmagnifier.regex.highlightColor`: Background color for Regex highlight. Can be a color string, a preset name, or an object with `light`/`dark` values.
 * `logmagnifier.highlightColors.color00`: Special "Bold Only" style (no background color).
 * `logmagnifier.highlightColors.color01` ... `color16`: Customizable light/dark mode colors for each highlight preset.
@@ -145,6 +157,7 @@ This extension contributes the following settings:
 * `logmagnifier.adbPath`: Path to the adb executable. (Default: `adb`)
 * `logmagnifier.adbLogcatDefaultOptions`: Default options for adb logcat command. (Default: `-v threadtime`)
 * `logmagnifier.bookmark.maxMatches`: Maximum number of matches to add to bookmarks at once. (Default: `500`)
+* `logmagnifier.removeMatches.maxLines`: Threshold for confirming removal of lines matching selection. (Default: `2000`)
 
 ## Known Limitations
 

@@ -1,0 +1,55 @@
+name: Daily Code Review
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Every day at 00:00 UTC
+  workflow_dispatch:      # Allow manual execution from the Actions tab
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necessary to check for recent commits
+
+      - name: Check for New Commits (Scheduled only)
+        id: check_commits
+        if: github.event_name == 'schedule'
+        run: |
+          COMMITS=$(git log --since="24 hours ago" --oneline)
+          if [ -z "$COMMITS" ]; then
+            echo "No new commits in the last 24 hours. Skipping review."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "Found new commits. Proceeding with review."
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install Claude Code
+        if: steps.check_commits.outputs.skip != 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Run Claude Code Review
+        if: steps.check_commits.outputs.skip != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          # Create a temporary directory for the report
+          mkdir -p review_results
+          
+          # Run Claude Code in non-interactive mode
+          # We use --print to get the output and redirect it to a file
+          # The prompt references the config file and asks for a full review
+          claude --non-interactive --allowed-tools "everything" -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." > review_results/review-report.md
+
+      - name: Upload Review Report
+        if: steps.check_commits.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-review-report
+          path: review_results/review-report.md

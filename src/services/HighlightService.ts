@@ -17,6 +17,9 @@ export interface DecorationConfig {
 }
 
 export class HighlightService implements vscode.Disposable {
+    // Map of URI string -> specific filters for that file
+    private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
+
     // Map of color string -> DecorationType
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
@@ -26,6 +29,10 @@ export class HighlightService implements vscode.Disposable {
         private filterManager: FilterManager,
         private logger: Logger
     ) { }
+
+    public registerDocumentFilters(uri: vscode.Uri, filters: { filter: FilterItem, groupId: string }[]) {
+        this.documentFilters.set(uri.toString(), filters);
+    }
 
     private getDecorationKey(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, textColor?: string): string {
         let colorKey = 'undefined';
@@ -126,7 +133,15 @@ export class HighlightService implements vscode.Disposable {
 
     private updateHighlightsSync(editor: vscode.TextEditor): Map<string, number> {
         const matchCounts = new Map<string, number>();
-        const activeFilters = this.filterManager.getActiveFilters();
+
+        let activeFilters: { filter: FilterItem, groupId: string }[] = [];
+        const docFilters = this.documentFilters.get(editor.document.uri.toString());
+        if (docFilters) {
+            activeFilters = docFilters;
+        } else {
+            activeFilters = this.filterManager.getActiveFilters();
+        }
+
         const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
 
         const filtersToRun = activeFilters.filter(item => {
@@ -162,7 +177,15 @@ export class HighlightService implements vscode.Disposable {
         const YIELD_INTERVAL = 50; // ms
 
         const matchCounts = new Map<string, number>();
-        const activeFilters = this.filterManager.getActiveFilters();
+
+        let activeFilters: { filter: FilterItem, groupId: string }[] = [];
+        const docFilters = this.documentFilters.get(editor.document.uri.toString());
+        if (docFilters) {
+            activeFilters = docFilters;
+        } else {
+            activeFilters = this.filterManager.getActiveFilters();
+        }
+
         const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
 
         const filtersToRun = activeFilters.filter(item => {
@@ -264,7 +287,8 @@ export class HighlightService implements vscode.Disposable {
         }
 
         const decoContexts = decoRequests.map(req => {
-            const { decoration: _ } = this.getDecorationInfo(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
+            // Ensure decoration exists
+            this.getDecorationInfo(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
             const key = this.getDecorationKey(req.color, req.isFullLine, req.textDecoration, req.fontWeight, req.textColor);
             if (!rangesByDeco.has(key)) {
                 rangesByDeco.set(key, []);

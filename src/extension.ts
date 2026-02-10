@@ -26,6 +26,9 @@ import { FilterGroup, FilterItem } from './models/Filter';
 import { FileHierarchyService } from './services/FileHierarchyService';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
 import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
+import { WorkflowManager } from './services/WorkflowManager';
+import { SidebarWorkflowWebviewProvider } from './views/SidebarWorkflowWebviewProvider';
+import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
 let debounceTimer: NodeJS.Timeout | undefined;
 
@@ -36,12 +39,20 @@ export function activate(context: vscode.ExtensionContext) {
     const filterManager = new FilterManager(context);
     context.subscriptions.push(filterManager);
 
-    const quickAccessProvider = new QuickAccessProvider(filterManager);
+    const sourceMapService = SourceMapService.getInstance();
     const logProcessor = new LogProcessor();
-
     const highlightService = new HighlightService(filterManager, logger);
+    const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, sourceMapService);
+    context.subscriptions.push(workflowManager);
+
+    const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager);
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
+
+    const workflowProvider = new SidebarWorkflowWebviewProvider(context.extensionUri, workflowManager);
+    context.subscriptions.push(
+        vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
+    );
 
     const refreshHighlightsForEditor = async (editor: vscode.TextEditor) => {
         const counts = await highlightService.updateHighlights(editor);
@@ -89,9 +100,6 @@ export function activate(context: vscode.ExtensionContext) {
     setupExpansionSync(wordTreeView);
     setupExpansionSync(regexTreeView);
 
-    // Source Map Service
-    const sourceMapService = SourceMapService.getInstance();
-
     // Register Definition Provider for Click-to-Navigate
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(
@@ -110,6 +118,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
     new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
+    new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
     // File Hierarchy Service & Navigation
     const fileHierarchyService = FileHierarchyService.getInstance();

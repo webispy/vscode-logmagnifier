@@ -25,6 +25,10 @@ export class FilterManager implements vscode.Disposable {
     private profileManager: ProfileManager;
     private stateService: FilterStateService;
 
+    public get profileManagerRef(): ProfileManager {
+        return this.profileManager;
+    }
+
     constructor(private context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
@@ -35,8 +39,11 @@ export class FilterManager implements vscode.Disposable {
         this.resetCounts();
         this.initDefaultFilters();
 
-        // Relay profile changes
-        this.profileManager.onDidChangeProfile(() => this._onDidChangeProfile.fire());
+        // Relay profile changes & Reload filters
+        this.profileManager.onDidChangeProfile(async () => {
+            this._onDidChangeProfile.fire();
+            await this.reloadFromProfile();
+        });
 
         // Listen for configuration changes
         vscode.workspace.onDidChangeConfiguration(e => {
@@ -45,6 +52,25 @@ export class FilterManager implements vscode.Disposable {
                 this._onDidChangeFilters.fire();
             }
         });
+    }
+
+    private async reloadFromProfile() {
+        const activeProfileName = this.profileManager.getActiveProfile();
+        const groups = await this.profileManager.getProfileGroups(activeProfileName);
+
+        if (groups) {
+            this.groups = this.stateService.deepCopy(groups);
+        } else if (activeProfileName === Constants.Labels.DefaultProfile) {
+            // If Default Profile is selected but has no saved data, init defaults
+            this.groups = [];
+            this.initDefaultFilters();
+        } else {
+            this.logger.warn(`Failed to load groups for profile: ${activeProfileName}`);
+        }
+
+        this.debouncedSaveToState();
+        this.invalidateCache();
+        this._onDidChangeFilters.fire();
     }
 
     private resetCounts() {
@@ -58,21 +84,26 @@ export class FilterManager implements vscode.Disposable {
 
     private saveDebounceTimer: NodeJS.Timeout | undefined;
 
+    public async saveFilters(): Promise<void> {
+        if (this.saveDebounceTimer) {
+            clearTimeout(this.saveDebounceTimer);
+            this.saveDebounceTimer = undefined;
+        }
+        try {
+            this.stateService.saveToState(this.groups);
+            const activeWrapper = this.profileManager.getActiveProfile();
+            await this.profileManager.updateProfileData(activeWrapper, this.groups);
+        } catch (e) {
+            this.logger.error(`Failed to save state: ${e}`);
+        }
+    }
+
     private debouncedSaveToState() {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
         }
-        this.saveDebounceTimer = setTimeout(async () => {
-            try {
-                this.stateService.saveToState(this.groups);
-                const activeWrapper = this.profileManager.getActiveProfile();
-                await this.profileManager.updateProfileData(activeWrapper, this.groups);
-
-            } catch (e) {
-                this.logger.error(`Failed to save state: ${e}`);
-            } finally {
-                this.saveDebounceTimer = undefined;
-            }
+        this.saveDebounceTimer = setTimeout(() => {
+            this.saveFilters();
         }, 300);
     }
 

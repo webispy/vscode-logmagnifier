@@ -100,8 +100,10 @@ export class ProfileManager {
             // Switch to default if deleted active
             if (this.getActiveProfile() === name) {
                 await this.context.globalState.update(Constants.GlobalState.ActiveProfile, Constants.Labels.DefaultProfile);
-                this._onDidChangeProfile.fire();
             }
+
+            // Always fire change event when a profile is deleted
+            this._onDidChangeProfile.fire();
             return true;
         }
         return false;
@@ -143,5 +145,36 @@ export class ProfileManager {
         }
 
         return undefined;
+    }
+
+    public async getProfileGroups(name: string): Promise<FilterGroup[] | undefined> {
+        const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
+
+        // Handle Default Profile
+        // Note: Default profile groups are not strictly stored in 'FilterProfiles' array if it relies on initialization.
+        // However, ProfileManager doesn't persist Default Profile into the array unless explicitly saved?
+        // Actually ProfileManager.updateProfileData handles saving Default Profile.
+
+        const profile = profiles.find(p => p.name === name);
+        if (profile) {
+            return profile.groups;
+        }
+
+        // If Default Profile is requested but not in storage (e.g. never modified), we return undefined
+        // The caller (WorkflowManager) should handle generating defaults if needed,
+        // but Workflow likely only runs on saved explicit profiles.
+        return undefined;
+    }
+
+    public async importProfile(name: string, groups: FilterGroup[], overwrite: boolean = false): Promise<boolean> {
+        const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
+        const exists = profiles.some(p => p.name === name);
+
+        if (exists && !overwrite) {
+            return false;
+        }
+
+        await this.updateProfileData(name, groups);
+        return true;
     }
 }

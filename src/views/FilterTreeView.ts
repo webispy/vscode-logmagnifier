@@ -24,110 +24,114 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     }
 
     getTreeItem(element: TreeItem): vscode.TreeItem {
-        if (this.isGroup(element)) {
-            const state = element.isExpanded !== false ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
-            const item = new vscode.TreeItem(element.name, state);
-            item.contextValue = element.isEnabled ? 'filterGroupEnabled' : 'filterGroupDisabled';
-            item.id = element.id;
+        try {
+            if (this.isGroup(element)) {
+                const state = element.isExpanded !== false ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed;
+                const item = new vscode.TreeItem(element.name, state);
+                item.contextValue = element.isEnabled ? 'filterGroupEnabled' : 'filterGroupDisabled';
+                item.id = element.id;
 
-            // UX Improvement: Distinct Group Icons
-            const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-            const strokeColor = isDark ? '#cccccc' : '#333333';
-            const dimmedColor = isDark ? '#555555' : '#cccccc';
-
-            const isEnabled = element.isEnabled;
-            const folderColor = isEnabled ? strokeColor : dimmedColor;
-            const overlayColor = isEnabled ? undefined : strokeColor;
-
-            const svg = IconUtils.generateGroupSvg(folderColor, overlayColor);
-            item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
-
-            item.description = `${element.filters.length} items`;
-            return item;
-        } else {
-            let label = element.keyword;
-
-            if (element.isRegex) {
-                label = element.nickname || element.keyword;
-            } else {
-                // Apply tilde prefix for exclude items (both enabled and disabled)
-                if (element.type === 'exclude') {
-                    label = `^${element.keyword}`;
-                } else {
-                    label = element.keyword;
-                }
-            }
-
-            if (element.resultCount !== undefined && element.resultCount > 0) {
-                label += ` (${element.resultCount})`;
-            }
-
-            const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-            item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}_es${element.excludeStyle || 'line-through'}${element.resultCount && element.resultCount > 0 ? '_hasMatches' : ''}`;
-            item.id = element.id;
-
-            if (element.isRegex && element.nickname) {
-                item.description = element.keyword;
-            } else {
-                item.description = '';
-            }
-
-            if (element.isEnabled) {
-                if (element.type === 'exclude') {
-                    // Resolve color: check if it's a preset ID, otherwise use as is
-                    // Always use default gray for exclude, even if color property exists from previous include state
-                    const fillColor = '#808080';
-
-                    // Determine stroke color for the strike-through line based on theme
-                    const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                    const strokeColor = isDark ? '#cccccc' : '#333333';
-                    const style = element.excludeStyle || 'line-through';
-
-                    const svg = IconUtils.generateExcludeSvg(fillColor, strokeColor, style);
-                    item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
-                } else if (element.color) {
-                    // Resolve color: check if it's a preset ID, otherwise use as is
-                    const preset = this.filterManager.getPresetById(element.color);
-                    let fillColor = element.color;
-
-                    if (preset) {
-                        const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                        fillColor = isDark ? preset.dark : preset.light;
-                    }
-
-                    // Create a colored dot icon using SVG data URI
-                    const mode = element.highlightMode ?? 0;
-                    const svg = IconUtils.generateIncludeSvg(fillColor, mode, element.id);
-                    item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
-                } else {
-                    // Fallback for enabled items without specific color
-                    if (this.mode === 'regex') {
-                        item.iconPath = new vscode.ThemeIcon('eye');
-                    } else {
-                        item.iconPath = new vscode.ThemeIcon('filter');
-                    }
-                }
-            } else {
-                // Distinct "Disabled/Hidden" icon - "OFF" text
+                // UX Improvement: Distinct Group Icons
                 const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                const textColor = isDark ? '#808080' : '#808080';
-                const svg = IconUtils.generateOffSvg(textColor);
-                item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
-            }
+                const strokeColor = isDark ? '#cccccc' : '#333333';
+                const dimmedColor = isDark ? '#555555' : '#cccccc';
 
-            return item;
+                const isEnabled = element.isEnabled;
+                const folderColor = isEnabled ? strokeColor : dimmedColor;
+                const overlayColor = isEnabled ? undefined : strokeColor;
+
+                const svg = IconUtils.generateGroupSvg(folderColor, overlayColor);
+                item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+
+                item.description = `${element.filters.length} items`;
+                return item;
+            } else {
+                let label = element.keyword;
+
+                if (element.isRegex) {
+                    label = element.nickname || element.keyword;
+                } else {
+                    // Apply tilde prefix for exclude items (both enabled and disabled)
+                    if (element.type === 'exclude') {
+                        label = `^${element.keyword}`;
+                    } else {
+                        label = element.keyword;
+                    }
+                }
+
+                if (element.resultCount !== undefined && element.resultCount > 0) {
+                    label += ` (${element.resultCount})`;
+                }
+
+                const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
+                item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}_es${element.excludeStyle || 'line-through'}${element.resultCount && element.resultCount > 0 ? '_hasMatches' : ''}`;
+                item.id = element.id;
+
+                if (element.isRegex && element.nickname) {
+                    item.description = element.keyword;
+                } else {
+                    item.description = '';
+                }
+
+                if (element.isEnabled) {
+                    if (element.type === 'exclude') {
+                        const fillColor = '#808080';
+                        const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                        const strokeColor = isDark ? '#cccccc' : '#333333';
+                        const style = element.excludeStyle || 'line-through';
+
+                        const svg = IconUtils.generateExcludeSvg(fillColor, strokeColor, style);
+                        item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                    } else if (element.color) {
+                        const preset = this.filterManager.getPresetById(element.color);
+                        let fillColor = element.color;
+
+                        if (preset) {
+                            const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                            fillColor = isDark ? preset.dark : preset.light;
+                        }
+
+                        const mode = element.highlightMode ?? 0;
+                        const svg = IconUtils.generateIncludeSvg(fillColor, mode, element.id);
+                        item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                    } else {
+                        if (this.mode === 'regex') {
+                            item.iconPath = new vscode.ThemeIcon('eye');
+                        } else {
+                            item.iconPath = new vscode.ThemeIcon('filter');
+                        }
+                    }
+                } else {
+                    const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                    const textColor = isDark ? '#808080' : '#808080';
+                    const svg = IconUtils.generateOffSvg(textColor);
+                    item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                }
+
+                return item;
+            }
+        } catch (e) {
+            console.error(`FilterTreeView: getTreeItem failed: ${e}`);
+            const errorItem = new vscode.TreeItem('Error loading item', vscode.TreeItemCollapsibleState.None);
+            errorItem.tooltip = String(e);
+            return errorItem;
         }
     }
 
     getChildren(element?: TreeItem): vscode.ProviderResult<TreeItem[]> {
-        if (!element) {
-            // Filter groups based on the data provider's mode
-            return this.filterManager.getGroups().filter(g => this.mode === 'regex' ? g.isRegex : !g.isRegex);
-        } else if (this.isGroup(element)) {
-            // Filter items based on the data provider's mode
-            return element.filters.filter(f => this.mode === 'regex' ? f.isRegex : !f.isRegex);
+        try {
+            if (!element) {
+                // Filter groups based on the data provider's mode
+                return this.filterManager.getGroups().filter(g => this.mode === 'regex' ? g.isRegex : !g.isRegex);
+            } else if (this.isGroup(element)) {
+                // Filter items based on the data provider's mode
+                return element.filters.filter(f => this.mode === 'regex' ? f.isRegex : !f.isRegex);
+            }
+            return [];
+        } catch (e) {
+            console.error(`FilterTreeView: getChildren failed: ${e}`);
+            return [];
         }
-        return [];
     }
 
     getParent(element: TreeItem): vscode.ProviderResult<TreeItem> {

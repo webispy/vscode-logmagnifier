@@ -445,6 +445,12 @@
           "icon": "$(tools)"
         },
         {
+          "id": "logmagnifier-workflow",
+          "name": "Workflows",
+          "icon": "$(circuit-board)",
+          "type": "webview"
+        },
+        {
           "id": "logmagnifier-filters",
           "name": "Word Filters",
           "icon": "$(filter)"
@@ -1345,6 +1351,35 @@
         "command": "logmagnifier.bookmark.toggleWordWrap",
         "title": "Toggle Bookmark Word Wrap",
         "category": "LogMagnifier"
+      },
+      {
+        "command": "logmagnifier.workflow.openResult",
+        "title": "Open Result"
+      },
+      {
+        "command": "logmagnifier.workflow.edit",
+        "title": "Edit Workflow",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "logmagnifier.workflow.run",
+        "title": "Run Workflow",
+        "icon": "$(play)"
+      },
+      {
+        "command": "logmagnifier.workflow.export",
+        "title": "Export Workflow",
+        "icon": "$(repo-push)"
+      },
+      {
+        "command": "logmagnifier.workflow.import",
+        "title": "Import Workflow",
+        "icon": "$(repo-pull)"
+      },
+      {
+        "command": "logmagnifier.workflow.create",
+        "title": "New Workflow",
+        "icon": "$(plus)"
       }
     ],
     "submenus": [
@@ -1471,6 +1506,15 @@
           "command": "logmagnifier.setFilterContextLine.cl9",
           "title": "±9",
           "group": "1_lines@4"
+        },
+        {
+          "command": "logmagnifier.workflow.openResult",
+          "title": "Open Result File"
+        },
+        {
+          "command": "logmagnifier.workflow.run",
+          "title": "Run Workflow",
+          "icon": "$(play)"
         }
       ],
       "logmagnifier.excludeStyleSubmenu": [
@@ -1500,6 +1544,16 @@
         }
       ],
       "view/title": [
+        {
+          "command": "logmagnifier.addFilterGroup",
+          "group": "navigation",
+          "when": "view == logmagnifier-filters"
+        },
+        {
+          "command": "logmagnifier.addRegexFilterGroup",
+          "group": "navigation",
+          "when": "view == logmagnifier-regex-filters"
+        },
         {
           "command": "logmagnifier.expandAllWordGroups",
           "when": "view == logmagnifier-filters",
@@ -1614,6 +1668,21 @@
           "command": "logmagnifier.clearAllShellConfigs",
           "when": "view == logmagnifier-shell-commander",
           "group": "navigation@8"
+        },
+        {
+          "command": "logmagnifier.workflow.import",
+          "when": "view == logmagnifier-workflow",
+          "group": "navigation@1"
+        },
+        {
+          "command": "logmagnifier.workflow.export",
+          "when": "view == logmagnifier-workflow",
+          "group": "navigation@2"
+        },
+        {
+          "command": "logmagnifier.workflow.create",
+          "when": "view == logmagnifier-workflow",
+          "group": "navigation@3"
         }
       ],
       "editor/context": [
@@ -1627,6 +1696,11 @@
           "command": "logmagnifier.openChromeInspect",
           "when": "view == logmagnifier-adb-devices && viewItem == chromeInspect",
           "group": "inline@1"
+        },
+        {
+          "command": "logmagnifier.workflow.run",
+          "when": "view == logmagnifier-workflow && viewItem == workflowItem",
+          "group": "inline"
         },
         {
           "command": "logmagnifier.previousMatch",
@@ -1896,6 +1970,11 @@
         {
           "command": "logmagnifier.removeLogcatTag",
           "when": "view == logmagnifier-adb-devices && viewItem == tag_editable",
+          "group": "inline"
+        },
+        {
+          "command": "logmagnifier.workflow.run",
+          "when": "view == logmagnifier-quick-access && viewItem == workflowInstance",
           "group": "inline"
         },
         {

@@ -139,6 +139,9 @@ export const Constants = {
         OpenChromeInspect: 'logmagnifier.openChromeInspect',
         ClearAllData: 'logmagnifier.clearAllData',
 
+        // Workflow
+        WorkflowOpenResult: 'logmagnifier.workflow.openResult',
+
         // Bookmark
         AddBookmark: 'logmagnifier.addBookmark',
         AddMatchListToBookmark: 'logmagnifier.addMatchListToBookmark',
@@ -231,6 +234,7 @@ export const Constants = {
         Filters: 'logmagnifier-filters',
         RegexFilters: 'logmagnifier-regex-filters',
         ShellCommander: 'logmagnifier-shell-commander',
+        Workflow: 'logmagnifier-workflow',
         ADBDevices: 'logmagnifier-adb-devices',
         Bookmark: 'logmagnifier-bookmark',
     },
@@ -315,6 +319,7 @@ export const Constants = {
     ContextKeys: {
         PrependLineNumbersEnabled: 'logmagnifier.prependLineNumbersEnabled',
         BookmarkMouseOver: 'logmagnifier.bookmark.mouseOver',
+
     },
 
     GlobalState: {
@@ -323,6 +328,8 @@ export const Constants = {
         ActiveProfile: 'logmagnifier.activeProfile',
         ShellConfigPaths: 'logmagnifier.shellConfigPaths',
         Bookmarks: 'logmagnifier.bookmarks',
+        Workflows: 'logmagnifier.workflows',
+        ActiveWorkflow: 'logmagnifier.activeWorkflow',
     },
 
     Labels: {

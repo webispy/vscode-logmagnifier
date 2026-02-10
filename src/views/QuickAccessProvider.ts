@@ -5,12 +5,18 @@ import { Logger } from '../services/Logger';
 import { FilterManager } from '../services/FilterManager';
 import { EditorUtils } from '../utils/EditorUtils';
 
+import { WorkflowManager } from '../services/WorkflowManager';
+
 export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
-    constructor(private filterManager: FilterManager) {
+    constructor(
+        private filterManager: FilterManager,
+        private workflowManager: WorkflowManager
+    ) {
         this.filterManager.onDidChangeProfile(() => this.refresh());
+        this.workflowManager.onDidChangeWorkflow(() => this.refresh());
     }
 
     refresh(): void {
@@ -33,11 +39,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         const config = vscode.workspace.getConfiguration('editor', scope);
 
         const minimapEnabled = config.get<boolean>('minimap.enabled');
-        Logger.getInstance().info(`Minimap state: ${minimapEnabled}`);
-
         const stickyScrollEnabled = config.get<boolean>('stickyScroll.enabled');
-        Logger.getInstance().info(`Sticky Scroll state: ${stickyScrollEnabled}`);
-
         const lmConfig = vscode.workspace.getConfiguration('logmagnifier', scope);
         return Promise.resolve([
             this.createButtonItem('Toggle Word Wrap', Constants.Commands.ToggleWordWrap, 'word-wrap'),

@@ -44,7 +44,7 @@ export class LogProcessor {
      * @returns Promise resolving to output path and statistics
      * @throws Error if file cannot be read or written
      */
-    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
+    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
         return new Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }>((resolve, reject) => {
             const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
 
@@ -68,7 +68,8 @@ export class LogProcessor {
             const tmpDir = os.tmpdir();
             const prefix = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.TempFilePrefix) || Constants.Defaults.TempFilePrefix;
             const now = new Date();
-            const outputFilename = `${prefix}${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}.log`;
+            const uniqueSuffix = Math.random().toString(36).substring(7);
+            const outputFilename = `${prefix}${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}_${now.getMilliseconds().toString().padStart(3, '0')}_${uniqueSuffix}.log`;
             const outputPath = path.join(tmpDir, outputFilename);
             const outputStream = fs.createWriteStream(outputPath);
 
@@ -165,7 +166,9 @@ export class LogProcessor {
                     const adjustedMapping = lineMapping.map(l => l - 1);
 
                     // Register with FileHierarchyService
-                    const sourceUri = vscode.Uri.file(inputPath);
+                    // If originalPath is provided (e.g. from Workflow), use it as the parent
+                    const parentPath = options?.originalPath || inputPath;
+                    const sourceUri = vscode.Uri.file(parentPath);
                     const outputUri = vscode.Uri.file(outputPath);
                     FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
 

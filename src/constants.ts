@@ -209,6 +209,8 @@ export const Constants = {
         EditShellDescription: 'logmagnifier.editShellDescription',
         EditShellGroupReadme: 'logmagnifier.editShellGroupReadme',
         RenameShellGroup: 'logmagnifier.renameShellGroup',
+        RenameShellFolder: 'logmagnifier.renameShellFolder',
+        RenameShellCommand: 'logmagnifier.renameShellCommand',
         OpenGlobalShellConfig: 'logmagnifier.openGlobalShellConfig',
         HandleShellKey: 'logmagnifier.shellCommander.handleKey',
     },

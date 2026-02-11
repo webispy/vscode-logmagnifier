@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { Constants } from '../constants';
 import { FilterManager } from '../services/FilterManager';
 import { FilterItem, FilterType } from '../models/Filter';
+import { IconUtils } from '../utils/IconUtils';
 
 export class FilterPropertyCommandManager {
     constructor(
@@ -118,7 +119,7 @@ export class FilterPropertyCommandManager {
                 const colorItems = presets.map(preset => {
                     const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
                     const iconColor = isDark ? preset.dark : preset.light;
-                    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${iconColor}"/></svg>`;
+                    const svg = IconUtils.generateSimpleCircleSvg(iconColor);
                     const iconUri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
 
                     return {

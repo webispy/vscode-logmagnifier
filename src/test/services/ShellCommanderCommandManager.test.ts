@@ -43,8 +43,7 @@ class TestableCommandManager extends ShellCommanderCommandManager {
             if (handler) {
                 return handler(args);
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            return undefined as any;
+            return undefined as unknown as TResult;
         };
         mock.setHandler = (fn: (args: TArgs) => Promise<TResult> | TResult) => { handler = fn; };
         return mock;
@@ -279,5 +278,102 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         await (manager as any).executeShellCommand(command);
 
         assert.ok(createdHealthy, 'Should create new terminal because the old one was dead');
+    });
+    test('handleShellKey with "enter" opens editor without execution', async () => {
+        const groupName = 'Show Command Group';
+        await service.createGroup(groupName, configPath);
+        let group = service.groups.find(g => g.label === groupName)!;
+        await service.addFolder(group, 'Folder');
+        group = service.groups.find(g => g.label === groupName)!;
+        const folder = group.children[0] as ShellFolder;
+        await service.addCommand(folder, 'Show Me', 'echo show');
+        const command = (service.groups.find(g => g.label === groupName)!.children[0] as ShellFolder).children[0] as ShellCommand;
+
+        // Mock selection
+        // @ts-expect-error mock private property
+        manager.treeView = { selection: [command] };
+
+        let editorOpened = false;
+        let terminalCreated = false;
+
+        // Mock openCommandEditor (spy)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (manager as any).openCommandEditor = async () => {
+            editorOpened = true;
+            return '/tmp/mock.sh';
+        };
+
+        // Mock terminal creation (should not be called)
+        const originalCreateTerminal = vscode.window.createTerminal;
+        vscode.window.createTerminal = () => {
+            terminalCreated = true;
+            return {
+                sendText: () => { },
+                show: () => { }
+            } as unknown as vscode.Terminal;
+        };
+
+        // Act: call handleShellKey with 'enter'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (manager as any).handleShellKey('enter');
+
+        // Cleanup
+        vscode.window.createTerminal = originalCreateTerminal;
+
+        assert.strictEqual(editorOpened, true, 'Should open editor');
+        assert.strictEqual(terminalCreated, false, 'Should NOT create terminal or execute');
+    });
+
+    test('handleShellKey executes command if key matches kbExecuteCommand', async () => {
+        const groupName = 'Exec Key Group';
+        await service.createGroup(groupName, configPath);
+        let group = service.groups.find(g => g.label === groupName)!;
+        await service.addFolder(group, 'Folder');
+        group = service.groups.find(g => g.label === groupName)!;
+        const folder = group.children[0] as ShellFolder;
+        await service.addCommand(folder, 'Exec Me', 'echo exec');
+        const command = (service.groups.find(g => g.label === groupName)!.children[0] as ShellFolder).children[0] as ShellCommand;
+
+        // Mock selection
+        // @ts-expect-error mock private property
+        manager.treeView = { selection: [command] };
+
+        // Mock executeShellCommand (spy) (using any cast to access private method)
+        let executed = false;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (manager as any).executeShellCommand = async () => {
+            executed = true;
+        };
+
+        // Default keymap has 'space'
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (manager as any).handleShellKey('space');
+        assert.strictEqual(executed, true, 'Should execute on default space key');
+    });
+
+    test('getKeymap returns defaults for missing properties', async () => {
+        // Mock a config file with partial keymap
+        const partialConfig = {
+            version: 1,
+            shortCutKeymap: {
+                kbCreateGroup: 'x'
+                // kbExecuteCommand missing
+            },
+            groups: []
+        };
+        const partialPath = path.join(tempDir, 'partial_config.json');
+        fs.writeFileSync(partialPath, JSON.stringify(partialConfig));
+
+        await service.loadConfig(); // Reloads all paths, currently just default.
+        // We need to add this path or overwrite default.
+        // Let's overwrite default path content to simulate user config.
+        const defaultPath = path.join(tempDir, 'logmagnifier_shell_cmds.json');
+        fs.writeFileSync(defaultPath, JSON.stringify(partialConfig));
+
+        await service.refresh();
+
+        const keymap = service.getKeymap();
+        assert.strictEqual(keymap?.kbCreateGroup, 'x', 'Should respect user config');
+        assert.strictEqual(keymap?.kbExecuteCommand, 'space', 'Should fall back to default for missing key');
     });
 });

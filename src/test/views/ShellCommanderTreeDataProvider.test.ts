@@ -101,7 +101,7 @@ suite('ShellCommanderTreeDataProvider Test Suite', () => {
         assert.strictEqual(item.label, 'Tree Command');
         assert.strictEqual(item.collapsibleState, vscode.TreeItemCollapsibleState.None);
         assert.strictEqual(item.contextValue, 'shellCommand');
-        assert.strictEqual(item.command?.title, 'Execute Command');
+        assert.strictEqual(item.command?.title, 'Show Command');
     });
 
     test('getParent returns correct parent', async () => {

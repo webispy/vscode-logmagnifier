@@ -801,56 +801,89 @@ export class ShellCommanderCommandManager {
         await vscode.commands.executeCommand('list.expand');
         // Small delay to allow synchronous execution trigger to be suppressed
         await new Promise(resolve => setTimeout(resolve, 0));
-        this.isProcessingShortcut = false;
-
-        const keymap = this.shellService.getKeymap();
-        if (!keymap) { return; }
-
-        let action: string | undefined;
-        // Reverse lookup: Find action for key
-        for (const [act, k] of Object.entries(keymap)) {
-            if (k === key) {
-                action = act;
-                break;
-            }
-        }
-
-        if (!action) { return; }
-
-        // Now use selection which should match what was focused
-        const target = this.treeView?.selection[0];
 
         try {
+            const validKey = key.length === 1 ? key.toLowerCase() : key.toLowerCase();
+            const keymap = this.shellService.getKeymap();
+
+            if (!keymap) { return; }
+
+            let action: string | undefined;
+
+            if (keymap.kbCreateGroup === validKey) {
+                action = 'createGroup';
+            } else if (keymap.kbCreateFolder === validKey) {
+                action = 'createFolder';
+            } else if (keymap.kbCreateCommand === validKey) {
+                action = 'createCommand';
+            } else if (keymap.kbDelete === validKey) {
+                action = 'delete';
+            } else if (keymap.kbEdit === validKey) {
+                action = 'edit';
+            } else if (keymap.kbView === validKey) {
+                action = 'view';
+            } else if (keymap.kbExecuteCommand && keymap.kbExecuteCommand.toLowerCase() === validKey) {
+                action = 'execute';
+            }
+
+            // Treat certain direct arguments as actions (e.g. from tree item click 'enter')
+            if (key === 'enter') {
+                action = 'view';
+            }
+            if (key === 'space') { // explicitly mapped in package.json from space key
+                action = 'execute';
+            }
+
+            if (!action) {
+                return;
+            }
+
+            const selection = this.treeView?.selection;
+            const selectedItem = selection && selection.length > 0 ? selection[0] : undefined;
+
             switch (action) {
-                case 'kbCreateGroup':
+                case 'createGroup':
                     await this.addShellGroup();
                     break;
-                case 'kbCreateFolder':
-                    if (target && (target.kind === 'group' || target.kind === 'folder')) {
-                        await this.addShellFolder(target as ShellGroup | ShellFolder);
+                case 'createFolder':
+                    if (selectedItem && (selectedItem.kind === 'group' || selectedItem.kind === 'folder')) {
+                        await this.addShellFolder(selectedItem as ShellGroup | ShellFolder);
                     }
                     break;
-                case 'kbCreateCommand':
-                    if (target) {
-                        const parent = target.kind === 'command' ? (target.parent as ShellFolder) : (target as ShellGroup | ShellFolder);
+                case 'createCommand':
+                    if (selectedItem) { // Can add command to group or folder
+                        const parent = selectedItem.kind === 'command' ? (selectedItem.parent as ShellFolder) : (selectedItem as ShellGroup | ShellFolder);
                         if (parent) {
                             await this.addShellCommand(parent);
                         }
                     }
                     break;
-                case 'kbDelete':
-                    if (target) {
-                        await this.deleteShellItem(target);
+                case 'delete':
+                    if (selectedItem) {
+                        await this.deleteShellItem(selectedItem);
                     }
                     break;
-                case 'kbEdit':
-                    if (target) {
-                        await this.editShellItem(target);
+                case 'edit':
+                    if (selectedItem) {
+                        await this.editShellItem(selectedItem);
                     }
                     break;
-                case 'kbView':
-                    if (target) {
-                        await this.editShellDescription(target as ShellGroup | ShellFolder);
+                case 'view':
+                    if (selectedItem && (selectedItem as ShellItem).kind === 'group') {
+                        await this.openShellGroupConfig(selectedItem as ShellGroup);
+                    }
+                    else if (selectedItem && (selectedItem as ShellItem).kind === 'command') {
+                        await this.openCommandEditor(selectedItem as ShellCommand, true);
+                    }
+                    else if (selectedItem && ((selectedItem as ShellItem).kind === 'group' || selectedItem.kind === 'folder')) {
+                        await this.editShellDescription(selectedItem as ShellGroup | ShellFolder);
+                    }
+                    break;
+                case 'execute':
+                    if (selectedItem && selectedItem.kind === 'command') {
+                        this.isProcessingShortcut = false;
+                        await this.executeShellCommand(selectedItem as ShellCommand);
+                        return;
                     }
                     break;
             }
@@ -858,5 +891,4 @@ export class ShellCommanderCommandManager {
             this._ui.showErrorMessage(`Action failed: ${e}`);
         }
     }
-
 }

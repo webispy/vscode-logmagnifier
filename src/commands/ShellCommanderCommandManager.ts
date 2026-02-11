@@ -385,27 +385,38 @@ export class ShellCommanderCommandManager {
             return;
         }
 
-        // 1. Try to find if an editor is already open for this command
-        let commandText = item.command || "";
-        const openDoc = vscode.workspace.textDocuments.find(doc =>
-            this.activeEditors.get(doc.uri.fsPath) === item.id
-        );
+        // 1. Open/Focus the editor and get the temp file path
+        // We always save the current content to this file before execution to ensure it's up-to-date
+        const tempPath = await this.openCommandEditor(item, true);
 
-        if (openDoc) {
-            // Priority: Use the current editor's content (after saving)
-            await openDoc.save();
-            commandText = openDoc.getText();
-        }
-
-        // 2. Open the command in an editor so the user can see/edit it
-        await this.openCommandEditor(item, true);
-
-        // 3. Execute immediately
-        if (commandText.trim().length > 0) {
+        // 2. Execute immediately via file sourcing
+        if (tempPath) {
             const commandId = item.id;
             const root = this.shellService.getRootGroup(item);
             const groupName = root.label;
-            await this.sendToTerminal(commandText, commandId, item.label, groupName);
+
+            // Prepare the execution string
+            // On Windows (win32), we might need different handling, but for now assuming bash/zsh/sh environment (Git Bash, WSL, or Mac/Linux)
+            // Using dot operator (source) to run in current context if possible, or just bash
+            // The user wants variables to persist across lines in the same "session" or at least same block.
+            // Sourcing the file `. /path/to/file` is the standard way to run a script in the current shell.
+
+            let execCmd = `. "${tempPath}"`;
+
+            // If strictly windows command prompt (cmd.exe), this won't work. 
+            // But the extension seems tailored for "Shell" which usually implies a shell environment.
+            // If the user uses PowerShell, they might need `& "path"`. 
+            // Let's stick to the Unix-like assumption for now as requested (Mac OS in context).
+            if (os.platform() === 'win32') {
+                // Simple heuristic: if default shell is powershell, use different invoke? 
+                // For now, let's try to detect or just default to source if they are using bash on windows.
+                // If they are using cmd.exe, they can't run these multi-line bash scripts anyway.
+                // So assuming a posix-compatible shell is a safe bet for this feature set.
+                // Just quote the path to be safe.
+                execCmd = `. "${tempPath}"`;
+            }
+
+            await this.sendToTerminal(execCmd, commandId, item.label, groupName);
         }
     }
 
@@ -560,20 +571,40 @@ export class ShellCommanderCommandManager {
         }
     }
 
-    private async openCommandEditor(item: ShellCommand, preserveFocus: boolean = true) {
+    private async openCommandEditor(item: ShellCommand, preserveFocus: boolean = true): Promise<string> {
         const tempDir = os.tmpdir();
         const safeId = item.id.replace(/\//g, '_');
         // Use a simplified unique filename for all command executions
         const tempPath = path.join(tempDir, `_exec_${safeId}.sh`);
 
         // command is now string, use directly
-        const content = item.command || "";
+        // If the document is already open and dirty, we should probably save it first?
+        // Or if we possess the latest content in 'item.command' (updated via onDidSave), we write that.
+        // But if the user is typing in an unsaved file, item.command might be stale.
+        // Let's check for open doc again to get latest text if available.
+
+        let content = item.command || "";
+        const openDoc = vscode.workspace.textDocuments.find(doc =>
+            this.activeEditors.get(doc.uri.fsPath) === item.id
+        );
+
+        if (openDoc) {
+            // If we have an open document, ensure it is saved so disk matches content
+            if (openDoc.isDirty) {
+                await openDoc.save();
+            }
+            content = openDoc.getText();
+        }
+
+        // Always write to disk to ensure the executor runs the latest
         fs.writeFileSync(tempPath, content, 'utf8');
 
         this.activeEditors.set(tempPath, item.id);
 
         const doc = await vscode.workspace.openTextDocument(tempPath);
         await this._ui.showTextDocument(doc, { preserveFocus: preserveFocus });
+
+        return tempPath;
     }
 
     private findItemById(groups: ShellGroup[], id: string): ShellItem | undefined {

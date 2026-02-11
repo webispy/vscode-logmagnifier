@@ -5,6 +5,7 @@ import { BookmarkWebviewMessage, SerializedBookmarkItem } from '../models/Webvie
 import { Constants } from '../constants';
 import { Logger } from '../services/Logger';
 import { LogBookmarkHtmlGenerator } from './LogBookmarkHtmlGenerator';
+import { escapeHtml } from '../utils/WebviewUtils';
 
 export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
     private _view?: vscode.WebviewView;
@@ -172,7 +173,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         } catch (e) {
             this._logger.error(`Error resolving webview view: ${e}`);
             webviewView.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
-                Critical Error resolving view: ${e}
+                Critical Error resolving view: ${escapeHtml(String(e))}
             </div></body></html>`;
         }
     }
@@ -273,7 +274,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 this._view.webview.html = html;
             } catch (e) {
                 this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
-                    Error loading bookmarks: ${e}<br/>
+                    Error loading bookmarks: ${escapeHtml(String(e))}<br/>
                 </div></body></html>`;
             }
         }, 100);

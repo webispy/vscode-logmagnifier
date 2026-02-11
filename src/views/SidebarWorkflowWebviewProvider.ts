@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { WorkflowManager, WorkflowViewModel } from '../services/WorkflowManager';
+import { escapeHtml } from '../utils/WebviewUtils';
 
 export class SidebarWorkflowWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = 'logmagnifier-workflow';
@@ -163,7 +164,7 @@ export class SidebarWorkflowWebviewProvider implements vscode.WebviewViewProvide
 
         } catch (e) {
             console.error('Error resolving workflow webview:', e);
-            webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view.</div></body></html>`;
+            webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view: ${escapeHtml(String(e))}</div></body></html>`;
         }
     }
 
@@ -448,10 +449,10 @@ export class SidebarWorkflowWebviewProvider implements vscode.WebviewViewProvide
             <script>
                 const vscode = acquireVsCodeApi();
                 const container = document.getElementById('graph-container');
-                let workflows = ${JSON.stringify(workflows)};
-                let activeId = "${activeId || ''}";
-                let activeStepId = "${this._workflowManager.getActiveStep() || ''}"; // Note: using direct injection here might be cleaner
-                const colors = ${JSON.stringify(graphColors)};
+                let workflows = ${JSON.stringify(workflows).replace(/</g, '\\u003c')};
+                let activeId = ${JSON.stringify(activeId || '')}.replace(/</g, '\\u003c');
+                let activeStepId = ${JSON.stringify(this._workflowManager.getActiveStep() || '')}.replace(/</g, '\\u003c');
+                const colors = ${JSON.stringify(graphColors).replace(/</g, '\\u003c')};
 
                 // Icons (VS Code Codicons)
                 const icons = {

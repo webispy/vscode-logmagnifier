@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { SerializedBookmarkItem } from '../models/WebviewModels';
-import { getNonce } from '../utils/WebviewUtils';
+import { getNonce, escapeHtml } from '../utils/WebviewUtils';
 import { Logger } from '../services/Logger';
 
 export class LogBookmarkHtmlGenerator {
@@ -44,8 +44,8 @@ export class LogBookmarkHtmlGenerator {
             }
 
             headerButtonsHtml += `
-                <button class="file-nav-btn ${isActive ? 'active' : ''}" data-action="focusFileScroll" data-uri="${uriStr}" title="${filename}">
-                    ${btnLabel}
+                <button class="file-nav-btn ${isActive ? 'active' : ''}" data-action="focusFileScroll" data-uri="${escapeHtml(uriStr)}" title="${escapeHtml(filename)}">
+                    ${escapeHtml(btnLabel)}
                 </button>
             `;
 
@@ -68,9 +68,9 @@ export class LogBookmarkHtmlGenerator {
             const tagsHtml = Array.from(groupMap.entries())
                 .sort((a, b) => a[0].localeCompare(b[0]))
                 .map(([groupId, data]) => `
-                <span class="tag" title="${data.keyword} (${data.count} lines)">
-                    <span class="tag-label">${data.keyword}</span>
-                    <span class="tag-remove" data-action="removeGroup" data-group-id="${groupId}">×</span>
+                <span class="tag" title="${escapeHtml(data.keyword)} (${data.count} lines)">
+                    <span class="tag-label">${escapeHtml(data.keyword)}</span>
+                    <span class="tag-remove" data-action="removeGroup" data-group-id="${escapeHtml(groupId)}">×</span>
                 </span>
             `).join('');
 
@@ -120,27 +120,28 @@ export class LogBookmarkHtmlGenerator {
 
                         while ((match = regex.exec(content)) !== null) {
                             const before = content.substring(lastIndex, match.index);
-                            parts.push(before.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+                            parts.push(escapeHtml(before));
 
-                            const matchedStr = match[0].replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-                            parts.push(`<u class="match-highlight">${matchedStr}</u>`);
+                            const matchedStr = match[0];
+                            parts.push(`<u class="match-highlight">${escapeHtml(matchedStr)}</u>`);
 
                             lastIndex = regex.lastIndex;
                         }
 
                         const remaining = content.substring(lastIndex);
-                        parts.push(remaining.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"));
+                        parts.push(escapeHtml(remaining));
                         safeContent = parts.join('');
                     } catch (_e) {
-                        safeContent = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                        safeContent = escapeHtml(content);
                     }
                 } else {
-                    safeContent = content.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                    safeContent = escapeHtml(content);
                 }
 
                 const itemUriStr = primaryItem.uri ? primaryItem.uri.toString() : '';
                 const allIds = lineItems.map((i: BookmarkItem) => i.id);
-                const allIdsStr = JSON.stringify(allIds).replace(/"/g, '&quot;');
+                // Use escapeHtml on the JSON string to sanitize quotes for attribute injection
+                const allIdsStr = escapeHtml(JSON.stringify(allIds));
 
                 itemsMap[primaryItem.id] = {
                     id: primaryItem.id,
@@ -150,7 +151,7 @@ export class LogBookmarkHtmlGenerator {
                 };
 
                 fileLines += `
-                    <div class="log-line" data-action="lineClick" data-id="${primaryItem.id}" data-uri="${uriStr}">
+                    <div class="log-line" data-action="lineClick" data-id="${primaryItem.id}" data-uri="${escapeHtml(uriStr)}">
                         <div class="gutter">
                             <span class="remove-btn" data-action="removeLineBookmarks" data-ids='${allIdsStr}'>×</span>
                             <span class="line-number">${paddedLine}</span>
@@ -162,13 +163,13 @@ export class LogBookmarkHtmlGenerator {
             const isDeleted = this._bookmarkService.isFileMissing(uriStr);
 
             filesHtml += `
-                <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''} ${isDeleted ? 'deleted' : ''}" id="section-${uriStr}">
+                <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''} ${isDeleted ? 'deleted' : ''}" id="section-${escapeHtml(uriStr)}">
                     <div class="file-header">
                         <div class="header-left">
-                            <button class="fold-toggle" data-action="toggleFold" data-uri="${uriStr}" title="Toggle Fold">
+                            <button class="fold-toggle" data-action="toggleFold" data-uri="${escapeHtml(uriStr)}" title="Toggle Fold">
                                 <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6 4l4 4-4 4V4z"/></svg>
                             </button>
-                            <span class="file-name ${uriStr === lastAddedUri ? 'flash-active' : ''}" data-action="focusFileScroll" data-uri="${uriStr}" title="${filename}">${filename}</span>
+                            <span class="file-name ${uriStr === lastAddedUri ? 'flash-active' : ''}" data-action="focusFileScroll" data-uri="${escapeHtml(uriStr)}" title="${escapeHtml(filename)}">${escapeHtml(filename)}</span>
 
                             <div class="header-tags">
                                  ${tagsHtml}
@@ -178,21 +179,21 @@ export class LogBookmarkHtmlGenerator {
                             <button class="action-btn ${wordWrapEnabled ? 'active' : ''}" data-action="toggleWordWrap" title="Toggle Word Wrap" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleWordWrapIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" data-action="toggleLineNumbers" data-uri="${uriStr}" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn toggle-ln ${withLn ? 'active' : ''}" data-action="toggleLineNumbers" data-uri="${escapeHtml(uriStr)}" title="Include Line Numbers" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${toggleLnIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" data-action="copyFile" data-uri="${uriStr}" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="copyFile" data-uri="${escapeHtml(uriStr)}" title="Copy Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${copyFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" data-action="openFile" data-uri="${uriStr}" title="Open File in Tab" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="openFile" data-uri="${escapeHtml(uriStr)}" title="Open File in Tab" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${openFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
-                            <button class="action-btn" data-action="removeFile" data-uri="${uriStr}" title="Clear Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
+                            <button class="action-btn" data-action="removeFile" data-uri="${escapeHtml(uriStr)}" title="Clear Current File Bookmarks" ${lineCount > 0 ? '' : 'disabled'}>
                                 <div style="width: 16px; height: 16px; background-color: currentColor; -webkit-mask-image: url('${removeFileIconUri}'); -webkit-mask-repeat: no-repeat; -webkit-mask-position: center;"></div>
                             </button>
                         </div>
                     </div>
-                    <div class="file-lines-container" id="fold-${uriStr}">
+                    <div class="file-lines-container" id="fold-${escapeHtml(uriStr)}">
                         <div class="file-lines">${fileLines}</div>
                     </div>
                 </div>`;
@@ -213,12 +214,12 @@ export class LogBookmarkHtmlGenerator {
             template = template.replace(/{{\s*NAV_BAR\s*}}/g, headerButtonsHtml);
             template = template.replace(/{{\s*WORD_WRAP_CLASS\s*}}/g, wordWrapEnabled ? 'word-wrap' : '');
             template = template.replace(/{{\s*CONTENT\s*}}/g, finalHtml);
-            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, JSON.stringify(itemsMap));
+            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, JSON.stringify(itemsMap)); // itemsMap is structured data, JSON stringify is safe here as it's typically assigned to JS var
 
             return template;
         } catch (e) {
             this._logger.error(`Error reading template: ${e}`);
-            return `<html><body>Error reading template: ${e}</body></html>`;
+            return `<html><body>Error reading template: ${escapeHtml(String(e))}</body></html>`;
         }
     }
 }

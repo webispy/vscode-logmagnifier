@@ -19,9 +19,6 @@ export class AdbService implements vscode.Disposable {
     private _onDidChangeSessions = new vscode.EventEmitter<void>();
     public readonly onDidChangeSessions = this._onDidChangeSessions.event;
 
-    private _onDidReceiveLog = new vscode.EventEmitter<{ sessionId: string, line: string }>();
-    public readonly onDidReceiveLog = this._onDidReceiveLog.event;
-
     constructor(private logger: Logger) { }
 
     private deviceTargetApps: Map<string, string> = new Map(); // deviceId -> packageName
@@ -973,6 +970,5 @@ export class AdbService implements vscode.Disposable {
         this.recordingProcesses.clear();
 
         this._onDidChangeSessions.dispose();
-        this._onDidReceiveLog.dispose();
     }
 }

@@ -30,11 +30,18 @@ import { WorkflowManager } from './services/WorkflowManager';
 import { SidebarWorkflowWebviewProvider } from './views/SidebarWorkflowWebviewProvider';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
-let debounceTimer: NodeJS.Timeout | undefined;
-
 export function activate(context: vscode.ExtensionContext) {
     const logger = Logger.getInstance();
     logger.info('LogMagnifier activated');
+
+    let debounceTimer: NodeJS.Timeout | undefined;
+    context.subscriptions.push({
+        dispose: () => {
+            if (debounceTimer) {
+                clearTimeout(debounceTimer);
+            }
+        }
+    });
 
     const filterManager = new FilterManager(context);
     context.subscriptions.push(filterManager);
@@ -390,10 +397,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    if (debounceTimer) {
-        clearTimeout(debounceTimer);
-        debounceTimer = undefined;
-    }
+    // debounceTimer is cleaned up by context.subscriptions
 }
 
 function isSupportedScheme(uri: vscode.Uri): boolean {

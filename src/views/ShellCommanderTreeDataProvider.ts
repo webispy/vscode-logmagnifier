@@ -75,9 +75,9 @@ export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<S
         treeItem.tooltip = new vscode.MarkdownString(`**${command.label}**\n\n\`\`\`sh\n${tooltipScript}\n\`\`\``);
 
         treeItem.command = {
-            command: Constants.Commands.ExecuteShellCommand,
-            title: 'Execute Command',
-            arguments: [command]
+            command: Constants.Commands.HandleShellKey,
+            title: 'Show Command',
+            arguments: ['enter']
         };
 
         return treeItem;

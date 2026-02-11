@@ -17,7 +17,8 @@ export class ShellCommanderService {
         kbCreateCommand: 'c',
         kbDelete: 'd',
         kbEdit: 'e',
-        kbView: 'i'
+        kbView: 'i',
+        kbExecuteCommand: 'space'
     };
 
     constructor(private context: vscode.ExtensionContext) {
@@ -40,8 +41,8 @@ export class ShellCommanderService {
     }
 
     public getKeymap(): ShellShortCutKeymap | undefined {
-        // Return global keymap if loaded, otherwise default
-        return this._globalKeymap || this.DEFAULT_KEYMAP;
+        // Return global keymap merged with default to ensure new keys exist
+        return { ...this.DEFAULT_KEYMAP, ...this._globalKeymap };
     }
 
     public isConfigRegistered(filePath: string): boolean {

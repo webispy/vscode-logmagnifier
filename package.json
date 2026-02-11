@@ -500,14 +500,16 @@
         "when": "editorTextFocus && editorHasSelection"
       },
       {
-        "command": "logmagnifier.executeShellCommand",
+        "command": "logmagnifier.shellCommander.handleKey",
         "key": "enter",
-        "when": "focusedView == logmagnifier-shell-commander && viewItem == shellCommand"
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "enter"
       },
       {
-        "command": "logmagnifier.executeShellCommand",
+        "command": "logmagnifier.shellCommander.handleKey",
         "key": "space",
-        "when": "focusedView == logmagnifier-shell-commander && viewItem == shellCommand"
+        "when": "focusedView == logmagnifier-shell-commander && !inputFocus",
+        "args": "space"
       },
       {
         "command": "logmagnifier.applyJsonPretty",
@@ -1066,8 +1068,9 @@
       },
       {
         "command": "logmagnifier.executeShellCommand",
-        "title": "Run Command",
-        "icon": "$(play)"
+        "title": "Execute Command",
+        "icon": "$(play)",
+        "category": "LogMagnifier"
       },
       {
         "command": "logmagnifier.editShellItem",
@@ -1994,8 +1997,8 @@
         },
         {
           "command": "logmagnifier.executeShellCommand",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellCommand",
-          "group": "1_execution"
+          "when": "viewItem == shellCommand",
+          "group": "inline"
         },
         {
           "command": "logmagnifier.addShellCommand",

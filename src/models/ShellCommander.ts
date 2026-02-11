@@ -47,6 +47,7 @@ export interface ShellShortCutKeymap {
     kbDelete?: string;
     kbEdit?: string;
     kbView?: string;
+    kbExecuteCommand?: string;
 }
 
 export interface ShellFolderConfig {

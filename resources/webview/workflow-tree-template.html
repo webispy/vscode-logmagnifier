@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; style-src {{CSP_SOURCE}} 'unsafe-inline'; script-src 'nonce-{{NONCE}}';">
     <title>Workflows</title>
     <style>
         body {
@@ -247,7 +249,7 @@
         <div class="menu-item" id="menu-close-all">Close All Results</div>
     </div>
 
-    <script>
+    <script nonce="{{NONCE}}">
         const vscode = acquireVsCodeApi();
         const container = document.getElementById('graph-container');
         let workflows = {{ WORKFLOWS }};

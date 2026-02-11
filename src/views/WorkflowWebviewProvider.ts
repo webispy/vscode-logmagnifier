@@ -36,7 +36,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             const activeId = this._workflowManager.getActiveWorkflow();
             const activeStepId = this._workflowManager.getActiveStep();
 
-            webviewView.webview.html = await this.htmlGenerator.generate(workflows, activeId, activeStepId);
+            webviewView.webview.html = await this.htmlGenerator.generate(webviewView.webview, workflows, activeId, activeStepId);
 
             webviewView.webview.onDidReceiveMessage(async (data) => {
                 switch (data.type) {

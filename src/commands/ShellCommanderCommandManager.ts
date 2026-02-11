@@ -403,12 +403,12 @@ export class ShellCommanderCommandManager {
 
             let execCmd = `. "${tempPath}"`;
 
-            // If strictly windows command prompt (cmd.exe), this won't work. 
+            // If strictly windows command prompt (cmd.exe), this won't work.
             // But the extension seems tailored for "Shell" which usually implies a shell environment.
-            // If the user uses PowerShell, they might need `& "path"`. 
+            // If the user uses PowerShell, they might need `& "path"`.
             // Let's stick to the Unix-like assumption for now as requested (Mac OS in context).
             if (os.platform() === 'win32') {
-                // Simple heuristic: if default shell is powershell, use different invoke? 
+                // Simple heuristic: if default shell is powershell, use different invoke?
                 // For now, let's try to detect or just default to source if they are using bash on windows.
                 // If they are using cmd.exe, they can't run these multi-line bash scripts anyway.
                 // So assuming a posix-compatible shell is a safe bet for this feature set.

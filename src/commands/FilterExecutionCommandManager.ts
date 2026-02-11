@@ -10,6 +10,7 @@ import { RegexUtils } from '../utils/RegexUtils';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import { EditorUtils } from '../utils/EditorUtils';
 
 export class FilterExecutionCommandManager {
     private _prependLineNumbersEnabled: boolean = false;
@@ -60,25 +61,22 @@ export class FilterExecutionCommandManager {
                 return;
             }
 
-            let document: vscode.TextDocument | undefined = vscode.window.activeTextEditor?.document;
+            let document = await EditorUtils.resolveActiveDocument();
             let filePathFromTab: string | undefined;
 
             if (!document) {
-                const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                    const uri = activeTab.input.uri;
+                const uri = EditorUtils.resolveActiveUri();
+                if (uri) {
                     if (uri.scheme === 'file') {
                         filePathFromTab = uri.fsPath;
                     } else if (uri.scheme === 'untitled') {
                         try {
+                            // Try to open validation doc if possible
                             const doc = await vscode.workspace.openTextDocument(uri);
                             document = doc;
                         } catch (e) { this.logger.error(String(e)); }
                     }
                 }
-
-                // Fallback removed: Do not search for random background files.
-                // If the user has no active tab/editor, we should not guess.
             }
 
             if (!document && !filePathFromTab) {

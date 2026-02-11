@@ -7,6 +7,7 @@ import { Logger } from '../services/Logger';
 import * as path from 'path';
 import * as os from 'os';
 import * as fs from 'fs';
+import { EditorUtils } from '../utils/EditorUtils';
 
 export class WorkflowCommandManager {
     constructor(
@@ -29,27 +30,7 @@ export class WorkflowCommandManager {
             await this.filterManager.saveFilters();
             const activeId = this.workflowManager.getActiveWorkflow();
             if (activeId) {
-                let document = vscode.window.activeTextEditor?.document;
-
-                // If no active editor (e.g. webview focused), try to find from visible editors
-                if (!document) {
-                    const visible = vscode.window.visibleTextEditors;
-                    if (visible.length > 0) {
-                        document = visible[0].document;
-                    }
-                }
-
-                // If still no document, try to find from active tab group
-                if (!document) {
-                    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                    if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                        try {
-                            document = await vscode.workspace.openTextDocument(activeTab.input.uri);
-                        } catch (e) {
-                            this.logger.error(`Failed to open document from tab: ${e}`);
-                        }
-                    }
-                }
+                const document = await EditorUtils.resolveActiveDocument();
 
                 if (document) {
                     // Check scheme
@@ -60,14 +41,9 @@ export class WorkflowCommandManager {
                     }
                 } else {
                     // Try to get URI from active tab even if document open failed (e.g. large file)
-                    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                    if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                        const uri = activeTab.input.uri;
-                        if (uri.scheme === 'file') {
-                            await this.workflowManager.run(activeId, uri);
-                        } else {
-                            vscode.window.showErrorMessage("Workflow can only run on file or untitled documents.");
-                        }
+                    const uri = EditorUtils.resolveActiveUri();
+                    if (uri && uri.scheme === 'file') {
+                        await this.workflowManager.run(activeId, uri);
                     } else {
                         vscode.window.showErrorMessage("No active file found to run workflow on. Please open a log file.");
                     }
@@ -88,21 +64,7 @@ export class WorkflowCommandManager {
 
             if (simId) {
                 // Reuse logic to find document
-                let document = vscode.window.activeTextEditor?.document;
-                if (!document) {
-                    const visible = vscode.window.visibleTextEditors;
-                    if (visible.length > 0) {
-                        document = visible[0].document;
-                    }
-                }
-                if (!document) {
-                    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                    if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                        try {
-                            document = await vscode.workspace.openTextDocument(activeTab.input.uri);
-                        } catch (_e) { /* ignore */ }
-                    }
-                }
+                const document = await EditorUtils.resolveActiveDocument();
 
                 if (document) {
                     if (document.uri.scheme === 'file' || document.uri.scheme === 'untitled') {
@@ -114,18 +76,13 @@ export class WorkflowCommandManager {
                     }
                 } else {
                     // Try to get URI from active tab even if document open failed (e.g. large file)
-                    const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-                    if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                        const uri = activeTab.input.uri;
-                        if (uri.scheme === 'file') {
-                            // Set active for visibility
-                            await this.workflowManager.setActiveWorkflow(simId);
-                            await this.workflowManager.run(simId, uri);
-                        } else {
-                            vscode.window.showErrorMessage("Workflow can only run on file or untitled documents.");
-                        }
+                    const uri = EditorUtils.resolveActiveUri();
+                    if (uri && uri.scheme === 'file') {
+                        // Set active for visibility
+                        await this.workflowManager.setActiveWorkflow(simId);
+                        await this.workflowManager.run(simId, uri);
                     } else {
-                        vscode.window.showErrorMessage("No active file found to run workflow on.");
+                        vscode.window.showErrorMessage("Workflow can only run on file or untitled documents.");
                     }
                 }
             }

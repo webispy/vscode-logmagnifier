@@ -72,4 +72,53 @@ export class EditorUtils {
         }
         return undefined;
     }
+
+    /**
+     * Attempts to resolve the active text document from:
+     * 1. Active Text Editor
+     * 2. Visible Text Editors (first check)
+     * 3. Active Tab Group (if Input is Text)
+     */
+    public static async resolveActiveDocument(): Promise<vscode.TextDocument | undefined> {
+        let document = vscode.window.activeTextEditor?.document;
+
+        // Check visible editors if no active editor
+        if (!document) {
+            const visible = vscode.window.visibleTextEditors;
+            if (visible.length > 0) {
+                document = visible[0].document;
+            }
+        }
+
+        // Check active tab if still not found
+        if (!document) {
+            const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+            if (activeTab && activeTab.input instanceof vscode.TabInputText) {
+                try {
+                    document = await vscode.workspace.openTextDocument(activeTab.input.uri);
+                } catch (e) {
+                    console.error('Failed to resolve document from tab:', e);
+                }
+            }
+        }
+
+        return document;
+    }
+
+    /**
+     * Resolves URI from active tab input, even if document cannot be opened (e.g. large file, or binary).
+     */
+    public static resolveActiveUri(): vscode.Uri | undefined {
+        const editor = vscode.window.activeTextEditor;
+        if (editor) {
+            return editor.document.uri;
+        }
+
+        const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+        if (activeTab && activeTab.input instanceof vscode.TabInputText) {
+            return activeTab.input.uri;
+        }
+
+        return undefined;
+    }
 }

@@ -35,7 +35,7 @@ suite('ShellCommanderService Test Suite', () => {
         // Service should have created default config and loaded it
         const groups = service.groups;
         assert.strictEqual(groups.length, 1);
-        assert.strictEqual(groups[0].label, 'Any Group');
+        assert.strictEqual(groups[0].label, 'android');
     });
 
     test('createGroup creates a new group and saves to file', async () => {

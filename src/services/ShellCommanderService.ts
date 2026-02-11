@@ -59,14 +59,49 @@ export class ShellCommanderService {
             shortCutKeymap: this.DEFAULT_KEYMAP,
             groups: [
                 {
-                    groupName: 'Any Group',
-                    descript: "hello world. This is Shell Commander. You can freely use it for executing any scripts.",
+                    groupName: "android",
+                    descript: "# Group: android\n\n## Folders\n- **adb - common**\n- **adb - adot auto app**\n- **OEM Guide Collection - RK project**\n",
                     folders: [
                         {
-                            name: 'Simple',
+                            name: "adb - common",
+                            descript: "# adb",
                             commands: [
-                                { label: 'single cmd', command: 'echo hiyo' },
-                                { label: 'multi cmds', command: "clear\njava -version\nls -l\n# comments\necho 'what are you doing" }
+                                {
+                                    label: "Check Memory Leak (HPROF Dump)",
+                                    command: "# Create a heap dump of the current app and pull it to the PC.\npackage=\"com.example.myapp\"\n\n# 1. Create Heap Dump\nadb shell am dumpheap $package /data/local/tmp/android.hprof\n\n# 2. Pull File\nadb pull /data/local/tmp/android.hprof .\n\n# 3. Delete Temp File\nadb shell rm /data/local/tmp/android.hprof\n\n# 4. Convert for Android Studio (Optional)\n# hprof-conv android.hprof converted.hprof"
+                                },
+                                {
+                                    label: "Wireless Debugging Connection (TCPIP)",
+                                    command: "# Execute while connected via USB, then remove cable and connect wirelessly.\nport=5555\n\n# 1. Switch to TCPIP Mode\nadb tcpip $port\n\n# 2. Check IP (wlan0)\nip_address=$(adb shell ip addr show wlan0 | grep 'inet ' | cut -d' ' -f6 | cut -d/ -f1)\n\necho \"Disconnect the cable and run the following command:\"\necho \"adb connect $ip_address:$port\""
+                                },
+                                {
+                                    label: "Extract Installed App APK",
+                                    command: "# Find the path of the installed app APK and pull it to the PC.\npackage=\"com.example.myapp\"\n\n# Find Path\npath=$(adb shell pm path $package | awk -F':' '{print $2}' | tr -d '\\r')\n\nif [ -z \"$path\" ]; then\n  echo \"App not found.\"\nelse\n  echo \"Pulling APK from $path...\"\n  adb pull \"$path\" ./extracted_app.apk\nfi"
+                                },
+                                {
+                                    label: "Auto-Type Input Text",
+                                    command: "# Type long text directly into the input field when typing is tedious.\n# (Spaces must be replaced with %s)\ntext=\"This%sis%stest%sinput\"\nadb shell input text \"$text\""
+                                },
+                                {
+                                    label: "Check Process Memory Info",
+                                    command: "# View detailed memory usage of the app (Java Heap, Native Heap, etc.).\npackage=\"com.example.myapp\"\n\nadb shell dumpsys meminfo $package"
+                                },
+                                {
+                                    label: "Temp Change Resolution & DPI (UI Test)",
+                                    command: "# Change resolution and density to test various screen sizes.\n\n# Change to 1080x1920\n#adb shell wm size 1080x1920\n# Change to DPI 480\n#adb shell wm density 480\n\n# Reset\nadb shell wm size reset\nadb shell wm density reset"
+                                },
+                                {
+                                    label: "Check Current Activity",
+                                    command: "# Check the package name and activity class name of the app currently on top.\n# (Recommended for Android 11+)\n# adb shell dumpsys activity list | grep -E 'mResumedActivity|topResumedActivity'\n\n# For older versions\nadb shell dumpsys window displays | grep -E 'mCurrentFocus|mFocusedApp'"
+                                },
+                                {
+                                    label: "Deep Link (URI Scheme) Test",
+                                    command: "# Launch the app via Deep Link URL.\nurl=\"myapp://scheme/path?query=value\"\npackage=\"com.example.myapp\"\n\nadb shell am start -a android.intent.action.VIEW -d \"$url\" $package"
+                                },
+                                {
+                                    label: "Force Doze Mode Test",
+                                    command: "# Force change state to test Battery Saver (Doze) mode.\n# 1. Simulate unplugging power cable\n# adb shell dumpsys battery unplug\n\n# 2. Turn off screen (Optional)\n# adb shell input keyevent 26\n\n# 3. Force enter Doze mode\n# adb shell dumpsys deviceidle force-idle\n\n# 4. Check state\n# adb shell dumpsys deviceidle get deep\n\n# Reset after test\n# adb shell dumpsys battery reset"
+                                }
                             ]
                         }
                     ]

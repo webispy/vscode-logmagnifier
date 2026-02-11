@@ -129,6 +129,36 @@ export class WorkflowCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.import', async () => {
             await this.handleImportWorkflow();
         }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.openAllResults', async (args?: { id: string } | string) => {
+            const workflowId = typeof args === 'string' ? args : args?.id;
+            if (workflowId) {
+                await this.workflowManager.openAllResults(workflowId);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.closeAllResults', async (args?: { id: string } | string) => {
+            const workflowId = typeof args === 'string' ? args : args?.id;
+            if (workflowId) {
+                await this.workflowManager.closeAllResults(workflowId);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.rename', async (args?: { id: string } | string) => {
+            const workflowId = typeof args === 'string' ? args : args?.id;
+            if (workflowId) {
+                const workflow = this.workflowManager.getWorkflow(workflowId);
+                const newName = await vscode.window.showInputBox({
+                    placeHolder: "Enter New Workflow Name",
+                    prompt: "Rename Workflow",
+                    value: workflow?.name
+                });
+
+                if (newName && newName !== workflow?.name) {
+                    await this.workflowManager.renameWorkflow(workflowId, newName);
+                }
+            }
+        }));
     }
 
     private async handleExportWorkflow() {

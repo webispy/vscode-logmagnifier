@@ -408,7 +408,7 @@ export const Constants = {
             FallbackToOpen: 'Failed to open text document (likely too large), falling back to vscode.open: {0}',
             AllBookmarksCopied: 'All bookmarks copied to clipboard.',
             RemovedBookmarks: 'Removed {0} bookmarks matching selection \'{1}\'.',
-
+            NoHierarchyFound: 'No hierarchy found.',
         },
         Warn: {
             UninstallConfirm: 'Are you sure you want to uninstall {0}?',
@@ -425,6 +425,7 @@ export const Constants = {
             JsonPreviewLimited: 'JSON Preview limited to first {0} selected lines.',
             FoundMoreThanMaxMatches: 'Found more than {0} matches. Limited to {0} bookmarks based on your settings.',
             FilteredLogViewBookmark: 'Note: This is a filtered log view. Bookmarks added here may be lost if you re-apply filters or close this temporary file.',
+            FilterAlreadyProcessing: 'Filter operation is already in progress.',
         },
         Error: {
             InvalidTagFormat: 'Invalid Tag format. Use "Tag" or "Tag:Priority" (V, D, I, W, E, F, S)',
@@ -461,6 +462,8 @@ export const Constants = {
             RecordingFailed: 'Screen recording failed: {0}',
             RecordingEmpty: 'Screen recording file is empty.',
             RetrieveRecordingFailed: 'Failed to retrieve screen recording.',
+            InvalidRegexPatternDetailed: 'Invalid Regex Pattern: "{0}". Error: {1}',
+            OpenFileFailed: 'Failed to open file: {0}',
         },
         Progress: {
             Processing: 'Processing...',

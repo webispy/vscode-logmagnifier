@@ -4,6 +4,8 @@ export class RegexUtils {
     private static readonly MAX_CACHE_SIZE = 500;
     private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 
+    private static reportedErrors: Set<string> = new Set();
+
     /**
      * Creates a RegExp object safely with caching.
      * Returns a NEW RegExp instance every time to avoid shared 'lastIndex' state bugs.
@@ -43,7 +45,23 @@ export class RegexUtils {
             RegexUtils.cache.set(key, regex);
             return new RegExp(regex);
 
-        } catch (_e) {
+        } catch (error) {
+            // Report error to user (once per invalid pattern to avoid spam)
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorKey = `${keyword}_${errorMessage}`;
+
+            if (!RegexUtils.reportedErrors.has(errorKey)) {
+                RegexUtils.reportedErrors.add(errorKey);
+                // We dynamically import vscode to avoid hard dependency if this util is used outside extension context context
+                // effectively we will just assume it is available in this environment
+                Promise.all([import('vscode'), import('../constants.js')]).then(([vscode, { Constants }]) => {
+                    const message = Constants.Messages.Error.InvalidRegexPatternDetailed
+                        .replace('{0}', keyword)
+                        .replace('{1}', errorMessage);
+                    vscode.window.showErrorMessage(message);
+                }).catch(() => { });
+            }
+
             // Return a regex that matches nothing
             return /(?!)/;
         }

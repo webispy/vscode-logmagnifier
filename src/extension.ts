@@ -175,93 +175,88 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Listen for selection changes to trigger navigation animation (flash)
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
-        const editor = e.textEditor;
-        if (editor && e.selections.length > 0) {
-            const line = e.selections[0].active.line;
-            if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
-                highlightService.flashLine(editor, line);
+        try {
+            const editor = e.textEditor;
+            if (editor && e.selections.length > 0) {
+                const line = e.selections[0].active.line;
+                if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
+                    highlightService.flashLine(editor, line);
+                }
             }
+        } catch (error) {
+            logger.error(`Error in onDidChangeTextEditorSelection: ${error}`);
         }
     }));
 
     // Update highlights and counts when active editor changes
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async editor => {
-        sourceMapService.updateContextKey(editor);
+        try {
+            sourceMapService.updateContextKey(editor);
 
-        // Check for pending navigation (animation) on active editor change
-        if (editor && editor.selection) {
-            const line = editor.selection.active.line;
-            if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
-                highlightService.flashLine(editor, line);
-            }
-        }
-
-        if (editor) {
-            if (!isSupportedScheme(editor.document.uri)) {
-                return;
-            }
-
-            if (lastProcessedDoc && editor.document === lastProcessedDoc) {
-                return;
-            }
-
-            const largeFileOptimizations = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section).get<boolean>(Constants.Configuration.Editor.LargeFileOptimizations);
-            const fileName = editor.document.fileName;
-            const scheme = editor.document.uri.scheme;
-            logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
-
-            quickAccessProvider.refresh();
-
-            await refreshHighlightsForEditor(editor);
-            lastProcessedDoc = editor.document;
-        } else {
-            // Fallback for large files where activeTextEditor is undefined
-            // We only want to handle the specific case where a file is too large for VS Code to provide an editor.
-            // Other cases (e.g. focus lost to Output panel, transition states) should be ignored to prevent redundant refreshes/logs.
-            const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
-            if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                const uri = activeTab.input.uri;
-                try {
-                    if (uri.scheme === Constants.Schemes.File) {
-                        // Use EditorUtils or direct async fs
-                        try {
-                            const stat = await vscode.workspace.fs.stat(uri);
-                            const sizeMB = stat.size / (1024 * 1024);
-                            if (sizeMB > 50) {
-                                lastProcessedDoc = undefined;
-                                resultCountService.clearCounts();
-                                quickAccessProvider.refresh();
-                                logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
-                                vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
-                            }
-                        } catch (e) {
-                            // Fallback only if needed, but workspace.fs should work for local files
-                            logger.error(`Error checking file size (async): ${e}`);
-                        }
-                    }
-                } catch (e) {
-                    logger.error(`Error checking file size: ${e}`);
+            // Check for pending navigation (animation) on active editor change
+            if (editor && editor.selection) {
+                const line = editor.selection.active.line;
+                if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
+                    highlightService.flashLine(editor, line);
                 }
             }
+
+            if (editor) {
+                if (!isSupportedScheme(editor.document.uri)) {
+                    return;
+                }
+
+                if (lastProcessedDoc && editor.document === lastProcessedDoc) {
+                    return;
+                }
+
+                const largeFileOptimizations = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section).get<boolean>(Constants.Configuration.Editor.LargeFileOptimizations);
+                const fileName = editor.document.fileName;
+                const scheme = editor.document.uri.scheme;
+                logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
+
+                quickAccessProvider.refresh();
+
+                await refreshHighlightsForEditor(editor);
+                lastProcessedDoc = editor.document;
+            } else {
+                // Fallback for large files where activeTextEditor is undefined
+                // We only want to handle the specific case where a file is too large for VS Code to provide an editor.
+                // Other cases (e.g. focus lost to Output panel, transition states) should be ignored to prevent redundant refreshes/logs.
+                const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
+                if (activeTab && activeTab.input instanceof vscode.TabInputText) {
+                    const uri = activeTab.input.uri;
+                    try {
+                        if (uri.scheme === Constants.Schemes.File) {
+                            // Use EditorUtils or direct async fs
+                            try {
+                                const stat = await vscode.workspace.fs.stat(uri);
+                                const sizeMB = stat.size / (1024 * 1024);
+                                if (sizeMB > 50) {
+                                    lastProcessedDoc = undefined;
+                                    resultCountService.clearCounts();
+                                    quickAccessProvider.refresh();
+                                    logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
+                                    vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
+                                }
+                            } catch (e) {
+                                // Fallback only if needed, but workspace.fs should work for local files
+                                logger.error(`Error checking file size (async): ${e}`);
+                            }
+                        }
+                    } catch (e) {
+                        logger.error(`Error checking file size: ${e}`);
+                    }
+                }
+            }
+        } catch (error) {
+            logger.error(`Error in onDidChangeActiveTextEditor: ${error}`);
         }
     }));
 
     // Update highlights when filters change
     context.subscriptions.push(filterManager.onDidChangeFilters(async () => {
-        lastProcessedDoc = undefined; // Force update
-        if (vscode.window.activeTextEditor) {
-            if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
-                await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                lastProcessedDoc = vscode.window.activeTextEditor.document;
-            }
-        }
-    }));
-
-    // Update highlights when configuration changes (e.g. color)
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async e => {
-        if (e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.HighlightColor}`) ||
-            e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.EnableHighlight}`)) {
-            highlightService.refreshDecorationType();
+        try {
             lastProcessedDoc = undefined; // Force update
             if (vscode.window.activeTextEditor) {
                 if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
@@ -269,20 +264,45 @@ export function activate(context: vscode.ExtensionContext) {
                     lastProcessedDoc = vscode.window.activeTextEditor.document;
                 }
             }
+        } catch (error) {
+            logger.error(`Error in onDidChangeFilters: ${error}`);
         }
+    }));
 
-        // Refresh Quick Access view if editor settings change
-        if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
-            e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
-            e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
-            quickAccessProvider.refresh();
+    // Update highlights when configuration changes (e.g. color)
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async e => {
+        try {
+            if (e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.HighlightColor}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.EnableHighlight}`)) {
+                highlightService.refreshDecorationType();
+                lastProcessedDoc = undefined; // Force update
+                if (vscode.window.activeTextEditor) {
+                    if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
+                        await refreshHighlightsForEditor(vscode.window.activeTextEditor);
+                        lastProcessedDoc = vscode.window.activeTextEditor.document;
+                    }
+                }
+            }
+
+            // Refresh Quick Access view if editor settings change
+            if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
+                quickAccessProvider.refresh();
+            }
+        } catch (error) {
+            logger.error(`Error in onDidChangeConfiguration: ${error}`);
         }
     }));
 
     // Refresh tree views when color theme changes to update icons
     context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(() => {
-        wordTreeDataProvider.refresh();
-        regexTreeDataProvider.refresh();
+        try {
+            wordTreeDataProvider.refresh();
+            regexTreeDataProvider.refresh();
+        } catch (error) {
+            logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
+        }
     }));
 
     // Initial highlight
@@ -301,47 +321,63 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Update counts when text changes
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
-        if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
-            if (!isSupportedScheme(e.document.uri)) {
-                return;
-            }
-
-            lastProcessedDoc = undefined; // Invalidate because content changed
-
-            if (debounceTimer) {
-                clearTimeout(debounceTimer);
-            }
-
-            debounceTimer = setTimeout(async () => {
-                if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
-                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                    lastProcessedDoc = vscode.window.activeTextEditor.document;
+        try {
+            if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+                if (!isSupportedScheme(e.document.uri)) {
+                    return;
                 }
-            }, 500);
 
-            // Update Quick Access if untitled (size changes)
-            if (e.document.isUntitled) {
-                quickAccessProvider.refresh();
+                lastProcessedDoc = undefined; // Invalidate because content changed
+
+                if (debounceTimer) {
+                    clearTimeout(debounceTimer);
+                }
+
+                debounceTimer = setTimeout(async () => {
+                    if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+                        try {
+                            await refreshHighlightsForEditor(vscode.window.activeTextEditor);
+                            lastProcessedDoc = vscode.window.activeTextEditor.document;
+                        } catch (innerError) {
+                            logger.error(`Error in onDidChangeTextEditor debounce: ${innerError}`);
+                        }
+                    }
+                }, 500);
+
+                // Update Quick Access if untitled (size changes)
+                if (e.document.isUntitled) {
+                    quickAccessProvider.refresh();
+                }
             }
+        } catch (error) {
+            logger.error(`Error in onDidChangeTextDocument: ${error}`);
         }
     }));
 
     // Update Quick Access when file is saved (size changes)
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
-        if (vscode.window.activeTextEditor && doc === vscode.window.activeTextEditor.document) {
-            quickAccessProvider.refresh();
+        try {
+            if (vscode.window.activeTextEditor && doc === vscode.window.activeTextEditor.document) {
+                quickAccessProvider.refresh();
+            }
+        } catch (error) {
+            logger.error(`Error in onDidSaveTextDocument: ${error}`);
         }
     }));
 
     // Prevent memory leak by clearing reference to closed documents
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
-        if (lastProcessedDoc === doc) {
-            lastProcessedDoc = undefined;
-            resultCountService.clearCounts();
-            quickAccessProvider.refresh();
+        try {
+            if (lastProcessedDoc === doc) {
+                lastProcessedDoc = undefined;
+                resultCountService.clearCounts();
+                quickAccessProvider.refresh();
+            }
+            sourceMapService.unregister(doc.uri);
+            // Hierarchy unregister handled above
+        } catch (error) {
+            logger.error(`Error in onDidCloseTextDocument: ${error}`);
         }
-        sourceMapService.unregister(doc.uri);
-        // Hierarchy unregister handled above
     }));
 
     return {

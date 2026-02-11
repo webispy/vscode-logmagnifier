@@ -39,7 +39,7 @@ export class NavigationCommandManager {
             await vscode.window.showTextDocument(doc, { preview: false });
         } catch (e) {
             Logger.getInstance().error(`Failed to open file ${uri.toString()}: ${e}`);
-            vscode.window.showErrorMessage(`Failed to open file: ${e}`);
+            vscode.window.showErrorMessage(Constants.Messages.Error.OpenFileFailed.replace('{0}', String(e)));
         }
     }
 
@@ -48,7 +48,14 @@ export class NavigationCommandManager {
         const items: vscode.QuickPickItem[] = [];
 
         // Recursive function to build tree
+        const visited = new Set<string>();
         const buildTree = (uri: vscode.Uri, depth: number) => {
+            const uriString = uri.toString();
+            if (visited.has(uriString)) {
+                return;
+            }
+            visited.add(uriString);
+
             const node = this.hierarchyService.getNode(uri);
             if (!node) { return; }
 
@@ -88,7 +95,7 @@ export class NavigationCommandManager {
         buildTree(root, 0);
 
         if (items.length === 0) {
-            vscode.window.showInformationMessage('No hierarchy found.');
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoHierarchyFound);
             return;
         }
 

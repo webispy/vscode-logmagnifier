@@ -38,6 +38,7 @@ export class FilterExecutionCommandManager {
 
     private async applyFilter(filterType?: 'word' | 'regex') {
         if (this.isProcessing) {
+            vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyProcessing);
             return;
         }
         this.isProcessing = true;

@@ -218,8 +218,16 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (manager as any).executeShellCommand(command);
 
+        const safeId = command.id.replace(/\//g, '_');
+        const tempPath = path.join(os.tmpdir(), `_exec_${safeId}.sh`);
+        const expectedCmd = `. "${tempPath}"`;
+
         assert.strictEqual(createdTerminalCount, 1, 'Should create terminal');
-        assert.deepStrictEqual(sentTexts, ['echo run'], 'Should send only command on first run');
+        assert.deepStrictEqual(sentTexts, [expectedCmd], 'Should send sourced file command on first run');
+
+        // Verify temp file content
+        assert.ok(fs.existsSync(tempPath), 'Temp file should exist');
+        assert.strictEqual(fs.readFileSync(tempPath, 'utf8'), 'echo run', 'Temp file should contain command');
 
         // Second execution (reuse)
         sentTexts.length = 0;
@@ -227,7 +235,7 @@ suite('ShellCommanderCommandManager Test Suite', () => {
         await (manager as any).executeShellCommand(command);
 
         assert.strictEqual(createdTerminalCount, 1, 'Should NOT create new terminal');
-        assert.deepStrictEqual(sentTexts, ['\u0003', 'echo run'], 'Should send Ctrl+C before command on reuse');
+        assert.deepStrictEqual(sentTexts, ['\u0003', expectedCmd], 'Should send Ctrl+C before sourced command on reuse');
     });
 
     test('executeShellCommand ignores dead terminal and creates new one', async () => {

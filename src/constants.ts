@@ -141,6 +141,9 @@ export const Constants = {
 
         // Workflow
         WorkflowOpenResult: 'logmagnifier.workflow.openResult',
+        WorkflowImport: 'logmagnifier.workflow.import',
+        WorkflowExport: 'logmagnifier.workflow.export',
+        WorkflowRun: 'logmagnifier.workflow.run',
 
         // Bookmark
         AddBookmark: 'logmagnifier.addBookmark',
@@ -409,6 +412,8 @@ export const Constants = {
             AllBookmarksCopied: 'All bookmarks copied to clipboard.',
             RemovedBookmarks: 'Removed {0} bookmarks matching selection \'{1}\'.',
             NoHierarchyFound: 'No hierarchy found.',
+            WorkflowInputName: 'Enter new name for Workflow',
+            SelectProfileToAdd: 'Select a profile to add to the workflow',
         },
         Warn: {
             UninstallConfirm: 'Are you sure you want to uninstall {0}?',
@@ -426,6 +431,8 @@ export const Constants = {
             FoundMoreThanMaxMatches: 'Found more than {0} matches. Limited to {0} bookmarks based on your settings.',
             FilteredLogViewBookmark: 'Note: This is a filtered log view. Bookmarks added here may be lost if you re-apply filters or close this temporary file.',
             FilterAlreadyProcessing: 'Filter operation is already in progress.',
+            DeleteWorkflowConfirm: 'Are you sure you want to delete workflow \'{0}\'?',
+            RemoveProfileConfirm: 'Remove profile \'{0}\' from workflow?',
         },
         Error: {
             InvalidTagFormat: 'Invalid Tag format. Use "Tag" or "Tag:Priority" (V, D, I, W, E, F, S)',

@@ -27,7 +27,7 @@ import { FileHierarchyService } from './services/FileHierarchyService';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
 import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
 import { WorkflowManager } from './services/WorkflowManager';
-import { SidebarWorkflowWebviewProvider } from './views/SidebarWorkflowWebviewProvider';
+import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
 export function activate(context: vscode.ExtensionContext) {
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
 
-    const workflowProvider = new SidebarWorkflowWebviewProvider(context.extensionUri, workflowManager);
+    const workflowProvider = new WorkflowWebviewProvider(context, workflowManager);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
     );

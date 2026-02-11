@@ -170,6 +170,17 @@ export class FilterManager implements vscode.Disposable {
         return this.colorService.getPresetById(id);
     }
 
+    private _findFilter(groupId: string, filterId: string): { group: FilterGroup, filter: FilterItem } | undefined {
+        const group = this.groups.find(g => g.id === groupId);
+        if (group) {
+            const filter = group.filters.find(f => f.id === filterId);
+            if (filter) {
+                return { group, filter };
+            }
+        }
+        return undefined;
+    }
+
     public findGroupByFilterId(filterId: string): FilterGroup | undefined {
         return this.groups.find(g => g.filters.some(f => f.id === filterId));
     }
@@ -246,15 +257,12 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public updateFilterColor(groupId: string, filterId: string, color: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                filter.color = color;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
-            }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            found.filter.color = color;
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
         }
     }
 
@@ -270,65 +278,55 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public updateFilter(groupId: string, filterId: string, updates: { keyword?: string, nickname?: string }): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                if (updates.keyword !== undefined) {
-                    filter.keyword = updates.keyword;
-                }
-                if (updates.nickname !== undefined) {
-                    filter.nickname = updates.nickname;
-                }
-                this.logger.info(`Filter '${filter.id}' updated`);
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            const { filter } = found;
+            if (updates.keyword !== undefined) {
+                filter.keyword = updates.keyword;
             }
+            if (updates.nickname !== undefined) {
+                filter.nickname = updates.nickname;
+            }
+            this.logger.info(`Filter '${filter.id}' updated`);
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
         }
     }
 
     public toggleFilterHighlightMode(groupId: string, filterId: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-
-                // Cycle: 0 (Word) -> 1 (Line) -> 2 (Whole Line) -> 0
-                filter.highlightMode = ((filter.highlightMode ?? 0) + 1) % 3;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
-            }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            const { filter } = found;
+            // Cycle: 0 (Word) -> 1 (Line) -> 2 (Whole Line) -> 0
+            filter.highlightMode = ((filter.highlightMode ?? 0) + 1) % 3;
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
         }
     }
 
     public toggleFilterCaseSensitivity(groupId: string, filterId: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                filter.caseSensitive = !filter.caseSensitive;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
-            }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            found.filter.caseSensitive = !found.filter.caseSensitive;
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
         }
     }
 
     public toggleFilterContextLine(groupId: string, filterId: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                const levels = [0, 3, 5, 9];
-                const currentIndex = levels.indexOf(filter.contextLine ?? 0);
-                const nextIndex = (currentIndex + 1) % levels.length;
-                filter.contextLine = levels[nextIndex];
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
-            }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            const { filter } = found;
+            const levels = [0, 3, 5, 9];
+            const currentIndex = levels.indexOf(filter.contextLine ?? 0);
+            const nextIndex = (currentIndex + 1) % levels.length;
+            filter.contextLine = levels[nextIndex];
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
         }
     }
 
@@ -414,12 +412,39 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilter(groupId: string, filterId: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                filter.isEnabled = !filter.isEnabled;
-                this.logger.info(`Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            const { group, filter } = found;
+            filter.isEnabled = !filter.isEnabled;
+            this.logger.info(`Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
+            this.debouncedSaveToState();
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
+        }
+    }
+
+    public toggleFilterType(groupId: string, filterId: string): void {
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            // Determine next type
+            const nextType = found.filter.type === 'include' ? 'exclude' : 'include';
+            this.setFilterType(groupId, filterId, nextType);
+        }
+    }
+
+    public setFilterType(groupId: string, filterId: string, type: FilterType): void {
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            const { group, filter } = found;
+            if (filter.type !== type) {
+                filter.type = type;
+
+                // If switching to include and color is missing, assign one
+                if (filter.type === 'include' && !filter.color) {
+                    filter.color = this.assignColor(group);
+                }
+
+                this.logger.info(`Filter '${filter.keyword}' type set to: ${filter.type}`);
                 this.debouncedSaveToState();
                 this.invalidateCache();
                 this._onDidChangeFilters.fire();
@@ -427,97 +452,50 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    public toggleFilterType(groupId: string, filterId: string): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                // Determine next type
-                const nextType = filter.type === 'include' ? 'exclude' : 'include';
-                this.setFilterType(groupId, filterId, nextType);
-            }
-        }
-    }
-
-    public setFilterType(groupId: string, filterId: string, type: FilterType): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                if (filter.type !== type) {
-                    filter.type = type;
-
-                    // If switching to include and color is missing, assign one
-                    if (filter.type === 'include' && !filter.color) {
-                        filter.color = this.assignColor(group);
-                    }
-
-                    this.logger.info(`Filter '${filter.keyword}' type set to: ${filter.type}`);
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
-            }
-        }
-    }
-
     public setFilterCaseSensitivity(groupId: string, filterId: string, enable: boolean): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                if (filter.caseSensitive !== enable) {
-                    filter.caseSensitive = enable;
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            if (found.filter.caseSensitive !== enable) {
+                found.filter.caseSensitive = enable;
+                this.debouncedSaveToState();
+                this.invalidateCache();
+                this._onDidChangeFilters.fire();
             }
         }
     }
 
     public setFilterExcludeStyle(groupId: string, filterId: string, style: 'line-through' | 'hidden'): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                if (filter.excludeStyle !== style) {
-                    filter.excludeStyle = style;
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            if (found.filter.excludeStyle !== style) {
+                found.filter.excludeStyle = style;
+                this.debouncedSaveToState();
+                this.invalidateCache();
+                this._onDidChangeFilters.fire();
             }
         }
     }
 
     public setFilterHighlightMode(groupId: string, filterId: string, mode: number): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-
-                if (filter.highlightMode !== mode) {
-                    filter.highlightMode = mode;
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            if (found.filter.highlightMode !== mode) {
+                found.filter.highlightMode = mode;
+                this.debouncedSaveToState();
+                this.invalidateCache();
+                this._onDidChangeFilters.fire();
             }
         }
     }
 
     public setFilterContextLine(groupId: string, filterId: string, lines: number): void {
-        const group = this.groups.find(g => g.id === groupId);
-        if (group) {
-            const filter = group.filters.find(f => f.id === filterId);
-            if (filter) {
-                if (filter.contextLine !== lines) {
-                    filter.contextLine = lines;
-                    this.debouncedSaveToState();
-                    this.invalidateCache();
-                    this._onDidChangeFilters.fire();
-                }
+        const found = this._findFilter(groupId, filterId);
+        if (found) {
+            if (found.filter.contextLine !== lines) {
+                found.filter.contextLine = lines;
+                this.debouncedSaveToState();
+                this.invalidateCache();
+                this._onDidChangeFilters.fire();
             }
         }
     }

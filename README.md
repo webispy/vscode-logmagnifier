@@ -43,6 +43,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
+- **Shell Commander**: Execute and organize custom shell scripts (bash/zsh) with support for context-aware terminal reuse.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
@@ -117,6 +118,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - **Reorder**: Use the arrow icons to change execution order.
     - **Run**: Click the **Play** icon to execute all steps automatically.
 4.  **Execution Feedback**: The sidebar visualizes step progress, indicating the currently active step and completion status.
+
+### Shell Commander
+
+1.  **Overview**:
+    - Execute custom shell commands and scripts directly from the sidebar.
+    - Organize commands into **Groups** and **Folders**.
+2.  **Execution**:
+    - **Run**: Click the item or use `Enter` to execute.
+    - **Context Menu**: Right-click to **Edit**, **Rename**, or **Delete**.
+3.  **Configuration**:
+    - Commands are stored in `logmagnifier_shell_cmds.json`.
+    - Global config accessible via command palette: `LogMagnifier: Open Global Shell Config`.
 
 ### Log Bookmarks
 

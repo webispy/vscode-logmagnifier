@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.6.0]
+
+### Added
+- **Workflow**: Introduced Automated Log Analysis Workflow to chain multiple filter profiles for complex analysis.
+- **Shell Commander**: Added a powerful Shell Commander to execute and organize custom shell scripts with context-aware terminal reuse.
+- **ADB**: Added support for "Chrome Inspect" to debug webviews on connected devices directly from the device tree.
+
+### Changed
+- **Internal**: Refactored CommandManager into focused sub-modules for better maintainability.
+
+### Fixed
+- **Highlight**: Fixed issue where highlights were not correctly applied in some edge cases.
+- **Filter Export**: Resolved issues with group selection and layout during filter export.
+- **Stability**: Improved terminal execution reliability in Shell Commander.
+
 ## [1.5.6]
 
 ### Refactor

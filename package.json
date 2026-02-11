@@ -737,6 +737,18 @@
         "icon": "$(trash)"
       },
       {
+        "command": "logmagnifier.workflow.openAllResults",
+        "title": "Open All Results"
+      },
+      {
+        "command": "logmagnifier.workflow.closeAllResults",
+        "title": "Close All Results"
+      },
+      {
+        "command": "logmagnifier.workflow.rename",
+        "title": "Rename"
+      },
+      {
         "command": "logmagnifier.enableGroup",
         "title": "Enable",
         "icon": "$(circle-large-outline)",
@@ -1506,15 +1518,6 @@
           "command": "logmagnifier.setFilterContextLine.cl9",
           "title": "±9",
           "group": "1_lines@4"
-        },
-        {
-          "command": "logmagnifier.workflow.openResult",
-          "title": "Open Result File"
-        },
-        {
-          "command": "logmagnifier.workflow.run",
-          "title": "Run Workflow",
-          "icon": "$(play)"
         }
       ],
       "logmagnifier.excludeStyleSubmenu": [

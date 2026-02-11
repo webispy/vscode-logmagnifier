@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Constants } from '../constants';
 import { FilterManager } from '../services/FilterManager';
-import { FilterGroup } from '../models/Filter';
+import { FilterGroup, FilterItem } from '../models/Filter';
 import { Logger } from '../services/Logger';
 
 export class FilterGroupCommandManager {
@@ -81,42 +81,27 @@ export class FilterGroupCommandManager {
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItems, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => f.keyword).join('\n');
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItems.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
-                }
-            }
+            await this.copyToClipboard(
+                group,
+                (items) => items.map(f => f.keyword).join('\n'),
+                Constants.Messages.Info.CopiedItems
+            );
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsSingleLine, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => f.keyword).join(' '); // Use space as delimiter
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsSingleLine.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
-                }
-            }
+            await this.copyToClipboard(
+                group,
+                (items) => items.map(f => f.keyword).join(' '), // Use space as delimiter
+                Constants.Messages.Info.CopiedItemsSingleLine
+            );
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsWithTag, async (group: FilterGroup) => {
-            if (group) {
-                const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
-                if (enabledFilters.length > 0) {
-                    const text = enabledFilters.map(f => `tag:${f.keyword}`).join(' ');
-                    await vscode.env.clipboard.writeText(text);
-                    vscode.window.showInformationMessage(Constants.Messages.Info.CopiedItemsTags.replace('{0}', enabledFilters.length.toString()));
-                } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
-                }
-            }
+            await this.copyToClipboard(
+                group,
+                (items) => items.map(f => `tag:${f.keyword}`).join(' '),
+                Constants.Messages.Info.CopiedItemsTags
+            );
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteGroup, (item: FilterGroup | undefined) => {
@@ -124,5 +109,19 @@ export class FilterGroupCommandManager {
                 vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item);
             }
         }));
+    }
+
+    private async copyToClipboard(group: FilterGroup, formatter: (items: FilterItem[]) => string, logMessage: string) {
+        if (!group) {
+            return;
+        }
+        const enabledFilters = group.filters.filter(f => f.isEnabled && f.type !== Constants.FilterTypes.Exclude);
+        if (enabledFilters.length > 0) {
+            const text = formatter(enabledFilters);
+            await vscode.env.clipboard.writeText(text);
+            vscode.window.showInformationMessage(logMessage.replace('{0}', enabledFilters.length.toString()));
+        } else {
+            vscode.window.showInformationMessage(Constants.Messages.Info.NoEnabledItems);
+        }
     }
 }

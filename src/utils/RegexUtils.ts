@@ -64,7 +64,9 @@ export class RegexUtils {
                         .replace('{0}', keyword)
                         .replace('{1}', errorMessage);
                     vscode.window.showErrorMessage(message);
-                }).catch(() => { });
+                }).catch((importErr) => {
+                    console.warn('[RegexUtils] Failed to show error notification:', importErr);
+                });
             }
 
             // Return a regex that matches nothing

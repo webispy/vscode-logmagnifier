@@ -402,10 +402,9 @@ export class ShellCommanderService {
         }
 
         const content = fs.readFileSync(filePath, 'utf-8');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let json: any;
+        let parsed: unknown;
         try {
-            json = JSON.parse(content);
+            parsed = JSON.parse(content);
         } catch {
             return {
                 version: 1,
@@ -414,26 +413,31 @@ export class ShellCommanderService {
             };
         }
 
+        if (!parsed || typeof parsed !== 'object') {
+            return { version: 1, shortCutKeymap: this.DEFAULT_KEYMAP, groups: [] };
+        }
+
         // Detect format
+        const json = parsed as Record<string, unknown>;
         if (json.version === 1 && json.groups) {
-            return json as ShellSystemConfig;
+            return json as unknown as ShellSystemConfig;
         }
 
         // Migration logic
         let configs: ShellConfig[] = [];
         let keymap = this.DEFAULT_KEYMAP;
 
-        if (json && json.groups && Array.isArray(json.groups)) {
+        if (json.groups && Array.isArray(json.groups)) {
             // Old V1-ish format (had groups array but maybe not version 1 explicit or keymap handling)
-            configs = json.groups;
+            configs = json.groups as ShellConfig[];
             if (json.shortCutKeymap) {
                 // Migrate keymap
-                keymap = this.migrateKeymap(json.shortCutKeymap);
+                keymap = this.migrateKeymap(json.shortCutKeymap as Record<string, unknown>);
             }
-        } else if (Array.isArray(json)) {
-            configs = json;
-        } else if (json && typeof json === 'object') {
-            configs = [json];
+        } else if (Array.isArray(parsed)) {
+            configs = parsed as ShellConfig[];
+        } else {
+            configs = [json as unknown as ShellConfig];
         }
 
         return {
@@ -443,19 +447,18 @@ export class ShellCommanderService {
         };
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private migrateKeymap(km: any): ShellShortCutKeymap {
+    private migrateKeymap(km: Record<string, unknown>): ShellShortCutKeymap {
         if (km.createGroup || km.createFolder || km.delete || km.createCommand) {
             return {
-                kbCreateGroup: km.kbCreateGroup || km.createGroup,
-                kbCreateFolder: km.kbCreateFolder || km.createFolder,
-                kbCreateCommand: km.kbCreateCommand || km.createCommand,
-                kbDelete: km.kbDelete || km.delete,
-                kbEdit: km.kbEdit || km.edit,
-                kbView: km.kbView || km.view
+                kbCreateGroup: (km.kbCreateGroup || km.createGroup) as string | undefined,
+                kbCreateFolder: (km.kbCreateFolder || km.createFolder) as string | undefined,
+                kbCreateCommand: (km.kbCreateCommand || km.createCommand) as string | undefined,
+                kbDelete: (km.kbDelete || km.delete) as string | undefined,
+                kbEdit: (km.kbEdit || km.edit) as string | undefined,
+                kbView: (km.kbView || km.view) as string | undefined
             };
         }
-        return km as ShellShortCutKeymap;
+        return km as unknown as ShellShortCutKeymap;
     }
 
     private async loadGroup(filePath: string): Promise<void> {

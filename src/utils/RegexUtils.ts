@@ -29,6 +29,11 @@ export class RegexUtils {
             const flags = caseSensitive ? 'g' : 'gi';
             let regex: RegExp;
             if (isRegex) {
+                // Reject patterns with nested quantifiers that cause catastrophic backtracking
+                // e.g. (a+)+$
+                if (/(\+|\*|\{)\)?(\+|\*|\{)/.test(keyword)) {
+                    throw new Error('Pattern contains nested quantifiers that may cause performance issues');
+                }
                 regex = new RegExp(keyword, flags);
             } else {
                 const escaped = keyword.replace(RegexUtils.ESCAPE_REGEX, '\\$&');

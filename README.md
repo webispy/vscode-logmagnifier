@@ -43,12 +43,13 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
-- **Shell Commander**: Execute and organize custom shell scripts (bash/zsh) with support for context-aware terminal reuse.
+- **Shell Commander**: Execute and organize custom shell scripts (bash/zsh) with support for multi-line commands and configurable terminal reuse strategies.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
   - **CodeLens**: clickable "Original" and "Parent" links automatically appear at the top of filtered files.
   - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (Ctrl+Cmd+T).
+  - **Management**: Quickly remove items using the trash icon, with support for recursive deletion (deleting a root file removes all its derivatives).
   - **Persistence**: Navigation links and hierarchy are preserved even after restarting VS Code.
 
 ## Usage
@@ -63,6 +64,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 2.  **Full Tree View**:
     - Displays a recursive, indented tree view of all related files (Original, Filters, Bookmarks).
     - Select any item to jump to it.
+    - Click the **Trash** icon on an item to remove it.
+        - Deleting a parent (e.g., Original) will recursively remove all its children (Filters, Bookmarks).
 3.  **Persistence**:
     - You can confidently "Close" filter tabs. When you re-open them (e.g., via Bookmarks), the hierarchy and navigation links are automatically restored.
 
@@ -123,13 +126,15 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 1.  **Overview**:
     - Execute custom shell commands and scripts directly from the sidebar.
+    - Support for **multi-line commands**: complex scripts are executed as temporary files to ensure reliability and preserve environment state.
     - Organize commands into **Groups** and **Folders**.
 2.  **Execution**:
-    - **Run**: Click the item or use `Enter` to execute.
-    - **Context Menu**: Right-click to **Edit**, **Rename**, or **Delete**.
+    - **Run**: Click the item, use the play icon, or use the **Enter** key.
+    - **Context Menu**: Right-click to **Edit**, **Rename**, **Edit Description**, or **Delete**.
 3.  **Configuration**:
     - Commands are stored in `logmagnifier_shell_cmds.json`.
     - Global config accessible via command palette: `LogMagnifier: Open Global Shell Config`.
+    - Flexible terminal management via **Terminal Reuse Strategy** settings.
 
 ### Log Bookmarks
 
@@ -171,6 +176,7 @@ This extension contributes the following settings:
 * `logmagnifier.adbLogcatDefaultOptions`: Default options for adb logcat command. (Default: `-v threadtime`)
 * `logmagnifier.bookmark.maxMatches`: Maximum number of matches to add to bookmarks at once. (Default: `500`)
 * `logmagnifier.removeMatches.maxLines`: Threshold for confirming removal of lines matching selection. (Default: `2000`)
+* `logmagnifier.shellCommander.terminalReuseStrategy`: Strategy for reusing terminals when executing shell commands (`perFolder`, `perGroup`, `global`, `perCommand`). (Default: `perFolder`)
 
 ## Known Limitations
 
@@ -197,6 +203,7 @@ Thanks to the following people who have contributed to this project:
 
 - [@birdea](https://github.com/birdea)
 - [@JeanTracker](https://github.com/JeanTracker)
+- [@HanDougChun](https://github.com/HanDougChun)
 
 ## Credits
 

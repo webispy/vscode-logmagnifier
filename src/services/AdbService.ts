@@ -839,7 +839,7 @@ export class AdbService implements vscode.Disposable {
             while (attempts < maxAttempts) {
 
                 const result = await new Promise<{ size: number, output: string }>((resolve) => {
-                    cp.execFile(adbPath, ['-s', deviceId, 'shell', 'ls', '-l', remotePath], (err, stdout) => {
+                    cp.execFile(adbPath, ['-s', deviceId, 'shell', 'ls', '-l', remotePath], (_err, stdout) => {
                         attempts++;
                         let size = 0;
                         if (stdout) {

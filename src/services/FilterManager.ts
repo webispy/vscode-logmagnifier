@@ -29,6 +29,8 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager;
     }
 
+    private configDisposable: vscode.Disposable;
+
     constructor(private context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
@@ -46,7 +48,7 @@ export class FilterManager implements vscode.Disposable {
         });
 
         // Listen for configuration changes
-        vscode.workspace.onDidChangeConfiguration(e => {
+        this.configDisposable = vscode.workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration(Constants.Configuration.HighlightColors.Section)) {
                 this.colorService.loadColorPresets();
                 this._onDidChangeFilters.fire();
@@ -876,5 +878,6 @@ export class FilterManager implements vscode.Disposable {
         this._onDidChangeFilters.dispose();
         this._onDidChangeResultCounts.dispose();
         this._onDidChangeProfile.dispose();
+        this.configDisposable.dispose();
     }
 }

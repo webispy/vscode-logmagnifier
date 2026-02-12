@@ -26,79 +26,91 @@ export class AdbService implements vscode.Disposable {
         return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) || Constants.Defaults.AdbPath;
     }
 
-    public async getDevices(): Promise<AdbDevice[]> {
-        return new Promise((resolve, _reject) => {
+    private async execAdb(args: string[]): Promise<string> {
+        return new Promise((resolve, reject) => {
             const adbPath = this.getAdbPath();
-            this.logger.info(`[ADB] Executing: ${adbPath} devices -l`);
-
-            cp.execFile(adbPath, ['devices', '-l'], async (err, stdout, _stderr) => {
+            cp.execFile(adbPath, args, (err, stdout, stderr) => {
                 if (err) {
-                    this.logger.error(`[ADB] Error running adb devices: ${err.message}`);
-                    resolve([]);
+                    reject(new Error(`${err.message} (stderr: ${stderr})`));
                     return;
                 }
-
-                this.logger.info(`[ADB] Raw output:\n${stdout.trim()}`);
-
-                const devices: AdbDevice[] = [];
-                const lines = stdout.split('\n');
-                for (const line of lines) {
-                    if (!line.trim() || line.startsWith('List of devices attached')) {
-                        continue;
-                    }
-                    // Parse line: "serial product:p model:m device:d transport_id:t"
-                    const parts = line.split(/\s+/);
-                    if (parts.length >= 2) {
-                        const id = parts[0];
-                        const type = parts[1];
-                        const device: AdbDevice = { id, type };
-
-                        for (let i = 2; i < parts.length; i++) {
-                            const [key, value] = parts[i].split(':');
-                            if (key && value) {
-                                if (key === 'transport_id') {
-                                    device.transportId = value;
-                                } else if (key === 'product') {
-                                    device.product = value;
-                                } else if (key === 'model') {
-                                    device.model = value;
-                                } else if (key === 'device') {
-                                    device.device = value;
-                                }
-                            }
-                        }
-                        this.logger.info(`[ADB] Parsed device: ${JSON.stringify(device)}`);
-                        devices.push(device);
-                    }
-                }
-
-                // Validate Target Apps
-                const validationPromises = devices.map(async (device) => {
-                    const storedTarget = this.deviceTargetApps.get(device.id);
-                    if (storedTarget && storedTarget !== 'all') {
-                        // Check if running
-                        try {
-                            const runningApps = await this.getRunningApps(device.id);
-                            if (!runningApps.has(storedTarget)) {
-                                this.logger.info(`[ADB] Target app ${storedTarget} not running on ${device.id}. Resetting to all.`);
-                                this.deviceTargetApps.set(device.id, 'all');
-                                device.targetApp = 'all';
-                            } else {
-                                device.targetApp = storedTarget;
-                            }
-                        } catch (_e) {
-                            this.logger.warn(`[ADB] Failed to check running apps for ${device.id}, keeping stored target.`);
-                            device.targetApp = storedTarget;
-                        }
-                    } else {
-                        device.targetApp = 'all';
-                    }
-                });
-
-                await Promise.all(validationPromises);
-                resolve(devices);
+                resolve(stdout);
             });
         });
+    }
+
+    public async getDevices(): Promise<AdbDevice[]> {
+        const adbPath = this.getAdbPath();
+        this.logger.info(`[ADB] Executing: ${adbPath} devices -l`);
+
+        try {
+            const stdout = await this.execAdb(['devices', '-l']);
+
+            this.logger.info(`[ADB] Raw output:\n${stdout.trim()}`);
+
+            const devices: AdbDevice[] = [];
+            const lines = stdout.split('\n');
+            for (const line of lines) {
+                if (!line.trim() || line.startsWith('List of devices attached')) {
+                    continue;
+                }
+                // Parse line: "serial product:p model:m device:d transport_id:t"
+                const parts = line.split(/\s+/);
+                if (parts.length >= 2) {
+                    const id = parts[0];
+                    const type = parts[1];
+                    const device: AdbDevice = { id, type };
+
+                    for (let i = 2; i < parts.length; i++) {
+                        const [key, value] = parts[i].split(':');
+                        if (key && value) {
+                            if (key === 'transport_id') {
+                                device.transportId = value;
+                            } else if (key === 'product') {
+                                device.product = value;
+                            } else if (key === 'model') {
+                                device.model = value;
+                            } else if (key === 'device') {
+                                device.device = value;
+                            }
+                        }
+                    }
+                    this.logger.info(`[ADB] Parsed device: ${JSON.stringify(device)}`);
+                    devices.push(device);
+                }
+            }
+
+            // Validate Target Apps
+            const validationPromises = devices.map(async (device) => {
+                const storedTarget = this.deviceTargetApps.get(device.id);
+                if (storedTarget && storedTarget !== 'all') {
+                    // Check if running
+                    try {
+                        const runningApps = await this.getRunningApps(device.id);
+                        if (!runningApps.has(storedTarget)) {
+                            this.logger.info(`[ADB] Target app ${storedTarget} not running on ${device.id}. Resetting to all.`);
+                            this.deviceTargetApps.set(device.id, 'all');
+                            device.targetApp = 'all';
+                        } else {
+                            device.targetApp = storedTarget;
+                        }
+                    } catch (_e) {
+                        this.logger.warn(`[ADB] Failed to check running apps for ${device.id}, keeping stored target.`);
+                        device.targetApp = storedTarget;
+                    }
+                } else {
+                    device.targetApp = 'all';
+                }
+            });
+
+            await Promise.all(validationPromises);
+            return devices;
+
+        } catch (err: unknown) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            this.logger.error(`[ADB] Error running adb devices: ${errorMessage}`);
+            return [];
+        }
     }
 
     public async getInstalledPackages(deviceId: string): Promise<string[]> {

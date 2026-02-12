@@ -6,7 +6,6 @@ import * as crypto from 'crypto';
 import { Constants } from '../constants';
 import * as os from 'os';
 import * as path from 'path';
-import * as cp from 'child_process';
 
 export class AdbCommandManager {
     constructor(
@@ -331,28 +330,7 @@ export class AdbCommandManager {
 
                 if (deviceCount > 0) {
                     const chromeInspectUrl = 'chrome://inspect/#devices';
-                    let command = '';
-
-                    switch (process.platform) {
-                        case 'darwin':
-                            command = `open -a "Google Chrome" "${chromeInspectUrl}"`;
-                            break;
-                        case 'linux':
-                            command = `google-chrome "${chromeInspectUrl}"`;
-                            break;
-                        case 'win32':
-                            command = `start chrome "${chromeInspectUrl}"`;
-                            break;
-                        default:
-                            vscode.window.showInformationMessage(`Platform '${process.platform}' not fully supported. Please open '${chromeInspectUrl}' in Chrome manually.`);
-                            return;
-                    }
-
-                    cp.exec(command, (error) => {
-                        if (error) {
-                            vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
-                        }
-                    });
+                    await vscode.env.openExternal(vscode.Uri.parse(chromeInspectUrl));
 
                 } else {
                     vscode.window.showErrorMessage('❌ No connected Android devices found. Please check USB connection and debugging authorization.');

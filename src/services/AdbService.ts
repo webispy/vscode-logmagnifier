@@ -58,8 +58,12 @@ export class AdbService implements vscode.Disposable {
                             if (key && value) {
                                 if (key === 'transport_id') {
                                     device.transportId = value;
-                                } else {
-                                    (device as unknown as Record<string, unknown>)[key] = value;
+                                } else if (key === 'product') {
+                                    device.product = value;
+                                } else if (key === 'model') {
+                                    device.model = value;
+                                } else if (key === 'device') {
+                                    device.device = value;
                                 }
                             }
                         }

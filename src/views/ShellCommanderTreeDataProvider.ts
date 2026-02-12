@@ -52,8 +52,6 @@ export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<S
         item.contextValue = 'shellGroup';
         item.iconPath = new vscode.ThemeIcon('folder-library');
         item.tooltip = group.description || group.label;
-        // Debug logging
-        // console.log(`Created group item: ${group.label}, context: ${item.contextValue}`);
         return item;
     }
 

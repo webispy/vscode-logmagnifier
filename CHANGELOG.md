@@ -1,5 +1,21 @@
 # Change Log
 
+## [1.6.1]
+
+### Added
+- **File Hierarchy**: Added recursive delete action to quickly remove original files and all derived filters/bookmarks.
+- **Shell Commander**: Added support for executing multi-line commands via temporary scripts.
+
+### Changed
+- **Shell Commander**: Updated default configuration and unified action handling.
+- **Build**: Enabled stricter TypeScript compiler options for better code quality.
+- **ADB**: Replaced unsafe dynamic property assignment with type-safe alternatives.
+
+### Fixed
+- **Workflow**: Fixed execution and result handling for large files.
+- **Stability**: Enhanced error handling and removed dead code in activation logic.
+- **Security**: Improved Content Security Policy (CSP) nonce generation and sanitized webview HTML.
+
 ## [1.6.0]
 
 ### Added

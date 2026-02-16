@@ -59,8 +59,8 @@ suite('Workflow Badge Logic Test Suite', () => {
     });
 
     test('Badge visibility logic based on execution state', async () => {
-        const workflowA: Workflow = { id: 'wfA', name: 'Workflow A', steps: [{ id: 's1', profileName: 'P1' }] };
-        const workflowB: Workflow = { id: 'wfB', name: 'Workflow B', steps: [{ id: 's1', profileName: 'P1' }] };
+        const workflowA: Workflow = { id: 'wfA', name: 'Workflow A', steps: [{ id: 's1', profileName: 'P1', executionMode: 'sequential' }] };
+        const workflowB: Workflow = { id: 'wfB', name: 'Workflow B', steps: [{ id: 's1', profileName: 'P1', executionMode: 'sequential' }] };
 
         // 1. Initial State: No results, badge should be hidden for both
         (workflowManager as unknown as { workflows: Workflow[] }).workflows = [workflowA, workflowB];
@@ -89,7 +89,7 @@ suite('Workflow Badge Logic Test Suite', () => {
         const workflow: Workflow = {
             id: 'wf1',
             name: 'Workflow 1',
-            steps: [{ id: 's1', profileName: 'P1' }],
+            steps: [{ id: 's1', profileName: 'P1', executionMode: 'sequential' }],
             lastRunFile: '/tmp/last.log' // Persisted in state
         };
 

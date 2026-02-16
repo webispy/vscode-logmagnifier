@@ -108,51 +108,50 @@ suite('LogProcessor Integration Test Suite', () => {
         }
     });
 
-    test('processFile: Strict Item Logic (Group Enabled, Item Disabled)', async () => {
+    test('processFile: Strict Group Logic (Group Enabled, Item Disabled)', async () => {
         const filterGroup = createGroup('toggle-group', 'Toggle');
 
         // Add disabled "ERROR" filter.
-        // New Logic: Group Enabled is IGNORED. Item Disabled -> Filter NOT applied.
+        // New Logic: Group is Enabled, but Item is Disabled -> Filter NOT applied.
         const disabledFilter = createFilter('disabled-error', 'ERROR', 'include', false);
         filterGroup.filters.push(disabledFilter);
 
         const result1 = await processor.processFile(sampleLogPath, [filterGroup]);
 
         // Should match 7 lines (ALL) because Item is Disabled -> No active filters -> Show All.
-        assert.strictEqual(result1.matched, 7, 'Should match all (7) lines because Item is Disabled (Group state ignored)');
+        assert.strictEqual(result1.matched, 7, 'Should match all (7) lines because Item is Disabled');
 
         if (fs.existsSync(result1.outputPath)) {
             fs.unlinkSync(result1.outputPath);
         }
     });
 
-    test('processFile: Multiple Groups (Strict Item Enable)', async () => {
+    test('processFile: Multiple Groups (Strict Group Enable)', async () => {
         // Group 1: Enabled, Include "ERROR" (Matches 2)
         const group1 = createGroup('g1', 'Enabled Group', true);
         group1.filters.push(createFilter('f1', 'ERROR', 'include'));
 
         // Group 2: Disabled, Include "INFO" (Matches 4)
-        // Group Disabled, but Item Enabled -> Filter IS ACTIVE.
+        // Group Disabled -> Filters inside are IGNORED, even if item isEnabled=true.
         const group2 = createGroup('g2', 'Disabled Group', false); // Enabled = false
         group2.filters.push(createFilter('f2', 'INFO', 'include', true)); // Explicitly enabled item
 
         const result = await processor.processFile(sampleLogPath, [group1, group2]);
 
-        // Should apply Group 1 (ERROR) AND Group 2 (INFO)
-        // Matches are lines with ERROR (2) + INFO (4).
-        // Expected matches: 6 (4 INFO + 2 ERROR)
-        assert.strictEqual(result.matched, 6, 'Should match both groups (Strict Item Logic)');
+        // Should ONLY apply Group 1 (ERROR) since Group 2 is disabled.
+        // Expected matches: 2 (ERROR lines only)
+        assert.strictEqual(result.matched, 2, 'Should only match Group 1 because Group 2 is disabled');
         if (fs.existsSync(result.outputPath)) {
             fs.unlinkSync(result.outputPath);
         }
 
-        // Sub-test: Disable the item in Group 2
+        // Sub-test: Disable the item in Group 2 (redundant, but tests further changes)
         group2.filters[0].isEnabled = false;
         const result2 = await processor.processFile(sampleLogPath, [group1, group2]);
 
-        // Now Item is Disabled -> Item ignored.
-        // Should only match Group 1 (ERROR) -> 2 matches.
-        assert.strictEqual(result2.matched, 2, 'Should only match Group 1 when Group 2 item is disabled');
+        // Now Item is Disabled AND Group is Disabled.
+        // Should continue to only match Group 1 (ERROR) -> 2 matches.
+        assert.strictEqual(result2.matched, 2, 'Should only match Group 1 when Group 2 and its item are disabled');
         if (fs.existsSync(result2.outputPath)) {
             fs.unlinkSync(result2.outputPath);
         }

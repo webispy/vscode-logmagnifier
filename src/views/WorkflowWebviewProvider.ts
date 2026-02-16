@@ -113,7 +113,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                                 placeHolder: Constants.Messages.Info.SelectProfileToAdd
                             });
                             if (selected) {
-                                await this._workflowManager.addProfileToWorkflow(data.id, selected);
+                                await this._workflowManager.addProfileToWorkflow(data.id, selected, data.parentId);
                                 this.refresh();
                             }
                         }

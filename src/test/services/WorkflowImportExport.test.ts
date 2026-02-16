@@ -104,7 +104,7 @@ suite('Workflow Import/Export Test Suite', () => {
         test('Path 1: No profile name conflicts', async () => {
             const pkg: WorkflowPackage = {
                 version: '1.0.0',
-                workflow: { id: 'wf1', name: 'New Workflow', steps: [{ id: 's1', profileName: 'NewProfile' }] },
+                workflow: { id: 'wf1', name: 'New Workflow', steps: [{ id: 's1', profileName: 'NewProfile', executionMode: 'sequential' }] },
                 profiles: [{ name: 'NewProfile', groups: [] }]
             };
 
@@ -125,7 +125,7 @@ suite('Workflow Import/Export Test Suite', () => {
 
             const pkg: WorkflowPackage = {
                 version: '1.0.0',
-                workflow: { id: 'wf2', name: 'Overwrite Workflow', steps: [{ id: 's1', profileName: 'Existing' }] },
+                workflow: { id: 'wf2', name: 'Overwrite Workflow', steps: [{ id: 's1', profileName: 'Existing', executionMode: 'sequential' }] },
                 profiles: [{ name: 'Existing', groups: [{ id: 'new', name: 'New', isRegex: true, isEnabled: true, filters: [] }] }]
             };
 
@@ -146,7 +146,7 @@ suite('Workflow Import/Export Test Suite', () => {
 
             const pkg: WorkflowPackage = {
                 version: '1.0.0',
-                workflow: { id: 'wf3', name: 'Sync Workflow', steps: [{ id: 's1', profileName: 'Conflict' }] },
+                workflow: { id: 'wf3', name: 'Sync Workflow', steps: [{ id: 's1', profileName: 'Conflict', executionMode: 'sequential' }] },
                 profiles: [{ name: 'Conflict', groups: [{ id: 'imported', name: 'Imported', isRegex: false, isEnabled: true, filters: [] }] }]
             };
 
@@ -176,7 +176,7 @@ suite('Workflow Import/Export Test Suite', () => {
 
             const pkg: WorkflowPackage = {
                 version: '1.0.0',
-                workflow: { id: 'wf4', name: 'Multi Copy', steps: [{ id: 's1', profileName: 'Base' }] },
+                workflow: { id: 'wf4', name: 'Multi Copy', steps: [{ id: 's1', profileName: 'Base', executionMode: 'sequential' }] },
                 profiles: [{ name: 'Base', groups: [] }]
             };
 
@@ -191,7 +191,7 @@ suite('Workflow Import/Export Test Suite', () => {
 
             const pkg: WorkflowPackage = {
                 version: '1.0.0',
-                workflow: { id: 'wf5', name: 'Abort Workflow', steps: [{ id: 's1', profileName: 'AbortMe' }] },
+                workflow: { id: 'wf5', name: 'Abort Workflow', steps: [{ id: 's1', profileName: 'AbortMe', executionMode: 'sequential' }] },
                 profiles: [{ name: 'AbortMe', groups: [] }]
             };
 

@@ -36,16 +36,26 @@ export class WorkflowHtmlGenerator {
         ];
 
         const nonce = getNonce();
-        html = html.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
-        html = html.replace(/{{\s*NONCE\s*}}/g, nonce);
+        const safeJson = (val: unknown) => {
+            try {
+                return JSON.stringify(val).replace(/</g, '\\u003c');
+            } catch (e) {
+                console.error('JSON Stringify Error:', e);
+                return 'null'; // Fallback
+            }
+        };
 
-        const safeJson = (val: unknown) => JSON.stringify(val).replace(/</g, '\\u003c');
+        const viewData = {
+            workflows: workflows || [],
+            activeId: activeId || '',
+            activeStepId: activeStepId || '',
+            graphColors: graphColors
+        };
 
         // Replace placeholders
-        html = html.replace(/{{\s*WORKFLOWS\s*}}/g, safeJson(workflows));
-        html = html.replace(/{{\s*ACTIVE_ID\s*}}/g, safeJson(activeId || '')); // Handle undefined as empty string
-        html = html.replace(/{{\s*ACTIVE_STEP_ID\s*}}/g, safeJson(activeStepId || ''));
-        html = html.replace(/{{\s*GRAPH_COLORS\s*}}/g, safeJson(graphColors));
+        html = html.replace(/{{\s*VIEW_DATA\s*}}/g, safeJson(viewData));
+        html = html.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
+        html = html.replace(/{{\s*NONCE\s*}}/g, nonce);
 
         return html;
     }

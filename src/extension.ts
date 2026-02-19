@@ -165,6 +165,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(bookmarkService);
 
     const bookmarkWebviewProvider = new LogBookmarkWebviewProvider(context.extensionUri, bookmarkService, logger);
+    context.subscriptions.push(bookmarkWebviewProvider);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(Constants.Views.Bookmark, bookmarkWebviewProvider)
     );

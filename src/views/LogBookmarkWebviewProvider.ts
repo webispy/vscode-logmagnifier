@@ -7,12 +7,13 @@ import { Logger } from '../services/Logger';
 import { LogBookmarkHtmlGenerator } from './LogBookmarkHtmlGenerator';
 import { escapeHtml } from '../utils/WebviewUtils';
 
-export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
+export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
     private _view?: vscode.WebviewView;
     private _lastAddedUri?: string;
     private _foldedUris: Set<string> = new Set();
     private _activeUriStr?: string;
     private _htmlGenerator: LogBookmarkHtmlGenerator;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(
         private readonly _extensionUri: vscode.Uri,
@@ -21,11 +22,11 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
     ) {
         this._htmlGenerator = new LogBookmarkHtmlGenerator(this._extensionUri, this._bookmarkService, this._logger);
 
-        this._bookmarkService.onDidChangeBookmarks(() => {
+        this._disposables.push(this._bookmarkService.onDidChangeBookmarks(() => {
             this.updateContent();
-        });
+        }));
 
-        this._bookmarkService.onDidAddBookmark((uri) => {
+        this._disposables.push(this._bookmarkService.onDidAddBookmark((uri) => {
             const addedKey = uri.toString();
             this._lastAddedUri = addedKey;
 
@@ -38,12 +39,12 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
                 this._lastAddedUri = undefined;
                 this.updateContent();
             }, 1000);
-        });
+        }));
 
         // Listen for active editor changes to auto-expand/collapse
-        vscode.window.onDidChangeActiveTextEditor(editor => {
+        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
             this.handleActiveEditorChange(editor);
-        });
+        }));
     }
 
     private handleActiveEditorChange(editor: vscode.TextEditor | undefined) {
@@ -249,6 +250,14 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider {
         if (uriStr) {
             vscode.commands.executeCommand(Constants.Commands.RemoveBookmarkFile, vscode.Uri.parse(uriStr));
         }
+    }
+
+    public dispose() {
+        if (this._updateTimeout) {
+            clearTimeout(this._updateTimeout);
+        }
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
     }
 
     private _updateTimeout?: NodeJS.Timeout;

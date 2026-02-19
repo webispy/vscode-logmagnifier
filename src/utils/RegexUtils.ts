@@ -4,6 +4,7 @@ export class RegexUtils {
     private static readonly MAX_CACHE_SIZE = 500;
     private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 
+    private static readonly MAX_REPORTED_ERRORS = 200;
     private static reportedErrors: Set<string> = new Set();
 
     /**
@@ -56,6 +57,9 @@ export class RegexUtils {
             const errorKey = `${keyword}_${errorMessage}`;
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {
+                if (RegexUtils.reportedErrors.size >= RegexUtils.MAX_REPORTED_ERRORS) {
+                    RegexUtils.reportedErrors.clear();
+                }
                 RegexUtils.reportedErrors.add(errorKey);
                 // We dynamically import vscode to avoid hard dependency if this util is used outside extension context context
                 // effectively we will just assume it is available in this environment

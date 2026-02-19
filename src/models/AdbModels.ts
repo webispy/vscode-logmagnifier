@@ -46,17 +46,13 @@ export interface SessionGroupItem {
     device: AdbDevice;
 }
 
-export interface ControlAppItem {
-    type: 'controlApp';
-    device: AdbDevice;
-}
 
 export interface DumpsysGroupItem {
     type: 'dumpsysGroup';
     device: AdbDevice;
 }
 
-export type ControlActionType = 'uninstall' | 'clearStorage' | 'clearCache' | 'dumpsys' | 'dumpsysMeminfo' | 'dumpsysActivity';
+export type ControlActionType = 'uninstall' | 'clearStorage' | 'clearCache' | 'dumpsys' | 'dumpsysMeminfo' | 'dumpsysActivity' | 'moreControl' | 'launchApp';
 
 export interface ControlActionItem {
     type: 'controlAction';
@@ -69,7 +65,7 @@ export interface ControlDeviceItem {
     device: AdbDevice;
 }
 
-export type ControlDeviceActionType = 'screenshot' | 'screenRecord' | 'showTouches';
+export type ControlDeviceActionType = 'screenshot' | 'screenRecord' | 'showTouches' | 'moreControl';
 
 export interface ControlDeviceActionItem {
     type: 'controlDeviceAction';
@@ -88,4 +84,4 @@ export interface MessageItem {
     message: string;
 }
 
-export type AdbTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem | ControlAppItem | ControlActionItem | DumpsysGroupItem | ControlDeviceItem | ControlDeviceActionItem | ChromeInspectItem | MessageItem;
+export type AdbTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | SessionGroupItem | ControlActionItem | DumpsysGroupItem | ControlDeviceItem | ControlDeviceActionItem | ChromeInspectItem | MessageItem;

@@ -134,6 +134,10 @@ export const Ids = {
         OpenChromeInspect: 'logmagnifier.openChromeInspect',
         ClearAllData: 'logmagnifier.clearAllData',
 
+        ControlAppLaunch: 'logmagnifier.adb.controlApp.launch',
+        ControlAppMore: 'logmagnifier.adb.controlApp.more',
+        ControlDeviceMore: 'logmagnifier.adb.controlDevice.more',
+
         // Workflow
         WorkflowOpenResult: 'logmagnifier.workflow.openResult',
         WorkflowImport: 'logmagnifier.workflow.import',

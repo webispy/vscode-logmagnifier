@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { AdbService } from '../services/AdbService';
-import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlAppItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
 
 export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();
@@ -41,11 +41,11 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             return item;
         } else if (this.isTargetApp(element)) {
             const app = element.device.targetApp || 'all';
-            const item = new vscode.TreeItem(`Target app: ${app}`, vscode.TreeItemCollapsibleState.None);
+            const collapsibleState = (app !== 'all') ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None;
+            const item = new vscode.TreeItem(`Target app: ${app}`, collapsibleState);
             item.iconPath = new vscode.ThemeIcon('symbol-method');
             item.command = {
-                command: 'logmagnifier.pickTargetApp',
-                title: 'Select Target App',
+                command: 'logmagnifier.pickTargetApp', title: 'Select Target App',
                 arguments: [element]
             };
             item.tooltip = 'Click to select target application';
@@ -70,11 +70,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             item.tooltip = `${element.name}\nStatus: ${element.isRunning ? 'Running' : 'Stopped'}\n${timeFilterStatus}`;
 
             return item;
-        } else if (this.isControlApp(element)) {
-            const item = new vscode.TreeItem('Control app', vscode.TreeItemCollapsibleState.Expanded);
-            item.contextValue = 'controlApp';
-            item.iconPath = new vscode.ThemeIcon('tools');
-            return item;
+
         } else if (this.isDumpsysGroup(element)) {
             const item = new vscode.TreeItem('Dumpsys', vscode.TreeItemCollapsibleState.Collapsed);
             item.contextValue = 'dumpsysGroup';
@@ -115,6 +111,16 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                     label = 'Activity';
                     icon = 'layers-active';
                     commandId = 'logmagnifier.control.dumpsysActivity';
+                    break;
+                case 'moreControl':
+                    label = 'More...';
+                    icon = 'gear';
+                    commandId = 'logmagnifier.adb.controlApp.more';
+                    break;
+                case 'launchApp':
+                    label = 'Launch App';
+                    icon = 'rocket';
+                    commandId = 'logmagnifier.adb.controlApp.launch';
                     break;
             }
 
@@ -220,6 +226,17 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 };
                 item.tooltip = 'Toggle "Show Taps" in Developer Options';
                 return item;
+                return item;
+            } else if (element.actionType === 'moreControl') {
+                const item = new vscode.TreeItem('More...', vscode.TreeItemCollapsibleState.None);
+                item.contextValue = 'controlDeviceAction_more';
+                item.iconPath = new vscode.ThemeIcon('gear');
+                item.command = {
+                    command: 'logmagnifier.adb.controlDevice.more',
+                    title: 'More...',
+                    arguments: [element]
+                };
+                return item;
             }
         } else if (this.isMessage(element)) {
             const item = new vscode.TreeItem(element.message, vscode.TreeItemCollapsibleState.None);
@@ -257,19 +274,21 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             // Control Device (New)
             children.push({ type: 'controlDevice', device: element } as ControlDeviceItem);
 
-            if (element.targetApp && element.targetApp !== 'all') {
-                children.push({ type: 'controlApp', device: element } as ControlAppItem);
-            }
+            // Control App items are now under TargetAppItem if not 'all'
+            // We don't push ControlAppItem anymore.
 
             children.push({ type: 'sessionGroup', device: element } as SessionGroupItem);
             return children;
-        } else if (this.isControlApp(element)) {
-            return [
-                { type: 'controlAction', actionType: 'uninstall', device: element.device } as ControlActionItem,
-                { type: 'controlAction', actionType: 'clearStorage', device: element.device } as ControlActionItem,
-                { type: 'controlAction', actionType: 'clearCache', device: element.device } as ControlActionItem,
-                { type: 'dumpsysGroup', device: element.device } as DumpsysGroupItem
-            ];
+        } else if (this.isTargetApp(element)) {
+            // If target app is selected (not all), return control items
+            if (element.device.targetApp && element.device.targetApp !== 'all') {
+                return [
+                    { type: 'controlAction', actionType: 'uninstall', device: element.device } as ControlActionItem,
+                    { type: 'controlAction', actionType: 'launchApp', device: element.device } as ControlActionItem,
+                    { type: 'controlAction', actionType: 'moreControl', device: element.device } as ControlActionItem
+                ];
+            }
+            return [];
         } else if (this.isDumpsysGroup(element)) {
             return [
                 { type: 'controlAction', actionType: 'dumpsys', device: element.device } as ControlActionItem,
@@ -282,7 +301,8 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 return [
                     { type: 'controlDeviceAction', actionType: 'screenshot', device: element.device } as ControlDeviceActionItem,
                     { type: 'controlDeviceAction', actionType: 'screenRecord', device: element.device } as ControlDeviceActionItem,
-                    { type: 'controlDeviceAction', actionType: 'showTouches', device: element.device, meta: { enabled: String(showTouchesState) } } as ControlDeviceActionItem
+                    { type: 'controlDeviceAction', actionType: 'showTouches', device: element.device, meta: { enabled: String(showTouchesState) } } as ControlDeviceActionItem,
+                    { type: 'controlDeviceAction', actionType: 'moreControl', device: element.device } as ControlDeviceActionItem
                 ];
             })();
         } else if (this.isSessionGroup(element)) {
@@ -299,7 +319,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         const t = element.type;
         // AdbDevice 'type' is dynamic (device, offline, etc.), so we check it's NOT one of our internal structural types
         return t !== 'targetApp' && t !== 'sessionGroup' &&
-            t !== 'controlApp' && t !== 'dumpsysGroup' &&
+            t !== 'dumpsysGroup' &&
             t !== 'controlAction' && t !== 'controlDevice' &&
             t !== 'controlDeviceAction' && t !== 'chromeInspect' && t !== 'message';
     }
@@ -320,9 +340,6 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         return 'priority' in element && 'isEnabled' in element && 'name' in element;
     }
 
-    private isControlApp(element: AdbTreeItem): element is ControlAppItem {
-        return 'type' in element && element.type === 'controlApp';
-    }
 
     private isDumpsysGroup(element: AdbTreeItem): element is DumpsysGroupItem {
         return 'type' in element && element.type === 'dumpsysGroup';

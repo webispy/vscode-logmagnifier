@@ -46,7 +46,6 @@ export interface SessionGroupItem {
     device: AdbDevice;
 }
 
-
 export interface DumpsysGroupItem {
     type: 'dumpsysGroup';
     device: AdbDevice;

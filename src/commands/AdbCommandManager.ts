@@ -331,24 +331,28 @@ export class AdbCommandManager {
 
                 if (deviceCount > 0) {
                     const chromeInspectUrl = 'chrome://inspect/#devices';
-                    let command = '';
+                    let executable = '';
+                    let args: string[] = [];
 
                     switch (process.platform) {
                         case 'darwin':
-                            command = `open -a "Google Chrome" "${chromeInspectUrl}"`;
+                            executable = 'open';
+                            args = ['-a', 'Google Chrome', chromeInspectUrl];
                             break;
                         case 'linux':
-                            command = `google-chrome "${chromeInspectUrl}"`;
+                            executable = 'google-chrome';
+                            args = [chromeInspectUrl];
                             break;
                         case 'win32':
-                            command = `start chrome "${chromeInspectUrl}"`;
+                            executable = 'cmd';
+                            args = ['/c', 'start', 'chrome', chromeInspectUrl];
                             break;
                         default:
                             vscode.window.showInformationMessage(`Platform '${process.platform}' not fully supported. Please open '${chromeInspectUrl}' in Chrome manually.`);
                             return;
                     }
 
-                    cp.exec(command, (error) => {
+                    cp.execFile(executable, args, (error) => {
                         if (error) {
                             vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
                         }

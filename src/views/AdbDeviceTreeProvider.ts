@@ -340,7 +340,6 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         return 'priority' in element && 'isEnabled' in element && 'name' in element;
     }
 
-
     private isDumpsysGroup(element: AdbTreeItem): element is DumpsysGroupItem {
         return 'type' in element && element.type === 'dumpsysGroup';
     }

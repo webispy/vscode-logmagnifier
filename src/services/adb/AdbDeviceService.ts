@@ -309,11 +309,251 @@ export class AdbDeviceService {
     }
 
     public async getSystemInfo(deviceId: string): Promise<string> {
-        return this.client.execAdb(['-s', deviceId, 'shell', 'echo "Model:" && getprop ro.product.model && echo "Android Version:" && getprop ro.build.version.release && echo "Build ID:" && getprop ro.build.display.id && echo "\n--- MEMINFO ---" && cat /proc/meminfo']);
+        try {
+            const [
+                props,
+                wmSize,
+                wmDensity,
+                windowDisplays,
+                battery,
+                memInfo
+            ] = await Promise.all([
+                this.getDeviceProps(deviceId),
+                this.getWmSize(deviceId),
+                this.getWmDensity(deviceId),
+                this.getWindowDisplays(deviceId),
+                this.getBatteryInfo(deviceId),
+                this.getMemInfo(deviceId)
+            ]);
+
+            // IP Address & Public IP
+            let ipAddressString = 'Unknown';
+            let publicIpString = '';
+
+            try {
+                const ipData = await this.getIpInfo(deviceId);
+                if (ipData.internal.length > 0) {
+                    // IP Address: 172.20.10.7 (wlan0)
+                    //             192.0.0.2 (rmnet_data1)
+                    ipAddressString = ipData.internal[0];
+                    if (ipData.internal.length > 1) {
+                        const padding = ' '.repeat(14); // "  IP Address: " length
+                        for (let i = 1; i < ipData.internal.length; i++) {
+                            ipAddressString += `\n${padding}${ipData.internal[i]}`;
+                        }
+                    }
+                }
+                if (ipData.public) {
+                    publicIpString = `\n  Public IP: ${ipData.public}`;
+                }
+            } catch (error) {
+                this.logger.warn(`Failed to process IP info: ${error}`);
+            }
+
+            // Parsing Device Info
+            const model = this.getPropValue(props, 'ro.product.model');
+            const androidVersion = this.getPropValue(props, 'ro.build.version.release');
+            const sdkVersion = this.getPropValue(props, 'ro.build.version.sdk');
+            const cpuAbi = this.getPropValue(props, 'ro.product.cpu.abi');
+            const androidId = (await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'get', 'secure', 'android_id'])).trim();
+
+            // Parsing Display Info
+            // wm size: Physical size: 1080x2340
+            const sizeMatch = wmSize.match(/Physical size: (\d+x\d+)/);
+            const resolution = sizeMatch ? sizeMatch[1] : 'Unknown';
+            // wm density: Physical density: 480
+            const densityMatch = wmDensity.match(/Physical density: (\d+)/);
+            const density = densityMatch ? parseInt(densityMatch[1], 10) : 0;
+
+            // Calculate DP
+            let dpResolution = '';
+            let dpWidth = 0, dpHeight = 0;
+            if (resolution !== 'Unknown' && density > 0) {
+                const [w, h] = resolution.split('x').map(Number);
+                const scale = density / 160;
+                dpWidth = Math.round(w / scale);
+                dpHeight = Math.round(h / scale);
+                dpResolution = ` (${dpWidth}x${dpHeight} dp)`;
+            }
+
+            // Parse Bounds
+            const bounds = this.parseWindowBounds(windowDisplays, 'mBounds', density);
+            const appBounds = this.parseWindowBounds(windowDisplays, 'mAppBounds', density);
+            const maxBounds = this.parseWindowBounds(windowDisplays, 'mMaxBounds', density);
+
+            // Parsing Environment
+            const locale = this.getPropValue(props, 'ro.product.locale') || this.getPropValue(props, 'persist.sys.locale');
+            const timezone = this.getPropValue(props, 'persist.sys.timezone');
+
+            const batteryMatch = battery.match(/level: (\d+)/);
+            const batteryLevel = batteryMatch ? `${batteryMatch[1]}%` : 'Unknown';
+
+            // Parsing Memory
+            const memTotalMatch = memInfo.match(/MemTotal:\s+(\d+)\s+kB/);
+            const memAvailMatch = memInfo.match(/MemAvailable:\s+(\d+)\s+kB/);
+            const memTotal = memTotalMatch ? Math.round(parseInt(memTotalMatch[1], 10) / 1024) : 0;
+            const memAvail = memAvailMatch ? Math.round(parseInt(memAvailMatch[1], 10) / 1024) : 0;
+
+            // Parsing Storage
+            let storageTotal = 'Unknown';
+            let storageFree = 'Unknown';
+
+            try {
+                const diskUsage = await this.getDiskUsage(deviceId);
+                storageTotal = diskUsage.total;
+                storageFree = diskUsage.free;
+            } catch (error) {
+                this.logger.warn(`Failed to get disk usage: ${error}`);
+            }
+
+            return `System Info for ${model}
+========================================
+[Device]
+  Model: ${model}
+  Android Version: ${androidVersion} (SDK ${sdkVersion})
+  CPU ABI: ${cpuAbi}
+  Android ID: ${androidId}
+
+[Display]
+  Resolution: ${resolution}, ${density}${dpResolution}
+  mBounds:    ${bounds}
+  mAppBounds: ${appBounds}
+  mMaxBounds: ${maxBounds}
+
+[Environment]
+  Locale: ${locale}
+  Timezone: ${timezone}
+  Battery: ${batteryLevel}
+  IP Address: ${ipAddressString}${publicIpString}
+
+[Memory & Storage]
+  RAM: Total ${memTotal} MB / Available ${memAvail} MB
+  Internal Storage (/data): Total ${storageTotal} / Free ${storageFree}`;
+
+        } catch (error) {
+            this.logger.error(`Error fetching system info: ${error}`);
+            // Do not re-throw, simpler message
+            return `Error fetching system info: ${error instanceof Error ? error.message : String(error)}`;
+        }
     }
 
     public async getSystemProperties(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'getprop']);
+    }
+
+    private async getDeviceProps(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'getprop']);
+    }
+
+    private async getWmSize(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'wm', 'size']);
+    }
+
+    private async getWmDensity(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'wm', 'density']);
+    }
+
+    private async getWindowDisplays(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'window', 'displays']);
+    }
+
+    private async getBatteryInfo(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'battery']);
+    }
+
+    private async getIpInfo(deviceId: string): Promise<{ internal: string[], public?: string }> {
+        const ips: string[] = [];
+        let publicIp: string | undefined;
+
+        // 1. Internal IPs via ip route
+        try {
+            const output = await this.client.execAdb(['-s', deviceId, 'shell', 'ip', 'route']);
+            const lines = output.trim().split('\n');
+
+            for (const line of lines) {
+                // 172.20.10.0/28 dev wlan0 proto kernel scope link src 172.20.10.7
+                const srcMatch = line.match(/src\s+([\d.]+)/);
+                const devMatch = line.match(/dev\s+([^\s]+)/);
+                if (srcMatch && devMatch) {
+                    const ip = srcMatch[1];
+                    const dev = devMatch[1];
+                    if (ip !== '127.0.0.1') { // Excluding localhost if it appears in route (unlikely but safe)
+                        ips.push(`${ip} (${dev})`);
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.warn(`[ADB] Failed to get internal IP info: ${error}`);
+        }
+
+        // 2. Public IP via curl
+        try {
+            // Use a short timeout to avoid hanging if no internet
+            const output = await this.client.execAdb(['-s', deviceId, 'shell', 'curl', '-s', '--connect-timeout', '5', 'https://api.ipify.org']);
+            if (output && output.trim().match(/^[\d.]+$/)) {
+                publicIp = `${output.trim()} (via https://api.ipify.org)`;
+            }
+        } catch (error) {
+            this.logger.warn(`[ADB] Failed to get public IP: ${error}`);
+        }
+
+        return { internal: ips, public: publicIp };
+    }
+
+    private async getMemInfo(deviceId: string): Promise<string> {
+        return this.client.execAdb(['-s', deviceId, 'shell', 'cat', '/proc/meminfo']);
+    }
+
+    private async getDiskUsage(deviceId: string): Promise<{ total: string, free: string }> {
+        const result = { total: 'Unknown', free: 'Unknown' };
+        try {
+            const dfDataRaw = await this.client.execAdb(['-s', deviceId, 'shell', 'df', '/data']);
+            const dfLines = dfDataRaw.trim().split('\n');
+            // Find line ending in /data or /data/user/0
+            const dataLine = dfLines.find(l => {
+                const p = l.trim().split(/\s+/);
+                return p.length > 0 && (p[p.length - 1] === '/data' || p[p.length - 1].startsWith('/data/'));
+            });
+
+            if (dataLine) {
+                const parts = dataLine.trim().split(/\s+/);
+                // Standard df output on Android:
+                // Filesystem               1K-blocks   Used Available Use% Mounted on
+                // /dev/block/dm-4          117035656 123456  12345678  1% /data
+                // Sometimes header is different, but columns are usually: FS, Total, Used, Free, ...
+                if (parts.length >= 4) {
+                    let totalIndex = -1;
+                    let freeIndex = -1;
+
+                    // Try to guess indices based on header if present
+                    if (dfLines[0] && dfLines[0].toLowerCase().includes('1k-blocks')) {
+                        totalIndex = 1;
+                        freeIndex = 3;
+                    } else if (dfLines[0] && dfLines[0].toLowerCase().includes('blocks')) {
+                        totalIndex = 1;
+                        freeIndex = 3;
+                    }
+
+                    // Fallback to standard indices if header is missing or complex
+                    if (totalIndex === -1 && parts.length >= 5) {
+                        totalIndex = 1;
+                        freeIndex = 3;
+                    }
+
+                    if (totalIndex !== -1 && parts.length > freeIndex) {
+                        const totalBlocks = parseInt(parts[totalIndex], 10);
+                        const freeBlocks = parseInt(parts[freeIndex], 10);
+                        if (!isNaN(totalBlocks) && !isNaN(freeBlocks)) {
+                            result.total = this.formatBytes(totalBlocks * 1024);
+                            result.free = this.formatBytes(freeBlocks * 1024);
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            this.logger.warn(`Failed to parse disk usage: ${error}`);
+        }
+        return result;
     }
 
     public async installApk(deviceId: string, filePath: string): Promise<boolean> {
@@ -341,5 +581,55 @@ export class AdbDeviceService {
 
     public async runDumpsysAudioFlinger(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_flinger']);
+    }
+    private getPropValue(props: string, key: string): string {
+        // Escape special regex characters to prevent CodeQL security issue
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`^\\[${escapedKey}\\]: \\[(.*)\\]`, 'm');
+        const match = props.match(regex);
+        return match ? match[1] : 'Unknown';
+    }
+
+    private parseWindowBounds(output: string, key: string, density: number): string {
+        // Common formats:
+        // mBounds=[0,0][1080,2340]
+        // mBounds=Rect(0, 0 - 1080, 2340)
+
+        let l = 0, t = 0, r = 0, b = 0;
+        let found = false;
+
+        const regexSquare = new RegExp(`${key}=\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]`);
+        const regexRect = new RegExp(`${key}=Rect\\((\\d+),\\s*(\\d+)\\s*-\\s*(\\d+),\\s*(\\d+)\\)`);
+
+        let match = output.match(regexSquare);
+        if (match) {
+            [, l, t, r, b] = match.map(Number);
+            found = true;
+        } else {
+            match = output.match(regexRect);
+            if (match) {
+                [, l, t, r, b] = match.map(Number);
+                found = true;
+            }
+        }
+
+        if (!found) { return 'Unknown'; }
+
+        // Format: 0, 0 - 1080, 2340 (0,0 - 360,780 dp)
+        const densityScale = density > 0 ? density / 160 : 1;
+        const dpL = Math.round(l / densityScale);
+        const dpT = Math.round(t / densityScale);
+        const dpR = Math.round(r / densityScale);
+        const dpB = Math.round(b / densityScale);
+
+        return `${l}, ${t} - ${r}, ${b} (${dpL},${dpT} - ${dpR},${dpB} dp)`;
+    }
+
+    private formatBytes(bytes: number): string {
+        if (bytes === 0) { return '0 B'; }
+        const k = 1024;
+        const sizes = ['B', 'K', 'M', 'G', 'T'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(0)) + sizes[i];
     }
 }

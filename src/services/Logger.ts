@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
-export class Logger {
+export class Logger implements vscode.Disposable {
     private static instance: Logger;
     private outputChannel: vscode.OutputChannel;
 
@@ -35,5 +35,9 @@ export class Logger {
 
     public show(): void {
         this.outputChannel.show(true);
+    }
+
+    public dispose() {
+        this.outputChannel.dispose();
     }
 }

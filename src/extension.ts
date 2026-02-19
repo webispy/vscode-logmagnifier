@@ -32,6 +32,7 @@ import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
 export function activate(context: vscode.ExtensionContext) {
     const logger = Logger.getInstance();
+    context.subscriptions.push(logger);
     logger.info('LogMagnifier activated');
 
     let debounceTimer: NodeJS.Timeout | undefined;

@@ -11,6 +11,7 @@ export class AdbService implements vscode.Disposable {
     private deviceService: AdbDeviceService;
     private targetAppService: AdbTargetAppService;
     private logcatService: AdbLogcatService;
+    private _disposables: vscode.Disposable[] = [];
 
     // Events need to be aggregated or exposed from sub-services
     private _onDidChangeSessions = new vscode.EventEmitter<void>();
@@ -23,9 +24,11 @@ export class AdbService implements vscode.Disposable {
         this.logcatService = new AdbLogcatService(logger, this.client, this.targetAppService);
 
         // Forward events
-        this.logcatService.onDidChangeSessions(() => this._onDidChangeSessions.fire());
-        this.targetAppService.onDidChangeTargetApp(() => this._onDidChangeSessions.fire());
-        this.deviceService.onDidChangeRecordingStatus(() => this._onDidChangeSessions.fire()); // In case recording affects device status display
+        this._disposables.push(
+            this.logcatService.onDidChangeSessions(() => this._onDidChangeSessions.fire()),
+            this.targetAppService.onDidChangeTargetApp(() => this._onDidChangeSessions.fire()),
+            this.deviceService.onDidChangeRecordingStatus(() => this._onDidChangeSessions.fire())
+        );
     }
 
     // Devices
@@ -199,6 +202,8 @@ export class AdbService implements vscode.Disposable {
     }
 
     public dispose() {
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
         this.logcatService.dispose();
         // deviceService doesn't have disposable resources (process cleanup handles itself or on demand)
         // targetAppService doesn't have disposable resources

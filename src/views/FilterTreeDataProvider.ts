@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { ThemeUtils } from '../utils/ThemeUtils';
 import { FilterManager } from '../services/FilterManager';
 import { FilterGroup, FilterItem } from '../models/Filter';
 
@@ -42,7 +43,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 item.id = element.id;
 
                 // UX Improvement: Distinct Group Icons
-                const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                const isDark = ThemeUtils.isDarkTheme();
                 const strokeColor = isDark ? '#cccccc' : '#333333';
                 const dimmedColor = isDark ? '#555555' : '#cccccc';
 
@@ -85,7 +86,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 if (element.isEnabled) {
                     if (element.type === 'exclude') {
                         const fillColor = '#808080';
-                        const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                        const isDark = ThemeUtils.isDarkTheme();
                         const strokeColor = isDark ? '#cccccc' : '#333333';
                         const style = element.excludeStyle || 'line-through';
 
@@ -95,7 +96,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                         let fillColor = element.color;
 
                         if (preset) {
-                            const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
+                            const isDark = ThemeUtils.isDarkTheme();
                             fillColor = isDark ? preset.dark : preset.light;
                         }
 

@@ -3,15 +3,16 @@ import { ShellCommanderService } from '../services/ShellCommanderService';
 import { ShellItem, ShellGroup, ShellFolder, ShellCommand } from '../models/ShellCommander';
 import { Constants } from '../Constants';
 
-export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<ShellItem>, vscode.TreeDragAndDropController<ShellItem> {
+export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<ShellItem>, vscode.TreeDragAndDropController<ShellItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<ShellItem | undefined | null | void> = new vscode.EventEmitter<ShellItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<ShellItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private disposables: vscode.Disposable[] = [];
 
     dropMimeTypes = ['application/vnd.code.tree.shellcommander'];
     dragMimeTypes = ['application/vnd.code.tree.shellcommander'];
 
     constructor(private shellService: ShellCommanderService) {
-        this.shellService.onDidChangeTreeData(() => this.refresh());
+        this.disposables.push(this.shellService.onDidChangeTreeData(() => this.refresh()));
     }
 
     refresh(): void {
@@ -91,5 +92,11 @@ export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<S
     }
     getParent(element: ShellItem): vscode.ProviderResult<ShellItem> {
         return element.parent as ShellItem;
+    }
+
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
+        this._onDidChangeTreeData.dispose();
     }
 }

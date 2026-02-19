@@ -59,6 +59,7 @@ export class JsonTreeWebview {
             this.panel.dispose();
             this.panel = undefined;
         }
+        this._onDidRevealLine.dispose();
     }
 
     public get isVisible(): boolean {

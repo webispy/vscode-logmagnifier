@@ -511,11 +511,11 @@ export class LogBookmarkService implements vscode.Disposable {
         const lnObj: Record<string, boolean> = {};
         for (const [k, v] of this._includeLineNumbers.entries()) { lnObj[k] = v; }
 
-        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_include_ln_map', lnObj);
-        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_wordWrap', this._isWordWrapEnabled);
+        await this.context.globalState.update(Constants.GlobalState.BookmarkIncludeLnMap, lnObj);
+        await this.context.globalState.update(Constants.GlobalState.BookmarkWordWrap, this._isWordWrapEnabled);
 
         // Save file order
-        await this.context.globalState.update(Constants.GlobalState.Bookmarks + '_fileOrder', this._fileOrder);
+        await this.context.globalState.update(Constants.GlobalState.BookmarkFileOrder, this._fileOrder);
 
         this.logger.info(`Saved bookmarks to state. Files with bookmarks: ${this._bookmarks.size}`);
     }
@@ -555,10 +555,10 @@ export class LogBookmarkService implements vscode.Disposable {
             }
         }
 
-        const lnMapData = this.context.globalState.get<Record<string, boolean>>(Constants.GlobalState.Bookmarks + '_include_ln_map');
+        const lnMapData = this.context.globalState.get<Record<string, boolean>>(Constants.GlobalState.BookmarkIncludeLnMap);
 
         // Load file order
-        const fileOrderData = this.context.globalState.get<string[]>(Constants.GlobalState.Bookmarks + '_fileOrder');
+        const fileOrderData = this.context.globalState.get<string[]>(Constants.GlobalState.BookmarkFileOrder);
         if (fileOrderData) {
             this._fileOrder = fileOrderData;
         } else {
@@ -572,7 +572,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
         }
 
-        const wordWrapData = this.context.globalState.get<boolean>(Constants.GlobalState.Bookmarks + '_wordWrap');
+        const wordWrapData = this.context.globalState.get<boolean>(Constants.GlobalState.BookmarkWordWrap);
         if (wordWrapData !== undefined) {
             this._isWordWrapEnabled = wordWrapData;
         }

@@ -1,4 +1,4 @@
-import * as vscode from 'vscode';
+import { ThemeUtils } from './ThemeUtils';
 
 export class IconUtils {
     public static generateGroupSvg(folderColor: string, overlayColor?: string): string {
@@ -57,7 +57,7 @@ export class IconUtils {
 
     public static generateIncludeSvg(fillColor: string, mode: number, elementId: string): string {
         const isTransparent = fillColor === 'rgba(0,0,0,0)' || fillColor === 'rgba(0, 0, 0, 0)' || fillColor === 'transparent';
-        const strokeColor = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark ? '#cccccc' : '#333333';
+        const strokeColor = ThemeUtils.isDarkTheme() ? '#cccccc' : '#333333';
         const strokeAttr = `stroke="${strokeColor}" stroke-width="1.0" fill="none"`;
         const fillAttr = `fill="${fillColor}"`;
 

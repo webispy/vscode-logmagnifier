@@ -399,7 +399,7 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-    // debounceTimer is cleaned up by context.subscriptions
+    Logger.getInstance().info('LogMagnifier deactivated');
 }
 
 function isSupportedScheme(uri: vscode.Uri): boolean {

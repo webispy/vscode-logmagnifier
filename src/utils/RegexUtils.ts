@@ -59,7 +59,7 @@ export class RegexUtils {
                 RegexUtils.reportedErrors.add(errorKey);
                 // We dynamically import vscode to avoid hard dependency if this util is used outside extension context context
                 // effectively we will just assume it is available in this environment
-                Promise.all([import('vscode'), import('../constants.js')]).then(([vscode, { Constants }]) => {
+                Promise.all([import('vscode'), import('../Constants.js')]).then(([vscode, { Constants }]) => {
                     const message = Constants.Messages.Error.InvalidRegexPatternDetailed
                         .replace('{0}', keyword)
                         .replace('{1}', errorMessage);

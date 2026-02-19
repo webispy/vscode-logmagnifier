@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Logger } from './Logger';
 import { SourceMapService } from './SourceMapService';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { HighlightService } from './HighlightService';
 import { JsonTreeWebview } from '../views/JsonTreeWebview';
 import { LenientJsonParser } from './LenientJsonParser';

@@ -1,7 +1,7 @@
 
 import * as vscode from 'vscode';
 import { FileHierarchyService } from '../services/FileHierarchyService';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
 

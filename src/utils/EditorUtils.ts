@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export class EditorUtils {
 

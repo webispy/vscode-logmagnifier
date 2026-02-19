@@ -21,7 +21,7 @@ import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinition
 import { ShellCommanderService } from './services/ShellCommanderService';
 import { ShellCommanderTreeDataProvider } from './views/ShellCommanderTreeDataProvider';
 import { ShellCommanderCommandManager } from './commands/ShellCommanderCommandManager';
-import { Constants } from './constants';
+import { Constants } from './Constants';
 import { FilterGroup, FilterItem } from './models/Filter';
 import { FileHierarchyService } from './services/FileHierarchyService';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';

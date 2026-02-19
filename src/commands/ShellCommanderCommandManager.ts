@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { ShellCommanderService } from '../services/ShellCommanderService';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { ShellGroup, ShellFolder, ShellCommand, ShellItem, ShellConfig } from '../models/ShellCommander';
 import { Logger } from '../services/Logger';
 import * as os from 'os';

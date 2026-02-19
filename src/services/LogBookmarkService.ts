@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import { BookmarkItem, BookmarkResult } from '../models/Bookmark';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { SourceMapService } from './SourceMapService';
 
 import { Logger } from './Logger';

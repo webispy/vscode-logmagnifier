@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { BookmarkWebviewMessage, SerializedBookmarkItem } from '../models/WebviewModels';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { Logger } from '../services/Logger';
 import { LogBookmarkHtmlGenerator } from './LogBookmarkHtmlGenerator';
 import { escapeHtml } from '../utils/WebviewUtils';

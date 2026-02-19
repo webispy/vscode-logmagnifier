@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { WorkflowManager } from '../services/WorkflowManager';
 import { escapeHtml } from '../utils/WebviewUtils';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { WorkflowHtmlGenerator } from './WorkflowHtmlGenerator';
 
 export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {

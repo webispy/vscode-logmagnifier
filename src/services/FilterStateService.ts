@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { FilterGroup, FilterItem } from '../models/Filter';
 
 export class FilterStateService {

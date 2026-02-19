@@ -4,7 +4,7 @@ import { FileHierarchyService } from '../services/FileHierarchyService';
 import { BookmarkItem } from '../models/Bookmark';
 import { FilterItem } from '../models/Filter';
 import { HighlightService } from '../services/HighlightService';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { RegexUtils } from '../utils/RegexUtils';
 import { EditorUtils } from '../utils/EditorUtils';
 

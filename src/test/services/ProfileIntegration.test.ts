@@ -1,7 +1,7 @@
 import * as assert from 'assert';
 
 import { FilterManager } from '../../services/FilterManager';
-import { Constants } from '../../constants';
+import { Constants } from '../../Constants';
 import { MockExtensionContext } from '../utils/Mocks';
 
 suite('Profile Integration Test Suite', () => {

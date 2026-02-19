@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export class Logger {
     private static instance: Logger;

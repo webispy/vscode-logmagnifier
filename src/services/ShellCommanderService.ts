@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import { ShellConfig, ShellGroup, ShellFolder, ShellCommand, ShellItem, ShellFolderConfig, ShellCommandConfig, ShellShortCutKeymap, ShellSystemConfig } from '../models/ShellCommander';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { Logger } from './Logger';
 
 export class ShellCommanderService {

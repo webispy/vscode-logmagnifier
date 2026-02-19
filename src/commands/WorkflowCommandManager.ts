@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { WorkflowManager } from '../services/WorkflowManager';
 import { SimulationStepResult } from '../models/Workflow';
 import { FilterManager } from '../services/FilterManager';

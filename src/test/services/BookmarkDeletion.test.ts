@@ -4,7 +4,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { LogBookmarkService } from '../../services/LogBookmarkService';
-import { Constants } from '../../constants';
+import { Constants } from '../../Constants';
 // Integration tests rely on public behavior (UI updates, exposed state).
 
 suite('Bookmark Deletion & Watcher Integration Test Suite', function () {

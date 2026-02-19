@@ -6,7 +6,7 @@ import * as os from 'os';
 import * as path from 'path';
 
 import { Logger } from './Logger';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export class AdbService implements vscode.Disposable {
     private sessions: Map<string, LogcatSession> = new Map();

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ShellCommanderService } from '../services/ShellCommanderService';
 import { ShellItem, ShellGroup, ShellFolder, ShellCommand } from '../models/ShellCommander';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<ShellItem>, vscode.TreeDragAndDropController<ShellItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<ShellItem | undefined | null | void> = new vscode.EventEmitter<ShellItem | undefined | null | void>();

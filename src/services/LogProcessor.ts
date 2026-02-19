@@ -7,7 +7,7 @@ import { FilterGroup, FilterItem } from '../models/Filter';
 import { FileHierarchyService } from './FileHierarchyService';
 import { RegexUtils } from '../utils/RegexUtils';
 import { CircularBuffer } from '../utils/CircularBuffer';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 
 export interface CompiledGroup {
     includes: { regex: RegExp, contextLine: number }[];

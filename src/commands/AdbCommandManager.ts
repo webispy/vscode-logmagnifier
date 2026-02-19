@@ -3,7 +3,7 @@ import { AdbService } from '../services/AdbService';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, SessionGroupItem } from '../models/AdbModels';
 import * as crypto from 'crypto';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import * as os from 'os';
 import * as path from 'path';
 import * as cp from 'child_process';

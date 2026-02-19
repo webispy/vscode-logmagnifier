@@ -6,7 +6,7 @@ import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
 import { Workflow } from '../../models/Workflow';
-import { Constants } from '../../constants';
+import { Constants } from '../../Constants';
 import { SourceMapService } from '../../services/SourceMapService';
 
 suite('Workflow Badge Logic Test Suite', () => {

@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { LogBookmarkService } from '../../services/LogBookmarkService';
-import { Constants } from '../../constants';
+import { Constants } from '../../Constants';
 
 suite('Bookmark Integration Test Suite', () => {
     let bookmarkService: LogBookmarkService;

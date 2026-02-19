@@ -1,7 +1,7 @@
 
 import * as vscode from 'vscode';
 
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { FileHierarchyService } from '../services/FileHierarchyService';
 import { Logger } from '../services/Logger';
 

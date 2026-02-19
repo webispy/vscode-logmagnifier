@@ -3,7 +3,7 @@ import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { Workflow, WorkflowPackage, SimulationResult, SimulationStepResult } from '../models/Workflow';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';

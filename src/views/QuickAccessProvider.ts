@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { Logger } from '../services/Logger';
 import { FilterManager } from '../services/FilterManager';
 import { EditorUtils } from '../utils/EditorUtils';

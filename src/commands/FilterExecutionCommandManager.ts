@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { Constants } from '../constants';
+import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
 import { LogProcessor } from '../services/LogProcessor';

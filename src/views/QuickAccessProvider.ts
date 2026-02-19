@@ -7,16 +7,19 @@ import { EditorUtils } from '../utils/EditorUtils';
 
 import { WorkflowManager } from '../services/WorkflowManager';
 
-export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(
         private filterManager: FilterManager,
         private workflowManager: WorkflowManager
     ) {
-        this.filterManager.onDidChangeProfile(() => this.refresh());
-        this.workflowManager.onDidChangeWorkflow(() => this.refresh());
+        this._disposables.push(
+            this.filterManager.onDidChangeProfile(() => this.refresh()),
+            this.workflowManager.onDidChangeWorkflow(() => this.refresh())
+        );
     }
 
     refresh(): void {
@@ -242,5 +245,10 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         }
 
         return item;
+    }
+    public dispose() {
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        this._onDidChangeTreeData.dispose();
     }
 }

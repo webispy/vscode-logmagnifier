@@ -18,6 +18,7 @@ export class WorkflowManager implements vscode.Disposable {
 
     private _onDidRunWorkflow: vscode.EventEmitter<SimulationResult> = new vscode.EventEmitter<SimulationResult>();
     readonly onDidRunWorkflow: vscode.Event<SimulationResult> = this._onDidRunWorkflow.event;
+    private _disposables: vscode.Disposable[] = [];
 
     private workflows: Workflow[] = [];
     private lastRunResults: Map<string, SimulationResult> = new Map();
@@ -37,9 +38,11 @@ export class WorkflowManager implements vscode.Disposable {
         this.workflows = this.loadFromState();
 
         // Subscribe to profile changes to update workflow UI when profiles are deleted
-        this.profileManager.onDidChangeProfile(() => {
-            this._onDidChangeWorkflow.fire();
-        });
+        this._disposables.push(
+            this.profileManager.onDidChangeProfile(() => {
+                this._onDidChangeWorkflow.fire();
+            })
+        );
     }
 
     private loadFromState(): Workflow[] {
@@ -643,6 +646,8 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public dispose() {
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
         this._onDidChangeWorkflow.dispose();
         this._onDidRunWorkflow.dispose();
     }

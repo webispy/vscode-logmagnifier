@@ -8,7 +8,7 @@ export interface FilterProfile {
     updatedAt: number;
 }
 
-export class ProfileManager {
+export class ProfileManager implements vscode.Disposable {
     private _onDidChangeProfile: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeProfile: vscode.Event<void> = this._onDidChangeProfile.event;
 
@@ -176,5 +176,9 @@ export class ProfileManager {
 
         await this.updateProfileData(name, groups);
         return true;
+    }
+
+    public dispose() {
+        this._onDidChangeProfile.dispose();
     }
 }

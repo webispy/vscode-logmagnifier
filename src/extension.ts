@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { FilterManager } from './services/FilterManager';
-import { FilterTreeDataProvider } from './views/FilterTreeView';
+import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
 import { QuickAccessProvider } from './views/QuickAccessProvider';
 import { LogProcessor } from './services/LogProcessor';
 import { HighlightService } from './services/HighlightService';

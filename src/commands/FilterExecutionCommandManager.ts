@@ -277,7 +277,7 @@ export class FilterExecutionCommandManager {
             }
         } else {
             // Previous
-            const offset = document.offsetAt(selection.active);
+            const offset = document.offsetAt(selection.start);
             regex.lastIndex = 0;
             let match: RegExpExecArray | null;
             let verifyLastMatch: RegExpExecArray | undefined;

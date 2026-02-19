@@ -60,138 +60,129 @@ export class LogProcessor {
      * @throws Error if file cannot be read or written
      */
     public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
-        return new Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }>((resolve, reject) => {
-            const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
+        const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
 
-            fileStream.on('error', (err) => {
-                reject(new Error(`Failed to read file ${inputPath}: ${err.message}`));
-            });
+        const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity
+        });
 
-            const rl = readline.createInterface({
-                input: fileStream,
-                crlfDelay: Infinity
-            });
+        const compiledGroups = this.compileGroups(filterGroups);
 
-            rl.on('error', (err) => {
-                reject(new Error(`Readline error while processing ${inputPath}: ${err.message}`));
-            });
-            const compiledGroups = this.compileGroups(filterGroups);
+        // Path and stream setup
+        const tmpDir = os.tmpdir();
+        const prefix = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.TempFilePrefix) || Constants.Defaults.TempFilePrefix;
+        const now = new Date();
+        const uniqueSuffix = Math.random().toString(36).substring(7);
+        const outputFilename = `${prefix}${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}_${now.getMilliseconds().toString().padStart(3, '0')}_${uniqueSuffix}.log`;
+        const outputPath = path.join(tmpDir, outputFilename);
+        const outputStream = fs.createWriteStream(outputPath);
 
-            // Path and stream setup
-            const tmpDir = os.tmpdir();
-            const prefix = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.TempFilePrefix) || Constants.Defaults.TempFilePrefix;
-            const now = new Date();
-            const uniqueSuffix = Math.random().toString(36).substring(7);
-            const outputFilename = `${prefix}${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}_${now.getMilliseconds().toString().padStart(3, '0')}_${uniqueSuffix}.log`;
-            const outputPath = path.join(tmpDir, outputFilename);
-            const outputStream = fs.createWriteStream(outputPath);
+        // Surface stream errors as rejections
+        const streamError = new Promise<never>((_, reject) => {
+            fileStream.on('error', (err) => reject(new Error(`Failed to read file ${inputPath}: ${err.message}`)));
+            rl.on('error', (err) => reject(new Error(`Readline error while processing ${inputPath}: ${err.message}`)));
+            outputStream.on('error', (err) => reject(new Error(`Failed to write output file ${outputPath}: ${err.message}`)));
+        });
 
-            outputStream.on('error', (err) => {
-                reject(new Error(`Failed to write output file ${outputPath}: ${err.message}`));
-            });
+        let processed = 0;
+        let matched = 0;
 
-            let processed = 0;
-            let matched = 0;
+        const maxBeforeLines = DEFAULT_MAX_BEFORE_LINES;
+        const beforeBuffer = new CircularBuffer<{ line: string, index: number }>(maxBeforeLines);
+        let afterLinesRemaining = 0;
+        let lastWrittenLineIndex = -1; // Index of the last line written to output
 
-            const maxBeforeLines = DEFAULT_MAX_BEFORE_LINES;
-            const beforeBuffer = new CircularBuffer<{ line: string, index: number }>(maxBeforeLines);
-            let afterLinesRemaining = 0;
-            let lastWrittenLineIndex = -1; // Index of the last line written to output
+        // Line Mapping: Index = Output Line Number, Value = Source Line Number
+        const lineMapping: number[] = [];
 
-            // Line Mapping: Index = Output Line Number, Value = Source Line Number
-            const lineMapping: number[] = [];
+        // Padding calculation
+        const prependLineNumbers = options?.prependLineNumbers || false;
+        const totalLineCount = options?.totalLineCount || DEFAULT_MAX_LINE_COUNT;
+        const padding = totalLineCount.toString().length;
 
-            // Padding calculation
-            const prependLineNumbers = options?.prependLineNumbers || false;
-            const totalLineCount = options?.totalLineCount || DEFAULT_MAX_LINE_COUNT;
-            const padding = totalLineCount.toString().length;
+        const formatLine = (line: string, index: number) => {
+            if (prependLineNumbers) {
+                return `${index.toString().padStart(padding, '0')}: ${line}`;
+            }
+            return line;
+        };
 
-            const formatLine = (line: string, index: number) => {
-                if (prependLineNumbers) {
-                    return `${index.toString().padStart(padding, '0')}: ${line}`;
-                }
-                return line;
-            };
+        const waitForDrain = () => new Promise<void>(resolve => outputStream.once('drain', resolve));
 
-            const writeLine = (line: string, originalIndex: number) => {
-                if (!outputStream.write(formatLine(line, originalIndex) + '\n')) {
-                    return false;
-                }
-                lineMapping.push(originalIndex);
-                return true;
-            };
+        const writeLine = (line: string, originalIndex: number) => {
+            const ok = outputStream.write(formatLine(line, originalIndex) + '\n');
+            lineMapping.push(originalIndex);
+            return ok;
+        };
 
-            // Async processing wrapper
-            (async () => {
-                try {
-                    for await (const line of rl) {
-                        processed++; // 1-based index
-                        const matchResult = this.checkMatchCompiled(line, compiledGroups);
+        const processLines = async () => {
+            for await (const line of rl) {
+                processed++; // 1-based index
+                const matchResult = this.checkMatchCompiled(line, compiledGroups);
 
-                        if (matchResult.isMatched) {
-                            matched++;
-                            const maxContext = matchResult.contextLines;
+                if (matchResult.isMatched) {
+                    matched++;
+                    const maxContext = matchResult.contextLines;
 
-                            // 1. Write 'Before' context lines that haven't been written yet
-                            const allBuffer = beforeBuffer.getAll();
-                            const startIndex = Math.max(0, allBuffer.length - maxContext);
-                            const linesToSubmit = allBuffer.slice(startIndex);
+                    // 1. Write 'Before' context lines that haven't been written yet
+                    const allBuffer = beforeBuffer.getAll();
+                    const startIndex = Math.max(0, allBuffer.length - maxContext);
+                    const linesToSubmit = allBuffer.slice(startIndex);
 
-                            for (let i = 0; i < linesToSubmit.length; i++) {
-                                const bufferedItem = linesToSubmit[i];
-                                if (bufferedItem.index > lastWrittenLineIndex) {
-                                    if (!writeLine(bufferedItem.line, bufferedItem.index)) {
-                                        await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
-                                    }
-                                    lastWrittenLineIndex = bufferedItem.index;
-                                }
+                    for (let i = 0; i < linesToSubmit.length; i++) {
+                        const bufferedItem = linesToSubmit[i];
+                        if (bufferedItem.index > lastWrittenLineIndex) {
+                            if (!writeLine(bufferedItem.line, bufferedItem.index)) {
+                                await waitForDrain();
                             }
-
-                            // 2. Write current matching line
-                            if (processed > lastWrittenLineIndex) {
-                                if (!writeLine(line, processed)) {
-                                    await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
-                                }
-                                lastWrittenLineIndex = processed;
-                            }
-
-                            // 3. Set/Update 'After' context counter
-                            afterLinesRemaining = Math.max(afterLinesRemaining, maxContext);
-                        } else if (afterLinesRemaining > 0) {
-                            // This is an 'After' context line
-                            if (processed > lastWrittenLineIndex) {
-                                if (!writeLine(line, processed)) {
-                                    await new Promise<void>(resolve => outputStream.once('drain', () => resolve()));
-                                }
-                                lastWrittenLineIndex = processed;
-                            }
-                            afterLinesRemaining--;
+                            lastWrittenLineIndex = bufferedItem.index;
                         }
-
-                        // Maintain before buffer using CircularBuffer
-                        beforeBuffer.push({ line, index: processed });
                     }
 
-                    outputStream.end();
-                    await new Promise<void>(resolve => outputStream.on('finish', () => resolve()));
+                    // 2. Write current matching line
+                    if (processed > lastWrittenLineIndex) {
+                        if (!writeLine(line, processed)) {
+                            await waitForDrain();
+                        }
+                        lastWrittenLineIndex = processed;
+                    }
 
-                    // Adjust mapping to be 0-based for VS Code Positions
-                    const adjustedMapping = lineMapping.map(l => l - 1);
-
-                    // Register with FileHierarchyService
-                    // If originalPath is provided (e.g. from Workflow), use it as the parent
-                    const parentPath = options?.originalPath || inputPath;
-                    const sourceUri = vscode.Uri.file(parentPath);
-                    const outputUri = vscode.Uri.file(outputPath);
-                    FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
-
-                    resolve({ outputPath, processed, matched, lineMapping: adjustedMapping });
-
-                } catch (e: unknown) {
-                    reject(e);
+                    // 3. Set/Update 'After' context counter
+                    afterLinesRemaining = Math.max(afterLinesRemaining, maxContext);
+                } else if (afterLinesRemaining > 0) {
+                    // This is an 'After' context line
+                    if (processed > lastWrittenLineIndex) {
+                        if (!writeLine(line, processed)) {
+                            await waitForDrain();
+                        }
+                        lastWrittenLineIndex = processed;
+                    }
+                    afterLinesRemaining--;
                 }
-            })();
-        });
+
+                // Maintain before buffer using CircularBuffer
+                beforeBuffer.push({ line, index: processed });
+            }
+
+            outputStream.end();
+            await new Promise<void>(resolve => outputStream.on('finish', resolve));
+        };
+
+        // Race: process lines vs stream errors
+        await Promise.race([processLines(), streamError]);
+
+        // Adjust mapping to be 0-based for VS Code Positions
+        const adjustedMapping = lineMapping.map(l => l - 1);
+
+        // Register with FileHierarchyService
+        // If originalPath is provided (e.g. from Workflow), use it as the parent
+        const parentPath = options?.originalPath || inputPath;
+        const sourceUri = vscode.Uri.file(parentPath);
+        const outputUri = vscode.Uri.file(outputPath);
+        FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
+
+        return { outputPath, processed, matched, lineMapping: adjustedMapping };
     }
 
     /**

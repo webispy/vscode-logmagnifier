@@ -10,6 +10,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
     private disposables: vscode.Disposable[] = [];
+    private iconCache: Map<string, vscode.Uri> = new Map();
 
     constructor(
         private filterManager: FilterManager,
@@ -19,7 +20,16 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));
     }
 
+    private getCachedIcon(key: string, generator: () => string): vscode.Uri {
+        if (!this.iconCache.has(key)) {
+            const svg = generator();
+            this.iconCache.set(key, vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`));
+        }
+        return this.iconCache.get(key)!;
+    }
+
     refresh(element?: TreeItem): void {
+        this.iconCache.clear();
         this._onDidChangeTreeData.fire(element);
     }
 
@@ -40,8 +50,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 const folderColor = isEnabled ? strokeColor : dimmedColor;
                 const overlayColor = isEnabled ? undefined : strokeColor;
 
-                const svg = IconUtils.generateGroupSvg(folderColor, overlayColor);
-                item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                item.iconPath = this.getCachedIcon(`group_${folderColor}_${overlayColor}`, () => IconUtils.generateGroupSvg(folderColor, overlayColor));
 
                 item.description = `${element.filters.length} items`;
                 return item;
@@ -80,8 +89,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                         const strokeColor = isDark ? '#cccccc' : '#333333';
                         const style = element.excludeStyle || 'line-through';
 
-                        const svg = IconUtils.generateExcludeSvg(fillColor, strokeColor, style);
-                        item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                        item.iconPath = this.getCachedIcon(`exclude_${fillColor}_${strokeColor}_${style}`, () => IconUtils.generateExcludeSvg(fillColor, strokeColor, style));
                     } else if (element.color) {
                         const preset = this.filterManager.getPresetById(element.color);
                         let fillColor = element.color;
@@ -92,8 +100,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                         }
 
                         const mode = element.highlightMode ?? 0;
-                        const svg = IconUtils.generateIncludeSvg(fillColor, mode, element.id);
-                        item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                        item.iconPath = this.getCachedIcon(`include_${fillColor}_${mode}`, () => IconUtils.generateIncludeSvg(fillColor, mode, element.id));
                     } else {
                         if (this.mode === 'regex') {
                             item.iconPath = new vscode.ThemeIcon('eye');
@@ -102,10 +109,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                         }
                     }
                 } else {
-                    const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                    const textColor = isDark ? '#808080' : '#808080';
-                    const svg = IconUtils.generateOffSvg(textColor);
-                    item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+                    const offColor = '#808080';
+                    item.iconPath = this.getCachedIcon(`off_${offColor}`, () => IconUtils.generateOffSvg(offColor));
                 }
 
                 return item;

@@ -971,6 +971,122 @@ export class AdbService implements vscode.Disposable {
         await this.setShowTouchesState(deviceId, !current);
     }
 
+    public async getSystemInfo(deviceId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const adbPath = this.getAdbPath();
+            // multiple commands: getprop ro.product.model, ro.build.version.release, ro.build.display.id
+            // and cat /proc/meminfo
+            const cmd = `${adbPath} -s ${deviceId} shell "getprop ro.product.model && echo '---' && getprop ro.build.version.release && echo '---' && getprop ro.build.display.id && echo '---' && cat /proc/meminfo"`;
+            this.logger.info(`[ADB] Getting system info: ${cmd}`);
+
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'echo "Model:" && getprop ro.product.model && echo "Android Version:" && getprop ro.build.version.release && echo "Build ID:" && getprop ro.build.display.id && echo "\n--- MEMINFO ---" && cat /proc/meminfo'], (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Failed to get system info: ${err.message}`);
+                    reject(err);
+                    return;
+                }
+                resolve(stdout);
+            });
+        });
+    }
+
+    public async getSystemProperties(deviceId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Getting system properties on ${deviceId}`);
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'getprop'], (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Failed to get system properties: ${err.message}`);
+                    reject(err);
+                    return;
+                }
+                resolve(stdout);
+            });
+        });
+    }
+
+    public async runDumpsysAudioPolicy(deviceId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const adbPath = this.getAdbPath();
+            // Try media.audio_policy first, if empty, try audio
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'media.audio_policy'], (err, stdout) => {
+                if (!err && stdout && stdout.trim().length > 0 && !stdout.includes('Can\'t find service')) {
+                    resolve(stdout);
+                } else {
+                    // Fallback to 'audio'
+                    this.logger.info(`[ADB] media.audio_policy failed or empty, trying 'audio'`);
+                    cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'audio'], (err2, stdout2) => {
+                        if (err2) {
+                            reject(err2);
+                        } else {
+                            resolve(stdout2);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    public async runDumpsysMediaSession(deviceId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const adbPath = this.getAdbPath();
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'media_session'], (err, stdout) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
+    }
+
+    public async runDumpsysAudioFlinger(deviceId: string): Promise<string> {
+        return new Promise((resolve, reject) => {
+            const adbPath = this.getAdbPath();
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'dumpsys', 'media.audio_flinger'], (err, stdout) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(stdout);
+                }
+            });
+        });
+    }
+
+    public async launchApp(deviceId: string, packageName: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Launching ${packageName} on ${deviceId}`);
+            // monkey -p <package> -c android.intent.category.LAUNCHER 1
+            cp.execFile(adbPath, ['-s', deviceId, 'shell', 'monkey', '-p', packageName, '-c', 'android.intent.category.LAUNCHER', '1'], (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Launch app failed: ${err.message}`);
+                    resolve(false);
+                    return;
+                }
+                this.logger.info(`[ADB] Launch app output: ${stdout.trim()}`);
+                // Monkey output usually contains "Events injected: 1" on success
+                resolve(stdout.includes('Events injected'));
+            });
+        });
+    }
+
+    public async installApk(deviceId: string, filePath: string): Promise<boolean> {
+        return new Promise((resolve) => {
+            const adbPath = this.getAdbPath();
+            this.logger.info(`[ADB] Installing ${filePath} to ${deviceId}`);
+            cp.execFile(adbPath, ['-s', deviceId, 'install', '-r', filePath], (err, stdout) => {
+                if (err) {
+                    this.logger.error(`[ADB] Install failed: ${err.message}`);
+                    resolve(false);
+                    return;
+                }
+                this.logger.info(`[ADB] Install output: ${stdout.trim()}`);
+                resolve(stdout.includes('Success'));
+            });
+        });
+    }
+
     public dispose() {
         this.flushTimers.forEach(timer => clearInterval(timer));
         this.flushTimers.clear();

@@ -54,6 +54,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(workflowManager);
 
     const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager);
+    context.subscriptions.push(quickAccessProvider);
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
 
@@ -123,8 +124,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Initialize Command Manager (Handles all command registrations)
     const jsonTreeWebview = new JsonTreeWebview(context);
+    context.subscriptions.push(jsonTreeWebview);
 
     const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
+    context.subscriptions.push(jsonPrettyService);
     new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
@@ -154,6 +157,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Shell Commander
     const shellCommanderService = new ShellCommanderService(context);
     const shellCommanderTreeDataProvider = new ShellCommanderTreeDataProvider(shellCommanderService);
+    context.subscriptions.push(shellCommanderTreeDataProvider);
     const shellCommanderTreeView = vscode.window.createTreeView(Constants.Views.ShellCommander, {
         treeDataProvider: shellCommanderTreeDataProvider,
         dragAndDropController: shellCommanderTreeDataProvider,
@@ -322,9 +326,7 @@ export function activate(context: vscode.ExtensionContext) {
         logger.info(`Initial active editor: ${fileName} (Scheme: ${scheme})`);
 
         // Initial highlight (async)
-        (async () => {
-            await refreshHighlightsForEditor(editor);
-        })();
+        refreshHighlightsForEditor(editor).catch(e => logger.error(`Initial highlight failed: ${e}`));
         lastProcessedDoc = editor.document;
     }
 

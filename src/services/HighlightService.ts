@@ -21,6 +21,7 @@ export class HighlightService implements vscode.Disposable {
     private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
 
     // Map of color string -> DecorationType
+    private static readonly MAX_DECORATION_CACHE = 1000;
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;
@@ -95,6 +96,15 @@ export class HighlightService implements vscode.Disposable {
                     opacity: '0.6',
                     color: textColor
                 };
+            }
+
+            // Evict oldest entry if cache is full
+            if (this.decorationTypes.size >= HighlightService.MAX_DECORATION_CACHE) {
+                const oldestKey = this.decorationTypes.keys().next().value;
+                if (oldestKey) {
+                    this.decorationTypes.get(oldestKey)?.decoration.dispose();
+                    this.decorationTypes.delete(oldestKey);
+                }
             }
 
             const decoration = vscode.window.createTextEditorDecorationType(decorationOptions);

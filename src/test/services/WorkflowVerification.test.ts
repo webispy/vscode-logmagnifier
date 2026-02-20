@@ -28,9 +28,6 @@ suite('Workflow Final Verification', () => {
     let context: vscode.ExtensionContext;
     let openedFiles: string[] = [];
 
-    // Monkey-patch vscode.window.showTextDocument to capture opened files
-    const originalShowTextDocument = vscode.window.showTextDocument;
-
     setup(() => {
         openedFiles = [];
         // Mock Context
@@ -62,14 +59,6 @@ suite('Workflow Final Verification', () => {
         highlightService = {
             updateDecorations: () => { },
             registerDocumentFilters: () => { }
-        };
-
-        // Mock vscode.window.showTextDocument
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        vscode.window.showTextDocument = async (docOrUri: any, _options?: any) => {
-            const path = 'uri' in docOrUri ? docOrUri.uri.fsPath : docOrUri.fsPath;
-            openedFiles.push(path);
-            return {} as vscode.TextEditor;
         };
 
         // Mock ProfileManager
@@ -118,13 +107,16 @@ suite('Workflow Final Verification', () => {
         workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockSourceMapService as any);
         workflowManager.stepDelay = 0; // Skip UI delay in tests to avoid CI timeout
 
+        // Mock openStepResult to skip heavy VS Code API calls
+        // (vscode.workspace.fs.stat, openTextDocument, setTextDocumentLanguage)
+        // that cause ~1.3s cold-start overhead in CI extension host
+        workflowManager.openStepResult = async (step) => {
+            openedFiles.push(step.outputFilePath);
+        };
+
         // Expose registeredMappings for verification
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (workflowManager as any)._test_registeredMappings = registeredMappings;
-    });
-
-    teardown(() => {
-        vscode.window.showTextDocument = originalShowTextDocument;
     });
 
     test('3-Step Pipeline: Cumulative Filtering, Sequential Opening, and Chain Mapping', async () => {

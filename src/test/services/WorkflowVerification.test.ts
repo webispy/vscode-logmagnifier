@@ -135,9 +135,9 @@ suite('Workflow Final Verification', () => {
             id: 'sim_final',
             name: 'Final Pipeline',
             steps: [
-                { id: 's1', profileName: 'profile1' },
-                { id: 's2', profileName: 'profile2' },
-                { id: 's3', profileName: 'profile3' }
+                { id: 's1', profileName: 'profile1', executionMode: 'cumulative' as const },
+                { id: 's2', profileName: 'profile2', executionMode: 'cumulative' as const, parentId: 's1' },
+                { id: 's3', profileName: 'profile3', executionMode: 'sequential' as const, parentId: 's2' }
             ]
         };
 
@@ -202,6 +202,7 @@ suite('Workflow Final Verification', () => {
 
         // 3. Log Execution Duration
         console.log(`[FINAL] Execution Duration: ${duration}ms`);
+        assert.ok(duration > 100, 'Execution too fast, delays missing?');
 
         // 4. Verify Source Mapping (N -> N-1)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

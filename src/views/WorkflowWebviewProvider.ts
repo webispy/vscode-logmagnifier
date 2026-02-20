@@ -108,14 +108,138 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                         break;
                     case 'addStep':
                         if (data.id) {
-                            const profiles = this._workflowManager.getProfileNames();
-                            const selected = await vscode.window.showQuickPick(profiles, {
-                                placeHolder: Constants.Messages.Info.SelectProfileToAdd
-                            });
-                            if (selected) {
-                                await this._workflowManager.addProfileToWorkflow(data.id, selected);
+                            const quickPick = vscode.window.createQuickPick();
+                            quickPick.placeholder = Constants.Messages.Info.SelectProfileToAdd;
+                            quickPick.matchOnDescription = true;
+                            quickPick.matchOnDetail = true;
+
+                            const refreshQuickPick = () => {
+                                const currentProfiles = this._workflowManager.getProfileNames();
+                                const createProfileItem: vscode.QuickPickItem = {
+                                    label: `$(plus) Create New Profile...`,
+                                    alwaysShow: true
+                                };
+                                const separatorItem: vscode.QuickPickItem = {
+                                    label: '',
+                                    kind: vscode.QuickPickItemKind.Separator
+                                };
+                                const buildItem = (p: string) => {
+                                    const buttons: vscode.QuickInputButton[] = [];
+                                    if (p !== Constants.Labels.DefaultProfile) {
+                                        buttons.push({
+                                            iconPath: new vscode.ThemeIcon('edit'),
+                                            tooltip: 'Rename Profile'
+                                        });
+                                        buttons.push({
+                                            iconPath: new vscode.ThemeIcon('trash'),
+                                            tooltip: 'Delete Profile'
+                                        });
+                                    }
+                                    return {
+                                        label: p,
+                                        buttons: buttons
+                                    };
+                                };
+                                const currentProfileItems: vscode.QuickPickItem[] = currentProfiles.map(buildItem);
+                                quickPick.items = [createProfileItem, separatorItem, ...currentProfileItems];
+                            };
+
+                            refreshQuickPick();
+
+                            quickPick.onDidAccept(async () => {
+                                const selection = quickPick.selectedItems[0];
+                                if (!selection) {
+                                    return;
+                                }
+
+                                let profileNameToAdd = selection.label;
+
+                                if (selection.label === `$(plus) Create New Profile...`) {
+                                    const profiles = this._workflowManager.getProfileNames();
+                                    const newName = await vscode.window.showInputBox({
+                                        prompt: Constants.Prompts.EnterNewProfileName,
+                                        validateInput: (value) => {
+                                            if (!value || value.trim().length === 0) {
+                                                return 'Profile name cannot be empty';
+                                            }
+                                            if (profiles.includes(value.trim())) {
+                                                return 'Profile with this name already exists';
+                                            }
+                                            return null;
+                                        }
+                                    });
+
+                                    if (newName) {
+                                        const success = await this._workflowManager.createEmptyProfile(newName.trim());
+                                        if (success) {
+                                            profileNameToAdd = newName.trim();
+                                            vscode.window.showInformationMessage(Constants.Messages.Info.ProfileCreated.replace('{0}', profileNameToAdd));
+                                            refreshQuickPick();
+                                        } else {
+                                            vscode.window.showErrorMessage(Constants.Messages.Error.ProfileCreateFailed.replace('{0}', newName.trim()));
+                                            return;
+                                        }
+                                    } else {
+                                        return;
+                                    }
+                                }
+
+                                quickPick.hide();
+                                await this._workflowManager.addProfileToWorkflow(data.id, profileNameToAdd, data.parentId);
                                 this.refresh();
-                            }
+                            });
+
+                            quickPick.onDidTriggerItemButton(async (e) => {
+                                const profileName = e.item.label;
+                                const isRename = e.button.tooltip === 'Rename Profile';
+                                const isDelete = e.button.tooltip === 'Delete Profile';
+
+                                if (isRename) {
+                                    const profiles = this._workflowManager.getProfileNames();
+                                    const newName = await vscode.window.showInputBox({
+                                        prompt: `Enter new name for profile '${profileName}'`,
+                                        value: profileName,
+                                        validateInput: (value) => {
+                                            if (!value || value.trim().length === 0) {
+                                                return 'Profile name cannot be empty';
+                                            }
+                                            if (value.trim() !== profileName && profiles.includes(value.trim())) {
+                                                return 'Profile with this name already exists';
+                                            }
+                                            return null;
+                                        }
+                                    });
+
+                                    if (newName && newName.trim() !== profileName) {
+                                        const success = await this._workflowManager.renameProfile(profileName, newName.trim());
+                                        if (success) {
+                                            vscode.window.showInformationMessage(`Profile renamed to '${newName.trim()}'`);
+                                            refreshQuickPick();
+                                        } else {
+                                            vscode.window.showErrorMessage(`Failed to rename profile '${profileName}'`);
+                                        }
+                                    }
+                                } else if (isDelete) {
+                                    const confirm = await vscode.window.showWarningMessage(
+                                        Constants.Messages.Warn.ConfirmDeleteProfile.replace('{0}', profileName),
+                                        { modal: true },
+                                        'Delete'
+                                    );
+
+                                    if (confirm === 'Delete') {
+                                        const success = await this._workflowManager.deleteProfile(profileName);
+                                        if (success) {
+                                            vscode.window.showInformationMessage(Constants.Messages.Info.ProfileDeleted.replace('{0}', profileName));
+                                            refreshQuickPick();
+                                        } else {
+                                            vscode.window.showErrorMessage(`Failed to delete profile '${profileName}'`);
+                                        }
+                                    }
+                                }
+                            });
+
+                            quickPick.onDidHide(() => quickPick.dispose());
+                            quickPick.show();
                         }
                         break;
                     case 'removeStep':

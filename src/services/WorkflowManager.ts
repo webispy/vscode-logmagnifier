@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { Constants } from '../Constants';
-import { Workflow, WorkflowPackage, SimulationResult, SimulationStepResult } from '../models/Workflow';
+import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult } from '../models/Workflow';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
 import { Logger } from './Logger';
@@ -47,7 +47,19 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     private loadFromState(): Workflow[] {
-        return this.context.globalState.get<Workflow[]>(Constants.GlobalState.Workflows) || [];
+        const workflows = this.context.globalState.get<Workflow[]>(Constants.GlobalState.Workflows) || [];
+        // Migration: Ensure new fields exist
+        workflows.forEach(w => {
+            if (w.steps) {
+                w.steps.forEach(s => {
+                    if (!s.executionMode) {
+                        s.executionMode = 'sequential';
+                    }
+                    // parentId is optional, so undefined is fine
+                });
+            }
+        });
+        return workflows;
     }
 
     private async saveToState() {
@@ -131,23 +143,89 @@ export class WorkflowManager implements vscode.Disposable {
     // ViewModel for UI
     public async getWorkflowViewModels(): Promise<WorkflowViewModel[]> {
         return Promise.all(this.workflows.map(async workflow => {
-            const profiles = await Promise.all(workflow.steps.map(async step => {
+            // Build Tree
+            const stepMap = new Map<string, WorkflowStep & { children: string[] }>();
+            const roots: string[] = [];
+
+            // 1. Initialize Map
+            workflow.steps.forEach(step => {
+                stepMap.set(step.id, { ...step, children: [] });
+            });
+
+            // 2. Build Hierarchy
+            workflow.steps.forEach(step => {
+                if (step.parentId && stepMap.has(step.parentId)) {
+                    stepMap.get(step.parentId)!.children.push(step.id);
+                } else {
+                    roots.push(step.id);
+                }
+            });
+
+            // 3. DFS Flattening
+            const flattenedSteps: (WorkflowStep & { depth: number; isLastChild: boolean; connectionType: 'branch' | 'continuous' })[] = [];
+
+            const traverse = (stepId: string, depth: number, isLast: boolean, type: 'branch' | 'continuous') => {
+                const step = stepMap.get(stepId);
+                if (!step) { return; }
+
+                flattenedSteps.push({
+                    ...step,
+                    depth,
+                    isLastChild: isLast,
+                    connectionType: type
+                });
+
+                step.children.forEach((childId: string, index: number) => {
+                    const childStep = stepMap.get(childId);
+                    if (childStep) {
+                        const childType = childStep.executionMode === 'sequential' ? 'branch' : 'continuous';
+                        traverse(childId, depth + 1, index === step.children.length - 1, childType);
+                    }
+                });
+            };
+
+            roots.forEach((rootId, index) => {
+                // Root steps start at depth 1 (depth 0 is reserved for "All Logs" node in UI)
+                // Roots are always "Sequential", so they should be branches.
+                traverse(rootId, 1, index === roots.length - 1, 'branch');
+            });
+
+            const profiles = await Promise.all(flattenedSteps.map(async step => {
                 const groups = await this.profileManager.getProfileGroups(step.profileName);
                 const isMissing = !this.profileManager.getProfileNames().includes(step.profileName);
                 let filterCount = 0;
                 if (groups) {
                     filterCount = groups.reduce((acc, g) => acc + g.filters.length, 0);
                 }
+
+                const stepNode = stepMap.get(step.id);
+                const hasChildren = stepNode && stepNode.children.length > 0;
+                let nodeType: 'seq-complex' | 'seq-simple' | 'cumulative' = 'seq-simple';
+
+                if (step.depth === 1) {
+                    nodeType = hasChildren ? 'seq-complex' : 'seq-simple';
+                } else {
+                    nodeType = 'cumulative';
+                }
+
                 return {
                     id: step.id,
                     name: step.profileName,
                     filterCount: filterCount,
                     groups: groups ? groups : [],
-                    isMissing: isMissing
+                    isMissing: isMissing,
+                    parentId: step.parentId,
+                    executionMode: step.executionMode,
+                    depth: step.depth,
+                    isLastChild: step.isLastChild,
+                    connectionType: step.connectionType,
+                    hasChildren: hasChildren,
+                    nodeType: nodeType
                 };
             }));
             const lastRunResult = this.lastRunResults.get(workflow.id);
             return {
+
                 id: workflow.id,
                 name: workflow.name,
                 isExpanded: this._expandedWorkflowIds.has(workflow.id),
@@ -194,6 +272,34 @@ export class WorkflowManager implements vscode.Disposable {
         await this.profileManager.loadProfile(name);
     }
 
+    public async createEmptyProfile(name: string): Promise<boolean> {
+        return await this.profileManager.createProfile(name, []);
+    }
+
+    public async renameProfile(oldName: string, newName: string): Promise<boolean> {
+        const success = await this.profileManager.renameProfile(oldName, newName);
+        if (success) {
+            let updated = false;
+            for (const workflow of this.workflows) {
+                for (const step of workflow.steps) {
+                    if (step.profileName === oldName) {
+                        step.profileName = newName;
+                        updated = true;
+                    }
+                }
+            }
+            if (updated) {
+                await this.saveToState();
+                this._onDidChangeWorkflow.fire();
+            }
+        }
+        return success;
+    }
+
+    public async deleteProfile(name: string): Promise<boolean> {
+        return await this.profileManager.deleteProfile(name);
+    }
+
     public async createWorkflow(name: string): Promise<Workflow> {
         const newSim: Workflow = {
             id: crypto.randomUUID(),
@@ -234,12 +340,14 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
-    public async addProfileToWorkflow(workflowId: string, profileName: string): Promise<void> {
+    public async addProfileToWorkflow(workflowId: string, profileName: string, parentId?: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
             workflow.steps.push({
                 id: crypto.randomUUID(),
-                profileName: profileName
+                profileName: profileName,
+                parentId: parentId,
+                executionMode: parentId ? 'cumulative' : 'sequential'
             });
             await this.saveWorkflow(workflow);
             await this.expandWorkflow(workflowId);
@@ -288,8 +396,34 @@ export class WorkflowManager implements vscode.Disposable {
             ...original,
             id: crypto.randomUUID(),
             name: `${original.name} (Copy)`,
-            steps: original.steps ? original.steps.map(s => ({ ...s, id: crypto.randomUUID() })) : []
+            steps: original.steps ? original.steps.map(s => ({
+                ...s,
+                id: crypto.randomUUID(),
+                // parentId needs remapping if we were to support deep copy of tree,
+                // but for now, if IDs change, parentIds break.
+                // TODO: Remap parentIds. For now, flat copy is safer or simple re-id.
+                // Actually, if we just re-generate IDs, the parent links break.
+                // We must maintain the structure.
+            })) : []
         };
+
+        // Fix parentIds for duplicated steps
+        if (original.steps) {
+            const idMap = new Map<string, string>();
+            // 1. Create new IDs and map old->new
+            const newSteps = original.steps.map(s => {
+                const newId = crypto.randomUUID();
+                idMap.set(s.id, newId);
+                return { ...s, id: newId };
+            });
+            // 2. Update parentIds
+            for (const step of newSteps) {
+                if (step.parentId && idMap.has(step.parentId)) {
+                    step.parentId = idMap.get(step.parentId);
+                }
+            }
+            newSim.steps = newSteps;
+        }
 
         this.workflows.push(newSim);
         await this.saveToState();
@@ -308,7 +442,8 @@ export class WorkflowManager implements vscode.Disposable {
         if (!sim.steps && 'profileNames' in sim) {
             sim.steps = ((sim as { profileNames: string[] }).profileNames).map(p => ({
                 id: crypto.randomUUID(),
-                profileName: p
+                profileName: p,
+                executionMode: 'sequential' // Migration default
             }));
         }
 
@@ -492,43 +627,96 @@ export class WorkflowManager implements vscode.Disposable {
                 const increment = 100 / totalSteps;
 
                 // 2. Execute Pipeline
-                for (let i = 0; i < totalSteps; i++) {
+                // 2. Build Execution Order (BFS / Topological)
+                const processingOrder: number[] = []; // Indices of steps
+                const stepIdToIndex = new Map<string, number>();
+                sim.steps.forEach((s, idx) => stepIdToIndex.set(s.id, idx));
+
+                const queue: number[] = [];
+                // Find roots
+                sim.steps.forEach((s, idx) => {
+                    if (!s.parentId || !stepIdToIndex.has(s.parentId)) {
+                        queue.push(idx);
+                    }
+                });
+
+                while (queue.length > 0) {
+                    const currentIdx = queue.shift()!;
+                    processingOrder.push(currentIdx);
+
+                    // Find children
+                    const currentId = sim.steps[currentIdx].id;
+                    sim.steps.forEach((s, idx) => {
+                        if (s.parentId === currentId) {
+                            queue.push(idx);
+                        }
+                    });
+                }
+
+                // If disconnected cycles exist, they might be missed. Use remaining for safety?
+                // For now, assume tree structure created by UI is valid.
+                // Fallback: add remaining steps to end (linear)
+                if (processingOrder.length < totalSteps) {
+                    for (let i = 0; i < totalSteps; i++) {
+                        if (!processingOrder.includes(i)) {
+                            processingOrder.push(i);
+                        }
+                    }
+                }
+
+                const stepIdToResult = new Map<string, SimulationStepResult>();
+
+                // 3. Execute Pipeline
+                for (let i = 0; i < processingOrder.length; i++) {
                     if (token.isCancellationRequested) { break; }
 
-                    const step = sim.steps[i];
-                    const profileData = resolvedProfiles[i];
+                    const stepIndex = processingOrder[i];
+                    const step = sim.steps[stepIndex];
+                    const profileData = resolvedProfiles[stepIndex];
 
                     if (!profileData.groups) {
-                        this.logger.warn(`[WorkflowManager] Skipping step ${i} ('${step.profileName}') because profile is missing.`);
+                        this.logger.warn(`[WorkflowManager] Skipping step ${stepIndex} ('${step.profileName}') because profile is missing.`);
                         progress.report({ message: `Step ${i + 1}/${totalSteps}: Skipping '${step.profileName}' (Missing)...`, increment });
                         continue;
                     }
 
-                    this.logger.info(`[WorkflowManager] Processing step ${i}: ${step.profileName}`);
+                    this.logger.info(`[WorkflowManager] Processing step ${stepIndex}: ${step.profileName} (Mode: ${step.executionMode})`);
                     progress.report({ message: `Step ${i + 1}/${totalSteps}: Applying '${step.profileName}'...`, increment });
 
+                    // Determine Input File
+                    let inputFile = currentFilePath; // Default to root source
+                    if (step.parentId && stepIdToResult.has(step.parentId)) {
+                        inputFile = stepIdToResult.get(step.parentId)!.outputFilePath;
+                    }
+
+                    // Calculate Filters based on Mode
                     const effectiveGroups: FilterGroup[] = [];
-                    // Cumulative Filter Logic (Look-Ahead):
-                    for (let j = i; j < totalSteps; j++) {
-                        const pData = resolvedProfiles[j];
-                        if (pData && pData.groups) {
-                            const deepCopiedGroups = pData.groups.map(g => {
-                                const newGroup = JSON.parse(JSON.stringify(g)) as FilterGroup;
-                                newGroup.id = `${newGroup.id}_step${j}`;
-                                newGroup.filters = newGroup.filters.map((f, fIndex) => ({
-                                    ...f,
-                                    id: `${f.id}_s${j}_f${fIndex}`
-                                }));
-                                return newGroup;
-                            });
-                            effectiveGroups.push(...deepCopiedGroups);
+
+                    // Always include current step's groups
+                    if (profileData.groups) {
+                        effectiveGroups.push(...this.cloneGroupsWithSuffix(profileData.groups, `_s${stepIndex}`));
+                    }
+
+                    // Determine if we need to include descendants (Cumulative Logic)
+                    // Rule: If explicit 'cumulative' mode OR if this step is a Parent (has children)
+                    const hasChildren = sim.steps.some(s => s.parentId === step.id);
+                    if (step.executionMode === 'cumulative' || hasChildren) {
+                        // Gather descendants
+                        const descendants = this.getDescendants(sim.steps, step.id);
+                        for (const desc of descendants) {
+                            // Find desc index
+                            const descIndex = sim.steps.indexOf(desc);
+                            if (descIndex !== -1 && resolvedProfiles[descIndex].groups) {
+                                effectiveGroups.push(...this.cloneGroupsWithSuffix(resolvedProfiles[descIndex].groups!, `_s${descIndex}`));
+                            }
                         }
                     }
 
                     // Run LogProcessor
-                    const result = await this.logProcessor.processFile(currentFilePath, effectiveGroups, {
+                    const result = await this.logProcessor.processFile(inputFile, effectiveGroups, {
                         prependLineNumbers: false,
-                        totalLineCount: lineCount // pass 0 or real count
+                        totalLineCount: lineCount, // pass 0 or real count
+                        mergeGroups: true // Always use Union logic for multiple profiles/levels
                     });
 
                     // Track file
@@ -536,28 +724,28 @@ export class WorkflowManager implements vscode.Disposable {
 
                     // Store Result
                     const stepResult: SimulationStepResult = {
-                        stepIndex: i,
+                        stepIndex: stepIndex,
                         profileName: step.profileName,
                         outputFilePath: result.outputPath,
                         matchedCount: result.matched,
                         effectiveGroups: effectiveGroups
                     };
                     stepResults.push(stepResult);
+                    stepIdToResult.set(step.id, stepResult);
 
                     if (result.matched > 0) {
                         this.sourceMapService.register(
                             vscode.Uri.file(result.outputPath),
-                            vscode.Uri.file(currentFilePath),
+                            vscode.Uri.file(inputFile),
                             result.lineMapping
                         );
+                        // Delay opening slightly to prevent UI flicker or race conditions
+                        await new Promise(resolve => setTimeout(resolve, 50));
+                        // Optional: auto-open? Maybe just store result.
+                        // Keeping existing behavior:
                         await this.openStepResult(stepResult);
-                        if (this.stepDelay > 0) {
-                            await new Promise(resolve => setTimeout(resolve, this.stepDelay));
-                        }
-                    }
 
-                    // Always update currentFilePath for next step
-                    currentFilePath = result.outputPath;
+                    }
                 }
             });
 
@@ -591,7 +779,10 @@ export class WorkflowManager implements vscode.Disposable {
         const flatFilters = step.effectiveGroups.flatMap(g =>
             g.filters
                 .filter(f => f.isEnabled)
-                .map(f => ({ filter: f, groupId: g.id }))
+                .map(f => {
+                    const originalF = { ...f, id: (f as import('../models/Filter').FilterItem & { originalId?: string }).originalId || f.id };
+                    return { filter: originalF, groupId: (g as import('../models/Filter').FilterGroup & { originalId?: string }).originalId || g.id };
+                })
         );
         this.highlightService.registerDocumentFilters(uri, flatFilters);
 
@@ -692,6 +883,28 @@ export class WorkflowManager implements vscode.Disposable {
             vscode.window.setStatusBarMessage(`Closed ${tabsToClose.length} result files.`, 3000);
         }
     }
+    private getDescendants(steps: import('../models/Workflow').WorkflowStep[], parentId: string): import('../models/Workflow').WorkflowStep[] {
+        const children = steps.filter(s => s.parentId === parentId);
+        let descendants = [...children];
+        for (const child of children) {
+            descendants = descendants.concat(this.getDescendants(steps, child.id));
+        }
+        return descendants;
+    }
+
+    private cloneGroupsWithSuffix(groups: FilterGroup[], suffix: string): FilterGroup[] {
+        return groups.map(g => {
+            const newGroup = JSON.parse(JSON.stringify(g)) as FilterGroup & { originalId?: string };
+            newGroup.originalId = newGroup.id;
+            newGroup.id = `${newGroup.id}${suffix}`;
+            newGroup.filters = newGroup.filters.map((f, fIndex) => ({
+                ...f,
+                originalId: f.id,
+                id: `${f.id}${suffix}_f${fIndex}`
+            }));
+            return newGroup;
+        });
+    }
 }
 
 export interface WorkflowViewModel {
@@ -708,4 +921,11 @@ export interface ProfileViewModel {
     filterCount: number;
     groups: FilterGroup[];
     isMissing?: boolean;
+    parentId?: string;
+    executionMode?: 'sequential' | 'cumulative';
+    depth?: number;
+    isLastChild?: boolean;
+    connectionType?: 'branch' | 'continuous';
+    hasChildren?: boolean;
+    nodeType?: 'seq-complex' | 'seq-simple' | 'cumulative';
 }

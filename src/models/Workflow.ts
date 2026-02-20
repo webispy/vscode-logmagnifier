@@ -4,6 +4,20 @@ export interface WorkflowStep {
     id: string;
     profileName: string;
     description?: string;
+
+    /**
+     * Tree Structure Support
+     * - undefined/null: Root node (Input source is Original Log)
+     * - string: Child node (Input source is Parent Step's Output Log)
+     */
+    parentId?: string;
+
+    /**
+     * Execution Strategy
+     * - 'sequential': Apply ONLY this step's filters. (Independent Analysis)
+     * - 'cumulative': Apply this step's filters + ALL descendant steps' filters. (Deep Dive/Preview)
+     */
+    executionMode: 'sequential' | 'cumulative';
 }
 
 export interface Workflow {

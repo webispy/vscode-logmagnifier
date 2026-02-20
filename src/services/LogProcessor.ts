@@ -59,7 +59,7 @@ export class LogProcessor {
      * @returns Promise resolving to output path and statistics
      * @throws Error if file cannot be read or written
      */
-    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
+    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string, mergeGroups?: boolean }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
         const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
 
         const rl = readline.createInterface({
@@ -67,7 +67,22 @@ export class LogProcessor {
             crlfDelay: Infinity
         });
 
-        const compiledGroups = this.compileGroups(filterGroups);
+        const activeGroups = filterGroups.filter(g => g.isEnabled);
+
+        // support OR logic by merging all groups into one if requested
+        let groupsToCompile = activeGroups;
+        if (options?.mergeGroups && activeGroups.length > 1) {
+            const mergedGroup: FilterGroup = {
+                id: 'merged',
+                name: 'Merged Group',
+                isEnabled: true,
+                isExpanded: true,
+                filters: activeGroups.flatMap(g => g.filters)
+            };
+            groupsToCompile = [mergedGroup];
+        }
+
+        const compiledGroups = this.compileGroups(groupsToCompile);
 
         // Path and stream setup
         const tmpDir = os.tmpdir();

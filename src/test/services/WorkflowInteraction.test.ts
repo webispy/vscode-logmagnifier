@@ -75,7 +75,7 @@ suite('Workflow Interaction Tests', () => {
 
     test('Click Active Workflow WITH Active Step -> Switches to Workflow Focus, KEEP Expanded', async () => {
         // Init with data
-        const pb = { id: 'pb1', name: 'Workflow 1', steps: [{ id: 'step1', name: 'Step 1' }] };
+        const pb = { id: 'pb1', name: 'Workflow 1', steps: [{ id: 'step1', name: 'Step 1', profileName: 'P1', executionMode: 'sequential' }] };
         globalStateData['logmagnifier.workflows'] = [pb];
         workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
 
@@ -172,7 +172,7 @@ suite('Workflow Interaction Tests', () => {
 
             // Mock a step so run doesn't fail early
             const pb = workflowManager.getWorkflow('pb1');
-            pb!.steps.push({ id: 's1', profileName: 'Profile1' });
+            pb!.steps.push({ id: 's1', profileName: 'Profile1', executionMode: 'sequential' });
 
             const document = { uri: vscode.Uri.file('/tmp/input.log'), getText: () => '', lineCount: 100, isUntitled: false } as vscode.TextDocument;
             await workflowManager.run('pb1', document);

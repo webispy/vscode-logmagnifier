@@ -3,15 +3,18 @@ import * as vscode from 'vscode';
 import { AdbService } from '../services/AdbService';
 import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
 
-export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem> {
+export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<AdbTreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     private devices: AdbDevice[] = [];
     private initialized = false;
+    private _disposables: vscode.Disposable[] = [];
 
     constructor(private adbService: AdbService) {
-        this.adbService.onDidChangeSessions(() => this.refresh());
+        this._disposables.push(
+            this.adbService.onDidChangeSessions(() => this.refresh())
+        );
     }
 
     public initialize() {
@@ -237,7 +240,6 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 };
                 item.tooltip = 'Toggle "Show Taps" in Developer Options';
                 return item;
-                return item;
             } else if (element.actionType === 'moreControl') {
                 const item = new vscode.TreeItem('More...', vscode.TreeItemCollapsibleState.None);
                 item.contextValue = 'controlDeviceAction_more';
@@ -309,7 +311,12 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             ];
         } else if (this.isControlDevice(element)) {
             return (async () => {
-                const showTouchesState = await this.adbService.getShowTouchesState(element.device.id);
+                let showTouchesState = false;
+                try {
+                    showTouchesState = await this.adbService.getShowTouchesState(element.device.id);
+                } catch {
+                    // Fall back to false on error
+                }
                 return [
                     { type: 'controlDeviceAction', actionType: 'screenshot', device: element.device } as ControlDeviceActionItem,
                     { type: 'controlDeviceAction', actionType: 'screenRecord', device: element.device } as ControlDeviceActionItem,
@@ -323,6 +330,12 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
             return element.tags;
         }
         return [];
+    }
+
+    public dispose() {
+        this._disposables.forEach(d => d.dispose());
+        this._disposables = [];
+        this._onDidChangeTreeData.dispose();
     }
 
     // Type guards

@@ -147,7 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
     const adbService = new AdbService(logger);
     context.subscriptions.push(adbService);
     const adbDeviceTreeProvider = new AdbDeviceTreeProvider(adbService);
-    // vscode.window.registerTreeDataProvider(Constants.Views.ADBDevices, adbDeviceTreeProvider);
+    context.subscriptions.push(adbDeviceTreeProvider);
     const adbTreeView = vscode.window.createTreeView(Constants.Views.ADBDevices, {
         treeDataProvider: adbDeviceTreeProvider,
         showCollapseAll: true

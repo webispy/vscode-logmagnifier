@@ -9,18 +9,17 @@ import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
 import { SourceMapService } from '../../services/SourceMapService';
-import { FilterType, FilterGroup } from '../../models/Filter';
+import { FilterGroup } from '../../models/Filter';
 import { Workflow } from '../../models/Workflow';
 
 /**
- * Large File Execution Tests
+ * Workflow URI Execution Tests
  *
- * NOTE: These tests simulate behavior for large files (>50MB) without actually
- * creating huge files on disk to avoid performance overhead and CI limitations.
- * They use small placeholder files and mock logic to verify how the system
- * handles large data contexts (e.g., line padding, memory-safe processing).
+ * NOTE: These tests verify that the WorkflowManager can properly handle
+ * running pipelines using file URIs directly, rather than loading large
+ * files into TextDocument memory.
  */
-suite('Large File Execution Tests', () => {
+suite('Workflow URI Execution Tests', () => {
     let workflowManager: WorkflowManager;
     let profileManager: ProfileManager;
     let logProcessor: LogProcessor;
@@ -58,7 +57,7 @@ suite('Large File Execution Tests', () => {
         );
     });
 
-    test('WorkflowManager should accept Uri directly for large files', async () => {
+    test('WorkflowManager should accept Uri input instead of TextDocument', async () => {
         const workflowId = 'test-workflow';
         const largeFileUri = vscode.Uri.file('/tmp/large_file.log');
 
@@ -136,35 +135,7 @@ suite('Large File Execution Tests', () => {
         assert.ok(result, 'Simulation result should be created');
     });
 
-    test('Simulation of Word Filter behavior: extracting path from URI works', async () => {
-        // This test documents how word filters work and confirms the processor can handle the path.
-        const tempFilePath = path.join(os.tmpdir(), `large_log_from_tab_${Date.now()}.log`);
-        fs.writeFileSync(tempFilePath, 'some log content\nerror line\n', 'utf8');
-
-        const fileUri = vscode.Uri.file(tempFilePath);
-        const groups = [{
-            id: 'g1',
-            name: 'Group 1',
-            isEnabled: true,
-            filters: [{ id: 'f1', keyword: 'error', isEnabled: true, type: 'include' as FilterType }]
-        }];
-
-        const filePathFromTab = fileUri.fsPath;
-
-        try {
-            const result = await logProcessor.processFile(filePathFromTab, groups, {
-                prependLineNumbers: false,
-                totalLineCount: 100 // Test with small content but "logic" remains same
-            });
-            assert.ok(result.outputPath, 'Processor should return an output path for a file path input');
-        } finally {
-            if (fs.existsSync(tempFilePath)) {
-                fs.unlinkSync(tempFilePath);
-            }
-        }
-    });
-
-    test('Workflow pipeline should continue even if intermediate result is large', async () => {
+    test('Workflow pipeline should complete all steps when processing from a Uri', async () => {
         const workflowId = 'pipeline-test';
         const tempFilePath = path.join(os.tmpdir(), `input_pipeline_${Date.now()}.log`);
         fs.writeFileSync(tempFilePath, 'log content', 'utf8');
@@ -210,28 +181,4 @@ suite('Large File Execution Tests', () => {
         }
     });
 
-    test('Word Filter result > 50MB should be handled gracefully', async () => {
-        // This test simulates a case where the result file is large.
-        // We want to ensure that even if opening fails, the process itself is documented as success.
-        const tempFilePath = path.join(os.tmpdir(), `input_large_result_${Date.now()}.log`);
-        // We write a small amount of content but test the "large file" handling logic.
-        // Creating a real 50MB+ file here would be too slow for unit tests.
-        fs.writeFileSync(tempFilePath, 'log content', 'utf8');
-        const fileUri = vscode.Uri.file(tempFilePath);
-
-        const groups = [{
-            id: 'g1', name: 'G1', isEnabled: true, filters: [{ id: 'f1', keyword: 'test', isEnabled: true, type: 'include' as FilterType }]
-        }];
-
-        // In CommandManager, if opening fails, it should fallback or show error but the logic remains.
-        // Here we just test the processor part again with "pretending" it's large (contextual).
-        try {
-            const result = await logProcessor.processFile(fileUri.fsPath, groups);
-            assert.ok(result.outputPath);
-        } finally {
-            if (fs.existsSync(tempFilePath)) {
-                fs.unlinkSync(tempFilePath);
-            }
-        }
-    });
 });

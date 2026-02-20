@@ -660,33 +660,42 @@
 
             // --- NODES ---
 
-            // 1. Ring (for Root and Complex)
-            if (nodeType === 'root' || nodeType === 'seq-complex') {
-                const ringR = 3.5; // Radius 3.5 + 2px stroke -> 4.5px outer radius (Matches solid dot)
-
+            // 1. Base Structure (Ring or Solid)
+            if (nodeType === 'root') {
+                // Root: Just a ring
+                const ringR = 3.5;
                 ctx.beginPath();
                 ctx.arc(cx, cy, ringR, 0, 2 * Math.PI);
-                ctx.strokeStyle = nodeType === 'root' ? baseColor : branchColor;
+                ctx.strokeStyle = baseColor;
                 ctx.lineWidth = isActive ? 3 : 2;
                 ctx.stroke();
-            }
+            } else {
+                // All non-root nodes get a solid center dot
+                const dotR = options.hasChildren ? 3.0 : 4.5;
+                const nodeColor = nodeType === 'cumulative' ? branchColor : baseColor;
 
-            // 2. Solid Circle
-            if (nodeType !== 'root') {
-                const dotR = 4.5; // Solid radius 4.5
-
+                // Center solid circle
                 ctx.beginPath();
                 ctx.arc(cx, cy, dotR, 0, 2 * Math.PI);
-                ctx.fillStyle = nodeType === 'cumulative' ? branchColor : baseColor;
-                if (nodeType === 'seq-complex') {
-                    ctx.fillStyle = branchColor;
-                }
+                ctx.fillStyle = nodeType === 'seq-complex' ? branchColor : nodeColor;
                 ctx.fill();
 
-                // Active state: Add 1px border
+                // If it has children, draw a ring around it
+                if (options.hasChildren || nodeType === 'seq-complex') {
+                    const outerRingR = 4.5;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, outerRingR, 0, 2 * Math.PI);
+                    ctx.strokeStyle = nodeType === 'seq-complex' ? branchColor : nodeColor;
+                    ctx.lineWidth = 1.2;
+                    ctx.stroke();
+                }
+
+                // Active state highlight
                 if (isActive) {
-                    ctx.strokeStyle = nodeType === 'cumulative' ? branchColor : baseColor;
+                    ctx.strokeStyle = nodeColor;
                     ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 4.5, 0, 2 * Math.PI);
                     ctx.stroke();
                 }
             }

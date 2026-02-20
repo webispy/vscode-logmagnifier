@@ -751,7 +751,10 @@ export class WorkflowManager implements vscode.Disposable {
         const flatFilters = step.effectiveGroups.flatMap(g =>
             g.filters
                 .filter(f => f.isEnabled)
-                .map(f => ({ filter: f, groupId: g.id }))
+                .map(f => {
+                    const originalF = { ...f, id: (f as import('../models/Filter').FilterItem & { originalId?: string }).originalId || f.id };
+                    return { filter: originalF, groupId: (g as import('../models/Filter').FilterGroup & { originalId?: string }).originalId || g.id };
+                })
         );
         this.highlightService.registerDocumentFilters(uri, flatFilters);
 
@@ -863,10 +866,12 @@ export class WorkflowManager implements vscode.Disposable {
 
     private cloneGroupsWithSuffix(groups: FilterGroup[], suffix: string): FilterGroup[] {
         return groups.map(g => {
-            const newGroup = JSON.parse(JSON.stringify(g)) as FilterGroup;
+            const newGroup = JSON.parse(JSON.stringify(g)) as FilterGroup & { originalId?: string };
+            newGroup.originalId = newGroup.id;
             newGroup.id = `${newGroup.id}${suffix}`;
             newGroup.filters = newGroup.filters.map((f, fIndex) => ({
                 ...f,
+                originalId: f.id,
                 id: `${f.id}${suffix}_f${fIndex}`
             }));
             return newGroup;

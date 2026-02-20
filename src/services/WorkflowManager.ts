@@ -272,6 +272,34 @@ export class WorkflowManager implements vscode.Disposable {
         await this.profileManager.loadProfile(name);
     }
 
+    public async createEmptyProfile(name: string): Promise<boolean> {
+        return await this.profileManager.createProfile(name, []);
+    }
+
+    public async renameProfile(oldName: string, newName: string): Promise<boolean> {
+        const success = await this.profileManager.renameProfile(oldName, newName);
+        if (success) {
+            let updated = false;
+            for (const workflow of this.workflows) {
+                for (const step of workflow.steps) {
+                    if (step.profileName === oldName) {
+                        step.profileName = newName;
+                        updated = true;
+                    }
+                }
+            }
+            if (updated) {
+                await this.saveToState();
+                this._onDidChangeWorkflow.fire();
+            }
+        }
+        return success;
+    }
+
+    public async deleteProfile(name: string): Promise<boolean> {
+        return await this.profileManager.deleteProfile(name);
+    }
+
     public async createWorkflow(name: string): Promise<Workflow> {
         const newSim: Workflow = {
             id: crypto.randomUUID(),

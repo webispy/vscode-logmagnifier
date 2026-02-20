@@ -109,6 +109,35 @@ export class ProfileManager implements vscode.Disposable {
         return false;
     }
 
+    public async renameProfile(oldName: string, newName: string): Promise<boolean> {
+        if (oldName === Constants.Labels.DefaultProfile || newName === Constants.Labels.DefaultProfile) {
+            return false;
+        }
+
+        const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
+
+        // Check if new name already exists
+        if (profiles.some(p => p.name === newName)) {
+            return false;
+        }
+
+        const index = profiles.findIndex(p => p.name === oldName);
+        if (index >= 0) {
+            profiles[index].name = newName;
+            profiles[index].updatedAt = Date.now();
+            await this.context.globalState.update(Constants.GlobalState.FilterProfiles, profiles);
+
+            // Update active profile if renamed
+            if (this.getActiveProfile() === oldName) {
+                await this.context.globalState.update(Constants.GlobalState.ActiveProfile, newName);
+            }
+
+            this._onDidChangeProfile.fire();
+            return true;
+        }
+        return false;
+    }
+
     public async createProfile(name: string, groupsCopy: FilterGroup[]): Promise<boolean> {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         if (profiles.some(p => p.name === name) || name === Constants.Labels.DefaultProfile) {

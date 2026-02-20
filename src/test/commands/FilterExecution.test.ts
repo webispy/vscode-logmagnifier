@@ -1,6 +1,9 @@
 
 import * as assert from 'assert';
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 import { FilterExecutionCommandManager } from '../../commands/FilterExecutionCommandManager';
 import { FilterManager } from '../../services/FilterManager';
 import { LogProcessor } from '../../services/LogProcessor';
@@ -9,6 +12,7 @@ import { HighlightService } from '../../services/HighlightService';
 import { SourceMapService } from '../../services/SourceMapService';
 import { MockExtensionContext } from '../utils/Mocks';
 import { FilterGroup, FilterItem } from '../../models/Filter';
+import { EditorUtils } from '../../utils/EditorUtils';
 
 // Mock LogProcessor to capture processed groups without real file I/O
 class MockLogProcessor extends LogProcessor {
@@ -168,6 +172,85 @@ suite('FilterExecutionCommandManager Test Suite', () => {
             // Restore original method
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (vscode.window as any).showWarningMessage = originalShowWarningMessage;
+        }
+    });
+
+    test('Apply Word Filter - Large File (70MB)', async function () {
+        this.timeout(60000); // Give it enough time since it's a large file
+
+        // Create ~70MB temp file
+        const tmpDir = os.tmpdir();
+        const tempFilePath = path.join(tmpDir, `large_test_file_${Date.now()}.log`);
+
+        // Write ~70MB of data, with only 10% containing 'ERROR' so the filtered result is < 10MB
+        const infoLine = 'This is a standard log line with INFO level and normal text to fill up the required space.\n';
+        const errorLine = 'This is a test log line with some ERROR and other keywords to make it somewhat realistic.\n';
+
+        // 90 info lines + 10 error lines = 100 lines (10% error rate)
+        const chunkBlock = infoLine.repeat(90) + errorLine.repeat(10);
+        // 80 blocks * 100 lines = 8000 lines per write (~720KB)
+        const chunk = chunkBlock.repeat(80);
+
+        const stream = fs.createWriteStream(tempFilePath);
+        for (let i = 0; i < 100; i++) {
+            stream.write(chunk);
+        }
+        stream.end();
+
+        await new Promise<void>(resolve => stream.on('finish', () => resolve()));
+
+        // Mock EditorUtils to simulate an active tab with the 70MB file
+        const originalResolveDocument = EditorUtils.resolveActiveDocument;
+        const originalResolveUri = EditorUtils.resolveActiveUri;
+
+        EditorUtils.resolveActiveDocument = async () => undefined;
+        EditorUtils.resolveActiveUri = () => vscode.Uri.file(tempFilePath);
+
+        try {
+            const g1 = filterManager.addGroup('Large File Group', false)!;
+            filterManager.toggleGroup(g1.id);
+            filterManager.addFilter(g1.id, 'ERROR', 'include');
+
+            // To verify actual matched line counts, use a real LogProcessor instead of the MockLogProcessor
+            const realLogProcessor = new LogProcessor();
+            let actualMatched = 0;
+            let actualProcessed = 0;
+            const originalProcessFile = realLogProcessor.processFile.bind(realLogProcessor);
+
+            realLogProcessor.processFile = async (filePath: string, activeGroups: FilterGroup[], options?: { prependLineNumbers?: boolean; totalLineCount?: number; originalPath?: string; }) => {
+                const result = await originalProcessFile(filePath, activeGroups, options);
+                actualMatched = result.matched;
+                actualProcessed = result.processed;
+                return result;
+            };
+
+            const testCommandManager = new FilterExecutionCommandManager(
+                mockContext,
+                filterManager,
+                new HighlightService(filterManager, Logger.getInstance()),
+                realLogProcessor,
+                Logger.getInstance(),
+                SourceMapService.getInstance(),
+                {} as vscode.TreeView<FilterGroup | FilterItem>,
+                {} as vscode.TreeView<FilterGroup | FilterItem>,
+                false
+            );
+
+            // Execute apply filter
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (testCommandManager as any).applyFilter('word');
+
+            assert.strictEqual(actualProcessed, 800000, 'Should process exactly 800,000 lines for the large file');
+            assert.strictEqual(actualMatched, 80000, 'Should match exactly 80,000 lines containing ERROR');
+        } finally {
+            // Restore mocks
+            EditorUtils.resolveActiveDocument = originalResolveDocument;
+            EditorUtils.resolveActiveUri = originalResolveUri;
+
+            // Cleanup
+            if (fs.existsSync(tempFilePath)) {
+                fs.unlinkSync(tempFilePath);
+            }
         }
     });
 });

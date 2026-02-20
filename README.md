@@ -34,6 +34,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Process Filtering**: Filter logs by specific running applications (PID) automatically.
   - **Control Device**: Quickly take screenshots, record screen, and toggle 'Show Touches'.
   - **App Control**: Uninstall apps, clear storage, clear cache, and run dumpsys commands.
+  - **Launch Installed App**: Select and launch any launchable app directly from the device tree.
   - **Session Management**: Create multiple logcat sessions with custom tag filters, priorities, and historical time toggles.
 - **Log Bookmarks**: Bookmark important lines in your log files for easy reference and navigation.
   - **Add/Remove**: Toggle bookmarks via context menu.

@@ -489,11 +489,7 @@ export class AdbCommandManager {
 
         const options: vscode.QuickPickItem[] = [
             { label: 'Clear Storage', description: 'pm clear <package>' },
-            { label: 'Clear Cache', description: 'pm clear <package> --cache-only' }, // Start with standard pm clear for cache only if possible, if not AdbService needs check. Actually AdbService.clearAppCache uses `pm clear --cache-only` if available or similar? No, standard `pm clear` clears both. `pm trim-caches` is global. Providing generic description or implementation detail. AdbService.clearAppCache logic: `pm clear --cache-only` isn't standard. It usually does `pm clear`. Let's check logic later or assume standard behaviour.
-            // Wait, AdbService.clearAppCache implementation:
-            // return this.execAdb(['-s', deviceId, 'shell', 'pm', 'clear', '--cache-only', packageName]); --> This flag might not exist on all android versions.
-            // But let's stick to what's requested: "actual adb command".
-            // Since I cannot check AdbService implementation right now without view_file, I will assume based on request "actually perform".
+            { label: 'Clear Cache', description: 'pm clear --cache-only <package>' },
             { label: 'Dumpsys: Package', description: 'dumpsys package <package>' },
             { label: 'Dumpsys: Meminfo', description: 'dumpsys meminfo <package>' },
             { label: 'Dumpsys: Activity', description: 'dumpsys activity <package>' }
@@ -563,6 +559,9 @@ export class AdbCommandManager {
                         break;
                     case 'Dumpsys: Media Sessions':
                         content = await this.adbService.runDumpsysMediaSession(item.device.id);
+                        break;
+                    case 'Dumpsys: Audio Flinger':
+                        content = await this.adbService.runDumpsysAudioFlinger(item.device.id);
                         break;
                 }
 

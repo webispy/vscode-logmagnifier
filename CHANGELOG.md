@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.6.2]
+
+### Added
+- **ADB**: Added "Launch Installed App" to quickly select and launch any launchable app from the device's sidebar.
+- **ADB**: Added comprehensive device and app control features (Install APK, System Info, Dumpsys Audio, etc.).
+- **ADB**: Enhanced system info with detailed network and storage statistics.
+- **Test**: Added comprehensive test coverage for services, commands, and webviews.
+
+### Changed
+- **ADB**: Refactored monolithic AdbService into focused micro-services (AdbDeviceService, AdbTargetAppService, AdbLogcatService) with shared AdbClient.
+- **Core**: Refactored LogProcessor to remove async IIFE anti-pattern.
+- **Refactor**: Restructured constants.ts into Constants.ts with Ids and Messages modules.
+- **Refactor**: Renamed FilterTreeView to FilterTreeDataProvider.
+- **Performance**: Implemented LRU cache for decoration types in HighlightService.
+- **Performance**: Cached SVG icon generation for filter tree.
+
+### Fixed
+- **Security**: Fixed ReDoS vulnerability in regex validation.
+- **Security**: Fixed unsafe shell invocation in OpenChromeInspect command.
+- **Stability**: Resolved memory leaks in FilterManager and LogBookmarkWebviewProvider.
+- **Stability**: Registered missing disposables and fixed resource leaks.
+- **Filter**: Fixed previous match navigation logic.
+- **ADB**: Fixed missing Dumpsys Audio Flinger handler in device control menu.
+
 ## [1.6.1]
 
 ### Added

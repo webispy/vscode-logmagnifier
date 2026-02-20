@@ -26,6 +26,7 @@ export class WorkflowManager implements vscode.Disposable {
     private sessionFiles: Set<string> = new Set(); // Track files created in session for cleanup on exit
     private _activeStepId: string | undefined;
     private _expandedWorkflowIds: Set<string> = new Set();
+    public stepDelay: number = 200;
 
     constructor(
         private context: vscode.ExtensionContext,
@@ -550,7 +551,9 @@ export class WorkflowManager implements vscode.Disposable {
                             result.lineMapping
                         );
                         await this.openStepResult(stepResult);
-                        await new Promise(resolve => setTimeout(resolve, 200));
+                        if (this.stepDelay > 0) {
+                            await new Promise(resolve => setTimeout(resolve, this.stepDelay));
+                        }
                     }
 
                     // Always update currentFilePath for next step

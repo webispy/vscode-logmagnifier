@@ -120,6 +120,7 @@ export const Ids = {
         EditLogcatTag: 'logmagnifier.editLogcatTag',
         RemoveLogcatTag: 'logmagnifier.removeLogcatTag',
         PickTargetApp: 'logmagnifier.pickTargetApp',
+        PickAndLaunchInstalledApp: 'logmagnifier.pickAndLaunchInstalledApp',
 
         ControlUninstall: 'logmagnifier.control.uninstall',
         ControlClearStorage: 'logmagnifier.control.clearStorage',

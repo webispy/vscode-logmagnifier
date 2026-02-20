@@ -1263,6 +1263,11 @@
         "icon": "$(symbol-method)"
       },
       {
+        "command": "logmagnifier.pickAndLaunchInstalledApp",
+        "title": "Launch Installed App",
+        "icon": "$(play-circle)"
+      },
+      {
         "command": "logmagnifier.addBookmark",
         "title": "Add Line to Bookmark"
       },

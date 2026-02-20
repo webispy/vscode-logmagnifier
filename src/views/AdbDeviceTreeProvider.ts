@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import { AdbService } from '../services/AdbService';
-import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, SessionGroupItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
 
 export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem> {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();
@@ -49,6 +49,17 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 arguments: [element]
             };
             item.tooltip = 'Click to select target application';
+            return item;
+        } else if (this.isLaunchInstalledApp(element)) {
+            const item = new vscode.TreeItem('Launch installed app', vscode.TreeItemCollapsibleState.None);
+            item.iconPath = new vscode.ThemeIcon('play-circle');
+            item.contextValue = 'launchInstalledApp';
+            item.command = {
+                command: 'logmagnifier.pickAndLaunchInstalledApp',
+                title: 'Launch Installed App',
+                arguments: [element]
+            };
+            item.tooltip = 'Click to select an installed app and launch it';
             return item;
         } else if (this.isSessionGroup(element)) {
             const item = new vscode.TreeItem('Logcat Sessions', vscode.TreeItemCollapsibleState.Expanded);
@@ -268,7 +279,8 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         } else if (this.isDevice(element)) {
             // Return TargetApp, potentially ControlApp, ControlDevice, and SessionGroup
             const children: AdbTreeItem[] = [
-                { type: 'targetApp', device: element } as TargetAppItem
+                { type: 'targetApp', device: element } as TargetAppItem,
+                { type: 'launchInstalledApp', device: element } as LaunchInstalledAppItem
             ];
 
             // Control Device (New)
@@ -319,6 +331,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         const t = element.type;
         // AdbDevice 'type' is dynamic (device, offline, etc.), so we check it's NOT one of our internal structural types
         return t !== 'targetApp' && t !== 'sessionGroup' &&
+            t !== 'launchInstalledApp' &&
             t !== 'dumpsysGroup' &&
             t !== 'controlAction' && t !== 'controlDevice' &&
             t !== 'controlDeviceAction' && t !== 'chromeInspect' && t !== 'message';
@@ -326,6 +339,10 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     private isTargetApp(element: AdbTreeItem): element is TargetAppItem {
         return 'type' in element && element.type === 'targetApp';
+    }
+
+    private isLaunchInstalledApp(element: AdbTreeItem): element is LaunchInstalledAppItem {
+        return 'type' in element && element.type === 'launchInstalledApp';
     }
 
     private isSessionGroup(element: AdbTreeItem): element is SessionGroupItem {

@@ -51,12 +51,18 @@ export class AdbService implements vscode.Disposable {
                 device.targetApp = 'all';
             }
         }
+
+        this.targetAppService.syncLaunchableAppScans(devices);
         return devices;
     }
 
     // Target Apps
     public async getInstalledPackages(deviceId: string): Promise<string[]> {
         return this.targetAppService.getInstalledPackages(deviceId);
+    }
+
+    public async getLaunchableApps(deviceId: string): Promise<{ packageName: string, componentName: string }[]> {
+        return this.targetAppService.getLaunchableApps(deviceId);
     }
 
     public async getThirdPartyPackages(deviceId: string): Promise<Set<string>> {
@@ -99,8 +105,8 @@ export class AdbService implements vscode.Disposable {
         return this.targetAppService.runDumpsysActivity(deviceId, packageName);
     }
 
-    public async launchApp(deviceId: string, packageName: string): Promise<boolean> {
-        return this.targetAppService.launchApp(deviceId, packageName);
+    public async launchApp(deviceId: string, packageName: string, componentName?: string): Promise<boolean> {
+        return this.targetAppService.launchApp(deviceId, packageName, componentName);
     }
 
     // Logcat

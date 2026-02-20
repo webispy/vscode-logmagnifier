@@ -14,6 +14,7 @@ export const Messages = {
         EnterSessionName: 'Enter Session Name',
         EnterTagTimestamp: 'Enter Tag and Priority (e.g. MyApp:D)',
         EditTag: 'Edit Tag',
+        SelectLaunchApp: 'Select an installed app to launch',
 
         EnterNewGroupName: 'Enter new group name',
         EnterNickname: 'Enter Name (Nickname)',
@@ -36,6 +37,7 @@ export const Messages = {
         SessionName: 'My App Debug',
         TagFormat: 'Tag:Priority',
         SelectTargetApp: 'Select Target Application (filters by PID)',
+        SelectLaunchApp: 'Choose installed app',
     },
 
     Labels: {
@@ -89,6 +91,7 @@ export const Messages = {
             UninstallCompleted: 'Uninstall completed. Please refresh the device list.',
             ClearStorageCompleted: 'Clear storage completed. Please refresh if needed.',
             ClearCacheCompleted: 'Clear cache completed. Please refresh if needed.',
+            LaunchAppCompleted: 'Launched app: {0}',
             ClearAllDataCompleted: 'All data cleared.',
             RecordingStarted: 'Recording started... (Max 3 mins)',
             SelectTextFirst: 'Please select some text first.',
@@ -140,6 +143,7 @@ export const Messages = {
             UninstallFailed: 'Uninstall failed.',
             ClearStorageFailed: 'Clear storage failed.',
             ClearCacheFailed: 'Clear cache failed (App might need to be debuggable).',
+            LaunchAppFailed: 'Failed to launch app: {0}',
             DumpsysNoOutput: 'Dumpsys returned no output.',
             DumpsysFailed: 'Dumpsys failed: {0}',
             ScreenshotFailed: 'Screenshot capture failed.',

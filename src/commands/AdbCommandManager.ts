@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { AdbService } from '../services/AdbService';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
-import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, SessionGroupItem } from '../models/AdbModels';
+import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem } from '../models/AdbModels';
 import * as crypto from 'crypto';
 import { Constants } from '../Constants';
 import * as os from 'os';
@@ -218,6 +218,45 @@ export class AdbCommandManager {
 
             if (picked) {
                 this.adbService.setTargetApp(device, picked.label);
+            }
+        }));
+
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.PickAndLaunchInstalledApp, async (item: LaunchInstalledAppItem) => {
+            const device = item?.device;
+            if (!device) {
+                return;
+            }
+
+            const launchableApps = await this.adbService.getLaunchableApps(device.id);
+
+            if (launchableApps.length === 0) {
+                vscode.window.showWarningMessage('Launcher app list is not ready yet. Please refresh devices and try again.');
+                return;
+            }
+
+            const runningApps = await this.adbService.getRunningApps(device.id);
+            const quickPickItems = launchableApps.map(app => ({
+                label: app.packageName,
+                description: runningApps.has(app.packageName) ? Constants.Labels.Running : '',
+                detail: app.componentName,
+            }));
+
+            const picked = await vscode.window.showQuickPick(quickPickItems, {
+                placeHolder: Constants.PlaceHolders.SelectLaunchApp,
+                title: Constants.Prompts.SelectLaunchApp,
+                matchOnDescription: true,
+                matchOnDetail: true
+            });
+
+            if (!picked) {
+                return;
+            }
+
+            const success = await this.adbService.launchApp(device.id, picked.label, picked.detail);
+            if (success) {
+                vscode.window.showInformationMessage(Constants.Messages.Info.LaunchAppCompleted.replace('{0}', picked.label));
+            } else {
+                vscode.window.showErrorMessage(Constants.Messages.Error.LaunchAppFailed.replace('{0}', picked.label));
             }
         }));
 

@@ -118,7 +118,6 @@
             min-width: 0;
             display: flex;
             align-items: center;
-            justify-content: space-between;
             padding-right: 8px;
         }
 
@@ -128,6 +127,8 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-size: 13px;
+            flex-shrink: 9999;
+            min-width: 0;
         }
 
         /* ACTIONS */
@@ -136,6 +137,7 @@
             gap: 2px;
             margin-left: auto;
             padding-right: 4px;
+            flex-shrink: 0;
         }
 
         .node-row:hover .actions,
@@ -189,9 +191,18 @@
             border-radius: 11px;
             padding: 1px 6px;
             font-size: 0.85em;
-            margin-left: 8px;
-            display: inline-block;
+            margin-left: auto;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-shrink: 1;
+            min-width: 0;
             line-height: normal;
+        }
+
+        .file-badge+.actions {
+            margin-left: 8px;
         }
 
         .is-missing {

@@ -550,7 +550,12 @@
                     container.appendChild(el);
                 });
             } catch (err) {
-                container.innerHTML = '<div style="color:red; padding:10px;">Error rendering workflow: ' + err + '</div>';
+                const errorDiv = document.createElement('div');
+                errorDiv.style.color = 'red';
+                errorDiv.style.padding = '10px';
+                errorDiv.textContent = 'Error rendering workflow: ' + String(err);
+                container.innerHTML = '';
+                container.appendChild(errorDiv);
             }
         }
 

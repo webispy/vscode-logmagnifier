@@ -158,12 +158,11 @@ export function activate(context: vscode.ExtensionContext) {
     const shellCommanderService = new ShellCommanderService(context);
     const shellCommanderTreeDataProvider = new ShellCommanderTreeDataProvider(shellCommanderService);
     context.subscriptions.push(shellCommanderTreeDataProvider);
-    const shellCommanderTreeView = vscode.window.createTreeView(Constants.Views.ShellCommander, {
+    vscode.window.createTreeView(Constants.Views.ShellCommander, {
         treeDataProvider: shellCommanderTreeDataProvider,
-        dragAndDropController: shellCommanderTreeDataProvider,
         showCollapseAll: false
     });
-    new ShellCommanderCommandManager(context, shellCommanderService, shellCommanderTreeView);
+    new ShellCommanderCommandManager(context, shellCommanderService);
 
     // Log Bookmark
     const bookmarkService = new LogBookmarkService(context);

@@ -3,7 +3,7 @@ import { RunbookService } from '../services/RunbookService';
 import { Constants } from '../Constants';
 import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
 import { Logger } from '../services/Logger';
-import { RunbookWebviewPanel } from '../webview/RunbookWebviewPanel';
+import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
 
 export class RunbookCommandManager {
     constructor(

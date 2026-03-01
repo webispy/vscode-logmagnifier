@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Relaxed CSP for inline execution -->
+    <title>{{ TITLE }}</title>
+    <link href="{{ CODICON_CSS_URI }}" rel="stylesheet" />
+    <style>
+        body {
+            font-family: var(--vscode-font-family);
+            padding: 20px;
+            color: var(--vscode-editor-foreground);
+            background-color: var(--vscode-editor-background);
+        }
+
+        .code-block-container {
+            background-color: var(--vscode-textCodeBlock-background);
+            border-radius: 6px;
+            margin: 16px 0;
+            overflow: hidden;
+            border: 1px solid var(--vscode-editorGroup-border);
+        }
+
+        .code-block-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background-color: var(--vscode-editorGroupHeader-tabsBackground);
+            border-bottom: 1px solid var(--vscode-editorGroup-border);
+        }
+
+        .play-btn {
+            background-color: var(--vscode-button-secondaryBackground);
+            color: var(--vscode-button-secondaryForeground);
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .play-btn:hover:not(:disabled) {
+            background-color: var(--vscode-button-secondaryHoverBackground);
+        }
+
+        .play-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        pre {
+            margin: 0;
+            padding: 16px;
+            overflow-x: auto;
+        }
+
+        code {
+            font-family: var(--vscode-editor-font-family);
+            font-size: var(--vscode-editor-font-size);
+        }
+
+        pre code {
+            background-color: transparent !important;
+            padding: 0 !important;
+            color: inherit !important;
+        }
+
+        .output-container {
+            background-color: var(--vscode-editor-background);
+            border-top: 1px solid var(--vscode-editorGroup-border);
+            padding: 16px;
+            color: var(--vscode-editor-foreground);
+        }
+
+        .output-container pre {
+            padding: 0;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+    </style>
+</head>
+
+<body>
+    {{ HTML_CONTENT }}
+    <script>
+        const vscode = acquireVsCodeApi();
+
+        function executeBlock(blockId, script) {
+            vscode.postMessage({
+                command: 'execute',
+                blockId: blockId,
+                script: script
+            });
+        }
+
+        window.addEventListener('message', event => {
+            const message = event.data;
+            const outputDiv = document.getElementById('output_' + message.blockId);
+            if (!outputDiv) return;
+            const codeEl = outputDiv.querySelector('code');
+
+            if (message.command === 'command-running') {
+                outputDiv.style.display = 'block';
+                codeEl.innerHTML = '<i style="color:var(--vscode-descriptionForeground)">Running...\n</i>';
+
+                const btn = document.getElementById('btn_' + message.blockId);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="codicon codicon-sync spin"></span> Running...';
+                }
+            } else if (message.command === 'command-output') {
+                let text = '';
+                if (message.stdout) {
+                    text += escapeHtml(message.stdout);
+                }
+                if (message.stderr && message.stderr.trim().length > 0) {
+                    text += '<span style="color:var(--vscode-errorForeground)">' + escapeHtml(message.stderr) + '</span>';
+                }
+                if (message.error) {
+                    text += '<span style="color:var(--vscode-errorForeground)">' + escapeHtml(message.error) + '\n</span>';
+                }
+                // remove Running indicator if present
+                if (codeEl.innerHTML.includes('Running...\n</i>')) {
+                    codeEl.innerHTML = '';
+                }
+                codeEl.innerHTML += text;
+            } else if (message.command === 'command-finished') {
+                if (message.code !== 0 && message.code !== null) {
+                    codeEl.innerHTML += '\n<i style="color:var(--vscode-errorForeground)">Exited with code ' + escapeHtml(String(message.code)) + '</i>';
+                }
+                if (!codeEl.innerHTML.trim() || codeEl.innerHTML.includes('Running...\n</i>')) {
+                    codeEl.innerHTML = '<i>(No output)</i>';
+                }
+
+                const btn = document.getElementById('btn_' + message.blockId);
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="codicon codicon-play"></span> Play';
+                }
+            }
+        });
+
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+
+</html>

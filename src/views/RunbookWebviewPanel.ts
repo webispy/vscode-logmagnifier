@@ -11,6 +11,7 @@ export class RunbookWebviewPanel {
     private _disposables: vscode.Disposable[] = [];
     private _currentItem: RunbookMarkdown;
     private readonly _htmlGenerator: RunbookHtmlGenerator;
+    private _runningProcesses: Map<string, cp.ChildProcess> = new Map();
 
     public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown) {
         const column = vscode.window.activeTextEditor
@@ -68,6 +69,10 @@ export class RunbookWebviewPanel {
     public dispose() {
         RunbookWebviewPanel.currentPanel = undefined;
 
+        // Kill all running child processes to prevent orphaned processes
+        this._runningProcesses.forEach(p => p.kill());
+        this._runningProcesses.clear();
+
         this._panel.dispose();
 
         while (this._disposables.length) {
@@ -79,11 +84,19 @@ export class RunbookWebviewPanel {
     }
 
     private executeScript(script: string, blockId: string) {
+        // Kill any existing process for this block before starting a new one
+        const existing = this._runningProcesses.get(blockId);
+        if (existing) {
+            existing.kill();
+            this._runningProcesses.delete(blockId);
+        }
+
         this._panel.webview.postMessage({ command: 'command-running', blockId });
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
 
         const child = cp.exec(script, { cwd });
+        this._runningProcesses.set(blockId, child);
 
         child.stdout?.on('data', (data) => {
             this._panel.webview.postMessage({
@@ -110,6 +123,7 @@ export class RunbookWebviewPanel {
         });
 
         child.on('close', (code) => {
+            this._runningProcesses.delete(blockId);
             this._panel.webview.postMessage({
                 command: 'command-finished',
                 blockId,

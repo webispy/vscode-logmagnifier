@@ -1,13 +1,13 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ShellItem, ShellMarkdown, ShellGroup } from '../models/ShellCommander';
+import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
 import { Logger } from './Logger';
 
-export class ShellCommanderService {
-    private _items: ShellItem[] = [];
-    private _onDidChangeTreeData: vscode.EventEmitter<ShellItem | undefined | null | void> = new vscode.EventEmitter<ShellItem | undefined | null | void>();
-    readonly onDidChangeTreeData: vscode.Event<ShellItem | undefined | null | void> = this._onDidChangeTreeData.event;
+export class RunbookService {
+    private _items: RunbookItem[] = [];
+    private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
 
     constructor(private context: vscode.ExtensionContext) {
         if (!fs.existsSync(this.storagePath)) {
@@ -18,10 +18,10 @@ export class ShellCommanderService {
     }
 
     private get storagePath(): string {
-        return path.join(this.context.globalStorageUri.fsPath, 'shell-commands');
+        return path.join(this.context.globalStorageUri.fsPath, 'runbooks');
     }
 
-    get items(): ShellItem[] {
+    get items(): RunbookItem[] {
         return this._items;
     }
 
@@ -53,7 +53,7 @@ adb exec-out screencap -p > screen.png
         try {
             fs.writeFileSync(defaultPath, defaultContent, 'utf-8');
         } catch (e) {
-            Logger.getInstance().error(`Failed to create default shell markdown: ${e}`);
+            Logger.getInstance().error(`Failed to create default runbook markdown: ${e}`);
         }
     }
 
@@ -65,19 +65,19 @@ adb exec-out screencap -p > screen.png
             }
             this._items = this.scanDir(this.storagePath);
         } catch (e) {
-            Logger.getInstance().error(`Error loading shell configurations: ${e}`);
+            Logger.getInstance().error(`Error loading runbook configurations: ${e}`);
         }
     }
 
-    private scanDir(dirPath: string): ShellItem[] {
-        const items: ShellItem[] = [];
+    private scanDir(dirPath: string): RunbookItem[] {
+        const items: RunbookItem[] = [];
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
 
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
 
             if (file.isDirectory()) {
-                const group: ShellGroup = {
+                const group: RunbookGroup = {
                     id: fullPath,
                     type: 'group',
                     kind: 'group',
@@ -87,7 +87,7 @@ adb exec-out screencap -p > screen.png
                 };
                 items.push(group);
             } else if (file.isFile() && file.name.endsWith('.md')) {
-                const item: ShellMarkdown = {
+                const item: RunbookMarkdown = {
                     id: fullPath,
                     type: 'markdown',
                     kind: 'markdown',
@@ -117,7 +117,7 @@ adb exec-out screencap -p > screen.png
         if (!fileName.endsWith('.md')) { fileName += '.md'; }
         const targetPath = parentPath ? path.join(parentPath, fileName) : path.join(this.storagePath, fileName);
         if (!fs.existsSync(targetPath)) {
-            fs.writeFileSync(targetPath, '# New Shell Command\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
+            fs.writeFileSync(targetPath, '# New Runbook\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
             await this.refresh();
         }
     }

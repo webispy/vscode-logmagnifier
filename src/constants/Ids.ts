@@ -197,16 +197,16 @@ export const Ids = {
         HierarchyShowQuickPick: 'logmagnifier.hierarchy.showQuickPick',
         HierarchyShowFullTree: 'logmagnifier.hierarchy.showFullTree',
 
-        // Shell Commander
-        ShellCommanderOpenWebview: 'logmagnifier.shellCommander.openWebview',
-        ShellCommanderEditMarkdown: 'logmagnifier.shellCommander.editMarkdown',
-        ShellCommanderAddGroup: 'logmagnifier.shellCommander.addGroup',
-        ShellCommanderAddItem: 'logmagnifier.shellCommander.addItem',
-        ShellCommanderDeleteGroup: 'logmagnifier.shellCommander.deleteGroup',
-        ShellCommanderDeleteItem: 'logmagnifier.shellCommander.deleteItem',
-        ShellCommanderRenameGroup: 'logmagnifier.shellCommander.renameGroup',
-        ShellCommanderRenameItem: 'logmagnifier.shellCommander.renameItem',
-        RefreshShellView: 'logmagnifier.refreshShellView',
+        // Runbook
+        RunbookOpenWebview: 'logmagnifier.runbook.openWebview',
+        RunbookEditMarkdown: 'logmagnifier.runbook.editMarkdown',
+        RunbookAddGroup: 'logmagnifier.runbook.addGroup',
+        RunbookAddItem: 'logmagnifier.runbook.addItem',
+        RunbookDeleteGroup: 'logmagnifier.runbook.deleteGroup',
+        RunbookDeleteItem: 'logmagnifier.runbook.deleteItem',
+        RunbookRenameGroup: 'logmagnifier.runbook.renameGroup',
+        RunbookRenameItem: 'logmagnifier.runbook.renameItem',
+        RefreshRunbookView: 'logmagnifier.refreshRunbookView',
     },
 
     Views: {
@@ -214,7 +214,7 @@ export const Ids = {
         QuickAccess: 'logmagnifier-quick-access',
         Filters: 'logmagnifier-filters',
         RegexFilters: 'logmagnifier-regex-filters',
-        ShellCommander: 'logmagnifier-shell-commander',
+        Runbook: 'logmagnifier-runbook',
         Workflow: 'logmagnifier-workflow',
         ADBDevices: 'logmagnifier-adb-devices',
         Bookmark: 'logmagnifier-bookmark',

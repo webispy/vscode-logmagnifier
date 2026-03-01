@@ -446,8 +446,8 @@
           "icon": "$(terminal)"
         },
         {
-          "id": "logmagnifier-shell-commander",
-          "name": "Shell Commander",
+          "id": "logmagnifier-runbook",
+          "name": "Runbook",
           "icon": "$(console)"
         }
       ],
@@ -844,7 +844,7 @@
         "title": "Word"
       },
       {
-        "command": "logmagnifier.refreshShellView",
+        "command": "logmagnifier.refreshRunbookView",
         "title": "Refresh",
         "icon": "$(refresh)"
       },
@@ -1119,37 +1119,37 @@
         "icon": "$(plus)"
       },
       {
-        "command": "logmagnifier.shellCommander.editMarkdown",
+        "command": "logmagnifier.runbook.editMarkdown",
         "title": "Edit Markdown",
         "icon": "$(go-to-file)"
       },
       {
-        "command": "logmagnifier.shellCommander.addGroup",
+        "command": "logmagnifier.runbook.addGroup",
         "title": "Add Group",
         "icon": "$(new-folder)"
       },
       {
-        "command": "logmagnifier.shellCommander.addItem",
+        "command": "logmagnifier.runbook.addItem",
         "title": "Add Item",
         "icon": "$(add)"
       },
       {
-        "command": "logmagnifier.shellCommander.deleteGroup",
+        "command": "logmagnifier.runbook.deleteGroup",
         "title": "Delete Group",
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.shellCommander.deleteItem",
+        "command": "logmagnifier.runbook.deleteItem",
         "title": "Delete Item",
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.shellCommander.renameGroup",
+        "command": "logmagnifier.runbook.renameGroup",
         "title": "Rename Group",
         "icon": "$(edit)"
       },
       {
-        "command": "logmagnifier.shellCommander.renameItem",
+        "command": "logmagnifier.runbook.renameItem",
         "title": "Rename Item",
         "icon": "$(edit)"
       },
@@ -1408,13 +1408,13 @@
           "group": "navigation@3"
         },
         {
-          "command": "logmagnifier.shellCommander.addGroup",
-          "when": "view == logmagnifier-shell-commander",
+          "command": "logmagnifier.runbook.addGroup",
+          "when": "view == logmagnifier-runbook",
           "group": "navigation@1"
         },
         {
-          "command": "logmagnifier.shellCommander.addItem",
-          "when": "view == logmagnifier-shell-commander",
+          "command": "logmagnifier.runbook.addItem",
+          "when": "view == logmagnifier-runbook",
           "group": "navigation@2"
         }
       ],
@@ -1731,63 +1731,63 @@
           "group": "navigation"
         },
         {
-          "command": "logmagnifier.shellCommander.renameGroup",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.renameGroup",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "inline@1"
         },
         {
-          "command": "logmagnifier.shellCommander.deleteGroup",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.deleteGroup",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "inline@2"
         },
         {
-          "command": "logmagnifier.shellCommander.addItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.addItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "inline@3"
         },
         {
-          "command": "logmagnifier.shellCommander.addItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.addItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "1_modification@1"
         },
         {
-          "command": "logmagnifier.shellCommander.renameGroup",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.renameGroup",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "2_edit@1"
         },
         {
-          "command": "logmagnifier.shellCommander.deleteGroup",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellGroup",
+          "command": "logmagnifier.runbook.deleteGroup",
+          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "3_edit@1"
         },
         {
-          "command": "logmagnifier.shellCommander.editMarkdown",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.editMarkdown",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "inline@1"
         },
         {
-          "command": "logmagnifier.shellCommander.renameItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.renameItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "inline@2"
         },
         {
-          "command": "logmagnifier.shellCommander.deleteItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.deleteItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "inline@3"
         },
         {
-          "command": "logmagnifier.shellCommander.editMarkdown",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.editMarkdown",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "1_edit@1"
         },
         {
-          "command": "logmagnifier.shellCommander.renameItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.renameItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "1_edit@2"
         },
         {
-          "command": "logmagnifier.shellCommander.deleteItem",
-          "when": "view == logmagnifier-shell-commander && viewItem == shellMarkdown",
+          "command": "logmagnifier.runbook.deleteItem",
+          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
           "group": "2_edit@1"
         }
       ]

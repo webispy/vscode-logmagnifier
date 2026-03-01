@@ -18,9 +18,9 @@ import { JsonPrettyService } from './services/JsonPrettyService';
 import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { SourceMapService } from './services/SourceMapService';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
-import { ShellCommanderService } from './services/ShellCommanderService';
-import { ShellCommanderTreeDataProvider } from './views/ShellCommanderTreeDataProvider';
-import { ShellCommanderCommandManager } from './commands/ShellCommanderCommandManager';
+import { RunbookService } from './services/RunbookService';
+import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
+import { RunbookCommandManager } from './commands/RunbookCommandManager';
 import { Constants } from './Constants';
 import { FilterGroup, FilterItem } from './models/Filter';
 import { FileHierarchyService } from './services/FileHierarchyService';
@@ -154,15 +154,15 @@ export function activate(context: vscode.ExtensionContext) {
     });
     new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView);
 
-    // Shell Commander
-    const shellCommanderService = new ShellCommanderService(context);
-    const shellCommanderTreeDataProvider = new ShellCommanderTreeDataProvider(shellCommanderService);
-    context.subscriptions.push(shellCommanderTreeDataProvider);
-    vscode.window.createTreeView(Constants.Views.ShellCommander, {
-        treeDataProvider: shellCommanderTreeDataProvider,
+    // Runbook
+    const runbookService = new RunbookService(context);
+    const runbookTreeDataProvider = new RunbookTreeDataProvider(runbookService);
+    context.subscriptions.push(runbookTreeDataProvider);
+    vscode.window.createTreeView(Constants.Views.Runbook, {
+        treeDataProvider: runbookTreeDataProvider,
         showCollapseAll: false
     });
-    new ShellCommanderCommandManager(context, shellCommanderService);
+    new RunbookCommandManager(context, runbookService);
 
     // Log Bookmark
     const bookmarkService = new LogBookmarkService(context);

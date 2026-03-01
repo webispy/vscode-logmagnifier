@@ -44,7 +44,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
-- **Shell Commander**: Execute and organize custom shell scripts (bash/zsh) with support for multi-line commands and configurable terminal reuse strategies.
+- **Runbook**: Execute and organize custom runbook scripts (bash/zsh) with support for multi-line commands and configurable terminal reuse strategies.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
@@ -123,19 +123,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - **Run**: Click the **Play** icon to execute all steps automatically.
 4.  **Execution Feedback**: The sidebar visualizes step progress, indicating the currently active step and completion status.
 
-### Shell Commander
+### Runbook
 
 1.  **Overview**:
-    - Execute custom shell commands and scripts directly from the sidebar.
-    - Support for **multi-line commands**: complex scripts are executed as temporary files to ensure reliability and preserve environment state.
-    - Organize commands into **Groups** and **Folders**.
+    - Manage and execute your operational commands using an interactive, Markdown-based notebook interface.
+    - Each Runbook is a `.md` file stored in your global storage. You can write documentation, instructions, and embed executable shell scripts.
 2.  **Execution**:
-    - **Run**: Click the item, use the play icon, or use the **Enter** key.
-    - **Context Menu**: Right-click to **Edit**, **Rename**, **Edit Description**, or **Delete**.
-3.  **Configuration**:
-    - Commands are stored in `logmagnifier_shell_cmds.json`.
-    - Global config accessible via command palette: `LogMagnifier: Open Global Shell Config`.
-    - Flexible terminal management via **Terminal Reuse Strategy** settings.
+    - **Open Interface**: Click a Runbook item in the sidebar to open the interactive Webview.
+    - **Run Blocks**: Inside the Webview, click the **Play** button next to any code block to execute it in a terminal.
+3.  **Organization**:
+    - **Manage Items**: Use the `+` (Add Item) and Folder (Add Group) icons in the Runbook view header to create new files and folders.
+    - **Context Menu**: Right-click any Runbook or folder in the sidebar to **Rename**, **Delete**, or **Edit Markdown** source directly.
+    - **Storage**: Files are saved in the extension's `runbooks` global storage directory (`.../globalStorage/webispy.logmagnifier/runbooks`).
 
 ### Log Bookmarks
 
@@ -177,7 +176,6 @@ This extension contributes the following settings:
 * `logmagnifier.adbLogcatDefaultOptions`: Default options for adb logcat command. (Default: `-v threadtime`)
 * `logmagnifier.bookmark.maxMatches`: Maximum number of matches to add to bookmarks at once. (Default: `500`)
 * `logmagnifier.removeMatches.maxLines`: Threshold for confirming removal of lines matching selection. (Default: `2000`)
-* `logmagnifier.shellCommander.terminalReuseStrategy`: Strategy for reusing terminals when executing shell commands (`perFolder`, `perGroup`, `global`, `perCommand`). (Default: `perFolder`)
 
 ## Known Limitations
 

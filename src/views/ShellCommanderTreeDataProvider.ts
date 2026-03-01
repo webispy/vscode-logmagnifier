@@ -40,7 +40,7 @@ export class ShellCommanderTreeDataProvider implements vscode.TreeDataProvider<S
     private getMarkdownTreeItem(markdown: ShellMarkdown): vscode.TreeItem {
         const item = new vscode.TreeItem(markdown.label, vscode.TreeItemCollapsibleState.None);
         item.contextValue = 'shellMarkdown';
-        item.iconPath = new vscode.ThemeIcon('markdown');
+        item.iconPath = new vscode.ThemeIcon('terminal');
         item.tooltip = markdown.filePath;
 
         item.command = {

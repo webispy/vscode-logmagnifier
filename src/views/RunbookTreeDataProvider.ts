@@ -1,0 +1,72 @@
+import * as vscode from 'vscode';
+import { RunbookService } from '../services/RunbookService';
+import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
+import { Constants } from '../Constants';
+
+export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookItem>, vscode.Disposable {
+    private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
+    readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    private disposables: vscode.Disposable[] = [];
+
+    constructor(private runbookService: RunbookService) {
+        this.disposables.push(this.runbookService.onDidChangeTreeData(() => this.refresh()));
+    }
+
+    refresh(): void {
+        this._onDidChangeTreeData.fire();
+    }
+
+    getTreeItem(element: RunbookItem): vscode.TreeItem {
+        if (element.kind === 'markdown') {
+            return this.getMarkdownTreeItem(element as RunbookMarkdown);
+        } else if (element.kind === 'group') {
+            return this.getGroupTreeItem(element as RunbookGroup);
+        }
+        return new vscode.TreeItem("Unknown");
+    }
+
+    getChildren(element?: RunbookItem): vscode.ProviderResult<RunbookItem[]> {
+        if (!element) {
+            return this.runbookService.items;
+        }
+
+        if (element.kind === 'group') {
+            return (element as RunbookGroup).children;
+        }
+
+        return [];
+    }
+
+    private getMarkdownTreeItem(markdown: RunbookMarkdown): vscode.TreeItem {
+        const item = new vscode.TreeItem(markdown.label, vscode.TreeItemCollapsibleState.None);
+        item.contextValue = 'runbookMarkdown';
+        item.iconPath = new vscode.ThemeIcon('terminal');
+        item.tooltip = markdown.filePath;
+
+        item.command = {
+            command: Constants.Commands.RunbookOpenWebview,
+            title: 'Open Runbook',
+            arguments: [markdown]
+        };
+
+        return item;
+    }
+
+    private getGroupTreeItem(group: RunbookGroup): vscode.TreeItem {
+        const item = new vscode.TreeItem(group.label, vscode.TreeItemCollapsibleState.Collapsed);
+        item.contextValue = 'runbookGroup';
+        item.iconPath = vscode.ThemeIcon.Folder;
+        item.tooltip = group.dirPath;
+        return item;
+    }
+
+    getParent(_element: RunbookItem): vscode.ProviderResult<RunbookItem> {
+        return undefined; // Flat list for now
+    }
+
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
+        this._onDidChangeTreeData.dispose();
+    }
+}

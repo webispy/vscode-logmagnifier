@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { ShellMarkdown } from '../models/ShellCommander';
+import { RunbookMarkdown } from '../models/Runbook';
 import { Logger } from '../services/Logger';
 import * as marked from 'marked';
 import * as fs from 'fs';
@@ -7,25 +7,25 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import * as os from 'os';
 
-export class ShellCommanderWebviewPanel {
-    public static currentPanel: ShellCommanderWebviewPanel | undefined;
+export class RunbookWebviewPanel {
+    public static currentPanel: RunbookWebviewPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
-    private _currentItem: ShellMarkdown;
+    private _currentItem: RunbookMarkdown;
 
-    public static async createOrShow(context: vscode.ExtensionContext, item: ShellMarkdown) {
+    public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        if (ShellCommanderWebviewPanel.currentPanel) {
-            ShellCommanderWebviewPanel.currentPanel._panel.reveal(column);
-            await ShellCommanderWebviewPanel.currentPanel.update(item);
+        if (RunbookWebviewPanel.currentPanel) {
+            RunbookWebviewPanel.currentPanel._panel.reveal(column);
+            await RunbookWebviewPanel.currentPanel.update(item);
             return;
         }
 
         const panel = vscode.window.createWebviewPanel(
-            'shellCommanderWebview',
+            'runbookWebview',
             `Shell: ${item.label}`,
             column || vscode.ViewColumn.One,
             {
@@ -35,10 +35,10 @@ export class ShellCommanderWebviewPanel {
             }
         );
 
-        ShellCommanderWebviewPanel.currentPanel = new ShellCommanderWebviewPanel(panel, context, item);
+        RunbookWebviewPanel.currentPanel = new RunbookWebviewPanel(panel, context, item);
     }
 
-    private constructor(panel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: ShellMarkdown) {
+    private constructor(panel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: RunbookMarkdown) {
         this._panel = panel;
         this._currentItem = item;
 
@@ -59,14 +59,14 @@ export class ShellCommanderWebviewPanel {
         );
     }
 
-    public async update(item: ShellMarkdown) {
+    public async update(item: RunbookMarkdown) {
         this._currentItem = item;
         this._panel.title = `Shell: ${item.label}`;
         this._panel.webview.html = await this._getHtmlForWebview(item);
     }
 
     public dispose() {
-        ShellCommanderWebviewPanel.currentPanel = undefined;
+        RunbookWebviewPanel.currentPanel = undefined;
 
         this._panel.dispose();
 
@@ -118,7 +118,7 @@ export class ShellCommanderWebviewPanel {
         });
     }
 
-    private async _getHtmlForWebview(item: ShellMarkdown): Promise<string> {
+    private async _getHtmlForWebview(item: RunbookMarkdown): Promise<string> {
         let content = '';
         try {
             content = fs.readFileSync(item.filePath, 'utf-8');

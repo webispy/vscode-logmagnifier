@@ -17,9 +17,16 @@ export class RunbookHtmlGenerator {
      * injected via malicious markdown content.
      */
     private sanitizeHtml(html: string): string {
-        // Rely on sanitize-html defaults, which already remove script tags,
-        // event handler attributes (on*), and other potentially dangerous markup.
-        return sanitizeHtmlLib(html);
+        // Rely on sanitize-html defaults, but whitelist elements and attributes
+        // needed by our custom rendering (like 'button', 'class', 'id', 'data-block-id', 'style')
+        // and standard markdown features like 'img'.
+        return sanitizeHtmlLib(html, {
+            allowedTags: sanitizeHtmlLib.defaults.allowedTags.concat(['button', 'img']),
+            allowedAttributes: {
+                ...sanitizeHtmlLib.defaults.allowedAttributes,
+                '*': ['class', 'id', 'data-*', 'style']
+            }
+        });
     }
 
     public async generate(webview: vscode.Webview, item: RunbookMarkdown): Promise<string> {

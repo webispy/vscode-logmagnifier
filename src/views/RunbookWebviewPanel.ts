@@ -6,7 +6,7 @@ import * as os from 'os';
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
-    public static currentPanel: RunbookWebviewPanel | undefined;
+    public static currentPanels: Map<string, RunbookWebviewPanel> = new Map();
     private readonly _panel: vscode.WebviewPanel;
     private _disposables: vscode.Disposable[] = [];
     private _currentItem: RunbookMarkdown;
@@ -18,15 +18,16 @@ export class RunbookWebviewPanel {
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
 
-        if (RunbookWebviewPanel.currentPanel) {
-            RunbookWebviewPanel.currentPanel._panel.reveal(column);
-            await RunbookWebviewPanel.currentPanel.update(item);
+        const existingPanel = RunbookWebviewPanel.currentPanels.get(item.filePath);
+        if (existingPanel) {
+            existingPanel._panel.reveal(column);
+            await existingPanel.update(item);
             return;
         }
 
         const panel = vscode.window.createWebviewPanel(
             'runbookWebview',
-            `Shell: ${item.label}`,
+            `Runbook: ${item.label}`,
             column || vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -35,7 +36,7 @@ export class RunbookWebviewPanel {
             }
         );
 
-        RunbookWebviewPanel.currentPanel = new RunbookWebviewPanel(panel, context, item);
+        RunbookWebviewPanel.currentPanels.set(item.filePath, new RunbookWebviewPanel(panel, context, item));
     }
 
     private constructor(panel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: RunbookMarkdown) {
@@ -62,12 +63,12 @@ export class RunbookWebviewPanel {
 
     public async update(item: RunbookMarkdown) {
         this._currentItem = item;
-        this._panel.title = `Shell: ${item.label}`;
+        this._panel.title = `Runbook: ${item.label}`;
         this._panel.webview.html = await this._htmlGenerator.generate(this._panel.webview, item);
     }
 
     public dispose() {
-        RunbookWebviewPanel.currentPanel = undefined;
+        RunbookWebviewPanel.currentPanels.delete(this._currentItem.filePath);
 
         // Kill all running child processes to prevent orphaned processes
         this._runningProcesses.forEach(p => p.kill());

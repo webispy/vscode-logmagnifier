@@ -4,6 +4,9 @@ import { Constants } from '../Constants';
 import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
 import { Logger } from '../services/Logger';
 import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
+import * as os from 'os';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export class RunbookCommandManager {
     constructor(
@@ -23,6 +26,8 @@ export class RunbookCommandManager {
             vscode.commands.registerCommand(Constants.Commands.RunbookDeleteItem, this.deleteItem, this),
             vscode.commands.registerCommand(Constants.Commands.RunbookRenameGroup, this.renameItem, this),
             vscode.commands.registerCommand(Constants.Commands.RunbookRenameItem, this.renameItem, this),
+            vscode.commands.registerCommand(Constants.Commands.RunbookExport, this.exportRunbook, this),
+            vscode.commands.registerCommand(Constants.Commands.RunbookImport, this.importRunbook, this),
             vscode.commands.registerCommand(Constants.Commands.RefreshRunbookView, this.refreshRunbookView, this)
         );
     }
@@ -90,5 +95,50 @@ export class RunbookCommandManager {
 
     private async refreshRunbookView() {
         await this.runbookService.refresh();
+    }
+
+    private async exportRunbook() {
+        const fileName = 'logmagnifier_runbook.json';
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
+
+        // Fallback to homedir if Downloads doesn't exist
+        if (!fs.existsSync(downloadsPath)) {
+            defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
+        }
+
+        const uri = await vscode.window.showSaveDialog({
+            defaultUri: defaultUri,
+            filters: {
+                'JSON Files': ['json']
+            },
+            title: 'Export Runbook'
+        });
+
+        if (uri) {
+            await this.runbookService.exportRunbook(uri);
+        }
+    }
+
+    private async importRunbook() {
+        const downloadsPath = path.join(os.homedir(), 'Downloads');
+        let defaultUri = vscode.Uri.file(downloadsPath);
+
+        if (!fs.existsSync(downloadsPath)) {
+            defaultUri = vscode.Uri.file(os.homedir());
+        }
+
+        const uris = await vscode.window.showOpenDialog({
+            defaultUri: defaultUri,
+            canSelectMany: false,
+            filters: {
+                'JSON Files': ['json']
+            },
+            title: 'Import Runbook'
+        });
+
+        if (uris && uris.length > 0) {
+            await this.runbookService.importRunbook(uris[0]);
+        }
     }
 }

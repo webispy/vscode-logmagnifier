@@ -1154,6 +1154,16 @@
         "icon": "$(edit)"
       },
       {
+        "command": "logmagnifier.runbook.export",
+        "title": "Export Runbook",
+        "icon": "$(repo-push)"
+      },
+      {
+        "command": "logmagnifier.runbook.import",
+        "title": "Import Runbook",
+        "icon": "$(repo-pull)"
+      },
+      {
         "command": "logmagnifier.hierarchy.showFullTree",
         "title": "Show Full Navigation Tree",
         "category": "LogMagnifier"
@@ -1408,14 +1418,24 @@
           "group": "navigation@3"
         },
         {
-          "command": "logmagnifier.runbook.addGroup",
+          "command": "logmagnifier.runbook.export",
           "when": "view == logmagnifier-runbook",
           "group": "navigation@1"
         },
         {
-          "command": "logmagnifier.runbook.addItem",
+          "command": "logmagnifier.runbook.import",
           "when": "view == logmagnifier-runbook",
           "group": "navigation@2"
+        },
+        {
+          "command": "logmagnifier.runbook.addGroup",
+          "when": "view == logmagnifier-runbook",
+          "group": "navigation@3"
+        },
+        {
+          "command": "logmagnifier.runbook.addItem",
+          "when": "view == logmagnifier-runbook",
+          "group": "navigation@4"
         }
       ],
       "editor/context": [

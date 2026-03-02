@@ -206,6 +206,8 @@ export const Ids = {
         RunbookDeleteItem: 'logmagnifier.runbook.deleteItem',
         RunbookRenameGroup: 'logmagnifier.runbook.renameGroup',
         RunbookRenameItem: 'logmagnifier.runbook.renameItem',
+        RunbookExport: 'logmagnifier.runbook.export',
+        RunbookImport: 'logmagnifier.runbook.import',
         RefreshRunbookView: 'logmagnifier.refreshRunbookView',
     },
 

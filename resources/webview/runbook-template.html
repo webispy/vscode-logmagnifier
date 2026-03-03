@@ -32,7 +32,14 @@
             border-bottom: 1px solid var(--vscode-editorGroup-border);
         }
 
-        .play-btn {
+        .header-buttons {
+            display: flex;
+            gap: 4px;
+        }
+
+        .play-btn,
+        .edit-btn,
+        .cancel-btn {
             background-color: var(--vscode-button-secondaryBackground);
             color: var(--vscode-button-secondaryForeground);
             border: none;
@@ -47,13 +54,54 @@
             font-size: 12px;
         }
 
-        .play-btn:hover:not(:disabled) {
+        .play-btn:hover:not(:disabled),
+        .edit-btn:hover:not(:disabled),
+        .cancel-btn:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
         }
 
-        .play-btn:disabled {
+        .play-btn:disabled,
+        .edit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        .save-btn {
+            background-color: var(--vscode-button-background);
+            color: var(--vscode-button-foreground);
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .save-btn:hover {
+            background-color: var(--vscode-button-hoverBackground);
+        }
+
+        .code-edit-area {
+            display: block;
+            width: 100%;
+            font-family: var(--vscode-editor-font-family);
+            font-size: var(--vscode-editor-font-size);
+            line-height: 1.5;
+            background-color: var(--vscode-input-background);
+            color: var(--vscode-input-foreground);
+            border: none;
+            border-top: 2px solid var(--vscode-focusBorder);
+            padding: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+            outline: none;
+            tab-size: 4;
+            -moz-tab-size: 4;
+            margin: 0;
         }
 
         .spin {
@@ -107,21 +155,181 @@
         // Script map injected from RunbookHtmlGenerator (avoids inline onclick handlers)
         const scriptMap = {{ SCRIPT_MAP }};
 
-        // Event delegation for play buttons
+        // Event delegation for play, edit, save, cancel buttons
         document.body.addEventListener('click', event => {
-            const btn = event.target.closest('.play-btn[data-block-id]');
-            if (!btn || btn.disabled) return;
+            const playBtn = event.target.closest('.play-btn[data-block-id]');
+            if (playBtn && !playBtn.disabled) {
+                const blockId = playBtn.getAttribute('data-block-id');
+                const script = scriptMap[blockId];
+                if (blockId && script !== undefined) {
+                    vscode.postMessage({
+                        command: 'execute',
+                        blockId: blockId,
+                        script: script
+                    });
+                }
+                return;
+            }
 
-            const blockId = btn.getAttribute('data-block-id');
-            const script = scriptMap[blockId];
-            if (blockId && script !== undefined) {
-                vscode.postMessage({
-                    command: 'execute',
-                    blockId: blockId,
-                    script: script
-                });
+            const editBtn = event.target.closest('.edit-btn[data-block-id]');
+            if (editBtn && !editBtn.disabled) {
+                enterEditMode(editBtn.getAttribute('data-block-id'));
+                return;
+            }
+
+            const saveBtn = event.target.closest('.save-btn[data-block-id]');
+            if (saveBtn) {
+                saveEdit(saveBtn.getAttribute('data-block-id'));
+                return;
+            }
+
+            const cancelBtn = event.target.closest('.cancel-btn[data-block-id]');
+            if (cancelBtn) {
+                cancelEdit(cancelBtn.getAttribute('data-block-id'));
+                return;
             }
         });
+
+        // Keyboard shortcuts for edit mode (Tab inserts tab, Ctrl/Cmd+Enter saves, Escape cancels)
+        document.addEventListener('keydown', event => {
+            const textarea = event.target;
+            if (!textarea.classList || !textarea.classList.contains('code-edit-area')) return;
+
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                textarea.value = textarea.value.substring(0, start) + '\t' + textarea.value.substring(end);
+                textarea.selectionStart = textarea.selectionEnd = start + 1;
+            } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                event.preventDefault();
+                saveEdit(textarea.id.replace('editor_', ''));
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelEdit(textarea.id.replace('editor_', ''));
+            }
+        });
+
+        function enterEditMode(blockId) {
+            const container = document.getElementById(blockId);
+            if (!container) return;
+
+            const preEl = container.querySelector('pre.code-display');
+            if (!preEl) return;
+
+            // Hide the code display
+            preEl.style.display = 'none';
+
+            // Create textarea with current script content
+            const textarea = document.createElement('textarea');
+            textarea.className = 'code-edit-area';
+            textarea.id = 'editor_' + blockId;
+            textarea.value = scriptMap[blockId] || '';
+            textarea.spellcheck = false;
+            const lineCount = textarea.value.split('\n').length;
+            textarea.rows = Math.max(3, lineCount + 1);
+            preEl.parentNode.insertBefore(textarea, preEl.nextSibling);
+            textarea.focus();
+
+            // Replace header buttons with Save / Cancel
+            replaceHeaderButtons(container, blockId, 'edit');
+        }
+
+        function saveEdit(blockId) {
+            const container = document.getElementById(blockId);
+            if (!container) return;
+
+            const textarea = document.getElementById('editor_' + blockId);
+            if (!textarea) return;
+            const newScript = textarea.value;
+
+            // Update in-memory script map (so Play runs updated content)
+            scriptMap[blockId] = newScript;
+
+            // Update code display
+            const preEl = container.querySelector('pre.code-display');
+            const codeEl = preEl ? preEl.querySelector('code') : null;
+            if (codeEl) {
+                codeEl.textContent = newScript;
+            }
+
+            // Remove textarea, show code display
+            textarea.remove();
+            if (preEl) preEl.style.display = '';
+
+            // Restore header buttons
+            replaceHeaderButtons(container, blockId, 'view');
+
+            // Persist change to the markdown file
+            vscode.postMessage({
+                command: 'update-script',
+                blockId: blockId,
+                script: newScript
+            });
+        }
+
+        function cancelEdit(blockId) {
+            const container = document.getElementById(blockId);
+            if (!container) return;
+
+            const textarea = document.getElementById('editor_' + blockId);
+            if (textarea) textarea.remove();
+
+            const preEl = container.querySelector('pre.code-display');
+            if (preEl) preEl.style.display = '';
+
+            replaceHeaderButtons(container, blockId, 'view');
+        }
+
+        function replaceHeaderButtons(container, blockId, mode) {
+            const buttonsDiv = container.querySelector('.header-buttons');
+            if (!buttonsDiv) return;
+
+            // Clear existing buttons
+            while (buttonsDiv.firstChild) buttonsDiv.removeChild(buttonsDiv.firstChild);
+
+            if (mode === 'edit') {
+                const cancelBtn = document.createElement('button');
+                cancelBtn.className = 'cancel-btn';
+                cancelBtn.setAttribute('data-block-id', blockId);
+                const cancelIcon = document.createElement('span');
+                cancelIcon.className = 'codicon codicon-close';
+                cancelBtn.appendChild(cancelIcon);
+                cancelBtn.appendChild(document.createTextNode(' Cancel'));
+
+                const saveBtn = document.createElement('button');
+                saveBtn.className = 'save-btn';
+                saveBtn.setAttribute('data-block-id', blockId);
+                const saveIcon = document.createElement('span');
+                saveIcon.className = 'codicon codicon-check';
+                saveBtn.appendChild(saveIcon);
+                saveBtn.appendChild(document.createTextNode(' Save'));
+
+                buttonsDiv.appendChild(cancelBtn);
+                buttonsDiv.appendChild(saveBtn);
+            } else {
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.id = 'edit_btn_' + blockId;
+                editBtn.setAttribute('data-block-id', blockId);
+                const editIcon = document.createElement('span');
+                editIcon.className = 'codicon codicon-edit';
+                editBtn.appendChild(editIcon);
+                editBtn.appendChild(document.createTextNode(' Edit'));
+
+                const playBtn = document.createElement('button');
+                playBtn.className = 'play-btn';
+                playBtn.id = 'btn_' + blockId;
+                playBtn.setAttribute('data-block-id', blockId);
+                const playIcon = document.createElement('span');
+                playIcon.className = 'codicon codicon-play';
+                playBtn.appendChild(playIcon);
+                playBtn.appendChild(document.createTextNode(' Play'));
+
+                buttonsDiv.appendChild(editBtn);
+                buttonsDiv.appendChild(playBtn);
+            }
+        }
 
         window.addEventListener('message', event => {
             const message = event.data;
@@ -131,42 +339,74 @@
 
             if (message.command === 'command-running') {
                 outputDiv.style.display = 'block';
-                codeEl.innerHTML = '<i style="color:var(--vscode-descriptionForeground)">Running...\n</i>';
+                codeEl.textContent = '';
+                const runIndicator = document.createElement('i');
+                runIndicator.style.color = 'var(--vscode-descriptionForeground)';
+                runIndicator.textContent = 'Running...\n';
+                runIndicator.className = 'run-indicator';
+                codeEl.appendChild(runIndicator);
 
                 const btn = document.getElementById('btn_' + message.blockId);
                 if (btn) {
                     btn.disabled = true;
-                    btn.innerHTML = '<span class="codicon codicon-sync spin"></span> Running...';
+                    btn.textContent = '';
+                    const spinIcon = document.createElement('span');
+                    spinIcon.className = 'codicon codicon-sync spin';
+                    btn.appendChild(spinIcon);
+                    btn.appendChild(document.createTextNode(' Running...'));
                 }
+                // Disable edit button while running
+                const editBtn = document.getElementById('edit_btn_' + message.blockId);
+                if (editBtn) editBtn.disabled = true;
             } else if (message.command === 'command-output') {
-                let text = '';
+                // Remove Running indicator if present
+                const indicator = codeEl.querySelector('.run-indicator');
+                if (indicator) indicator.remove();
+
                 if (message.stdout) {
-                    text += escapeHtml(message.stdout);
+                    codeEl.appendChild(document.createTextNode(message.stdout));
                 }
                 if (message.stderr && message.stderr.trim().length > 0) {
-                    text += '<span style="color:var(--vscode-errorForeground)">' + escapeHtml(message.stderr) + '</span>';
+                    const errSpan = document.createElement('span');
+                    errSpan.style.color = 'var(--vscode-errorForeground)';
+                    errSpan.textContent = message.stderr;
+                    codeEl.appendChild(errSpan);
                 }
                 if (message.error) {
-                    text += '<span style="color:var(--vscode-errorForeground)">' + escapeHtml(message.error) + '\n</span>';
+                    const errSpan = document.createElement('span');
+                    errSpan.style.color = 'var(--vscode-errorForeground)';
+                    errSpan.textContent = message.error + '\n';
+                    codeEl.appendChild(errSpan);
                 }
-                // remove Running indicator if present
-                if (codeEl.innerHTML.includes('Running...\n</i>')) {
-                    codeEl.innerHTML = '';
-                }
-                codeEl.innerHTML += text;
             } else if (message.command === 'command-finished') {
+                // Remove Running indicator if still present
+                const indicator = codeEl.querySelector('.run-indicator');
+                if (indicator) indicator.remove();
+
                 if (message.code !== 0 && message.code !== null) {
-                    codeEl.innerHTML += '\n<i style="color:var(--vscode-errorForeground)">Exited with code ' + escapeHtml(String(message.code)) + '</i>';
+                    const exitInfo = document.createElement('i');
+                    exitInfo.style.color = 'var(--vscode-errorForeground)';
+                    exitInfo.textContent = '\nExited with code ' + String(message.code);
+                    codeEl.appendChild(exitInfo);
                 }
-                if (!codeEl.innerHTML.trim() || codeEl.innerHTML.includes('Running...\n</i>')) {
-                    codeEl.innerHTML = '<i>(No output)</i>';
+                if (!codeEl.textContent.trim()) {
+                    const noOutput = document.createElement('i');
+                    noOutput.textContent = '(No output)';
+                    codeEl.appendChild(noOutput);
                 }
 
                 const btn = document.getElementById('btn_' + message.blockId);
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '<span class="codicon codicon-play"></span> Play';
+                    btn.textContent = '';
+                    const playIcon = document.createElement('span');
+                    playIcon.className = 'codicon codicon-play';
+                    btn.appendChild(playIcon);
+                    btn.appendChild(document.createTextNode(' Play'));
                 }
+                // Re-enable edit button
+                const editBtn = document.getElementById('edit_btn_' + message.blockId);
+                if (editBtn) editBtn.disabled = false;
             }
         });
 

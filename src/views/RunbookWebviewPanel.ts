@@ -3,6 +3,7 @@ import { RunbookMarkdown } from '../models/Runbook';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as os from 'os';
+import * as fs from 'fs';
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
@@ -53,6 +54,9 @@ export class RunbookWebviewPanel {
                 switch (message.command) {
                     case 'execute':
                         this.executeScript(message.script, message.blockId);
+                        return;
+                    case 'update-script':
+                        this.updateScriptInFile(message.blockId, message.script);
                         return;
                 }
             },
@@ -131,5 +135,34 @@ export class RunbookWebviewPanel {
                 code
             });
         });
+    }
+
+    private updateScriptInFile(blockId: string, newScript: string) {
+        const indexMatch = blockId.match(/^block_(\d+)$/);
+        if (!indexMatch) { return; }
+        const targetIndex = parseInt(indexMatch[1], 10);
+
+        try {
+            const content = fs.readFileSync(this._currentItem.filePath, 'utf-8');
+            const codeBlockRegex = /```(sh|bash|shell)\s*\n([\s\S]*?)```/g;
+
+            let match;
+            let currentIndex = 0;
+
+            while ((match = codeBlockRegex.exec(content)) !== null) {
+                if (currentIndex === targetIndex) {
+                    const lang = match[1];
+                    const before = content.substring(0, match.index);
+                    const after = content.substring(match.index + match[0].length);
+                    const normalizedScript = newScript.endsWith('\n') ? newScript : newScript + '\n';
+                    const newContent = before + '```' + lang + '\n' + normalizedScript + '```' + after;
+                    fs.writeFileSync(this._currentItem.filePath, newContent, 'utf-8');
+                    return;
+                }
+                currentIndex++;
+            }
+        } catch (e) {
+            vscode.window.showErrorMessage(`Failed to update script: ${e}`);
+        }
     }
 }

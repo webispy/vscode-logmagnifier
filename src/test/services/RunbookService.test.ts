@@ -35,9 +35,12 @@ suite('RunbookService Test Suite', () => {
             assert.ok(fs.existsSync(runbooksDir), 'runbooks directory should exist');
         });
 
-        test('Should create default adb.md file', () => {
-            const defaultFile = path.join(tempDir, 'globalStorage', 'runbooks', 'adb.md');
-            assert.ok(fs.existsSync(defaultFile), 'default adb.md should exist');
+        test('Should create default ADB folder with adb.md file', () => {
+            const defaultFolder = path.join(tempDir, 'globalStorage', 'runbooks', 'ADB');
+            assert.ok(fs.existsSync(defaultFolder), 'default ADB folder should exist');
+
+            const defaultFile = path.join(defaultFolder, 'adb.md');
+            assert.ok(fs.existsSync(defaultFile), 'default adb.md should exist inside ADB folder');
 
             const content = fs.readFileSync(defaultFile, 'utf-8');
             assert.ok(content.includes('# Android device control'), 'default content should include title');
@@ -48,8 +51,13 @@ suite('RunbookService Test Suite', () => {
             const items = service.items;
             assert.ok(items.length > 0, 'should have at least one item');
 
-            const adbItem = items.find(i => i.label === 'adb');
-            assert.ok(adbItem, 'should have adb item');
+            const adbGroup = items.find(i => i.label === 'ADB');
+            assert.ok(adbGroup, 'should have ADB group');
+            assert.strictEqual(adbGroup!.kind, 'group');
+
+            const children = (adbGroup as RunbookGroup).children;
+            const adbItem = children.find(i => i.label === 'adb');
+            assert.ok(adbItem, 'should have adb item inside ADB group');
             assert.strictEqual(adbItem!.kind, 'markdown');
         });
 
@@ -63,20 +71,7 @@ suite('RunbookService Test Suite', () => {
     });
 
     suite('loadConfig / scanDir', () => {
-        test('Should scan markdown files', async () => {
-            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            fs.writeFileSync(path.join(runbooksDir, 'test.md'), '# Test', 'utf-8');
-
-            await service.loadConfig();
-            const items = service.items;
-
-            const testItem = items.find(i => i.label === 'test');
-            assert.ok(testItem, 'should find test.md');
-            assert.strictEqual(testItem!.kind, 'markdown');
-            assert.strictEqual((testItem as RunbookMarkdown).filePath, path.join(runbooksDir, 'test.md'));
-        });
-
-        test('Should scan directories as groups', async () => {
+        test('Should scan directories as groups at root', async () => {
             const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
             const groupDir = path.join(runbooksDir, 'mygroup');
             fs.mkdirSync(groupDir, { recursive: true });
@@ -90,18 +85,45 @@ suite('RunbookService Test Suite', () => {
             assert.strictEqual((groupItem as RunbookGroup).dirPath, groupDir);
         });
 
-        test('Should ignore non-md files', async () => {
+        test('Should scan markdown files inside groups', async () => {
             const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            fs.writeFileSync(path.join(runbooksDir, 'readme.txt'), 'text', 'utf-8');
-            fs.writeFileSync(path.join(runbooksDir, 'data.json'), '{}', 'utf-8');
+            const groupDir = path.join(runbooksDir, 'mygroup');
+            fs.mkdirSync(groupDir, { recursive: true });
+            fs.writeFileSync(path.join(groupDir, 'test.md'), '# Test', 'utf-8');
 
             await service.loadConfig();
             const items = service.items;
 
-            const txtItem = items.find(i => i.label === 'readme');
-            const jsonItem = items.find(i => i.label === 'data');
-            assert.strictEqual(txtItem, undefined, 'should not include .txt files');
-            assert.strictEqual(jsonItem, undefined, 'should not include .json files');
+            const groupItem = items.find(i => i.label === 'mygroup') as RunbookGroup;
+            assert.ok(groupItem, 'should find mygroup directory');
+            const testItem = groupItem.children.find(i => i.label === 'test');
+            assert.ok(testItem, 'should find test.md inside group');
+            assert.strictEqual(testItem!.kind, 'markdown');
+            assert.strictEqual((testItem as RunbookMarkdown).filePath, path.join(groupDir, 'test.md'));
+        });
+
+        test('Should ignore standalone markdown files at root level', async () => {
+            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
+            fs.writeFileSync(path.join(runbooksDir, 'standalone.md'), '# Standalone', 'utf-8');
+
+            await service.loadConfig();
+            const items = service.items;
+
+            const standaloneItem = items.find(i => i.label === 'standalone');
+            assert.strictEqual(standaloneItem, undefined, 'should not include standalone .md files at root');
+        });
+
+        test('Should ignore subdirectories inside groups', async () => {
+            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
+            const groupDir = path.join(runbooksDir, 'mygroup');
+            const subDir = path.join(groupDir, 'subdir');
+            fs.mkdirSync(subDir, { recursive: true });
+
+            await service.loadConfig();
+            const groupItem = service.items.find(i => i.label === 'mygroup') as RunbookGroup;
+            assert.ok(groupItem, 'should find mygroup directory');
+            const subDirItem = groupItem.children.find(i => i.label === 'subdir');
+            assert.strictEqual(subDirItem, undefined, 'should not include subdirectories inside groups');
         });
 
         test('Should handle empty runbooks directory', async () => {
@@ -116,7 +138,7 @@ suite('RunbookService Test Suite', () => {
 
     suite('createGroup', () => {
         test('Should create a group at root level', async () => {
-            await service.createGroup(undefined, 'newgroup');
+            await service.createGroup('newgroup');
             const items = service.items;
 
             const group = items.find(i => i.label === 'newgroup');
@@ -133,7 +155,7 @@ suite('RunbookService Test Suite', () => {
             fs.mkdirSync(groupDir);
             fs.writeFileSync(path.join(groupDir, 'keep.md'), '# Keep', 'utf-8');
 
-            await service.createGroup(undefined, 'existing');
+            await service.createGroup('existing');
 
             // The file inside should still exist
             assert.ok(fs.existsSync(path.join(groupDir, 'keep.md')));
@@ -141,11 +163,14 @@ suite('RunbookService Test Suite', () => {
     });
 
     suite('createItem', () => {
-        test('Should create a markdown item at root level', async () => {
-            await service.createItem(undefined, 'newfile');
-
+        test('Should create a markdown item inside a group', async () => {
             const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            const filePath = path.join(runbooksDir, 'newfile.md');
+            const groupDir = path.join(runbooksDir, 'mygroup');
+            fs.mkdirSync(groupDir, { recursive: true });
+
+            await service.createItem(groupDir, 'newfile');
+
+            const filePath = path.join(groupDir, 'newfile.md');
             assert.ok(fs.existsSync(filePath), 'should create newfile.md');
 
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -153,38 +178,35 @@ suite('RunbookService Test Suite', () => {
         });
 
         test('Should auto-append .md extension', async () => {
-            await service.createItem(undefined, 'noext');
-
-            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            assert.ok(fs.existsSync(path.join(runbooksDir, 'noext.md')));
-        });
-
-        test('Should not double .md extension', async () => {
-            await service.createItem(undefined, 'already.md');
-
-            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            assert.ok(fs.existsSync(path.join(runbooksDir, 'already.md')));
-            assert.ok(!fs.existsSync(path.join(runbooksDir, 'already.md.md')));
-        });
-
-        test('Should not overwrite existing item', async () => {
-            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            const existingPath = path.join(runbooksDir, 'existing.md');
-            fs.writeFileSync(existingPath, '# Existing Content', 'utf-8');
-
-            await service.createItem(undefined, 'existing');
-
-            const content = fs.readFileSync(existingPath, 'utf-8');
-            assert.strictEqual(content, '# Existing Content', 'should not overwrite');
-        });
-
-        test('Should create item inside a group', async () => {
             const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
             const groupDir = path.join(runbooksDir, 'mygroup');
             fs.mkdirSync(groupDir, { recursive: true });
 
-            await service.createItem(groupDir, 'inside');
-            assert.ok(fs.existsSync(path.join(groupDir, 'inside.md')));
+            await service.createItem(groupDir, 'noext');
+            assert.ok(fs.existsSync(path.join(groupDir, 'noext.md')));
+        });
+
+        test('Should not double .md extension', async () => {
+            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
+            const groupDir = path.join(runbooksDir, 'mygroup');
+            fs.mkdirSync(groupDir, { recursive: true });
+
+            await service.createItem(groupDir, 'already.md');
+            assert.ok(fs.existsSync(path.join(groupDir, 'already.md')));
+            assert.ok(!fs.existsSync(path.join(groupDir, 'already.md.md')));
+        });
+
+        test('Should not overwrite existing item', async () => {
+            const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
+            const groupDir = path.join(runbooksDir, 'mygroup');
+            fs.mkdirSync(groupDir, { recursive: true });
+            const existingPath = path.join(groupDir, 'existing.md');
+            fs.writeFileSync(existingPath, '# Existing Content', 'utf-8');
+
+            await service.createItem(groupDir, 'existing');
+
+            const content = fs.readFileSync(existingPath, 'utf-8');
+            assert.strictEqual(content, '# Existing Content', 'should not overwrite');
         });
     });
 
@@ -264,13 +286,17 @@ suite('RunbookService Test Suite', () => {
             service.onDidChangeTreeData(() => { eventFired = true; });
 
             const runbooksDir = path.join(tempDir, 'globalStorage', 'runbooks');
-            fs.writeFileSync(path.join(runbooksDir, 'new.md'), '# New', 'utf-8');
+            const groupDir = path.join(runbooksDir, 'newgroup');
+            fs.mkdirSync(groupDir, { recursive: true });
+            fs.writeFileSync(path.join(groupDir, 'new.md'), '# New', 'utf-8');
 
             await service.refresh();
 
             assert.ok(eventFired, 'change event should fire');
-            const newItem = service.items.find(i => i.label === 'new');
-            assert.ok(newItem, 'new item should be found after refresh');
+            const newGroup = service.items.find(i => i.label === 'newgroup') as RunbookGroup;
+            assert.ok(newGroup, 'new group should be found after refresh');
+            const newItem = newGroup.children.find(i => i.label === 'new');
+            assert.ok(newItem, 'new item should be found inside group after refresh');
         });
     });
 
@@ -281,9 +307,9 @@ suite('RunbookService Test Suite', () => {
             fs.rmSync(runbooksDir, { recursive: true, force: true });
             fs.mkdirSync(runbooksDir, { recursive: true });
 
-            fs.writeFileSync(path.join(runbooksDir, 'doc1.md'), '# Doc 1 Content', 'utf-8');
             const groupDir = path.join(runbooksDir, 'group1');
             fs.mkdirSync(groupDir);
+            fs.writeFileSync(path.join(groupDir, 'doc1.md'), '# Doc 1 Content', 'utf-8');
             fs.writeFileSync(path.join(groupDir, 'doc2.md'), '# Doc 2 Content', 'utf-8');
 
             await service.loadConfig();
@@ -299,14 +325,14 @@ suite('RunbookService Test Suite', () => {
             assert.strictEqual(exported.version, '1.0.0-test');
             assert.ok(Array.isArray(exported.runbooks));
 
-            // Should have group1 and doc1
+            // Should have group1 with children
             const group = exported.runbooks.find((r: { name: string }) => r.name === 'group1');
             assert.ok(group, 'exported should contain group1');
             assert.strictEqual(group.type, 'group');
-            assert.ok(group.children.length > 0);
+            assert.ok(group.children.length === 2, 'group1 should have 2 children');
 
-            const doc1 = exported.runbooks.find((r: { name: string }) => r.name === 'doc1');
-            assert.ok(doc1, 'exported should contain doc1');
+            const doc1 = group.children.find((r: { name: string }) => r.name === 'doc1');
+            assert.ok(doc1, 'exported group should contain doc1');
             assert.strictEqual(doc1.type, 'markdown');
             assert.strictEqual(doc1.content, '# Doc 1 Content');
         });
@@ -407,7 +433,11 @@ suite('RunbookService Test Suite', () => {
                     { type: '', name: 'noType' },             // empty type
                     { name: 'missingType' },                  // no type
                     { type: 'markdown' },                     // no name
-                    { type: 'markdown', name: 'valid', content: '# Valid' }
+                    {
+                        type: 'group', name: 'validGroup', children: [
+                            { type: 'markdown', name: 'valid', content: '# Valid' }
+                        ]
+                    }
                 ]
             };
 
@@ -417,8 +447,10 @@ suite('RunbookService Test Suite', () => {
             await service.importRunbook(vscode.Uri.file(importPath));
 
             await service.loadConfig();
-            const validItem = service.items.find(i => i.label === 'valid');
-            assert.ok(validItem, 'valid item should be imported');
+            const validGroup = service.items.find(i => i.label === 'validGroup') as RunbookGroup;
+            assert.ok(validGroup, 'valid group should be imported');
+            const validItem = validGroup.children.find(i => i.label === 'valid');
+            assert.ok(validItem, 'valid item should be imported inside group');
         });
     });
 });

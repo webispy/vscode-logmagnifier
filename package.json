@@ -1121,7 +1121,7 @@
       {
         "command": "logmagnifier.runbook.editMarkdown",
         "title": "Edit Markdown",
-        "icon": "$(go-to-file)"
+        "icon": "$(edit)"
       },
       {
         "command": "logmagnifier.runbook.addGroup",
@@ -1431,11 +1431,6 @@
           "command": "logmagnifier.runbook.addGroup",
           "when": "view == logmagnifier-runbook",
           "group": "navigation@3"
-        },
-        {
-          "command": "logmagnifier.runbook.addItem",
-          "when": "view == logmagnifier-runbook",
-          "group": "navigation@4"
         }
       ],
       "editor/context": [
@@ -1751,7 +1746,7 @@
           "group": "navigation"
         },
         {
-          "command": "logmagnifier.runbook.renameGroup",
+          "command": "logmagnifier.runbook.addItem",
           "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "inline@1"
         },
@@ -1759,11 +1754,6 @@
           "command": "logmagnifier.runbook.deleteGroup",
           "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
           "group": "inline@2"
-        },
-        {
-          "command": "logmagnifier.runbook.addItem",
-          "when": "view == logmagnifier-runbook && viewItem == runbookGroup",
-          "group": "inline@3"
         },
         {
           "command": "logmagnifier.runbook.addItem",
@@ -1786,14 +1776,9 @@
           "group": "inline@1"
         },
         {
-          "command": "logmagnifier.runbook.renameItem",
-          "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
-          "group": "inline@2"
-        },
-        {
           "command": "logmagnifier.runbook.deleteItem",
           "when": "view == logmagnifier-runbook && viewItem == runbookMarkdown",
-          "group": "inline@3"
+          "group": "inline@2"
         },
         {
           "command": "logmagnifier.runbook.editMarkdown",

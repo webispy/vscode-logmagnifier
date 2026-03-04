@@ -83,7 +83,8 @@ suite('RunbookTreeDataProvider Test Suite', () => {
         });
 
         test('Should return correct TreeItem for group', () => {
-            const group = createGroup('mygroup', '/path/group');
+            const child = createMarkdown('child', '/path/group/child.md');
+            const group = createGroup('mygroup', '/path/group', [child]);
 
             const treeItem = provider.getTreeItem(group);
             assert.strictEqual(treeItem.label, 'mygroup');
@@ -91,6 +92,26 @@ suite('RunbookTreeDataProvider Test Suite', () => {
             assert.strictEqual(treeItem.contextValue, 'runbookGroup');
             assert.strictEqual(treeItem.tooltip, '/path/group');
             assert.strictEqual(treeItem.iconPath, vscode.ThemeIcon.Folder);
+            assert.strictEqual(treeItem.description, '1 items');
+        });
+    });
+
+    suite('getParent', () => {
+        test('Should return parent group for a markdown item', () => {
+            const child = createMarkdown('child', '/path/group/child.md');
+            const group = createGroup('group', '/path/group', [child]);
+            mockItems = [group];
+
+            const parent = provider.getParent(child);
+            assert.strictEqual(parent, group, 'should return the parent group');
+        });
+
+        test('Should return undefined for a group item', () => {
+            const group = createGroup('group', '/path/group');
+            mockItems = [group];
+
+            const parent = provider.getParent(group);
+            assert.strictEqual(parent, undefined, 'groups at root should have no parent');
         });
     });
 

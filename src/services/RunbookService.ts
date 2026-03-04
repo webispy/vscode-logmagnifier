@@ -38,7 +38,11 @@ export class RunbookService {
     }
 
     private createDefaultConfig() {
-        const defaultPath = path.join(this.storagePath, 'adb.md');
+        const defaultGroupPath = path.join(this.storagePath, 'ADB');
+        if (!fs.existsSync(defaultGroupPath)) {
+            fs.mkdirSync(defaultGroupPath, { recursive: true });
+        }
+        const defaultPath = path.join(defaultGroupPath, 'adb.md');
         const defaultContent = `# Android device control
 
 ## remount 하기
@@ -76,24 +80,24 @@ adb exec-out screencap -p > screen.png
         }
     }
 
-    private scanDir(dirPath: string): RunbookItem[] {
+    private scanDir(dirPath: string, isRoot: boolean = true): RunbookItem[] {
         const items: RunbookItem[] = [];
         const files = fs.readdirSync(dirPath, { withFileTypes: true });
 
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
 
-            if (file.isDirectory()) {
+            if (isRoot && file.isDirectory()) {
                 const group: RunbookGroup = {
                     id: fullPath,
                     type: 'group',
                     kind: 'group',
                     label: file.name,
                     dirPath: fullPath,
-                    children: this.scanDir(fullPath)
+                    children: this.scanDir(fullPath, false)
                 };
                 items.push(group);
-            } else if (file.isFile() && file.name.endsWith('.md')) {
+            } else if (!isRoot && file.isFile() && file.name.endsWith('.md')) {
                 const item: RunbookMarkdown = {
                     id: fullPath,
                     type: 'markdown',
@@ -105,24 +109,20 @@ adb exec-out screencap -p > screen.png
             }
         }
 
-        return items.sort((a, b) => {
-            if (a.kind === 'group' && b.kind === 'markdown') { return -1; }
-            if (a.kind === 'markdown' && b.kind === 'group') { return 1; }
-            return a.label.localeCompare(b.label);
-        });
+        return items;
     }
 
-    public async createGroup(parentPath: string | undefined, groupName: string): Promise<void> {
-        const targetPath = parentPath ? path.join(parentPath, groupName) : path.join(this.storagePath, groupName);
+    public async createGroup(groupName: string): Promise<void> {
+        const targetPath = path.join(this.storagePath, groupName);
         if (!fs.existsSync(targetPath)) {
             fs.mkdirSync(targetPath, { recursive: true });
             await this.refresh();
         }
     }
 
-    public async createItem(parentPath: string | undefined, fileName: string): Promise<void> {
+    public async createItem(parentPath: string, fileName: string): Promise<void> {
         if (!fileName.endsWith('.md')) { fileName += '.md'; }
-        const targetPath = parentPath ? path.join(parentPath, fileName) : path.join(this.storagePath, fileName);
+        const targetPath = path.join(parentPath, fileName);
         if (!fs.existsSync(targetPath)) {
             fs.writeFileSync(targetPath, '# New Runbook\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
             await this.refresh();

@@ -39,6 +39,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
 
     private getMarkdownTreeItem(markdown: RunbookMarkdown): vscode.TreeItem {
         const item = new vscode.TreeItem(markdown.label, vscode.TreeItemCollapsibleState.None);
+        item.id = markdown.id;
         item.contextValue = 'runbookMarkdown';
         item.iconPath = new vscode.ThemeIcon('terminal');
         item.tooltip = markdown.filePath;
@@ -54,14 +55,21 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
 
     private getGroupTreeItem(group: RunbookGroup): vscode.TreeItem {
         const item = new vscode.TreeItem(group.label, vscode.TreeItemCollapsibleState.Collapsed);
+        item.id = group.id;
         item.contextValue = 'runbookGroup';
         item.iconPath = vscode.ThemeIcon.Folder;
         item.tooltip = group.dirPath;
+        item.description = `${group.children.length} items`;
         return item;
     }
 
-    getParent(_element: RunbookItem): vscode.ProviderResult<RunbookItem> {
-        return undefined; // Flat list for now
+    getParent(element: RunbookItem): vscode.ProviderResult<RunbookItem> {
+        if (element.kind === 'markdown') {
+            return this.runbookService.items.find(
+                item => item.kind === 'group' && (item as RunbookGroup).children.some(child => child.id === element.id)
+            );
+        }
+        return undefined;
     }
 
     public dispose() {

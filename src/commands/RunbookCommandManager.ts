@@ -59,19 +59,18 @@ export class RunbookCommandManager {
         }
     }
 
-    private async addGroup(item?: RunbookGroup) {
-        const parentPath = item ? item.dirPath : undefined;
+    private async addGroup() {
         const name = await vscode.window.showInputBox({ prompt: 'Enter new group name' });
         if (name) {
-            await this.runbookService.createGroup(parentPath, name);
+            await this.runbookService.createGroup(name);
         }
     }
 
-    private async addItem(item?: RunbookGroup) {
-        const parentPath = item ? item.dirPath : undefined;
+    private async addItem(item: RunbookGroup) {
+        if (!item || item.kind !== 'group') { return; }
         const name = await vscode.window.showInputBox({ prompt: 'Enter new markdown file name' });
         if (name) {
-            await this.runbookService.createItem(parentPath, name);
+            await this.runbookService.createItem(item.dirPath, name);
         }
     }
 

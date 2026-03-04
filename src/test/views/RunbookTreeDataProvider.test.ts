@@ -91,7 +91,7 @@ suite('RunbookTreeDataProvider Test Suite', () => {
             assert.strictEqual(treeItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
             assert.strictEqual(treeItem.contextValue, 'runbookGroup');
             assert.strictEqual(treeItem.tooltip, '/path/group');
-            assert.strictEqual(treeItem.iconPath, vscode.ThemeIcon.Folder);
+            assert.ok(treeItem.iconPath instanceof vscode.Uri);
             assert.strictEqual(treeItem.description, '1 items');
         });
     });

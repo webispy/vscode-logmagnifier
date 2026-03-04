@@ -312,6 +312,7 @@ export function activate(context: vscode.ExtensionContext) {
         try {
             wordTreeDataProvider.refresh();
             regexTreeDataProvider.refresh();
+            runbookTreeDataProvider.refresh();
         } catch (error) {
             logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
         }

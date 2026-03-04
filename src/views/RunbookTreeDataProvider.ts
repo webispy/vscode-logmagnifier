@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { RunbookService } from '../services/RunbookService';
 import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
 import { Constants } from '../Constants';
+import { ThemeUtils } from '../utils/ThemeUtils';
+import { IconUtils } from '../utils/IconUtils';
 
 export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
@@ -57,7 +59,12 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         const item = new vscode.TreeItem(group.label, vscode.TreeItemCollapsibleState.Collapsed);
         item.id = group.id;
         item.contextValue = 'runbookGroup';
-        item.iconPath = vscode.ThemeIcon.Folder;
+
+        const isDark = ThemeUtils.isDarkTheme();
+        const strokeColor = isDark ? '#cccccc' : '#333333';
+        const svg = IconUtils.generateGroupSvg(strokeColor);
+        item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
+
         item.tooltip = group.dirPath;
         item.description = `${group.children.length} items`;
         return item;

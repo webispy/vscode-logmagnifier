@@ -552,7 +552,27 @@
       },
       {
         "command": "logmagnifier.clearAllData",
-        "title": "Clear All Persistent Data",
+        "title": "LogMagnifier: Clear All Persistent Data",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.clearFilterData",
+        "title": "LogMagnifier: Clear Filter Data",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.clearBookmarkData",
+        "title": "LogMagnifier: Clear Bookmark Data",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.clearWorkflowData",
+        "title": "LogMagnifier: Clear Workflow Data",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.clearRunbookData",
+        "title": "LogMagnifier: Clear Runbook Data",
         "icon": "$(trash)"
       },
       {

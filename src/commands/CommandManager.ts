@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
 import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
@@ -113,31 +115,114 @@ export class CommandManager {
     }
 
     private registerClearDataCommand() {
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ClearAllData, async () => {
-            const answer = await vscode.window.showWarningMessage(
-                Constants.Prompts.ConfirmClearAllData,
-                { modal: true },
-                'Yes'
-            );
-
-            if (answer === 'Yes') {
-                // Clear all globalState
-                const keys = this.context.globalState.keys();
-                for (const key of keys) {
-                    this.logger.info(`Clearing globalState key: ${key}`);
-                    await this.context.globalState.update(key, undefined);
-                }
-
-                // Show success and ask for reload
-                const reload = await vscode.window.showInformationMessage(
-                    Constants.Messages.Info.ClearAllDataCompleted,
-                    Constants.Prompts.ReloadConfirm
+        this.context.subscriptions.push(
+            vscode.commands.registerCommand(Constants.Commands.ClearAllData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearAllData,
+                    { modal: true },
+                    'Yes'
                 );
 
-                if (reload === Constants.Prompts.ReloadConfirm) {
-                    vscode.commands.executeCommand('workbench.action.reloadWindow');
+                if (answer === 'Yes') {
+                    const keys = this.context.globalState.keys();
+                    for (const key of keys) {
+                        this.logger.info(`Clearing globalState key: ${key}`);
+                        await this.context.globalState.update(key, undefined);
+                    }
+                    this.deleteRunbookStorage();
+                    await this.showClearResult(Constants.Messages.Info.ClearAllDataCompleted);
                 }
-            }
-        }));
+            }),
+
+            vscode.commands.registerCommand(Constants.Commands.ClearFilterData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearFilterData,
+                    { modal: true },
+                    'Yes'
+                );
+
+                if (answer === 'Yes') {
+                    await this.clearGlobalStateKeys([
+                        Constants.GlobalState.FilterGroups,
+                        Constants.GlobalState.FilterProfiles,
+                        Constants.GlobalState.ActiveProfile,
+                    ]);
+                    await this.showClearResult(Constants.Messages.Info.ClearFilterDataCompleted);
+                }
+            }),
+
+            vscode.commands.registerCommand(Constants.Commands.ClearBookmarkData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearBookmarkData,
+                    { modal: true },
+                    'Yes'
+                );
+
+                if (answer === 'Yes') {
+                    await this.clearGlobalStateKeys([
+                        Constants.GlobalState.Bookmarks,
+                        Constants.GlobalState.BookmarkIncludeLnMap,
+                        Constants.GlobalState.BookmarkWordWrap,
+                        Constants.GlobalState.BookmarkFileOrder,
+                    ]);
+                    await this.showClearResult(Constants.Messages.Info.ClearBookmarkDataCompleted);
+                }
+            }),
+
+            vscode.commands.registerCommand(Constants.Commands.ClearWorkflowData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearWorkflowData,
+                    { modal: true },
+                    'Yes'
+                );
+
+                if (answer === 'Yes') {
+                    await this.clearGlobalStateKeys([
+                        Constants.GlobalState.Workflows,
+                        Constants.GlobalState.ActiveWorkflow,
+                    ]);
+                    await this.showClearResult(Constants.Messages.Info.ClearWorkflowDataCompleted);
+                }
+            }),
+
+            vscode.commands.registerCommand(Constants.Commands.ClearRunbookData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearRunbookData,
+                    { modal: true },
+                    'Yes'
+                );
+
+                if (answer === 'Yes') {
+                    this.deleteRunbookStorage();
+                    await this.showClearResult(Constants.Messages.Info.ClearRunbookDataCompleted);
+                }
+            }),
+        );
+    }
+
+    private async clearGlobalStateKeys(keys: string[]) {
+        for (const key of keys) {
+            this.logger.info(`Clearing globalState key: ${key}`);
+            await this.context.globalState.update(key, undefined);
+        }
+    }
+
+    private deleteRunbookStorage() {
+        const runbookPath = path.join(this.context.globalStorageUri.fsPath, 'runbooks');
+        if (fs.existsSync(runbookPath)) {
+            fs.rmSync(runbookPath, { recursive: true, force: true });
+            this.logger.info(`Cleared runbook storage: ${runbookPath}`);
+        }
+    }
+
+    private async showClearResult(message: string) {
+        const reload = await vscode.window.showInformationMessage(
+            message,
+            Constants.Prompts.ReloadConfirm
+        );
+
+        if (reload === Constants.Prompts.ReloadConfirm) {
+            vscode.commands.executeCommand('workbench.action.reloadWindow');
+        }
     }
 }

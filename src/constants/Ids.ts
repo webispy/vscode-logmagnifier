@@ -134,6 +134,10 @@ export const Ids = {
         ControlToggleShowTouches: 'logmagnifier.control.toggleShowTouches',
         OpenChromeInspect: 'logmagnifier.openChromeInspect',
         ClearAllData: 'logmagnifier.clearAllData',
+        ClearFilterData: 'logmagnifier.clearFilterData',
+        ClearBookmarkData: 'logmagnifier.clearBookmarkData',
+        ClearWorkflowData: 'logmagnifier.clearWorkflowData',
+        ClearRunbookData: 'logmagnifier.clearRunbookData',
 
         ControlAppLaunch: 'logmagnifier.adb.controlApp.launch',
         ControlAppMore: 'logmagnifier.adb.controlApp.more',

@@ -35,15 +35,15 @@ suite('RunbookService Test Suite', () => {
             assert.ok(fs.existsSync(runbooksDir), 'runbooks directory should exist');
         });
 
-        test('Should create default ADB folder with adb.md file', () => {
-            const defaultFolder = path.join(tempDir, 'globalStorage', 'runbooks', 'ADB');
-            assert.ok(fs.existsSync(defaultFolder), 'default ADB folder should exist');
+        test('Should create default System Check folder with health-check.md file', () => {
+            const defaultFolder = path.join(tempDir, 'globalStorage', 'runbooks', 'System Check');
+            assert.ok(fs.existsSync(defaultFolder), 'default System Check folder should exist');
 
-            const defaultFile = path.join(defaultFolder, 'adb.md');
-            assert.ok(fs.existsSync(defaultFile), 'default adb.md should exist inside ADB folder');
+            const defaultFile = path.join(defaultFolder, 'health-check.md');
+            assert.ok(fs.existsSync(defaultFile), 'default health-check.md should exist inside System Check folder');
 
             const content = fs.readFileSync(defaultFile, 'utf-8');
-            assert.ok(content.includes('# Android device control'), 'default content should include title');
+            assert.ok(content.includes('# System Health Check'), 'default content should include title');
             assert.ok(content.includes('```sh'), 'default content should include shell code block');
         });
 
@@ -51,14 +51,14 @@ suite('RunbookService Test Suite', () => {
             const items = service.items;
             assert.ok(items.length > 0, 'should have at least one item');
 
-            const adbGroup = items.find(i => i.label === 'ADB');
-            assert.ok(adbGroup, 'should have ADB group');
-            assert.strictEqual(adbGroup!.kind, 'group');
+            const group = items.find(i => i.label === 'System Check');
+            assert.ok(group, 'should have System Check group');
+            assert.strictEqual(group!.kind, 'group');
 
-            const children = (adbGroup as RunbookGroup).children;
-            const adbItem = children.find(i => i.label === 'adb');
-            assert.ok(adbItem, 'should have adb item inside ADB group');
-            assert.strictEqual(adbItem!.kind, 'markdown');
+            const children = (group as RunbookGroup).children;
+            const item = children.find(i => i.label === 'health-check');
+            assert.ok(item, 'should have health-check item inside System Check group');
+            assert.strictEqual(item!.kind, 'markdown');
         });
 
         test('Should not recreate default config if runbooks dir already exists', () => {

@@ -38,27 +38,51 @@ export class RunbookService {
     }
 
     private createDefaultConfig() {
-        const defaultGroupPath = path.join(this.storagePath, 'ADB');
+        const defaultGroupPath = path.join(this.storagePath, 'System Check');
         if (!fs.existsSync(defaultGroupPath)) {
             fs.mkdirSync(defaultGroupPath, { recursive: true });
         }
-        const defaultPath = path.join(defaultGroupPath, 'adb.md');
-        const defaultContent = `# Android device control
+        const defaultPath = path.join(defaultGroupPath, 'health-check.md');
+        const defaultContent = `# System Health Check
 
-## remount 하기
+## Disk Usage
 
-아래 명령을 통해 remount
+Check disk space usage for all mounted filesystems.
 
 \`\`\`sh
-adb root on
-sleep 2
-adb remount
+df -h
 \`\`\`
 
-## 스크린샷 가져오기
+## Memory Usage
+
+Display current memory and swap usage.
 
 \`\`\`sh
-adb exec-out screencap -p > screen.png
+free -h 2>/dev/null || vm_stat
+\`\`\`
+
+## Network Connectivity
+
+Verify internet connectivity with a simple ping test.
+
+\`\`\`sh
+ping -c 3 8.8.8.8
+\`\`\`
+
+## Running Processes (Top 10 by CPU)
+
+List the top 10 processes sorted by CPU usage.
+
+\`\`\`sh
+ps aux --sort=-%cpu 2>/dev/null | head -11 || ps aux -r | head -11
+\`\`\`
+
+## System Uptime
+
+Check how long the system has been running.
+
+\`\`\`sh
+uptime
 \`\`\`
 `;
         try {

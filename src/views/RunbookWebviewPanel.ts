@@ -55,6 +55,9 @@ export class RunbookWebviewPanel {
                     case 'execute':
                         this.executeScript(message.script, message.blockId);
                         return;
+                    case 'stop':
+                        this.stopScript(message.blockId);
+                        return;
                     case 'update-script':
                         this.updateScriptInFile(message.blockId, message.script);
                         return;
@@ -85,6 +88,14 @@ export class RunbookWebviewPanel {
             if (x) {
                 x.dispose();
             }
+        }
+    }
+
+    private stopScript(blockId: string) {
+        const proc = this._runningProcesses.get(blockId);
+        if (proc) {
+            proc.kill();
+            this._runningProcesses.delete(blockId);
         }
     }
 

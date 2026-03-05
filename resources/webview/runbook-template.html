@@ -66,6 +66,25 @@
             cursor: not-allowed;
         }
 
+        .stop-btn {
+            background-color: var(--vscode-inputValidation-errorBackground, #5a1d1d);
+            color: var(--vscode-errorForeground);
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .stop-btn:hover {
+            opacity: 0.9;
+        }
+
         .save-btn {
             background-color: var(--vscode-button-background);
             color: var(--vscode-button-foreground);
@@ -167,6 +186,15 @@
                         blockId: blockId,
                         script: script
                     });
+                }
+                return;
+            }
+
+            const stopBtn = event.target.closest('.stop-btn[data-block-id]');
+            if (stopBtn) {
+                const blockId = stopBtn.getAttribute('data-block-id');
+                if (blockId) {
+                    vscode.postMessage({ command: 'stop', blockId });
                 }
                 return;
             }
@@ -346,14 +374,18 @@
                 runIndicator.className = 'run-indicator';
                 codeEl.appendChild(runIndicator);
 
+                // Replace Play button with Stop button
                 const btn = document.getElementById('btn_' + message.blockId);
                 if (btn) {
-                    btn.disabled = true;
-                    btn.textContent = '';
-                    const spinIcon = document.createElement('span');
-                    spinIcon.className = 'codicon codicon-sync spin';
-                    btn.appendChild(spinIcon);
-                    btn.appendChild(document.createTextNode(' Running...'));
+                    const stopBtn = document.createElement('button');
+                    stopBtn.className = 'stop-btn';
+                    stopBtn.id = 'btn_' + message.blockId;
+                    stopBtn.setAttribute('data-block-id', message.blockId);
+                    const stopIcon = document.createElement('span');
+                    stopIcon.className = 'codicon codicon-debug-stop';
+                    stopBtn.appendChild(stopIcon);
+                    stopBtn.appendChild(document.createTextNode(' Stop'));
+                    btn.replaceWith(stopBtn);
                 }
                 // Disable edit button while running
                 const editBtn = document.getElementById('edit_btn_' + message.blockId);
@@ -395,14 +427,18 @@
                     codeEl.appendChild(noOutput);
                 }
 
+                // Restore Play button (replacing Stop button if present)
                 const btn = document.getElementById('btn_' + message.blockId);
                 if (btn) {
-                    btn.disabled = false;
-                    btn.textContent = '';
+                    const playBtn = document.createElement('button');
+                    playBtn.className = 'play-btn';
+                    playBtn.id = 'btn_' + message.blockId;
+                    playBtn.setAttribute('data-block-id', message.blockId);
                     const playIcon = document.createElement('span');
                     playIcon.className = 'codicon codicon-play';
-                    btn.appendChild(playIcon);
-                    btn.appendChild(document.createTextNode(' Play'));
+                    playBtn.appendChild(playIcon);
+                    playBtn.appendChild(document.createTextNode(' Play'));
+                    btn.replaceWith(playBtn);
                 }
                 // Re-enable edit button
                 const editBtn = document.getElementById('edit_btn_' + message.blockId);

@@ -58,11 +58,11 @@ export class RunbookHtmlGenerator {
                     <div class="code-block-header">
                         <span class="lang-label">sh</span>
                         <div class="header-buttons">
-                            <button class="edit-btn" id="edit_btn_${currentBlockId}" data-block-id="${currentBlockId}">
-                                <span class="codicon codicon-edit"></span> Edit
-                            </button>
                             <button class="play-btn" id="btn_${currentBlockId}" data-block-id="${currentBlockId}">
                                 <span class="codicon codicon-play"></span> Play
+                            </button>
+                            <button class="edit-btn" id="edit_btn_${currentBlockId}" data-block-id="${currentBlockId}">
+                                <span class="codicon codicon-edit"></span> Edit
                             </button>
                         </div>
                     </div>

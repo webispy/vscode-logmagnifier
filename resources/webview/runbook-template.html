@@ -39,7 +39,8 @@
 
         .play-btn,
         .edit-btn,
-        .cancel-btn {
+        .cancel-btn,
+        .clear-btn {
             background-color: var(--vscode-button-secondaryBackground);
             color: var(--vscode-button-secondaryForeground);
             border: none;
@@ -56,7 +57,8 @@
 
         .play-btn:hover:not(:disabled),
         .edit-btn:hover:not(:disabled),
-        .cancel-btn:hover {
+        .cancel-btn:hover,
+        .clear-btn:hover {
             background-color: var(--vscode-button-secondaryHoverBackground);
         }
 
@@ -64,6 +66,12 @@
         .edit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+        }
+
+        .play-btn,
+        .stop-btn {
+            min-width: 68px;
+            justify-content: center;
         }
 
         .stop-btn {
@@ -195,6 +203,21 @@
                 const blockId = stopBtn.getAttribute('data-block-id');
                 if (blockId) {
                     vscode.postMessage({ command: 'stop', blockId });
+                }
+                return;
+            }
+
+            const clearBtn = event.target.closest('.clear-btn[data-block-id]');
+            if (clearBtn) {
+                const blockId = clearBtn.getAttribute('data-block-id');
+                if (blockId) {
+                    const outputDiv = document.getElementById('output_' + blockId);
+                    if (outputDiv) {
+                        outputDiv.style.display = 'none';
+                        const codeEl = outputDiv.querySelector('code');
+                        if (codeEl) codeEl.textContent = '';
+                    }
+                    clearBtn.remove();
                 }
                 return;
             }
@@ -336,15 +359,6 @@
                 buttonsDiv.appendChild(cancelBtn);
                 buttonsDiv.appendChild(saveBtn);
             } else {
-                const editBtn = document.createElement('button');
-                editBtn.className = 'edit-btn';
-                editBtn.id = 'edit_btn_' + blockId;
-                editBtn.setAttribute('data-block-id', blockId);
-                const editIcon = document.createElement('span');
-                editIcon.className = 'codicon codicon-edit';
-                editBtn.appendChild(editIcon);
-                editBtn.appendChild(document.createTextNode(' Edit'));
-
                 const playBtn = document.createElement('button');
                 playBtn.className = 'play-btn';
                 playBtn.id = 'btn_' + blockId;
@@ -354,8 +368,17 @@
                 playBtn.appendChild(playIcon);
                 playBtn.appendChild(document.createTextNode(' Play'));
 
-                buttonsDiv.appendChild(editBtn);
+                const editBtn = document.createElement('button');
+                editBtn.className = 'edit-btn';
+                editBtn.id = 'edit_btn_' + blockId;
+                editBtn.setAttribute('data-block-id', blockId);
+                const editIcon = document.createElement('span');
+                editIcon.className = 'codicon codicon-edit';
+                editBtn.appendChild(editIcon);
+                editBtn.appendChild(document.createTextNode(' Edit'));
+
                 buttonsDiv.appendChild(playBtn);
+                buttonsDiv.appendChild(editBtn);
             }
         }
 
@@ -373,6 +396,10 @@
                 runIndicator.textContent = 'Running...\n';
                 runIndicator.className = 'run-indicator';
                 codeEl.appendChild(runIndicator);
+
+                // Remove Clear button from previous run if present
+                const prevClearBtn = document.getElementById('clear_btn_' + message.blockId);
+                if (prevClearBtn) prevClearBtn.remove();
 
                 // Replace Play button with Stop button
                 const btn = document.getElementById('btn_' + message.blockId);
@@ -439,6 +466,17 @@
                     playBtn.appendChild(playIcon);
                     playBtn.appendChild(document.createTextNode(' Play'));
                     btn.replaceWith(playBtn);
+
+                    // Add Clear button before Play
+                    const clearBtn = document.createElement('button');
+                    clearBtn.className = 'clear-btn';
+                    clearBtn.id = 'clear_btn_' + message.blockId;
+                    clearBtn.setAttribute('data-block-id', message.blockId);
+                    const clearIcon = document.createElement('span');
+                    clearIcon.className = 'codicon codicon-clear-all';
+                    clearBtn.appendChild(clearIcon);
+                    clearBtn.appendChild(document.createTextNode(' Clear'));
+                    playBtn.parentNode.insertBefore(clearBtn, playBtn);
                 }
                 // Re-enable edit button
                 const editBtn = document.getElementById('edit_btn_' + message.blockId);

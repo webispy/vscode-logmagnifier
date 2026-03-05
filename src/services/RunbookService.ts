@@ -74,7 +74,7 @@ ping -c 3 8.8.8.8
 List the top 10 processes sorted by CPU usage.
 
 \`\`\`sh
-ps aux --sort=-%cpu 2>/dev/null | head -11 || ps aux -r | head -11
+if [ "$(uname)" = "Darwin" ]; then ps -eo pid,%cpu,%mem,command -r | head -11; else ps aux --sort=-%cpu | head -11; fi
 \`\`\`
 
 ## System Uptime

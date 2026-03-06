@@ -17,8 +17,24 @@
   "engines": {
     "vscode": "^1.94.0"
   },
+  "license": "Apache-2.0",
   "categories": [
-    "Other"
+    "Other",
+    "Debuggers"
+  ],
+  "keywords": [
+    "log",
+    "filter",
+    "highlight",
+    "logcat",
+    "adb",
+    "android",
+    "runbook",
+    "debugging",
+    "colorizer",
+    "log-viewer",
+    "log-filter",
+    "log-analysis"
   ],
   "activationEvents": [
     "onLanguage:log",

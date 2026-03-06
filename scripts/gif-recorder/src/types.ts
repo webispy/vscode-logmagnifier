@@ -187,3 +187,11 @@ export interface EnsureExpandedStep extends BaseStep {
   /** CSS selector targeting the collapsible section header (e.g. a `.pane-header`) */
   selector: string;
 }
+
+/** Metadata for a single captured frame (used by runner → composer pipeline) */
+export interface FrameMeta {
+  /** Absolute path to the captured PNG frame */
+  path: string;
+  /** Caption text to overlay on the frame */
+  caption: string;
+}

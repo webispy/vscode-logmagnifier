@@ -1,5 +1,41 @@
 # Change Log
 
+## [1.6.3]
+
+### Added
+- **Runbook**: Completely reimplemented Shell Commander as an interactive, Markdown-based notebook (Jupyter-style).
+  - Shell code blocks (`sh`, `bash`, `shell`) are executed directly in the Webview with real-time streaming output.
+  - **Stop** button replaces Play while a command is running, allowing the process to be killed.
+  - **Clear** button dismisses completed command output.
+  - **Edit** button enables inline editing of shell code blocks, with changes persisted to the Markdown file.
+  - Multiple Runbook panels can be opened simultaneously.
+  - Import/Export runbook configurations as JSON.
+  - Custom SVG icons for consistent tree item indentation across themes.
+  - Default runbook replaced with a universal system health check (disk, memory, network, processes, uptime).
+- **Workflow**: Create new profiles and rename/delete existing ones directly from the "Add Profile" quick pick.
+- **Workflow**: Improved tree visualization with structural metadata (rails, connections) for complex workflow hierarchies.
+- **Commands**: Added `LogMagnifier:` category prefix to all user-facing commands for cleaner command palette discovery.
+- **Data Management**: Added per-module clear commands: `Clear Filter Data`, `Clear Bookmark Data`, `Clear Workflow Data`, `Clear Runbook Data`.
+- **Test**: Added comprehensive test suite for RunbookService (28 tests), RunbookTreeDataProvider (6 tests), and WebviewUtils (2 tests).
+
+### Changed
+- **Runbook**: Renamed from "Shell Commander" to "Runbook" to better reflect its interactive notebook nature.
+- **Runbook**: Tree enforces folder-only root level with single-level hierarchy. Inline buttons simplified — groups: [Add Item] + [Remove], items: [Edit] + [Remove]; Rename moved to context menu.
+- **Runbook**: Panel title prefix changed from `Shell:` to `Runbook:`.
+- **Clear All**: `Clear All Persistent Data` now also removes Runbook storage.
+- **Workflow**: `LogProcessor` returns string arrays instead of concatenated strings, reducing memory usage for large log files.
+- **Workflow**: File badge aligned to the far right of workflow entries for improved readability.
+
+### Fixed
+- **Security**: Fixed XSS vulnerabilities in Runbook webview — added CSP meta tag, sanitized markdown HTML output, replaced inline `onclick` handlers with data attributes and event delegation.
+- **Security**: Fixed XSS in workflow tree template where error messages were inserted via `innerHTML`.
+- **Stability**: Fixed orphaned child processes when closing the Runbook webview during script execution.
+- **Stability**: Fixed shell code block rendering issue where `sanitize-html` stripped required `button`, `class`, `id`, and `data-*` attributes.
+- **Workflow**: Fixed word filter match counts during workflow execution by preserving original filter IDs on cloned filters.
+- **UI**: Fixed Runbook group item indentation loss caused by VS Code's compact folder heuristics on native ThemeIcons.
+- **Build**: Resolved npm audit security vulnerabilities (`ajv`, `minimatch`, `diff`, `serialize-javascript`).
+- **Compatibility**: Fixed `ps` command in default Runbook sample for macOS vs. Linux compatibility.
+
 ## [1.6.2]
 
 ### Added

@@ -1,0 +1,11 @@
+{
+  "workbench.startupEditor": "none",
+  "workbench.activityBar.location": "default",
+  "editor.minimap.enabled": false,
+  "editor.scrollBeyondLastLine": false,
+  "breadcrumbs.enabled": false,
+  "workbench.statusBar.visible": true,
+  "workbench.tips.enabled": false,
+  "extensions.ignoreRecommendations": true,
+  "telemetry.telemetryLevel": "off"
+}

@@ -20,6 +20,17 @@ export interface Spec {
   frameDelay?: number;
   /** GIF output scale factor 0.0–1.0 (default: 1.0) */
   scale?: number;
+  /**
+   * If true, hover over each clickable element and capture hover + mousedown frames
+   * before the click, so viewers can see which button is being targeted.
+   * Default: false
+   */
+  hoverBeforeClick?: boolean;
+  /**
+   * Milliseconds to hold on the last frame before the GIF loops back to the start.
+   * Achieved by duplicating the final frame. Default: 0
+   */
+  loopDelay?: number;
   /** Ordered list of steps to execute */
   steps: Step[];
 }
@@ -30,8 +41,10 @@ export type Step =
   | ClickStep
   | AriaClickStep
   | WebviewClickStep
+  | WebviewScrollStep
   | TypeStep
   | KeyStep
+  | DelayStep
   | WaitStep
   | ScreenshotStep
   | ScrollStep
@@ -43,8 +56,18 @@ export type Step =
 interface BaseStep {
   /** Optional human-readable label shown as a caption on the frame */
   caption?: string;
-  /** Milliseconds to wait after performing this step before capturing (default: 300) */
+  /**
+   * Milliseconds to wait after performing this step before capturing a screenshot.
+   * Use this to let the UI settle (e.g. wait for output to stream, animation to finish).
+   * Default: 300
+   */
   delay?: number;
+  /**
+   * How long to display this frame in the GIF output, in milliseconds.
+   * The frame is duplicated (hold / frameDelay) times so it stays on screen longer.
+   * When omitted, the frame is shown for one frameDelay period.
+   */
+  hold?: number;
   /** Whether to capture a screenshot frame after this step (default: true) */
   capture?: boolean;
 }
@@ -98,12 +121,38 @@ export interface WebviewClickStep extends BaseStep {
 }
 
 /**
+ * Scroll the content inside a VS Code Webview panel.
+ * Uses frameLocator to reach the inner iframe document, then calls scrollBy().
+ */
+export interface WebviewScrollStep extends BaseStep {
+  type: 'webview-scroll';
+  /** Pixels to scroll vertically (positive = down, negative = up) */
+  deltaY: number;
+  /** Pixels to scroll horizontally (positive = right, negative = left, default: 0) */
+  deltaX?: number;
+  /**
+   * Number of incremental steps to split the scroll into.
+   * Each step captures a frame, producing a smooth scroll animation in the GIF.
+   * Default: 1 (instant scroll, single frame)
+   */
+  steps?: number;
+  /** Inner frame selector (default: 'iframe') */
+  innerFrame?: string;
+}
+
+/**
  * Type text into the currently focused element.
  */
 export interface TypeStep extends BaseStep {
   type: 'type';
   /** The text to type */
   text: string;
+  /**
+   * If set, capture a GIF frame every N characters while typing.
+   * This makes the typing appear animated rather than appearing all at once.
+   * Omit or set to 0 for the default behavior (single frame after completion).
+   */
+  captureEvery?: number;
 }
 
 /**
@@ -119,8 +168,29 @@ export interface KeyStep extends BaseStep {
 }
 
 /**
- * Wait for a fixed duration without interacting.
- * Useful for letting animations complete or processes finish.
+ * Pause execution for a fixed duration. Does NOT capture a frame by default.
+ *
+ * Use this as an explicit step between actions to let the UI settle before
+ * the next screenshot, making the timing intent visible in the YAML.
+ *
+ *   - type: webview-click
+ *       selector: "button.play-btn"
+ *       caption: "▶ Play"
+ *   - type: delay
+ *       ms: 1500          # wait for output to stream in
+ *   - type: screenshot
+ *       caption: "Output"
+ *       hold: 2000
+ */
+export interface DelayStep {
+  type: 'delay';
+  /** Duration in milliseconds */
+  ms: number;
+}
+
+/**
+ * Wait for a fixed duration without interacting (captures a frame afterward).
+ * @deprecated Prefer `- type: delay` + `- type: screenshot` for explicit control.
  */
 export interface WaitStep extends BaseStep {
   type: 'wait';

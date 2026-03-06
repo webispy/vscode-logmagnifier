@@ -7,11 +7,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
-import { Page, chromium } from 'playwright';
+import { _electron as electron, Page } from 'playwright';
 import { downloadAndUnzipVSCode } from '@vscode/test-electron';
-import { Spec, Step } from './types';
+import { Spec, Step, FrameMeta } from './types';
 import { composeGif } from './composer';
-import { spawn } from 'child_process';
 
 interface AppHandle {
   firstWindow(): Promise<Page>;
@@ -71,7 +70,8 @@ async function main() {
 
     console.log(`  ✓ Captured ${frames.length} frames`);
 
-    const outputPath = path.resolve(process.cwd(), '..', '..', 'resources', 'demo', `${outputName}.gif`);
+    const repoRoot = path.resolve(__dirname, '..', '..', '..');
+    const outputPath = path.join(repoRoot, 'resources', 'demo', `${outputName}.gif`);
     fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
     await composeGif(frames, outputPath, {
@@ -171,71 +171,62 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
   console.log(`  Extension: ${extensionPath}`);
   console.log(`  User data: ${userDataDir}`);
 
-  const port = 9222;
-  const spawnEnv = { ...process.env };
-  delete spawnEnv.ELECTRON_RUN_AS_NODE;
+  const launchEnv = { ...process.env };
+  delete launchEnv.ELECTRON_RUN_AS_NODE;
 
-  console.log(`  Starting VS Code process on CDP port ${port}…`);
-  const child = spawn(
-    vscodePath,
-    [
+  console.log(`  Launching VS Code via Playwright Electron API…`);
+  const electronApp = await electron.launch({
+    executablePath: vscodePath,
+    args: [
       `--extensionDevelopmentPath=${extensionPath}`,
       `--user-data-dir=${userDataDir}`,
       `--extensions-dir=${extDir}`,
       '--no-sandbox',
       '--disable-gpu',
       '--disable-dev-shm-usage',
-      `--remote-debugging-port=${port}`,
       workspaceDir,
     ],
-    {
-      env: { ...spawnEnv, ELECTRON_ENABLE_LOGGING: '0' },
-      stdio: 'ignore'
-    }
-  );
+    env: { ...launchEnv, ELECTRON_ENABLE_LOGGING: '0' },
+  });
 
-  // Give VS Code a moment to bind the CDP port
-  await delay(3000);
+  const page = await electronApp.firstWindow();
 
-  console.log(`  Connecting Playwright to CDP…`);
-  const browser = await chromium.connectOverCDP(`http://localhost:${port}`);
-
-  // Find the actual workbench page
-  let page: Page | undefined;
-  for (const ctx of browser.contexts()) {
-    for (const p of ctx.pages()) {
-      if (p.url().includes('workbench')) {
-        page = p;
-        break;
-      }
-    }
-    if (page) break;
-  }
-  if (!page) {
-    page = browser.contexts()[0].pages()[0];
-  }
-
+  // Resize the actual Electron BrowserWindow via main-process API.
+  // This is the only reliable way to control the OS window size — using
+  // setViewportSize alone leaves the Electron window at its default
+  // dimensions, producing stale-pixel artifacts at the edges.
   const { width: winWidth, height: winHeight } = spec.window;
+  await electronApp.evaluate(
+    ({ BrowserWindow }, { w, h }) => {
+      const win = BrowserWindow.getAllWindows()[0];
+      if (win) win.setContentSize(w, h);
+    },
+    { w: winWidth, h: winHeight }
+  );
+  await delay(200);
   await page.setViewportSize({ width: winWidth, height: winHeight });
+  await page.evaluate('window.dispatchEvent(new Event("resize"))');
+  await delay(300);
 
   // Dismiss blocking dialogs and clean up unwanted UI panels.
   // These run concurrently in the background so they don't block the caller.
   dismissTrustDialogIfPresent(page).catch(() => { /* non-fatal */ });
   dismissGitPopupIfPresent(page).catch(() => { /* non-fatal */ });
 
-  // Register process cleanup
+  // Idempotent cleanup — safe to call multiple times
+  let cleaned = false;
   const cleanup = () => {
-    try {
-      if (child.pid) process.kill(child.pid);
-    } catch { /* ignore */ }
+    if (cleaned) return;
+    cleaned = true;
     try { fs.rmSync(userDataDir, { recursive: true, force: true }); } catch { /* ignore */ }
   };
   process.on('exit', cleanup);
+  process.on('SIGINT', cleanup);
 
   return {
-    firstWindow: async () => page!,
+    firstWindow: async () => page,
     close: async () => {
-      await browser.close();
+      await electronApp.close();
       cleanup();
     }
   };
@@ -336,8 +327,10 @@ async function executeStep(page: Page, step: Step): Promise<void> {
       break;
     }
 
-    default:
-      console.warn(`  ⚠ Unknown step type: ${(step as Step).type}`);
+    default: {
+      const _exhaustive: never = step;
+      console.warn(`  ⚠ Unknown step type: ${(_exhaustive as Step).type}`);
+    }
   }
 }
 
@@ -351,7 +344,8 @@ async function executeCommand(page: Page, commandLabel: string): Promise<void> {
   await delay(400);
 
   // Clear any pre-existing text and type the command
-  await page.keyboard.press('Control+a');
+  const selectAllKey = process.platform === 'darwin' ? 'Meta+a' : 'Control+a';
+  await page.keyboard.press(selectAllKey);
   await page.keyboard.type(commandLabel, { delay: 40 });
   await delay(500);
 
@@ -361,18 +355,9 @@ async function executeCommand(page: Page, commandLabel: string): Promise<void> {
   await page.keyboard.press('Enter');
 }
 
-/**
- * (Removed unused executeVSCodeCommandById which relied on Electron main process)
- */
-
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-export interface FrameMeta {
-  path: string;
-  caption: string;
-}
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

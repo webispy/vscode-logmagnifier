@@ -13,7 +13,7 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import * as os from 'os';
 import sharp from 'sharp';
-import { FrameMeta } from './runner';
+import { FrameMeta } from './types';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -53,14 +53,18 @@ export async function composeGif(
 
   try {
     console.log(`  Annotating ${frames.length} frames…`);
-    const annotatedPaths: string[] = [];
 
-    for (let i = 0; i < frames.length; i++) {
-      const frame = frames[i];
-      const outPath = path.join(annotatedDir, `frame_${String(i).padStart(4, '0')}.png`);
+    const BATCH_SIZE = 8;
+    const annotatedPaths: string[] = new Array(frames.length);
 
-      await annotateFrame(frame, outPath, { captionBarHeight, captionFontSize, scale });
-      annotatedPaths.push(outPath);
+    for (let start = 0; start < frames.length; start += BATCH_SIZE) {
+      const batch = frames.slice(start, start + BATCH_SIZE);
+      await Promise.all(batch.map((frame, j) => {
+        const i = start + j;
+        const outPath = path.join(annotatedDir, `frame_${String(i).padStart(4, '0')}.png`);
+        annotatedPaths[i] = outPath;
+        return annotateFrame(frame, outPath, { captionBarHeight, captionFontSize, scale });
+      }));
     }
 
     console.log(`  Assembling GIF…`);
@@ -115,7 +119,7 @@ async function annotateFrame(
 
     pipeline = pipeline.composite([
       { input: barPng, gravity: 'south', blend: 'over' },
-    ]) as ReturnType<typeof sharp>;
+    ]);
   }
 
   await pipeline.png().toFile(outPath);

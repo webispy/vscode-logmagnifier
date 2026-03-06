@@ -201,7 +201,7 @@ export class LogBookmarkHtmlGenerator {
 
         let finalHtml = filesHtml;
         if (sortedUris.length === 0) {
-            finalHtml = '<div class="empty-state">No bookmarks. Right-click on a line to add.</div>';
+            finalHtml = '<div class="empty-state">No bookmarks. Right-click a line in the editor to add one, or use "Add Filter Matches to Bookmark" from the filter panel.</div>';
         }
 
         const templatePath = vscode.Uri.joinPath(this._extensionUri, 'resources', 'webview', 'log-bookmark-template.html');

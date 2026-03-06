@@ -26,7 +26,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Organized Context Menus**: Intuitive submenus for managing filter types, case sensitivity, and highlight modes.
 - **Selection to Filter**: Quickly add selected text as a new filter via the editor context menu.
 - **Persistence**: Filters are automatically saved and restored when VS Code restarts.
-- **Clear Data**: Command to wipe all persistent data (filters, bookmarks, profiles) for a fresh start.
+- **Clear Data**: Commands to wipe persistent data for a fresh start — clear all at once or per-module (Filters, Bookmarks, Workflows, Runbook).
 - **Import/Export**: Share and backup your filter configurations via JSON files.
 - **Quick Access**: Toggle Word Wrap (active tab), Minimap, Sticky Scroll, and view File Size from the sidebar.
 - **ADB Logcat Integration**: Directly view and filter Android logs within VS Code.
@@ -44,7 +44,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Clear All**: Quickly remove all bookmarks for the current file.
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
-- **Runbook**: Execute and organize custom runbook scripts (bash/zsh) with support for multi-line commands and configurable terminal reuse strategies.
+- **Runbook**: Manage and execute operational runbooks via an interactive, Markdown-based notebook interface with real-time webview output. Write documentation alongside executable shell code blocks, stop long-running commands, edit scripts inline, and share configurations via import/export.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
@@ -118,7 +118,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 3.  **Manage Workflows**:
     - Click the **Workflows** icon (circuit board) in the activity bar.
     - **Create/Rename**: Manage your analysis scenarios as Workflows.
-    - **Add Profiles**: Add existing Filter Profiles as steps.
+    - **Add Profiles**: Add existing Filter Profiles as steps. From the quick pick, create new profiles on the fly or rename/delete existing ones without leaving the workflow editor.
     - **Reorder**: Use the arrow icons to change execution order.
     - **Run**: Click the **Play** icon to execute all steps automatically.
 4.  **Execution Feedback**: The sidebar visualizes step progress, indicating the currently active step and completion status.
@@ -127,27 +127,33 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 1.  **Overview**:
     - Manage and execute your operational commands using an interactive, Markdown-based notebook interface.
-    - Each Runbook is a `.md` file stored in your global storage. You can write documentation, instructions, and embed executable shell scripts.
+    - Each Runbook is a `.md` file stored in your global storage. You can write documentation, instructions, and embed executable shell code blocks (`sh`, `bash`, `shell`).
 2.  **Execution**:
     - **Open Interface**: Click a Runbook item in the sidebar to open the interactive Webview.
-    - **Run Blocks**: Inside the Webview, click the **Play** button next to any code block to execute it in a terminal.
+    - **Run**: Click the **Play** button next to a code block to execute it directly in the Webview with real-time streaming output.
+    - **Stop**: While a command is running, the Play button becomes a **Stop** button — click it to kill the process.
+    - **Clear**: After execution, click the **Clear** button to dismiss the output.
+    - **Edit**: Click the **Edit** button to modify the script inline. Changes are automatically saved back to the Markdown file.
 3.  **Organization**:
-    - **Manage Items**: Use the `+` (Add Item) and Folder (Add Group) icons in the Runbook view header to create new files and folders.
+    - **Add Group**: Click the **Folder** icon in the Runbook view title to create a new group.
+    - **Add Item**: Click the **+** icon inline on a group to add a new Markdown file inside it.
     - **Context Menu**: Right-click any Runbook or folder in the sidebar to **Rename**, **Delete**, or **Edit Markdown** source directly.
+    - **Import/Export**: Use the **Export** and **Import** icons in the view title bar to backup or share runbook configurations as JSON.
     - **Storage**: Files are saved in the extension's `runbooks` global storage directory (`.../globalStorage/webispy.logmagnifier/runbooks`).
 
 ### Log Bookmarks
 
 1.  **Add Bookmark**:
-    - Right-click a line and select "Add Line to LogMagnifier Bookmark".
-    - Select text in the editor, right-click, and select "Add Matches to LogMagnifier Bookmark" to bookmark all occurrences.
+    - Right-click a line in the editor and select **LogMagnifier > Add Line to Bookmark**.
+    - Select text in the editor, right-click, and select **LogMagnifier > Add Selection Matches to Bookmark** to bookmark all matching lines in the file.
+    - Right-click a filter item in the filter panel and select **Add Filter Matches to Bookmark** to bookmark all lines matched by that filter.
 2.  **View Bookmarks**:
     - Open the "LogMagnifier" view in the panel (bottom panel).
     - Click any bookmark to jump to that line in the editor.
     - Click the 'x' icon to remove a bookmark.
 3.  **Manage Bookmarks**:
     - **Quick File Switch**: Click the file tabs in the header to instantly jump between bookmarked files.
-    - **Add Tags**: Right-click a bookmark to add a custom keywoard tag (e.g., `#error`, `#login`) which is displayed next to the line number.
+    - **Keyword Tags**: Bookmarks created via selection text or filter matches automatically carry the matched keyword as a tag, displayed next to the line number. Tags are grouped in the file header for quick filtering.
     - **Toggle Word Wrap**: Use the "Word Wrap" icon in the view title or `Alt+Z` (when view is focused) to toggle wrapping for long log lines.
     - **Clear All**: Use the "Clear All" icon to remove all bookmarks for the current file.
     - **Remove**: Click the 'x' icon to remove a single bookmark.
@@ -158,7 +164,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 ## Requirements
 
-- VS Code 1.104.0 or higher.
+- VS Code 1.94.0 or higher.
 
 ## Extension Settings
 

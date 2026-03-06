@@ -134,30 +134,10 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
   const extDir = path.join(userDataDir, 'extensions');
   fs.mkdirSync(extDir, { recursive: true });
 
-  const globalSettings = {
-    'workbench.startupEditor': 'none',
-    'workbench.colorTheme': 'Default Dark Modern',
-    'editor.fontSize': 13,
-    'telemetry.telemetryLevel': 'off',
-    'extensions.autoUpdate': false,
-    'update.mode': 'none',
-    // Disable the "Do you trust the authors?" workspace trust prompt
-    'security.workspace.trust.enabled': false,
-    'security.workspace.trust.startupPrompt': 'never',
-    'security.workspace.trust.emptyWindow': true,
-    // Suppress other first-run dialogs
-    'extensions.ignoreRecommendations': true,
-    'workbench.tips.enabled': false,
-    // Suppress the "A git repository was found in parent folder" notification
-    'git.openRepositoryInParentFolders': 'never',
-    // Hide the secondary sidebar (Copilot Chat panel, etc.) from the start
-    'workbench.secondarySideBar.defaultVisibility': 'hidden',
-    'chat.commandCenter.enabled': false,
-  };
-  fs.writeFileSync(
-    path.join(settingsDir, 'settings.json'),
-    JSON.stringify(globalSettings, null, 2)
-  );
+  // User-level settings (trust, telemetry, updates) that must apply globally.
+  // UI/visual settings live in fixtures/workspace/.vscode/settings.json.
+  const userSettingsSrc = path.join(fixturesDir, 'user-settings.json');
+  fs.copyFileSync(userSettingsSrc, path.join(settingsDir, 'settings.json'));
 
   // Also write a trustedFolders entry in the globalStorage trust database
   // so VS Code's trust subsystem considers the workspace trusted from the start.

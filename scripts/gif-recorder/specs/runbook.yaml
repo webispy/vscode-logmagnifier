@@ -2,14 +2,23 @@
 # Runbook Feature Demo — GIF Recorder Spec
 # ============================================================
 #
-# This spec records a complete walkthrough of the Runbook feature:
-#   1. Open the LogMagnifier panel and switch to the Runbook tab
-#   2. Show the default "System Check" runbook in the tree
-#   3. Open the runbook — Markdown + shell blocks rendered in the Webview
-#   4. Run the first shell block and watch real-time streaming output
-#   5. Stop a long-running command mid-execution
-#   6. Edit a shell block inline and save the change
-#   7. Clear completed command output
+# This spec records a complete walkthrough of the Runbook feature,
+# demonstrating all interactions in block order (top → down):
+#
+#   1. Open the LogMagnifier panel and expand the Runbook section
+#   2. Open the "health-check" runbook in the Webview
+#   3. block_0 (Disk Usage)     — Play and watch real-time output
+#   4. block_1 (Network Ping)   — Play a long-running command, Stop it, Clear output
+#   5. block_2 (Net Interfaces) — Edit the script inline, Save, then Play to verify
+#
+# Scroll direction is always downward — no jumping back to the top.
+#
+# Timing fields:
+#   delay  — milliseconds to wait after an action for the UI to settle,
+#             before capturing the frame. Keep small; use `- type: delay`
+#             for intentional pauses between steps.
+#   hold   — milliseconds to display this frame in the GIF (duplicates the frame).
+#             Omit to show for exactly one frameDelay period.
 #
 # Run:
 #   cd scripts/gif-recorder
@@ -24,185 +33,213 @@ output: runbook
 window:
   width: 1280
   height: 800
-frameDelay: 150   # 6.6 fps — smoother transitions and more readable
-scale: 0.85       # Slightly shrink to keep file size manageable
+frameDelay: 300          # ~3 fps — slow and readable
+scale: 0.85              # Slightly shrink to keep file size manageable
+hoverBeforeClick: true   # show hover + press frames before each click
+loopDelay: 5000          # 5-second pause on last frame before looping
 
 steps:
   # ----------------------------------------------------------
   # SETUP (capture: false) — prepare the UI before recording
-  # These steps collapse sidebar sections not relevant to the
-  # Runbook demo so that the RUNBOOK section is fully visible.
-  # No frames are captured during setup.
   # ----------------------------------------------------------
 
-  # Open the LogMagnifier panel first so its sections are rendered
   - type: aria-click
     role: tab
     name: LogMagnifier
     capture: false
-    delay: 1000
 
-  # Collapse sections that push RUNBOOK out of view.
-  # Uses "ensure-collapsed" instead of plain "click" to safely handle unknown
-  # initial state: only clicks if aria-expanded="true", skips if already collapsed.
   - type: ensure-collapsed
     selector: "role=button[name='Quick Access Section']"
     capture: false
-    delay: 200
 
   - type: ensure-collapsed
     selector: "role=button[name='Workflows Section']"
     capture: false
-    delay: 200
 
   - type: ensure-collapsed
     selector: "role=button[name='Word Filters Section']"
     capture: false
-    delay: 200
 
   - type: ensure-collapsed
     selector: "role=button[name='Regex Filters Section']"
     capture: false
-    delay: 200
 
   - type: ensure-collapsed
     selector: "role=button[name='ADB Devices Section']"
     capture: false
-    delay: 400
+
+  - type: delay
+    ms: 600
 
   # ----------------------------------------------------------
-  # 0. Initial state — LogMagnifier open, RUNBOOK section visible
-  # ----------------------------------------------------------
-  - type: screenshot
-    caption: "LogMagnifier — Runbook feature"
-    delay: 1500
-
-  # ----------------------------------------------------------
-  # 1. Expand the RUNBOOK section (click its collapsed header)
+  # 0. Expand Runbook section, then show initial state
   # ----------------------------------------------------------
   - type: ensure-expanded
     selector: "role=button[name='Runbook Section']"
-    caption: "Expand Runbook section"
-    delay: 1200
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "LogMagnifier — Runbook feature"
+    hold: 2500
 
   # ----------------------------------------------------------
-  # 2. Expand the default "System Check" group in the tree
+  # 2. Expand the "System Check" group
   # ----------------------------------------------------------
   - type: aria-click
     role: treeitem
     name: System Check
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
     caption: "Expand 'System Check' runbook group"
-    delay: 1000
+    hold: 1200
 
   # ----------------------------------------------------------
-  # 3. Click the "health-check" runbook item to open the Webview
+  # 3. Open the "health-check" runbook
   # ----------------------------------------------------------
   - type: aria-click
     role: treeitem
     name: health-check
-    caption: "Open 'health-check' runbook"
-    delay: 1800
+    capture: false
+
+  - type: delay
+    ms: 1800
 
   # ----------------------------------------------------------
-  # 4. Webview opens — Markdown with interactive shell blocks
+  # 4. Webview renders
   # ----------------------------------------------------------
   - type: screenshot
     caption: "Runbook rendered as interactive Markdown notebook"
-    delay: 2500
+    hold: 3000
 
   # ----------------------------------------------------------
-  # 5. Click ▶ Play on the first shell block (Disk Usage)
-  #    Button class is "play-btn", not "run-btn"
+  # block_0 — Disk Usage: Play → output
   # ----------------------------------------------------------
   - type: webview-click
     selector: "button.play-btn[data-block-id='block_0']"
     caption: "▶ Play — executes shell block in real-time"
-    delay: 2500
 
-  # ----------------------------------------------------------
-  # 6. Show streamed output
-  # ----------------------------------------------------------
+  - type: delay
+    ms: 1500
+
   - type: screenshot
     caption: "Real-time command output streamed from shell"
-    delay: 1500
+    hold: 3000
 
   # ----------------------------------------------------------
-  # 7. Start a second block, then Stop it mid-execution
+  # block_1 — Network Ping: scroll → Play → Stop → Clear
   # ----------------------------------------------------------
+  - type: webview-scroll
+    deltaY: 350
+    steps: 6
+
+  - type: delay
+    ms: 600
+
   - type: webview-click
     selector: "button.play-btn[data-block-id='block_1']"
     caption: "▶ Start a long-running command"
-    delay: 1000
+
+  - type: delay
+    ms: 600
 
   - type: screenshot
     caption: "Command running — Stop button replaces Play"
-    delay: 1500
+    hold: 2000
 
   - type: webview-click
     selector: "button.stop-btn[data-block-id='block_1']"
     caption: "■ Stop the running command"
-    delay: 1200
+
+  - type: delay
+    ms: 1000
 
   - type: screenshot
     caption: "Command stopped — process killed cleanly"
-    delay: 1000
+    hold: 1500
+
+  - type: webview-click
+    selector: "button.clear-btn[data-block-id='block_1']"
+    caption: "✕ Clear completed output"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Output cleared — ready for next run"
+    hold: 2000
 
   # ----------------------------------------------------------
-  # 8. Edit the third shell block inline, then save
-  #    Textarea class is "code-edit-area", id is "editor_block_N"
+  # block_2 — Network Interfaces: scroll → Edit → type → Save → Play
   # ----------------------------------------------------------
+  - type: webview-scroll
+    deltaY: 350
+    steps: 6
+
+  - type: delay
+    ms: 600
+
   - type: webview-click
     selector: "button.edit-btn[data-block-id='block_2']"
     caption: "✎ Edit — modify the shell script inline"
-    delay: 1000
+
+  - type: delay
+    ms: 800
 
   - type: screenshot
     caption: "Inline editor — textarea replaces code display"
-    delay: 800
+    hold: 2000
 
-  # Click into the textarea (id=editor_block_2, class=code-edit-area)
   - type: webview-click
     selector: "textarea#editor_block_2"
-    caption: "Focus editor textarea"
-    delay: 500
     capture: false
 
+  - type: delay
+    ms: 300
+
   - type: key
-    key: "Control+a"
+    key: "Meta+a"
     capture: false
 
   - type: type
     text: "# Network interfaces\nifconfig | grep -E 'inet |flags'\n"
     caption: "Typing new shell command"
-    delay: 800
+    captureEvery: 8
 
-  # Save — class is "save-btn"
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "New command ready to save"
+    hold: 2000
+
   - type: webview-click
     selector: "button.save-btn[data-block-id='block_2']"
     caption: "Save — script persisted to Markdown file"
-    delay: 1500
 
-  # ----------------------------------------------------------
-  # 9. Re-run first block, then clear its output
-  #    Clear button (class "clear-btn") appears after command finishes
-  # ----------------------------------------------------------
-  - type: webview-click
-    selector: "button.play-btn[data-block-id='block_0']"
-    caption: "▶ Re-run a command block"
-    delay: 2000
-
-  - type: webview-click
-    selector: "button.clear-btn[data-block-id='block_0']"
-    caption: "✕ Clear completed output"
-    delay: 1000
+  - type: delay
+    ms: 800
 
   - type: screenshot
-    caption: "Output cleared — ready for next run"
-    delay: 1000
+    caption: "Script saved"
+    hold: 1500
+
+  - type: webview-click
+    selector: "button.play-btn[data-block-id='block_2']"
+    caption: "▶ Play — run the newly saved command"
+
+  - type: delay
+    ms: 1500
 
   # ----------------------------------------------------------
-  # 11. Final frame — show the runbook in a clean state
+  # Final frame — saved command output
   # ----------------------------------------------------------
   - type: screenshot
-    caption: "Runbook: Markdown-based interactive shell notebook"
-    delay: 2000
+    caption: "Saved command executed successfully"
+    hold: 3000

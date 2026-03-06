@@ -48,27 +48,61 @@ async function main() {
     let frameIndex = 0;
 
     for (const step of spec.steps) {
+      console.log(`  → [${step.type}]${'caption' in step && step.caption ? ' ' + step.caption : ''}`);
+
+      // delay steps just pause — no capture, no further processing
+      if (step.type === 'delay') {
+        await delay(step.ms);
+        continue;
+      }
+
       const caption = step.caption ?? '';
-      console.log(`  → [${step.type}]${caption ? ' ' + caption : ''}`);
+      const shouldCapture = step.capture !== false;
 
-      await executeStep(page, step);
+      // Callback for intermediate frame captures (e.g. during typed text animation)
+      const captureFrame = shouldCapture
+        ? async (cap: string) => {
+            const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
+            await page.screenshot({ path: framePath, type: 'png' });
+            frames.push({ path: framePath, caption: cap });
+            frameIndex++;
+          }
+        : undefined;
 
-      const stepDelay = step.delay ?? 300;
+      await executeStep(page, step, captureFrame, spec.hoverBeforeClick ?? false);
+
+      const stepDelay = step.delay ?? 0;
       if (stepDelay > 0) {
         await delay(stepDelay);
       }
 
-      // Capture frame unless explicitly disabled
-      const shouldCapture = step.capture !== false;
       if (shouldCapture) {
         const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
         await page.screenshot({ path: framePath, type: 'png' });
         frames.push({ path: framePath, caption });
         frameIndex++;
+
+        // Duplicate the frame to hold it on screen longer in the GIF
+        if (step.hold && step.hold > 0) {
+          const holdFrames = Math.max(0, Math.round(step.hold / (spec.frameDelay ?? 80)) - 1);
+          for (let i = 0; i < holdFrames; i++) {
+            frames.push({ path: framePath, caption });
+          }
+        }
       }
     }
 
     console.log(`  ✓ Captured ${frames.length} frames`);
+
+    // Duplicate the last frame to create a pause before the GIF loops
+    if (spec.loopDelay && spec.loopDelay > 0 && frames.length > 0) {
+      const extraFrames = Math.round(spec.loopDelay / (spec.frameDelay ?? 80));
+      const lastFrame = frames[frames.length - 1];
+      for (let i = 0; i < extraFrames; i++) {
+        frames.push({ path: lastFrame.path, caption: lastFrame.caption });
+      }
+      console.log(`  + ${extraFrames} loop-pause frames (${spec.loopDelay}ms)`);
+    }
 
     const repoRoot = path.resolve(__dirname, '..', '..', '..');
     const outputPath = path.join(repoRoot, 'resources', 'demo', `${outputName}.gif`);
@@ -216,7 +250,14 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
 // Step execution
 // ---------------------------------------------------------------------------
 
-async function executeStep(page: Page, step: Step): Promise<void> {
+type CaptureFrame = (caption: string) => Promise<void>;
+
+async function executeStep(
+  page: Page,
+  step: Step,
+  captureFrame?: CaptureFrame,
+  hoverBeforeClick = false
+): Promise<void> {
   switch (step.type) {
     case 'command':
       await executeCommand(page, step.command);
@@ -226,17 +267,26 @@ async function executeStep(page: Page, step: Step): Promise<void> {
       const el = page.locator(step.selector).first();
       if (step.double) {
         await el.dblclick({ position: { x: 10, y: 10 }, timeout: 5000 });
+      } else if (hoverBeforeClick && captureFrame) {
+        await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
       } else {
         await el.click({ position: { x: 10, y: 10 }, timeout: 5000 });
       }
       break;
     }
 
-    case 'aria-click':
-      await page.getByRole(step.role as Parameters<Page['getByRole']>[0], { name: new RegExp(step.name, 'i') })
-        .first()
-        .click({ position: { x: 10, y: 10 }, timeout: 5000 });
+    case 'aria-click': {
+      const el = page.getByRole(
+        step.role as Parameters<Page['getByRole']>[0],
+        { name: new RegExp(step.name, 'i') }
+      ).first();
+      if (hoverBeforeClick && captureFrame) {
+        await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
+      } else {
+        await el.click({ position: { x: 10, y: 10 }, timeout: 5000 });
+      }
       break;
+    }
 
     case 'webview-click': {
       // VS Code webviews have a double-iframe structure:
@@ -244,13 +294,54 @@ async function executeStep(page: Page, step: Step): Promise<void> {
       //   inner: iframe (the actual extension webview content)
       const outerFrame = page.frameLocator('iframe.webview.ready');
       const innerFrame = outerFrame.frameLocator(step.innerFrame ?? 'iframe');
-      await innerFrame.locator(step.selector).first().click({ timeout: 8000 });
+      const el = innerFrame.locator(step.selector).first();
+      if (hoverBeforeClick && captureFrame) {
+        await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
+      } else {
+        await el.click({ timeout: 8000 });
+      }
       break;
     }
 
-    case 'type':
-      await page.keyboard.type(step.text, { delay: 50 });
+    case 'webview-scroll': {
+      const outerFrame = page.frameLocator('iframe.webview.ready');
+      const innerFrame = outerFrame.frameLocator(step.innerFrame ?? 'iframe');
+      const scrollSteps = Math.max(1, step.steps ?? 1);
+      const stepY = step.deltaY / scrollSteps;
+      const stepX = (step.deltaX ?? 0) / scrollSteps;
+
+      for (let i = 0; i < scrollSteps; i++) {
+        await innerFrame.locator('html').evaluate(
+          (el, { dx, dy }) => el.scrollBy(dx, dy),
+          { dx: stepX, dy: stepY }
+        );
+        // Capture intermediate frames to animate the scroll in the GIF,
+        // except the last step (captured by the main loop)
+        if (i < scrollSteps - 1 && captureFrame) {
+          await delay(50);
+          await captureFrame(step.caption ?? '');
+        }
+      }
       break;
+    }
+
+    case 'type': {
+      const every = step.captureEvery;
+      if (every && every > 0 && captureFrame) {
+        // Type in chunks, capturing a frame after each chunk to animate typing in the GIF
+        const text = step.text;
+        for (let i = 0; i < text.length; i += every) {
+          await page.keyboard.type(text.slice(i, i + every), { delay: 50 });
+          // Capture after every chunk except the last (main loop handles the final frame)
+          if (i + every < text.length) {
+            await captureFrame(step.caption ?? '');
+          }
+        }
+      } else {
+        await page.keyboard.type(step.text, { delay: 50 });
+      }
+      break;
+    }
 
     case 'key':
       for (let i = 0; i < (step.repeat ?? 1); i++) {
@@ -307,6 +398,10 @@ async function executeStep(page: Page, step: Step): Promise<void> {
       break;
     }
 
+    case 'delay':
+      // Handled in the main loop before executeStep is called — should not reach here
+      break;
+
     default: {
       const _exhaustive: never = step;
       console.warn(`  ⚠ Unknown step type: ${(_exhaustive as Step).type}`);
@@ -338,6 +433,30 @@ async function executeCommand(page: Page, commandLabel: string): Promise<void> {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+/**
+ * Hover over an element, capture a hover frame, then simulate mousedown + mouseup
+ * so the GIF shows: [hover state] → [pressed state] → [result].
+ *
+ * Using page.mouse.down/up after hover lets us capture the CSS :active state between
+ * press and release, giving viewers a clear visual cue for each button interaction.
+ */
+async function clickWithInteraction(
+  el: import('playwright').Locator,
+  page: Page,
+  captureFrame: CaptureFrame,
+  caption: string
+): Promise<void> {
+  await el.hover({ timeout: 5000 });
+  await delay(150);
+  await captureFrame(caption);           // 1. hover state
+  await delay(150);
+  await page.mouse.down();
+  await delay(80);
+  await captureFrame(caption);           // 2. pressed (:active) state
+  await delay(80);
+  await page.mouse.up();
+}
 
 function delay(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));

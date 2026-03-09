@@ -8,6 +8,7 @@
     "record": "ts-node src/runner.ts",
     "record:runbook": "ts-node src/runner.ts specs/runbook.yaml",
     "record:json-preview": "ts-node src/runner.ts specs/json-preview.yaml",
+    "record:base": "ts-node src/runner.ts specs/base.yaml",
     "test:scale": "ts-node src/test-scale.ts"
   },
   "dependencies": {

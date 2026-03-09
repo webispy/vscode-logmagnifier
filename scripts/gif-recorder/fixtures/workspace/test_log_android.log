@@ -1,0 +1,209 @@
+--------- beginning of system
+02-04 12:16:21.138  9122  9122 D Activity: onKeyUp(KEYCODE_BACK) isTracking()=true isCanceled()=true hasCallback=true
+--------- beginning of main
+02-04 13:00:06.554  9122  9122 I Choreographer: Skipped 71087 frames!  The application may be doing too much work on its main thread.
+02-04 13:00:06.560  9122 17326 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_OPENING for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:00:06.560  9122 17326 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_OPEN for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:00:06.560  9122 17326 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_ACTIVE for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:00:06.560  9122 17326 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_IDLE for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:00:06.560  9122 17326 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:00:06.573  9122 22124 D Choreographer: BBA2 receive callback when in bg : 4
+02-04 13:00:06.626  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.628  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.631  9122  9122 I VRI[MainActivity]@5d8296d: handleAppVisibility mAppVisible = false visible = true
+02-04 13:00:06.643  9122  9122 W BillingClient: Billing service disconnected.
+02-04 13:00:06.660  9122  9122 W BillingClient: Billing service disconnected.
+02-04 13:00:06.660  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.672  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.673  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.673  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.673  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:00:06.675  9122  9122 I VRI[MainActivity]@5d8296d: stopped(false) old = true
+02-04 13:00:06.675  9122  9122 D VRI[MainActivity]@5d8296d: WindowStopped on com.nullable.slrclub/com.nullable.slrclub.MainActivity set to false
+02-04 13:00:06.675  9122  9122 D ViewRootImpl: Skipping stats log for color mode
+02-04 13:00:06.693  9122  9156 D SessionLifecycleClient: Sending lifecycle 1 to service
+02-04 13:00:06.694  9122  9285 D SessionLifecycleService: Activity foregrounding at 229911158.
+02-04 13:00:06.717  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:00:06.717  9122  9122 I BufferQueueProducer: [](id:23a200000002,api:0,p:-1,c:9122) setDequeueTimeout:2077252342
+02-04 13:00:06.718  9122  9122 I BLASTBufferQueue_Java: new BLASTBufferQueue, mName= VRI[MainActivity]@5d8296d mNativeObject= 0xb4000078e19fb000 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:3585 android.view.ViewRootImpl.relayoutWindow:11685 android.view.ViewRootImpl.performTraversals:4804 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 android.view.Choreographer$CallbackRecord.run:1910 android.view.Choreographer.doCallbacks:1367 android.view.Choreographer.doFrame:1292 android.view.Choreographer$FrameDisplayEventReceiver.run:1870 
+02-04 13:00:06.718  9122  9122 I BLASTBufferQueue_Java: update, w= 1080 h= 2340 mName = VRI[MainActivity]@5d8296d mNativeObject= 0xb4000078e19fb000 sc.mNativeObject= 0xb4000077844cba00 format= -1 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:3590 android.view.ViewRootImpl.relayoutWindow:11685 android.view.ViewRootImpl.performTraversals:4804 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 
+02-04 13:00:06.719  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:00:06.719  9122  9122 I VRI[MainActivity]@5d8296d: Relayout returned: old=(0,0,1080,2340) new=(0,0,1080,2340) relayoutAsync=false req=(1080,2340)0 dur=8 res=0x3 s={true 0xb400007793cb8800} ch=true seqId=0
+02-04 13:00:06.719  9122  9122 D VRI[MainActivity]@5d8296d: mThreadedRenderer.initialize() mSurface={isValid=true 0xb400007793cb8800} hwInitialized=true
+02-04 13:00:06.721  9122  9122 D VRI[MainActivity]@5d8296d: reportNextDraw android.view.ViewRootImpl.performTraversals:5443 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 android.view.Choreographer$CallbackRecord.run:1910 
+02-04 13:00:06.721  9122  9122 D VRI[MainActivity]@5d8296d: Setup new sync=wmsSync-VRI[MainActivity]@5d8296d#4
+02-04 13:00:06.721  9122  9122 I VRI[MainActivity]@5d8296d: Creating new active sync group VRI[MainActivity]@5d8296d#5
+02-04 13:00:06.722  9122  9122 D VRI[MainActivity]@5d8296d: Start draw after previous draw not visible
+02-04 13:00:06.722  9122  9122 D VRI[MainActivity]@5d8296d: registerCallbacksForSync syncBuffer=false
+02-04 13:00:06.763  9122  9184 D VRI[MainActivity]@5d8296d: Received frameDrawingCallback syncResult=0 frameNum=1.
+02-04 13:00:06.763  9122  9184 I VRI[MainActivity]@5d8296d: mWNT: t=0xb4000078f07f4f80 mBlastBufferQueue=0xb4000078e19fb000 fn= 1 HdrRenderState mRenderHdrSdrRatio=1.0 caller= android.view.ViewRootImpl$12.onFrameDraw:15441 android.view.ThreadedRenderer$1.onFrameDraw:718 <bottom of call stack> 
+02-04 13:00:06.763  9122  9184 I VRI[MainActivity]@5d8296d: Setting up sync and frameCommitCallback
+02-04 13:00:06.766  9122  9170 I BLASTBufferQueue: [VRI[MainActivity]@5d8296d#2](f:0,a:0,s:0) onFrameAvailable the first frame is available
+02-04 13:00:06.767  9122  9170 I SurfaceComposerClient: apply transaction with the first frame. layerId: 23544, bufferData(ID: 39178691674130, frameNumber: 1)
+02-04 13:00:06.770  9122  9170 I VRI[MainActivity]@5d8296d: Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+02-04 13:00:06.770  9122  9122 D VRI[MainActivity]@5d8296d: reportDrawFinished seqId=0
+02-04 13:00:06.802  9122  9122 I InsetsSourceConsumer: applyRequestedVisibilityToControl: visible=true, type=navigationBars, host=com.nullable.slrclub/com.nullable.slrclub.MainActivity
+02-04 13:00:06.803  9122  9122 I InsetsSourceConsumer: applyRequestedVisibilityToControl: visible=true, type=statusBars, host=com.nullable.slrclub/com.nullable.slrclub.MainActivity
+02-04 13:00:06.804  9122  9122 D VRI[MainActivity]@5d8296d: mThreadedRenderer.initializeIfNeeded()#2 mSurface={isValid=true 0xb400007793cb8800}
+02-04 13:00:06.808  9122  9122 D InputMethodManagerUtils: startInputInner - Id : 0
+02-04 13:00:06.808  9122  9122 I InputMethodManager: startInputInner - IInputMethodManagerGlobalInvoker.startInputOrWindowGainedFocus
+02-04 13:00:06.813  9122  9122 I InputMethodManager: handleMessage: setImeVisibility visible=false
+02-04 13:00:06.813  9122  9122 D InsetsController: hide(ime(), fromIme=false)
+02-04 13:00:06.813  9122  9122 I ImeTracker: com.nullable.slrclub:e319aa6b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+02-04 13:00:06.829  9122 22124 D InputTransport: Input channel constructed: 'ClientS', fd=178
+02-04 13:00:18.432  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:00:18.442  9122  9122 I VRI[MainActivity]@5d8296d: call setFrameRateCategory for touch hint category=high hint, reason=touch, vri=VRI[MainActivity]@5d8296d
+02-04 13:00:18.794  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 1
+02-04 13:00:19.322  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:00:19.361  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 1
+02-04 13:00:19.458  9122  9122 I AdFit3.19.5: Terminated AdFit Ad
+02-04 13:00:19.472  9122  9122 D ConnectivityManager: StackLog: [android.net.ConnectivityManager.unregisterNetworkCallback(ConnectivityManager.java:5571)] [WV.nm1.h(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:17)] [WV.ck.b(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:3)] [org.chromium.android_webview.AwContentsLifecycleNotifier.onLastWebViewDestroyed(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:19)] [J.N.VJ(Native Method)] [WV.ng.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:4)] [WV.gx.handleMessage(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:55)] [WV.ix.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:25)] [org.chromium.android_webview.AwContents.l(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:33)] [WV.xf.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:10)] [org.chromium.base.task.TaskRunnerImpl.runTask(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:31)]
+02-04 13:00:19.474  9122  9122 D ConnectivityManager: StackLog: [android.net.ConnectivityManager.unregisterNetworkCallback(ConnectivityManager.java:5571)] [WV.nm1.h(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:26)] [WV.ck.b(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:3)] [org.chromium.android_webview.AwContentsLifecycleNotifier.onLastWebViewDestroyed(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:19)] [J.N.VJ(Native Method)] [WV.ng.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:4)] [WV.gx.handleMessage(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:55)] [WV.ix.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:25)] [org.chromium.android_webview.AwContents.l(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:33)] [WV.xf.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:10)] [org.chromium.base.task.TaskRunnerImpl.runTask(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:31)]
+02-04 13:00:19.500  9122  9127 I ullable.slrclub: Background concurrent mark compact GC freed 63MB AllocSpace bytes, 74(1824KB) LOS objects, 66% free, 16MB/50MB, paused 956us,1.626ms total 134.288ms
+02-04 13:00:19.530  9122 10171 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:19.530  9122 22183 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:19.531  9122  9122 I AdFit3.19.5: Request Banner AD
+02-04 13:00:19.533  9122 30769 D AdvertisingIdClient: AdvertisingIdClient already created.
+02-04 13:00:19.533  9122 30769 D AdvertisingIdClient: AdvertisingIdClient is not bounded. Starting to bind it...
+02-04 13:00:19.545  9122 30769 D AdvertisingIdClient: AdvertisingIdClient is bounded
+02-04 13:00:19.547  9122 30769 I AdvertisingIdClient: shouldSendLog 619432210
+02-04 13:00:19.547  9122 30769 I AdvertisingIdClient: GetInfoInternal elapse 13ms
+02-04 13:00:19.547  9122 30769 I AdFit3.19.5: Get Advertising Id from Google Play services. [id = d7da3ac6-f2a9-45ef-9fdb-c1b10f0c1b03] [isLimitAdTrackingEnabled = false]
+02-04 13:00:19.558  9122  9122 I AdvertisingIdClient: getting error as 17: API: ClientTelemetry.API is not available on this device. Connection failed with: b{statusCode=API_DISABLED_FOR_CONNECTION, resolution=null, message=null}
+02-04 13:00:20.013  9122  9122 D ConnectivityManager: StackLog: [android.net.ConnectivityManager.sendRequestForNetwork(ConnectivityManager.java:4736)] [android.net.ConnectivityManager.registerDefaultNetworkCallbackForUid(ConnectivityManager.java:5461)] [android.net.ConnectivityManager.registerDefaultNetworkCallback(ConnectivityManager.java:5428)] [WV.mm1.e(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:37)] [WV.mm1.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:1)] [org.chromium.android_webview.AwContentsLifecycleNotifier.onFirstWebViewCreated(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:19)] [J.N.JJ(Native Method)] [org.chromium.android_webview.AwContents.<init>(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:628)] [com.android.webview.chromium.r.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:223)] [WV.u13.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:13)] [org.chromium.base.task.PostTask.d(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:18)] [WV.v13.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:18)] [com.android.webview.chromium.WebViewChromiumFactoryProvider.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:3)] [com.android.webview.chromium.WebViewChromium.init(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:273)] [android.webkit.WebView.<init>(WebView.java:447)] [android.webkit.WebView.<init>(WebView.java:367)] [android.webkit.WebView.<init>(WebView.java:349)] [android.webkit.WebView.<init>(WebView.java:336)] [android.webkit.WebView.<init>(WebView.java:326)] [com.kakao.adfit.a.r.<init>(SourceFile:1)] [com.kakao.adfit.b.a.a(SourceFile:2)] [com.kakao.adfit.ads.ba.BannerAdView.a(SourceFile:2)] [com.kakao.adfit.ads.ba.BannerAdView.access$createAdWebView(SourceFile:1)] [com.kakao.adfit.ads.ba.BannerAdView$b.a(SourceFile:3)] [com.kakao.adfit.ads.ba.d.b(SourceFile:6)] [com.kakao.adfit.ads.ba.d$j.invokeSuspend(SourceFile:529)] [tk.a.resumeWith(SourceFile:12)] [kotlinx.coroutines.DispatchedTask.run(SourceFile:129)]
+02-04 13:00:20.016  9122  9122 D ConnectivityManager: StackLog: [android.net.ConnectivityManager.sendRequestForNetwork(ConnectivityManager.java:4736)] [android.net.ConnectivityManager.sendRequestForNetwork(ConnectivityManager.java:4904)] [android.net.ConnectivityManager.registerNetworkCallback(ConnectivityManager.java:5321)] [WV.mm1.e(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:86)] [WV.mm1.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:1)] [org.chromium.android_webview.AwContentsLifecycleNotifier.onFirstWebViewCreated(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:19)] [J.N.JJ(Native Method)] [org.chromium.android_webview.AwContents.<init>(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:628)] [com.android.webview.chromium.r.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:223)] [WV.u13.run(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:13)] [org.chromium.base.task.PostTask.d(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:18)] [WV.v13.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:18)] [com.android.webview.chromium.WebViewChromiumFactoryProvider.a(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:3)] [com.android.webview.chromium.WebViewChromium.init(chromium-TrichromeWebViewGoogle6432.aab-stable-755910933:273)] [android.webkit.WebView.<init>(WebView.java:447)] [android.webkit.WebView.<init>(WebView.java:367)] [android.webkit.WebView.<init>(WebView.java:349)] [android.webkit.WebView.<init>(WebView.java:336)] [android.webkit.WebView.<init>(WebView.java:326)] [com.kakao.adfit.a.r.<init>(SourceFile:1)] [com.kakao.adfit.b.a.a(SourceFile:2)] [com.kakao.adfit.ads.ba.BannerAdView.a(SourceFile:2)] [com.kakao.adfit.ads.ba.BannerAdView.access$createAdWebView(SourceFile:1)] [com.kakao.adfit.ads.ba.BannerAdView$b.a(SourceFile:3)] [com.kakao.adfit.ads.ba.d.b(SourceFile:6)] [com.kakao.adfit.ads.ba.d$j.invokeSuspend(SourceFile:529)] [tk.a.resumeWith(SourceFile:12)] [kotlinx.coroutines.DispatchedTask.run(SourceFile:129)]
+02-04 13:00:20.415  9122 30773 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.465  9122 30773 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.469  9122 30725 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.521  9122 10171 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.521  9122 30714 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.522  9122 30780 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.527  9122 30772 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:20.536  9122 30772 I Kumiho-Kumiho: getPackageName: com.nullable.slrclub
+02-04 13:00:22.365  9122  9122 I VRI[MainActivity]@5d8296d: call setFrameRateCategory for touch hint category=no preference, reason=boost timeout, vri=VRI[MainActivity]@5d8296d
+02-04 13:00:22.612  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:00:22.613  9122  9122 I VRI[MainActivity]@5d8296d: call setFrameRateCategory for touch hint category=high hint, reason=touch, vri=VRI[MainActivity]@5d8296d
+02-04 13:00:22.698  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 1
+02-04 13:00:23.199  9122  9122 I AdFit3.19.5: Request Native AD
+02-04 13:00:24.724  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme key 0
+02-04 13:00:24.724  9122  9122 D Activity: onKeyDown(KEYCODE_BACK), activity=com.nullable.slrclub.MainActivity@baaa8ab
+02-04 13:00:24.726  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme key 1
+02-04 13:00:24.726  9122  9122 D Activity: onKeyUp(KEYCODE_BACK) isTracking()=true isCanceled()=true hasCallback=true
+02-04 13:00:25.471  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:00:25.718  9122  9122 I ImeFocusController: onPreWindowFocus: skipped hasWindowFocus=false mHasImeFocus=true
+02-04 13:00:25.718  9122  9122 I ImeFocusController: onPostWindowFocus: skipped hasWindowFocus=false mHasImeFocus=true
+02-04 13:00:26.475  9122  9156 D SessionLifecycleClient: Sending lifecycle 2 to service
+02-04 13:00:26.476  9122  9285 D SessionLifecycleService: Activity backgrounding at 229930940
+02-04 13:00:26.485  9122  9122 I VRI[MainActivity]@5d8296d: handleAppVisibility mAppVisible = true visible = false
+02-04 13:00:26.485  9122  9122 D VRI[MainActivity]@5d8296d: visibilityChanged oldVisibility=true newVisibility=false
+02-04 13:00:26.495  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:00:26.502  9122  9122 I VRI[MainActivity]@5d8296d: Relayout returned: old=(0,0,1080,2340) new=(0,0,1080,2340) relayoutAsync=false req=(1080,2340)8 dur=5 res=0x2 s={false 0x0} ch=true seqId=0
+02-04 13:00:26.502  9122  9122 D VRI[MainActivity]@5d8296d: Not drawing due to not visible. Reason=!mAppVisible && !mForceDecorViewVisibility
+02-04 13:00:26.504  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:00:26.508  9122  9122 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=b.e0$g$a@11b1452
+02-04 13:00:26.515  9122  9122 I VRI[MainActivity]@5d8296d: stopped(true) old = false
+02-04 13:00:26.515  9122  9122 D VRI[MainActivity]@5d8296d: WindowStopped on com.nullable.slrclub/com.nullable.slrclub.MainActivity set to true
+02-04 13:00:26.515  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:00:26.532  9122  9122 D InputTransport: Input channel destroyed: 'ClientS', fd=178
+02-04 13:00:26.539  9122  9122 D BBA2    : setIsFg isFg = false; delayValue 3999ms
+02-04 13:00:28.490  9122 30712 I FA      : Application backgrounded at: timestamp_millis: 1770177626488
+02-04 13:00:30.562  9122  9122 D Choreographer: CoreRune.SYSPERF_ACTIVE_APP_BBA_ENABLE : stop animation in background states
+02-04 13:00:44.659  9122  9161 I TRuntime.CctTransportBackend: Making request to: https://firebaselogging.googleapis.com/v0cc/log/batch?format=json_proto3
+02-04 13:00:44.660  9122  9122 W JobService: onNetworkChanged() not implemented in com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService. Must override in a subclass.
+02-04 13:00:45.080  9122  9122 W JobService: onNetworkChanged() not implemented in com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService. Must override in a subclass.
+02-04 13:00:45.344  9122  9161 I TRuntime.CctTransportBackend: Status Code: 200
+02-04 13:01:20.956  9122 30704 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_OPENING for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:01:21.094  9122 30704 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_OPEN for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:01:21.213  9122 30704 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_ACTIVE for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:01:22.886  9122 22124 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_IDLE for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:01:23.251  9122 22124 I CameraManagerGlobal: Camera 4 facing CAMERA_FACING_FRONT state now CAMERA_STATE_CLOSED for client client.pid<1709> API Level 2 User Id 0Device Id 0
+02-04 13:01:32.787  9122  9122 I VRI[MainActivity]@5d8296d: handleAppVisibility mAppVisible = false visible = true
+02-04 13:01:32.793  9122  9122 I VRI[MainActivity]@5d8296d: stopped(false) old = true
+02-04 13:01:32.793  9122  9122 D VRI[MainActivity]@5d8296d: WindowStopped on com.nullable.slrclub/com.nullable.slrclub.MainActivity set to false
+02-04 13:01:32.793  9122  9122 D ViewRootImpl: Skipping stats log for color mode
+02-04 13:01:32.794  9122  9122 D BBA2    : setIsFg isFg = true
+02-04 13:01:32.801  9122  9156 D SessionLifecycleClient: Sending lifecycle 1 to service
+02-04 13:01:32.801  9122  9285 D SessionLifecycleService: Activity foregrounding at 229997265.
+02-04 13:01:32.816  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:01:32.816  9122  9122 I BufferQueueProducer: [](id:23a200000003,api:0,p:-1,c:9122) setDequeueTimeout:2077252342
+02-04 13:01:32.816  9122  9122 I BLASTBufferQueue_Java: new BLASTBufferQueue, mName= VRI[MainActivity]@5d8296d mNativeObject= 0xb4000078e19fb000 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:3585 android.view.ViewRootImpl.relayoutWindow:11685 android.view.ViewRootImpl.performTraversals:4804 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 android.view.Choreographer$CallbackRecord.run:1910 android.view.Choreographer.doCallbacks:1367 android.view.Choreographer.doFrame:1292 android.view.Choreographer$FrameDisplayEventReceiver.run:1870 
+02-04 13:01:32.816  9122  9122 I BLASTBufferQueue_Java: update, w= 1080 h= 2340 mName = VRI[MainActivity]@5d8296d mNativeObject= 0xb4000078e19fb000 sc.mNativeObject= 0xb4000078f07dda00 format= -1 caller= android.view.ViewRootImpl.updateBlastSurfaceIfNeeded:3590 android.view.ViewRootImpl.relayoutWindow:11685 android.view.ViewRootImpl.performTraversals:4804 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 
+02-04 13:01:32.817  9122  9122 W libc    : Access denied finding property "vendor.display.enable_optimal_refresh_rate"
+02-04 13:01:32.817  9122  9122 I VRI[MainActivity]@5d8296d: Relayout returned: old=(0,0,1080,2340) new=(0,0,1080,2340) relayoutAsync=false req=(1080,2340)0 dur=9 res=0x3 s={true 0xb400007793a4aa00} ch=true seqId=0
+02-04 13:01:32.817  9122  9122 D VRI[MainActivity]@5d8296d: mThreadedRenderer.initialize() mSurface={isValid=true 0xb400007793a4aa00} hwInitialized=true
+02-04 13:01:32.817  9122  9122 D VRI[MainActivity]@5d8296d: reportNextDraw android.view.ViewRootImpl.performTraversals:5443 android.view.ViewRootImpl.doTraversal:3924 android.view.ViewRootImpl$TraversalRunnable.run:12903 android.view.Choreographer$CallbackRecord.run:1901 android.view.Choreographer$CallbackRecord.run:1910 
+02-04 13:01:32.817  9122  9122 D VRI[MainActivity]@5d8296d: Setup new sync=wmsSync-VRI[MainActivity]@5d8296d#6
+02-04 13:01:32.817  9122  9122 I VRI[MainActivity]@5d8296d: Creating new active sync group VRI[MainActivity]@5d8296d#7
+02-04 13:01:32.817  9122  9122 D VRI[MainActivity]@5d8296d: Start draw after previous draw not visible
+02-04 13:01:32.824  9122  9122 D VRI[MainActivity]@5d8296d: registerCallbacksForSync syncBuffer=false
+02-04 13:01:32.834  9122  9185 D VRI[MainActivity]@5d8296d: Received frameDrawingCallback syncResult=0 frameNum=1.
+02-04 13:01:32.834  9122  9185 I VRI[MainActivity]@5d8296d: mWNT: t=0xb4000078f07f3000 mBlastBufferQueue=0xb4000078e19fb000 fn= 1 HdrRenderState mRenderHdrSdrRatio=1.0 caller= android.view.ViewRootImpl$12.onFrameDraw:15441 android.view.ThreadedRenderer$1.onFrameDraw:718 <bottom of call stack> 
+02-04 13:01:32.834  9122  9185 I VRI[MainActivity]@5d8296d: Setting up sync and frameCommitCallback
+02-04 13:01:32.847  9122  9170 I BLASTBufferQueue: [VRI[MainActivity]@5d8296d#3](f:0,a:0,s:0) onFrameAvailable the first frame is available
+02-04 13:01:32.847  9122  9170 I SurfaceComposerClient: apply transaction with the first frame. layerId: 23593, bufferData(ID: 39178691674135, frameNumber: 1)
+02-04 13:01:32.848  9122  9170 I VRI[MainActivity]@5d8296d: Received frameCommittedCallback lastAttemptedDrawFrameNum=1 didProduceBuffer=true
+02-04 13:01:32.848  9122  9122 D VRI[MainActivity]@5d8296d: reportDrawFinished seqId=0
+02-04 13:01:32.852  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:01:32.853  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:01:32.853  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:01:32.853  9122  9122 I VRI[MainActivity]@5d8296d: onDisplayChanged oldDisplayState=2 newDisplayState=2
+02-04 13:01:32.854  9122  9122 I InsetsSourceConsumer: applyRequestedVisibilityToControl: visible=true, type=navigationBars, host=com.nullable.slrclub/com.nullable.slrclub.MainActivity
+02-04 13:01:32.854  9122  9122 I InsetsSourceConsumer: applyRequestedVisibilityToControl: visible=true, type=statusBars, host=com.nullable.slrclub/com.nullable.slrclub.MainActivity
+02-04 13:01:32.871  9122  9122 D VRI[MainActivity]@5d8296d: mThreadedRenderer.initializeIfNeeded()#2 mSurface={isValid=true 0xb400007793a4aa00}
+02-04 13:01:32.875  9122  9122 D InputMethodManagerUtils: startInputInner - Id : 0
+02-04 13:01:32.875  9122  9122 I InputMethodManager: startInputInner - IInputMethodManagerGlobalInvoker.startInputOrWindowGainedFocus
+02-04 13:01:32.879  9122  9122 I InputMethodManager: handleMessage: setImeVisibility visible=false
+02-04 13:01:32.879  9122  9122 D InsetsController: hide(ime(), fromIme=false)
+02-04 13:01:32.879  9122  9122 I ImeTracker: com.nullable.slrclub:cd722d6b: onCancelled at PHASE_CLIENT_ALREADY_HIDDEN
+02-04 13:01:32.883  9122 30704 D InputTransport: Input channel constructed: 'ClientS', fd=212
+02-04 13:01:34.379  9122  9122 I AdFit3.19.5: Request Banner AD
+02-04 13:01:34.382  9122 31512 D AdvertisingIdClient: AdvertisingIdClient already created.
+02-04 13:01:34.382  9122 31512 D AdvertisingIdClient: AdvertisingIdClient is not bounded. Starting to bind it...
+02-04 13:01:34.387  9122 31512 D AdvertisingIdClient: AdvertisingIdClient is bounded
+02-04 13:01:34.389  9122 31512 I AdvertisingIdClient: shouldSendLog 622197732
+02-04 13:01:34.390  9122 31512 I AdvertisingIdClient: GetInfoInternal elapse 7ms
+02-04 13:01:34.390  9122 31512 I AdFit3.19.5: Get Advertising Id from Google Play services. [id = d7da3ac6-f2a9-45ef-9fdb-c1b10f0c1b03] [isLimitAdTrackingEnabled = false]
+02-04 13:01:34.812  9122  9122 I VRI[MainActivity]@5d8296d: ViewPostIme pointer 0
+02-04 13:01:34.814  9122  9122 I VRI[MainActivity]@5d8296d: call setFrameRateCategory for touch hint category=high hint, reason=touch, vri=VRI[MainActivity]@5d8296d
+02-04 13:01:34.892  9122  9122 I ImeFocusController: onPreWindowFocus: skipped hasWindowFocus=false mHasImeFocus=true
+02-04 13:01:34.892  9122  9122 I ImeFocusController: onPostWindowFocus: skipped hasWindowFocus=false mHasImeFocus=true
+02-04 13:01:35.727  9122  9156 D SessionLifecycleClient: Sending lifecycle 2 to service
+02-04 13:01:35.727  9122  9285 D SessionLifecycleService: Activity backgrounding at 230000192
+02-04 13:01:35.730  9122  9122 I VRI[MainActivity]@5d8296d: handleAppVisibility mAppVisible = true visible = false
+02-04 13:01:35.730  9122  9122 D VRI[MainActivity]@5d8296d: visibilityChanged oldVisibility=true newVisibility=false
+02-04 13:01:35.746  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:01:35.752  9122  9122 I VRI[MainActivity]@5d8296d: Relayout returned: old=(0,0,1080,2340) new=(0,0,1080,2340) relayoutAsync=false req=(1080,2340)8 dur=5 res=0x2 s={false 0x0} ch=true seqId=0
+02-04 13:01:35.752  9122  9122 D VRI[MainActivity]@5d8296d: Not drawing due to not visible. Reason=!mAppVisible && !mForceDecorViewVisibility
+02-04 13:01:35.754  9122  9122 W WindowOnBackDispatcher: sendCancelIfRunning: isInProgress=false callback=b.e0$g$a@11b1452
+02-04 13:01:35.755  9122  9122 I VRI[MainActivity]@5d8296d: stopped(true) old = false
+02-04 13:01:35.755  9122  9122 D VRI[MainActivity]@5d8296d: WindowStopped on com.nullable.slrclub/com.nullable.slrclub.MainActivity set to true
+02-04 13:01:35.755  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:01:35.755  9122  9170 D HWUI    : CacheManager::trimMemory(20)
+02-04 13:01:35.772  9122  9122 D BBA2    : setIsFg isFg = false; delayValue 3999ms
+02-04 13:01:35.774  9122  9122 D InputTransport: Input channel destroyed: 'ClientS', fd=212
+02-04 13:01:37.768  9122 31508 I FA      : Application backgrounded at: timestamp_millis: 1770177695767
+02-04 13:01:39.786  9122  9122 D Choreographer: CoreRune.SYSPERF_ACTIVE_APP_BBA_ENABLE : stop animation in background states

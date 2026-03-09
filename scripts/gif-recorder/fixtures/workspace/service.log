@@ -1,0 +1,20 @@
+2024-01-15 10:23:01.123 INFO  main      Service starting up version=2.4.1 env=production
+2024-01-15 10:23:01.456 INFO  config    Loading configuration from /etc/service/config.yaml
+2024-01-15 10:23:01.789 DEBUG auth      Login result={"userId":7,"action":"login","ip":"192.168.1.10","success":true,"roles":["viewer","editor"],"session":{"id":"sess_abc123","expiresIn":3600}}
+2024-01-15 10:23:02.012 INFO  db        Connection pool established size=10 host=db.internal port=5432
+2024-01-15 10:23:02.198 INFO  cache     Cache warmed keys=1432 hit_ratio=0.87 backend=redis
+2024-01-15 10:23:02.345 INFO  api       Request received payload={"method":"POST","path":"/api/v1/orders","userId":42,"body":{"orderId":"ORD-20240115-9981","customer":{"id":42,"name":"Alice Kim","email":"alice@example.com","tier":"premium"},"items":[{"sku":"PROD-001","name":"Wireless Headphones","qty":2,"unitPrice":79.99},{"sku":"PROD-042","name":"USB-C Hub","qty":1,"unitPrice":49.99}],"shipping":{"method":"express","address":{"street":"123 Main St","city":"Seoul","country":"KR"}},"total":209.97}}
+2024-01-15 10:23:02.678 DEBUG db        Query executed table=orders duration=23ms rows=1
+2024-01-15 10:23:03.234 ERROR stream    Buffer overflow, partial data received payload={"event":"stream_chunk","sessionId":"sess_8a9f2c","timestamp":1705283583234,"data":{"streamId":"strm_001","sequence":142,"content":{"type":"delta","role":"assistant","text":"The weather in Seoul today is partly cloudy with a high of 18\u00b0C. There is a 30% chance of
+2024-01-15 10:23:03.567 INFO  api       Response sent status=201 duration=567ms
+2024-01-15 10:23:03.890 INFO  cleanup   Temp files purged count=14 path=/tmp/service
+2024-01-15 10:23:04.112 INFO  worker    Job dequeued queue=notifications job_id=job_881 attempt=1
+2024-01-15 10:23:04.334 DEBUG mailer    Rendering email template=order_confirm locale=ko-KR
+2024-01-15 10:23:04.589 INFO  mailer    Email dispatched to=alice@example.com msg_id=msg_20240115_4f9c
+2024-01-15 10:23:04.801 DEBUG metrics   Snapshot captured interval=60s sampled=true
+2024-01-15 10:23:05.023 INFO  metrics   Telemetry exported result={"events":12,"errors":0,"dropped":0} latency={"p50":8,"p95":31,"p99":67} host={"id":"node-03","region":"ap-northeast-2","az":"ap-northeast-2a"}
+2024-01-15 10:23:05.245 INFO  scheduler Next run scheduled at=2024-01-15T11:00:00Z job=hourly-report
+2024-01-15 10:23:05.467 WARN  db        Slow query detected table=audit_log duration=1523ms threshold=1000ms
+2024-01-15 10:23:05.689 INFO  api       Health check passed checks=3 status=ok uptime=3847s
+2024-01-15 10:23:05.901 DEBUG gc        GC cycle complete pause=12ms heap_before=512mb heap_after=234mb freed=278mb
+2024-01-15 10:23:06.123 INFO  main      Shutdown signal received, draining connections active=0

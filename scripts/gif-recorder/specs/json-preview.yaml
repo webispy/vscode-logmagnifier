@@ -1,0 +1,380 @@
+# ============================================================
+# JSON Preview Feature Demo — GIF Recorder Spec
+# ============================================================
+#
+# This spec records a complete walkthrough of the JSON Preview feature,
+# demonstrating both manual and auto-preview modes:
+#
+#   1. Open service.log — contains a valid JSON line (line 6)
+#      and a truncated JSON line (line 8)
+#   2. Move cursor to the valid JSON line, open JSON Preview (Ctrl+Cmd+J)
+#   3. Explore the structured tree — expand depth, navigate nodes
+#   4. Close JSON Preview
+#   5. Move cursor to the truncated JSON line, open JSON Preview
+#      — lenient parser recovers structure from partial data
+#   6. Close JSON Preview
+#   7. Enable Auto JSON Preview via Quick Access sidebar toggle
+#   8. Navigate lines in the editor — JSON Preview updates automatically
+#
+# Log file layout (fixtures/workspace/service.log):
+#   Line 3  — simple valid JSON    (login result: roles array, session object)
+#   Line 6  — complex valid JSON   (order API request: nested customer, items, shipping)
+#   Line 8  — truncated JSON       (stream buffer overflow, cut mid-string)
+#   Line 15 — three inline JSONs   (telemetry export: result + latency + host objects)
+#
+# Note: component names use plain-word format (no square brackets) to
+# avoid the JSON extractor treating them as array literals.
+#
+# Keybinding:
+#   Open JSON Preview : Ctrl+Cmd+J  (logmagnifier.applyJsonPretty)
+#
+# Shortcut display pattern:
+#   A `screenshot` step with the key combo in the caption is placed just
+#   before each `key` step (capture: false) so the GIF shows the shortcut
+#   in the caption bar for ~1.5 s before the UI responds.
+#
+# Run:
+#   cd scripts/gif-recorder
+#   npm install
+#   npm run record:json-preview
+#
+# Output: resources/demo/json-preview.gif
+# ============================================================
+
+name: JSON Preview Feature Demo
+output: json-preview
+window:
+  width: 1280
+  height: 800
+frameDelay: 300          # ~3 fps — slow and readable
+scale: 0.85
+hoverBeforeClick: true   # hover + press frames before every click (incl. webview)
+loopDelay: 5000          # 5-second pause on last frame before looping
+
+steps:
+  # ----------------------------------------------------------
+  # SETUP (capture: false) — prepare sidebar before recording
+  # ----------------------------------------------------------
+
+  - type: aria-click
+    role: tab
+    name: LogMagnifier
+    capture: false
+
+  - type: ensure-expanded
+    selector: "role=button[name='Quick Access Section']"
+    capture: false
+
+  - type: ensure-collapsed
+    selector: "role=button[name='Workflows Section']"
+    capture: false
+
+  - type: ensure-collapsed
+    selector: "role=button[name='Word Filters Section']"
+    capture: false
+
+  - type: ensure-collapsed
+    selector: "role=button[name='Regex Filters Section']"
+    capture: false
+
+  - type: ensure-collapsed
+    selector: "role=button[name='ADB Devices Section']"
+    capture: false
+
+  - type: ensure-collapsed
+    selector: "role=button[name='Runbook Section']"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # ----------------------------------------------------------
+  # 1. Open service.log via Quick Open (Cmd+P)
+  # ----------------------------------------------------------
+
+  # Show the shortcut about to be used, then press it
+  - type: screenshot
+    caption: "⌨  Cmd + P — Quick Open"
+    hold: 1200
+
+  - type: key
+    key: "Meta+p"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "service.log"
+    caption: "Typing filename to open"
+    captureEvery: 4
+
+  - type: delay
+    ms: 500
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "service.log — mixed log lines with embedded JSON payloads"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 2. Move cursor to line 6 (valid JSON payload), open JSON Preview
+  # ----------------------------------------------------------
+
+  - type: key
+    key: "ArrowDown"
+    repeat: 5
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  # Display shortcut in caption bar before pressing it
+  - type: screenshot
+    caption: "⌨  Ctrl + Cmd + J — Open JSON Preview"
+    hold: 1500
+
+  - type: key
+    key: "Control+Meta+J"
+    capture: false
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "JSON Preview panel — structured tree rendered beside the editor"
+    hold: 3000
+
+  # ----------------------------------------------------------
+  # 3. Explore the tree: expand depth, hover nodes, collapse/expand
+  # ----------------------------------------------------------
+
+  # Expand to depth 2 — hover + press on the button captured automatically
+  - type: webview-click
+    selector: "#btn-expand"
+    caption: "+  Increase depth — reveal body object children"
+    delay: 600
+
+  - type: screenshot
+    caption: "Depth 2 — order body, customer, items, shipping now visible"
+    hold: 2500
+
+  # Expand to depth 3
+  - type: webview-click
+    selector: "#btn-expand"
+    caption: "+  One more level — nested address and item details"
+    delay: 600
+
+  - type: screenshot
+    caption: "Depth 3 — full nesting exposed: customer fields, item list, address"
+    hold: 2500
+
+  # Collapse the 'customer' subtree by clicking its row
+  # (hover highlights the row; click collapses it — both captured via hoverBeforeClick)
+  - type: webview-click
+    selector: ".tree-row[data-key='customer']"
+    caption: "Click node to collapse — interactive tree navigation"
+    delay: 500
+
+  - type: screenshot
+    caption: "Customer subtree collapsed — focus on what matters"
+    hold: 2000
+
+  # Re-expand 'customer' by clicking the same row again
+  - type: webview-click
+    selector: ".tree-row[data-key='customer']"
+    caption: "Click again to expand — drill back in"
+    delay: 500
+
+  - type: screenshot
+    caption: "Customer subtree re-expanded — every node is independently toggleable"
+    hold: 2000
+
+  # ----------------------------------------------------------
+  # 4. Close JSON Preview
+  # ----------------------------------------------------------
+
+  - type: key
+    key: "Meta+w"
+    caption: "Close JSON Preview panel"
+    delay: 500
+
+  - type: key
+    key: "Control+1"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  # ----------------------------------------------------------
+  # 5. Move cursor to line 8 (truncated JSON), open JSON Preview
+  # ----------------------------------------------------------
+
+  - type: key
+    key: "ArrowDown"
+    repeat: 2
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: screenshot
+    caption: "Line 8 — ERROR log with payload cut off mid-stream"
+    hold: 1500
+
+  # Show shortcut, then press
+  - type: screenshot
+    caption: "⌨  Ctrl + Cmd + J — JSON Preview on truncated data"
+    hold: 1500
+
+  - type: key
+    key: "Control+Meta+J"
+    capture: false
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "Lenient parser recovers structure from incomplete JSON"
+    hold: 3500
+
+  # Expand to see partial structure
+  - type: webview-click
+    selector: "#btn-expand"
+    caption: "+  Expand — partial structure is still navigable"
+    delay: 500
+
+  - type: screenshot
+    caption: "Truncated fields rendered — missing closing brackets handled gracefully"
+    hold: 2500
+
+  # Interact with the recovered tree — hover shows the node is clickable
+  - type: webview-click
+    selector: ".tree-row[data-key='data']"
+    caption: "Click partial node — even broken JSON can be explored"
+    delay: 500
+
+  - type: screenshot
+    caption: "Partial subtree collapsed — lenient parser preserves navigable structure"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 6. Close JSON Preview
+  # ----------------------------------------------------------
+
+  - type: key
+    key: "Meta+w"
+    caption: "Close panel"
+    delay: 500
+
+  - type: key
+    key: "Control+1"
+    capture: false
+
+  - type: delay
+    ms: 400
+
+  # ----------------------------------------------------------
+  # 7. Enable Auto JSON Preview from the Quick Access sidebar
+  # ----------------------------------------------------------
+
+  - type: screenshot
+    caption: "Quick Access — JSON Preview is currently Off"
+    hold: 2000
+
+  - type: aria-click
+    role: treeitem
+    name: JSON Preview
+    caption: "Toggle Auto JSON Preview → On"
+    delay: 800
+
+  - type: screenshot
+    caption: "Auto JSON Preview: On — panel will follow every cursor move"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 8. Navigate in the editor — JSON Preview auto-updates each line
+  # ----------------------------------------------------------
+
+  - type: key
+    key: "Control+1"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  # At this point the cursor is at line 8 (where section 5 left it).
+  # Navigate relatively — no Control+Home needed.
+
+  # line 8 → line 3 : ArrowUp ×5  (simple valid JSON: login result)
+  - type: key
+    key: "ArrowUp"
+    repeat: 5
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  - type: screenshot
+    caption: "Line 3 — login result JSON auto-previewed"
+    hold: 2500
+
+  # line 3 → line 5 : ArrowDown ×2  (no JSON — cache info line)
+  - type: key
+    key: "ArrowDown"
+    repeat: 2
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Line 5 — no JSON found, preview clears automatically"
+    hold: 1500
+
+  # line 5 → line 6 : ArrowDown ×1  (complex order payload)
+  - type: key
+    key: "ArrowDown"
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  - type: screenshot
+    caption: "Line 6 — full order payload auto-previewed"
+    hold: 3000
+
+  # line 6 → line 8 : ArrowDown ×2  (truncated JSON)
+  - type: key
+    key: "ArrowDown"
+    repeat: 2
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  - type: screenshot
+    caption: "Line 8 — partial JSON recovered and auto-previewed in real time"
+    hold: 2500
+
+  # line 8 → line 15 : ArrowDown ×7  (three inline JSONs)
+  - type: key
+    key: "ArrowDown"
+    repeat: 7
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  # ----------------------------------------------------------
+  # Final frame — three JSONs auto-previewed from one log line
+  # ----------------------------------------------------------
+  - type: screenshot
+    caption: "Line 15 — result, latency, host: 3 JSON objects rendered side by side"
+    hold: 4000

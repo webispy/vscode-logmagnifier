@@ -255,6 +255,14 @@ export class FilterManager implements vscode.Disposable {
     }
 
     private assignColor(group: FilterGroup): string {
+        const usedColors = new Set(group.filters.map(f => f.color).filter(Boolean));
+        const allColors = this.colorService.getAvailableColors().filter(c => c !== 'color00');
+
+        const unusedColor = allColors.find(c => !usedColors.has(c));
+        if (unusedColor) {
+            return unusedColor;
+        }
+
         return this.colorService.assignColor(group);
     }
 

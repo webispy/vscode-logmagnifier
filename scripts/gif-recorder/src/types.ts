@@ -91,6 +91,16 @@ export interface ClickStep extends BaseStep {
   selector: string;
   /** If true, perform a double-click instead of a single click */
   double?: boolean;
+  /**
+   * Capture one frame showing the CSS :active (pressed) state before releasing
+   * the mouse.  Intended for use after a `hover` step has already revealed and
+   * positioned the pointer over the target button — the mouse is not moved
+   * again, only mousedown → screenshot → mouseup is performed.
+   * A captureFrame is automatically provided even when `capture: false` is set,
+   * so the pressed-state frame is recorded without also recording a result frame.
+   * Default: true
+   */
+  showPress?: boolean;
 }
 
 /**
@@ -226,6 +236,14 @@ export interface HoverStep extends BaseStep {
   type: 'hover';
   /** CSS selector of the element to hover */
   selector: string;
+  /**
+   * Skip Playwright's visibility / actionability checks and move the mouse
+   * directly to the element.  Useful for hover-to-reveal patterns where the
+   * target button only becomes visible after the mouse arrives (i.e. the
+   * button is hidden until hover but will appear once the pointer is over it).
+   * Default: true
+   */
+  force?: boolean;
 }
 
 /**

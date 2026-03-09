@@ -6,7 +6,9 @@
   "scripts": {
     "build": "tsc",
     "record": "ts-node src/runner.ts",
-    "record:runbook": "ts-node src/runner.ts specs/runbook.yaml"
+    "record:runbook": "ts-node src/runner.ts specs/runbook.yaml",
+    "record:json-preview": "ts-node src/runner.ts specs/json-preview.yaml",
+    "test:scale": "ts-node src/test-scale.ts"
   },
   "dependencies": {
     "@vscode/test-electron": "^2.4.0",

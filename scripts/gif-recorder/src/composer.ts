@@ -67,10 +67,16 @@ export async function composeGif(
       }));
     }
 
+    // Read the actual dimensions of the first annotated frame so we can
+    // pass them explicitly to gifski (prevents silent Retina downscaling).
+    const firstMeta = await sharp(annotatedPaths[0]).metadata();
+    const outWidth = firstMeta.width ?? 0;
+    const outHeight = firstMeta.height ?? 0;
+
     console.log(`  Assembling GIF…`);
 
     if (isAvailable('gifski')) {
-      await assembleWithGifski(annotatedPaths, output, { frameDelay });
+      await assembleWithGifski(annotatedPaths, output, { frameDelay, width: outWidth, height: outHeight });
     } else if (isAvailable('ffmpeg')) {
       await assembleWithFfmpeg(annotatedDir, output, { frameDelay });
     } else {
@@ -161,6 +167,10 @@ function buildCaptionSvg(
 
 interface AssembleOptions {
   frameDelay: number;
+  /** Explicit output width — forces gifski to use this exact size */
+  width?: number;
+  /** Explicit output height — forces gifski to use this exact size */
+  height?: number;
 }
 
 async function assembleWithGifski(
@@ -169,9 +179,16 @@ async function assembleWithGifski(
   opts: AssembleOptions
 ): Promise<void> {
   const fps = Math.round(1000 / opts.frameDelay);
-  const args = ['--fps', String(fps), '--output', output, ...frames];
+  const args = ['--fps', String(fps)];
 
-  console.log(`    $ gifski --fps ${fps} --output <output> [${frames.length} frames]`);
+  // Pass explicit dimensions so gifski never silently downscales
+  // (on Retina displays gifski may halve the output otherwise).
+  if (opts.width) args.push('--width', String(opts.width));
+  if (opts.height) args.push('--height', String(opts.height));
+
+  args.push('--output', output, ...frames);
+
+  console.log(`    $ gifski --fps ${fps}${opts.width ? ` --width ${opts.width} --height ${opts.height}` : ''} --output <output> [${frames.length} frames]`);
   await execFileAsync('gifski', args);
 }
 

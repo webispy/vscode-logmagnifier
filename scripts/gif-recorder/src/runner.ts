@@ -14,6 +14,7 @@ import { composeGif } from './composer';
 
 interface AppHandle {
   firstWindow(): Promise<Page>;
+  resize(width: number, height: number): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -40,9 +41,14 @@ async function main() {
     app = await launchVSCode(spec);
     const page = await app.firstWindow();
 
-    // Give VS Code time to fully initialize
+    // Give VS Code time to fully initialize.
+    // VS Code overwrites the window size during its startup sequence, so we
+    // re-apply the target dimensions AFTER it has fully settled to guarantee
+    // every captured screenshot is exactly spec.window pixels.
     await page.waitForLoadState('domcontentloaded');
     await delay(3000);
+    await app.resize(spec.window.width, spec.window.height);
+    await delay(300);
 
     const frames: FrameMeta[] = [];
     let frameIndex = 0;
@@ -198,6 +204,7 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
       '--no-sandbox',
       '--disable-gpu',
       '--disable-dev-shm-usage',
+      '--force-device-scale-factor=1',
       workspaceDir,
     ],
     env: { ...launchEnv, ELECTRON_ENABLE_LOGGING: '0' },
@@ -217,10 +224,7 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
     },
     { w: winWidth, h: winHeight }
   );
-  await delay(200);
-  await page.setViewportSize({ width: winWidth, height: winHeight });
-  await page.evaluate('window.dispatchEvent(new Event("resize"))');
-  await delay(300);
+  await delay(500);
 
   // Dismiss blocking dialogs and clean up unwanted UI panels.
   // These run concurrently in the background so they don't block the caller.
@@ -239,6 +243,15 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
 
   return {
     firstWindow: async () => page,
+    resize: async (w: number, h: number) => {
+      await electronApp.evaluate(
+        ({ BrowserWindow }, { w, h }) => {
+          const win = BrowserWindow.getAllWindows()[0];
+          if (win) win.setContentSize(w, h);
+        },
+        { w, h }
+      );
+    },
     close: async () => {
       await electronApp.close();
       cleanup();

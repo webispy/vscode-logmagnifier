@@ -75,7 +75,19 @@ async function main() {
           }
         : undefined;
 
-      await executeStep(page, step, captureFrame, spec.hoverBeforeClick ?? false);
+      // showPress click steps need a captureFrame for the :active frame even
+      // when capture is false (so no result frame is recorded by the step itself).
+      const effectiveCaptureFrame =
+        step.type === 'click' && step.showPress !== false && !captureFrame
+          ? async (cap: string) => {
+              const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
+              await page.screenshot({ path: framePath, type: 'png' });
+              frames.push({ path: framePath, caption: cap });
+              frameIndex++;
+            }
+          : captureFrame;
+
+      await executeStep(page, step, effectiveCaptureFrame, spec.hoverBeforeClick ?? false);
 
       const stepDelay = step.delay ?? 0;
       if (stepDelay > 0) {
@@ -280,6 +292,14 @@ async function executeStep(
       const el = page.locator(step.selector).first();
       if (step.double) {
         await el.dblclick({ position: { x: 10, y: 10 }, timeout: 5000 });
+      } else if (step.showPress !== false && captureFrame) {
+        // Mouse is already positioned over the element by a preceding hover step.
+        // Capture the :active (pressed) CSS state, then release to fire the click.
+        await page.mouse.down();
+        await delay(80);
+        await captureFrame(step.caption ?? '');
+        await delay(80);
+        await page.mouse.up();
       } else if (hoverBeforeClick && captureFrame) {
         await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
       } else {
@@ -382,7 +402,7 @@ async function executeStep(
     }
 
     case 'hover':
-      await page.locator(step.selector).first().hover({ timeout: 5000 });
+      await page.locator(step.selector).first().hover({ timeout: 5000, force: step.force !== false });
       break;
 
     case 'ensure-collapsed': {

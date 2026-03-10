@@ -49,48 +49,22 @@
 # Output: resources/demo/base.gif
 # ============================================================
 
+defaults: shared/common.yaml
+
 name: Base Demo
 output: base
-window:
-  width: 1280
-  height: 800
-frameDelay: 300          # ~3 fps — slow and readable
-scale: 0.85
-hoverBeforeClick: true   # hover + press frames before every click
-loopDelay: 5000          # 5-second pause on last frame before looping
 
 steps:
   # ----------------------------------------------------------
   # SETUP (capture: false) — prepare the UI before recording
   # ----------------------------------------------------------
 
-  - type: aria-click
-    role: tab
-    name: LogMagnifier
-    capture: false
+  - type: include
+    file: shared/open-logmagnifier.yaml
 
-  - type: ensure-expanded
-    selector: "role=button[name='Quick Access Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Workflows Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Regex Filters Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='ADB Devices Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Runbook Section']"
-    capture: false
-
-  - type: ensure-expanded
-    selector: "role=button[name='Word Filters Section']"
+  - type: setup-sidebar
+    expanded: [Quick Access, Word Filters]
+    collapsed: [Workflows, Regex Filters, ADB Devices, Runbook]
     capture: false
 
   - type: delay
@@ -100,16 +74,11 @@ steps:
   # 1. Open test_log_android.log
   # ----------------------------------------------------------
 
-  - type: screenshot
+  - type: key-hint
+    key: "Meta+p"
     caption: "⌨  Cmd + P — Quick Open"
     hold: 1200
-
-  - type: key
-    key: "Meta+p"
-    capture: false
-
-  - type: delay
-    ms: 500
+    settle: 500
 
   - type: type
     text: "test_log_android.log"

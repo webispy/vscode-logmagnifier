@@ -1,0 +1,13 @@
+# ============================================================
+# Shared step sequence — click the LogMagnifier sidebar tab
+# ============================================================
+#
+# Usage in a spec file:
+#   - type: include
+#     file: shared/open-logmagnifier.yaml
+# ============================================================
+
+- type: aria-click
+  role: tab
+  name: LogMagnifier
+  capture: false

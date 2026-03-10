@@ -28,44 +28,21 @@
 # Output: resources/demo/runbook.gif
 # ============================================================
 
+defaults: shared/common.yaml
+
 name: Runbook Feature Demo
 output: runbook
-window:
-  width: 1280
-  height: 800
-frameDelay: 300          # ~3 fps — slow and readable
-scale: 0.85              # Slightly shrink to keep file size manageable
-hoverBeforeClick: true   # show hover + press frames before each click
-loopDelay: 5000          # 5-second pause on last frame before looping
 
 steps:
   # ----------------------------------------------------------
   # SETUP (capture: false) — prepare the UI before recording
   # ----------------------------------------------------------
 
-  - type: aria-click
-    role: tab
-    name: LogMagnifier
-    capture: false
+  - type: include
+    file: shared/open-logmagnifier.yaml
 
-  - type: ensure-collapsed
-    selector: "role=button[name='Quick Access Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Workflows Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Word Filters Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='Regex Filters Section']"
-    capture: false
-
-  - type: ensure-collapsed
-    selector: "role=button[name='ADB Devices Section']"
+  - type: setup-sidebar
+    collapsed: [Quick Access, Workflows, Word Filters, Regex Filters, ADB Devices, Runbook]
     capture: false
 
   - type: delay

@@ -1,0 +1,18 @@
+# ============================================================
+# Shared GIF recorder defaults — referenced via `defaults:` key
+# ============================================================
+#
+# Usage in a spec file:
+#   defaults: shared/common.yaml
+#
+# All keys here are merged into the spec at load time.
+# Values explicitly set in the spec take precedence.
+# ============================================================
+
+window:
+  width: 1280
+  height: 800
+frameDelay: 300          # ~3 fps — slow and readable
+scale: 0.85
+hoverBeforeClick: true   # hover + press frames before every click
+loopDelay: 5000          # 5-second pause on last frame before looping

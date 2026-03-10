@@ -11,6 +11,16 @@ export interface Spec {
   name: string;
   /** Output GIF filename (without extension). Defaults to kebab-case of name. */
   output?: string;
+  /**
+   * Path to a shared defaults YAML file (relative to this spec file).
+   * Top-level non-steps keys are merged in; values defined in this spec take precedence.
+   * Consumed and removed by loadSpec() — not present at runtime.
+   *
+   * Step sequences can be shared via `type: include` steps (expanded at load time by
+   * loadSpec()). Include steps are never passed to executeStep(); they are replaced
+   * inline with the steps from the referenced file before execution begins.
+   */
+  defaults?: string;
   /** VS Code window size */
   window: {
     width: number;
@@ -44,24 +54,19 @@ export type Step =
   | WebviewScrollStep
   | TypeStep
   | KeyStep
+  | KeyHintStep
   | DelayStep
-  | WaitStep
   | ScreenshotStep
   | ScrollStep
   | HoverStep
   | EnsureCollapsedStep
-  | EnsureExpandedStep;
+  | EnsureExpandedStep
+  | SetupSidebarStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
   /** Optional human-readable label shown as a caption on the frame */
   caption?: string;
-  /**
-   * Milliseconds to wait after performing this step before capturing a screenshot.
-   * Use this to let the UI settle (e.g. wait for output to stream, animation to finish).
-   * Default: 300
-   */
-  delay?: number;
   /**
    * How long to display this frame in the GIF output, in milliseconds.
    * The frame is duplicated (hold / frameDelay) times so it stays on screen longer.
@@ -178,6 +183,38 @@ export interface KeyStep extends BaseStep {
 }
 
 /**
+ * Show a keyboard shortcut hint frame, press the key, then optionally wait for the UI.
+ *
+ * Replaces the three-step pattern:
+ *   - type: screenshot  (hint caption + hold)
+ *   - type: key         (capture: false)
+ *   - type: delay       (settle)
+ *
+ * The hint frame is captured BEFORE the key is pressed, so the viewer sees the
+ * shortcut annotation while the editor is still in its original state.
+ * The `hold` duplicates that frame so it stays visible long enough to read.
+ * After pressing, `settle` gives the UI time to react before the next step runs.
+ */
+export interface KeyHintStep {
+  type: 'key-hint';
+  /** Caption shown on the hint frame, e.g. "⌨  Cmd + P — Quick Open" */
+  caption?: string;
+  /** The Playwright key combo to press, e.g. "Meta+p", "Control+Meta+J" */
+  key: string;
+  /**
+   * Milliseconds to hold the hint frame before pressing the key.
+   * The frame is duplicated (hold / frameDelay) times. Default: 1200
+   */
+  hold?: number;
+  /**
+   * Milliseconds to wait after pressing the key for the UI to respond.
+   * Use when the action opens a panel or dialog that takes time to appear.
+   * Default: 0
+   */
+  settle?: number;
+}
+
+/**
  * Pause execution for a fixed duration. Does NOT capture a frame by default.
  *
  * Use this as an explicit step between actions to let the UI settle before
@@ -194,16 +231,6 @@ export interface KeyStep extends BaseStep {
  */
 export interface DelayStep {
   type: 'delay';
-  /** Duration in milliseconds */
-  ms: number;
-}
-
-/**
- * Wait for a fixed duration without interacting (captures a frame afterward).
- * @deprecated Prefer `- type: delay` + `- type: screenshot` for explicit control.
- */
-export interface WaitStep extends BaseStep {
-  type: 'wait';
   /** Duration in milliseconds */
   ms: number;
 }
@@ -274,6 +301,27 @@ export interface EnsureExpandedStep extends BaseStep {
   type: 'ensure-expanded';
   /** CSS selector targeting the collapsible section header (e.g. a `.pane-header`) */
   selector: string;
+}
+
+/**
+ * Set the expand/collapse state for multiple VS Code sidebar sections in one step.
+ *
+ * Sections listed in `expanded` are ensured expanded; those in `collapsed` are ensured
+ * collapsed. Sections not listed are left in their current state.
+ *
+ * Section names use the short form without the trailing " Section" suffix:
+ *   expanded: [Quick Access, Word Filters]
+ *   collapsed: [Workflows, Regex Filters, ADB Devices, Runbook]
+ *
+ * This replaces a sequence of individual `ensure-expanded` / `ensure-collapsed` steps,
+ * making sidebar setup in the SETUP block concise and self-documenting.
+ */
+export interface SetupSidebarStep extends BaseStep {
+  type: 'setup-sidebar';
+  /** Section names to ensure are expanded (e.g. ["Quick Access", "Word Filters"]) */
+  expanded?: string[];
+  /** Section names to ensure are collapsed (e.g. ["Workflows", "Regex Filters"]) */
+  collapsed?: string[];
 }
 
 /** Metadata for a single captured frame (used by runner → composer pipeline) */

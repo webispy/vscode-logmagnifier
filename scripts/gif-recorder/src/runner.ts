@@ -62,37 +62,57 @@ async function main() {
         continue;
       }
 
+      // key-hint: capture a hint frame first, hold it, press the key, then settle
+      if (step.type === 'key-hint') {
+        const hintCaption = step.caption ?? '';
+        const hintPath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
+        await page.screenshot({ path: hintPath, type: 'png' });
+        frames.push({ path: hintPath, caption: hintCaption });
+        frameIndex++;
+
+        const holdMs = step.hold ?? 1200;
+        const holdFrames = Math.max(0, Math.round(holdMs / (spec.frameDelay ?? 80)) - 1);
+        for (let i = 0; i < holdFrames; i++) {
+          frames.push({ path: hintPath, caption: hintCaption });
+        }
+
+        await page.keyboard.press(step.key);
+
+        if (step.settle && step.settle > 0) {
+          await delay(step.settle);
+        }
+        continue;
+      }
+
       const caption = step.caption ?? '';
       const shouldCapture = step.capture !== false;
 
-      // Callback for intermediate frame captures (e.g. during typed text animation)
-      const captureFrame = shouldCapture
-        ? async (cap: string) => {
-            const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
-            await page.screenshot({ path: framePath, type: 'png' });
-            frames.push({ path: framePath, caption: cap });
-            frameIndex++;
-          }
+      // Provide a capture callback when:
+      //   - the step's result frame should be recorded (shouldCapture), OR
+      //   - the step has a caption but capture is suppressed (capture: false) — in this
+      //     case hover + press interaction frames are still recorded via the callback so
+      //     the viewer can see the button being targeted, even though no result frame
+      //     follows.  Setup steps (no caption, capture: false) pass undefined and skip
+      //     all frame capture.
+      const makeCaptureFrame = () => async (cap: string) => {
+        const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
+        await page.screenshot({ path: framePath, type: 'png' });
+        frames.push({ path: framePath, caption: cap });
+        frameIndex++;
+      };
+
+      const captureFrame = (shouldCapture || caption !== '')
+        ? makeCaptureFrame()
         : undefined;
 
-      // showPress click steps need a captureFrame for the :active frame even
-      // when capture is false (so no result frame is recorded by the step itself).
+      // For showPress click steps with no caption and capture: false, still need a
+      // captureFrame to record the :active state.
       const effectiveCaptureFrame =
         step.type === 'click' && step.showPress !== false && !captureFrame
-          ? async (cap: string) => {
-              const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
-              await page.screenshot({ path: framePath, type: 'png' });
-              frames.push({ path: framePath, caption: cap });
-              frameIndex++;
-            }
+          ? makeCaptureFrame()
           : captureFrame;
 
       await executeStep(page, step, effectiveCaptureFrame, spec.hoverBeforeClick ?? false);
-
-      const stepDelay = step.delay ?? 0;
-      if (stepDelay > 0) {
-        await delay(stepDelay);
-      }
 
       if (shouldCapture) {
         const framePath = path.join(framesDir, `frame_${String(frameIndex).padStart(4, '0')}.png`);
@@ -146,8 +166,48 @@ async function main() {
 // ---------------------------------------------------------------------------
 
 function loadSpec(specPath: string): Spec {
+  const specDir = path.dirname(path.resolve(specPath));
   const raw = fs.readFileSync(path.resolve(specPath), 'utf-8');
-  return yaml.load(raw) as Spec;
+  const spec = yaml.load(raw) as Record<string, unknown> & { steps: unknown[] };
+
+  // Merge shared defaults — spec values take precedence over defaults
+  if (typeof spec.defaults === 'string') {
+    const defaultsPath = path.resolve(specDir, spec.defaults);
+    const defaults = yaml.load(fs.readFileSync(defaultsPath, 'utf-8')) as Record<string, unknown>;
+    for (const [key, value] of Object.entries(defaults)) {
+      if (!(key in spec)) {
+        spec[key] = value;
+      }
+    }
+    delete spec.defaults;
+  }
+
+  // Expand `type: include` steps inline before execution
+  spec.steps = expandIncludes(spec.steps ?? [], specDir);
+
+  return spec as unknown as Spec;
+}
+
+/**
+ * Recursively expand `type: include` steps, replacing each with the step list
+ * from the referenced YAML file. The resolved path is relative to `baseDir`.
+ */
+function expandIncludes(steps: unknown[], baseDir: string): Step[] {
+  const result: Step[] = [];
+  for (const step of steps) {
+    const s = step as Record<string, unknown>;
+    if (s.type === 'include') {
+      if (typeof s.file !== 'string') {
+        throw new Error(`include step missing required "file" field`);
+      }
+      const includePath = path.resolve(baseDir, s.file);
+      const included = yaml.load(fs.readFileSync(includePath, 'utf-8')) as unknown[];
+      result.push(...expandIncludes(included, path.dirname(includePath)));
+    } else {
+      result.push(s as unknown as Step);
+    }
+  }
+  return result;
 }
 
 // ---------------------------------------------------------------------------
@@ -383,10 +443,6 @@ async function executeStep(
       }
       break;
 
-    case 'wait':
-      await delay(step.ms);
-      break;
-
     case 'screenshot':
       // No-op here; the frame is captured after every step by the loop above.
       // This step type is just a marker to force a frame capture.
@@ -431,7 +487,31 @@ async function executeStep(
       break;
     }
 
+    case 'setup-sidebar': {
+      // Build an ordered list: expanded sections first, then collapsed sections.
+      // Within each group, preserve the order listed in the spec.
+      const entries: Array<{ name: string; expand: boolean }> = [
+        ...(step.expanded ?? []).map(name => ({ name, expand: true })),
+        ...(step.collapsed ?? []).map(name => ({ name, expand: false })),
+      ];
+      for (const { name, expand } of entries) {
+        const selector = `role=button[name='${name} Section']`;
+        const header = page.locator(selector).first();
+        await header.waitFor({ state: 'visible', timeout: 5000 });
+        const isExpanded = await header.getAttribute('aria-expanded');
+        if (expand && isExpanded !== 'true') {
+          await header.click({ position: { x: 10, y: 10 }, timeout: 5000 });
+        } else if (!expand && isExpanded === 'true') {
+          await header.click({ position: { x: 10, y: 10 }, timeout: 5000 });
+        } else {
+          console.log(`    (${name} Section: already ${expand ? 'expanded' : 'collapsed'} — skipping click)`);
+        }
+      }
+      break;
+    }
+
     case 'delay':
+    case 'key-hint':
       // Handled in the main loop before executeStep is called — should not reach here
       break;
 

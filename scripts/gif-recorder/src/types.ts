@@ -61,7 +61,8 @@ export type Step =
   | HoverStep
   | EnsureCollapsedStep
   | EnsureExpandedStep
-  | SetupSidebarStep;
+  | SetupSidebarStep
+  | DragStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
@@ -254,6 +255,36 @@ export interface ScrollStep extends BaseStep {
   deltaY: number;
   /** Pixels to scroll horizontally (positive = right, negative = left, default: 0) */
   deltaX?: number;
+}
+
+/**
+ * Drag an element by a relative offset.
+ *
+ * Intended for resize handles (sashes) and other draggable UI controls.
+ * The mouse is moved to the centre of the matched element, held down,
+ * moved by (deltaX, deltaY) over `steps` intermediate positions, then
+ * released.  Using multiple steps produces a smooth drag that VS Code's
+ * split-view layout engine can track in real time.
+ *
+ * Typical use — expand a sidebar section by dragging its lower sash down:
+ *   - type: drag
+ *     selector: ".sidebar .monaco-sash.horizontal"
+ *     deltaY: 100
+ *     capture: false
+ */
+export interface DragStep extends BaseStep {
+  type: 'drag';
+  /** CSS selector of the element to drag (e.g. a resize sash) */
+  selector: string;
+  /** Pixels to drag horizontally (positive = right, default: 0) */
+  deltaX?: number;
+  /** Pixels to drag vertically (positive = down, default: 0) */
+  deltaY?: number;
+  /**
+   * Number of intermediate mouse-move positions between start and end.
+   * More steps produce a smoother drag. Default: 10
+   */
+  steps?: number;
 }
 
 /**

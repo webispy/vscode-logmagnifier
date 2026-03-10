@@ -1,0 +1,24 @@
+# ============================================================
+# Shared step sequence — open the VS Code bottom panel and
+# activate the LogMagnifier tab inside it.
+#
+# `scope: ".panel"` restricts the aria search to the bottom-panel
+# area so the sidebar activity-bar button (same aria-label
+# "LogMagnifier") is not accidentally matched.
+#
+# Usage in a spec file:
+#   - type: include
+#     file: shared/open-logmagnifier-panel.yaml
+# ============================================================
+
+- type: key-hint
+  key: "Meta+j"
+  caption: "⌨  Cmd + J — Open Panel"
+  hold: 900
+  settle: 800
+
+- type: aria-click
+  role: tab
+  name: LogMagnifier
+  scope: ".panel"
+  capture: false

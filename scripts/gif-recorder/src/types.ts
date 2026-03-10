@@ -62,7 +62,8 @@ export type Step =
   | EnsureCollapsedStep
   | EnsureExpandedStep
   | SetupSidebarStep
-  | DragStep;
+  | DragStep
+  | DebugWebviewStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
@@ -112,13 +113,28 @@ export interface ClickStep extends BaseStep {
 /**
  * Click an element located by its ARIA role and accessible name.
  * More resilient to layout changes than CSS selectors.
+ *
+ * When `scope` is provided the search is limited to the subtree matched by
+ * that CSS selector, which is essential for disambiguation when two UI areas
+ * contain elements with the same role + name (e.g. the sidebar activity-bar
+ * button and the bottom-panel tab both have aria-label "LogMagnifier").
+ *
+ *   - type: aria-click        # click the PANEL LogMagnifier tab, not the sidebar one
+ *     role: tab
+ *     name: LogMagnifier
+ *     scope: ".panel"
  */
 export interface AriaClickStep extends BaseStep {
   type: 'aria-click';
   /** ARIA role (e.g. "button", "treeitem", "tab") */
   role: string;
-  /** Accessible name of the element (exact text match) */
+  /** Accessible name of the element (case-insensitive regex match) */
   name: string;
+  /**
+   * Optional CSS selector to limit the aria search to a subtree.
+   * When omitted the entire page is searched (existing behaviour).
+   */
+  scope?: string;
 }
 
 /**
@@ -134,6 +150,17 @@ export interface WebviewClickStep extends BaseStep {
    * Defaults to 'iframe' (first iframe inside the webview).
    */
   innerFrame?: string;
+  /**
+   * Optional CSS selector to scope the outer iframe search to a specific container.
+   * Use when multiple webviews are visible simultaneously (e.g. sidebar webview and
+   * panel webview) and you need to target the one inside a particular area.
+   *
+   * Example — target the bookmark webview in the bottom panel:
+   *   outerScope: ".part.panel"
+   *
+   * When omitted the first `iframe.webview.ready` in the page is used.
+   */
+  outerScope?: string;
 }
 
 /**
@@ -353,6 +380,20 @@ export interface SetupSidebarStep extends BaseStep {
   expanded?: string[];
   /** Section names to ensure are collapsed (e.g. ["Workflows", "Regex Filters"]) */
   collapsed?: string[];
+}
+
+/**
+ * Debug step: dumps webview iframe structure and HTML to the console.
+ * Useful for diagnosing webview-click selector issues.
+ * Does NOT capture a frame — remove from spec once debugging is done.
+ */
+export interface DebugWebviewStep extends BaseStep {
+  type: 'debug-webview';
+  /**
+   * CSS selector to scope the iframe search (e.g. ".part.panel").
+   * When omitted, searches the entire page.
+   */
+  scope?: string;
 }
 
 /** Metadata for a single captured frame (used by runner → composer pipeline) */

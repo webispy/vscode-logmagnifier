@@ -21,6 +21,9 @@
 #   9. Disable "Android Activity", enable "Network Requests"
 #  10. Apply Word Filter again — new filtered output shows only Request lines
 #      (demonstrates switching between independent filter profiles)
+#  11. Full Tree — click the code lens on the last tab to open the hierarchy
+#      picker; navigate to the 2nd tab (Android Activity), then back to the
+#      1st tab (original log file)
 #
 # Log file: fixtures/workspace/test_log_android.log
 #   Keywords and representative lines:
@@ -561,10 +564,82 @@ steps:
   - type: delay
     ms: 2000
 
+  - type: screenshot
+    caption: "Filters applied in stages — each group narrows the output further"
+    hold: 2500
+
   # ----------------------------------------------------------
-  # Final frame — second filtered output
+  # 11. Full Tree — navigate the open tab hierarchy
   # ----------------------------------------------------------
 
   - type: screenshot
-    caption: "Filters applied in stages — each group narrows the output further"
+    caption: "Full Tree shows the origin chain for each filtered tab"
+    hold: 2000
+
+  # Open the hierarchy picker from the last (active) tab
+  - type: aria-click
+    role: button
+    name: "Full Tree"
+    caption: "Full Tree — open the file hierarchy picker"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "All three tabs listed — origin chain at a glance"
+    hold: 2500
+
+  # Navigate to the second tab (Android Activity filtered output)
+  - type: hover
+    selector: ".quick-input-list .monaco-list-row[data-index='1']"
+    caption: "Select second tab — Android Activity filtered output"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".quick-input-list .monaco-list-row[data-index='1']"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Jumped to Android Activity tab via Full Tree"
+    hold: 2500
+
+  # Open Full Tree again from the second tab
+  - type: aria-click
+    role: button
+    name: "Full Tree"
+    caption: "Full Tree again — navigate back to the source"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Hierarchy picker — current tab highlighted"
+    hold: 1500
+
+  # Navigate to the first tab (original log file)
+  - type: hover
+    selector: ".quick-input-list .monaco-list-row[data-index='0']"
+    caption: "Select first tab — the original log file"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".quick-input-list .monaco-list-row[data-index='0']"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # ----------------------------------------------------------
+  # Final frame — back at the source
+  # ----------------------------------------------------------
+
+  - type: screenshot
+    caption: "Back to the source — Full Tree keeps the origin chain navigable"
     hold: 5000

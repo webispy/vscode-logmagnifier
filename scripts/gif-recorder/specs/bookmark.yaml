@@ -1,0 +1,279 @@
+# ============================================================
+# Bookmark Demo — GIF Recorder Spec
+# ============================================================
+#
+# Demonstrates adding a log line to a Bookmark via the
+# Command Palette:
+#   Editor → go to line 4 → Cmd+Shift+P → Add Line to Bookmark
+#
+# Architecture:
+#   The extension registers two separate view containers:
+#     - logmagnifier-container  (activitybar / left sidebar)
+#     - logmagnifier-panel      (panel / bottom)  ← Log Bookmark view
+#
+#   Both are activated in SETUP:
+#     1. Sidebar (activitybar): include open-logmagnifier.yaml
+#     2. Bottom panel:          include open-logmagnifier-panel.yaml
+#
+# Run:
+#   cd scripts/gif-recorder
+#   npm run record:bookmark
+#
+# Output: resources/demo/bookmark.gif
+# ============================================================
+
+defaults: shared/common.yaml
+
+name: Bookmark Demo
+output: bookmark
+
+steps:
+  # ── SETUP ──────────────────────────────────────────────────────────────────
+
+  # 1. Activate the sidebar (activitybar) LogMagnifier tab
+  - type: include
+    file: shared/open-logmagnifier.yaml
+
+  - type: delay
+    ms: 400
+
+  # 2. Open test_log_android.log in the editor
+  - type: key-hint
+    key: "Meta+p"
+    caption: "⌨  Cmd + P — Quick Open"
+    hold: 900
+    settle: 400
+
+  - type: type
+    text: "test_log_android.log"
+    captureEvery: 5
+    caption: "Open test_log_android.log"
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  - type: screenshot
+    caption: "test_log_android.log"
+    hold: 1200
+
+  # 3. Open the bottom panel and activate the LogMagnifier tab.
+  - type: include
+    file: shared/open-logmagnifier-panel.yaml
+
+  - type: screenshot
+    caption: "Log Bookmark panel"
+    hold: 1200
+
+  - type: delay
+    ms: 500
+
+  # ── DEMO ───────────────────────────────────────────────────────────────────
+
+  # 5. Click the editor area to return focus to it
+  - type: click
+    selector: ".monaco-editor .view-lines"
+    caption: "Focus editor"
+    capture: false
+
+  - type: delay
+    ms: 200
+
+  # 5b. Navigate to line 4 with Ctrl+G (Go to Line)
+  - type: key-hint
+    key: "Control+g"
+    caption: "⌨  Ctrl + G — Go to Line"
+    hold: 900
+    settle: 300
+
+  - type: type
+    text: "4"
+    capture: false
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  # 6. Open Command Palette and run "Add Line to Bookmark"
+  #    VS Code's editor context menu is a native Electron menu — it always appears
+  #    at the real OS cursor position and cannot be driven by Playwright. The
+  #    Command Palette is the reliable, automation-friendly alternative.
+  - type: key-hint
+    key: "Meta+Shift+p"
+    caption: "⌨  Cmd + Shift + P — Command Palette"
+    hold: 900
+    settle: 400
+
+  - type: type
+    text: "Add Line to Bookmark"
+    captureEvery: 5
+    caption: "Add Line to Bookmark"
+
+  - type: delay
+    ms: 300
+
+  - type: screenshot
+    caption: "Add Line to Bookmark"
+    hold: 1200
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # 7. Final result — bookmarked line visible in the Log Bookmark panel
+  - type: screenshot
+    caption: "Line added to Bookmark"
+    hold: 3000
+
+  # ── SCENARIO 2: Add Selection Matches to Bookmark ──────────────────────────
+
+  # 8. Click the editor to return focus to it
+  - type: click
+    selector: ".monaco-editor .view-lines"
+    caption: "Focus editor"
+    capture: false
+
+  - type: delay
+    ms: 200
+
+  # 9. Go to line 20 where 'handleAppVisibility' appears
+  - type: key-hint
+    key: "Control+g"
+    caption: "⌨  Ctrl + G — Go to Line 20"
+    hold: 900
+    settle: 300
+
+  - type: type
+    text: "20"
+    capture: false
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  # 10. Find 'handleAppVisibility' to visually select the word
+  - type: key-hint
+    key: "Meta+f"
+    caption: "⌨  Cmd + F — Find"
+    hold: 900
+    settle: 400
+
+  - type: type
+    text: "handleAppVisibility"
+    captureEvery: 5
+    caption: "Select 'handleAppVisibility'"
+
+  - type: delay
+    ms: 300
+
+  - type: key
+    key: "Escape"
+    capture: false
+
+  - type: delay
+    ms: 200
+
+  - type: screenshot
+    caption: "'handleAppVisibility' selected"
+    hold: 1200
+
+  # 11. Add all occurrences in the file to Bookmark via Command Palette
+  - type: key-hint
+    key: "Meta+Shift+p"
+    caption: "⌨  Cmd + Shift + P — Command Palette"
+    hold: 900
+    settle: 400
+
+  - type: type
+    text: "Add Selection Matches to Bookmark"
+    captureEvery: 5
+    caption: "Add Selection Matches to Bookmark"
+
+  - type: delay
+    ms: 300
+
+  - type: screenshot
+    caption: "Add Selection Matches to Bookmark"
+    hold: 1200
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # 12. Bookmark panel now shows all 4 matched lines (20, 121, 144, 196)
+  - type: screenshot
+    caption: "4 bookmarks added"
+    hold: 1500
+
+  # 13. Re-activate the bookmark panel tab (Command Palette shifts focus to the editor),
+  #     then click each bookmark item and confirm the editor navigates to that line.
+  #     The bookmark panel is a webview — items are `.log-line[data-action="lineClick"]`
+  #     elements inside the double-iframe. `outerScope` scopes the frameLocator to the
+  #     bottom panel so it doesn't accidentally match the sidebar webview.
+  #     Item order: nth-child(1)=line4, nth-child(2)=line20, ..., nth-child(5)=line196.
+  - type: screenshot
+    caption: "Bookmarks list"
+    hold: 1000
+
+  - type: webview-click
+    selector: ".file-lines .log-line:nth-child(2)"
+    outerScope: ".part.panel"
+    caption: "Bookmark → line 20"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Editor → line 20"
+    hold: 1500
+
+  - type: webview-click
+    selector: ".file-lines .log-line:nth-child(3)"
+    outerScope: ".part.panel"
+    caption: "Bookmark → line 121"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Editor → line 121"
+    hold: 1500
+
+  - type: webview-click
+    selector: ".file-lines .log-line:nth-child(4)"
+    outerScope: ".part.panel"
+    caption: "Bookmark → line 144"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Editor → line 144"
+    hold: 1500
+
+  - type: webview-click
+    selector: ".file-lines .log-line:nth-child(5)"
+    outerScope: ".part.panel"
+    caption: "Bookmark → line 196"
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Editor → line 196"
+    hold: 3000

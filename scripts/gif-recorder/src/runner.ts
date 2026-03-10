@@ -369,7 +369,11 @@ async function executeStep(
     }
 
     case 'aria-click': {
-      const el = page.getByRole(
+      // When `scope` is set, limit the search to that CSS subtree so
+      // duplicate role+name elements in different UI areas don't collide
+      // (e.g. sidebar vs bottom-panel tabs that share the same aria-label).
+      const container = step.scope ? page.locator(step.scope) : page;
+      const el = container.getByRole(
         step.role as Parameters<Page['getByRole']>[0],
         { name: new RegExp(step.name, 'i') }
       ).first();
@@ -382,16 +386,97 @@ async function executeStep(
     }
 
     case 'webview-click': {
-      // VS Code webviews have a double-iframe structure:
-      //   outer: iframe.webview.ready (the webview host iframe)
-      //   inner: iframe (the actual extension webview content)
-      const outerFrame = page.frameLocator('iframe.webview.ready');
-      const innerFrame = outerFrame.frameLocator(step.innerFrame ?? 'iframe');
-      const el = innerFrame.locator(step.selector).first();
-      if (hoverBeforeClick && captureFrame) {
-        await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
-      } else {
-        await el.click({ timeout: 8000 });
+      // VS Code 1.101+ renders panel webviews via Service Worker.
+      // SW frames appear in page.frames() with vscode-webview:// URLs.
+      // Their child frames (active-frame) contain the actual extension HTML.
+      //
+      // Frame references go stale quickly — always re-query page.frames() fresh.
+      // Click is dispatched via frame.evaluate(el.click()) to bypass Playwright's
+      // pointer-event actionability checks ("html intercepts pointer events").
+
+      // When outerScope is set, collect matching DOM iframe names to filter SW frames.
+      // VS Code sets the DOM iframe's `name` to the same ID as the Playwright frame name.
+      let allowedFrameNames: Set<string> | null = null;
+      if (step.outerScope) {
+        const domNames = await page.evaluate((scope: string) => {
+          return Array.from(document.querySelectorAll(`${scope} iframe`))
+            .map(f => (f as HTMLIFrameElement).name)
+            .filter(Boolean);
+        }, step.outerScope);
+        if (domNames.length > 0) allowedFrameNames = new Set(domNames);
+      }
+
+      // Returns the child frame that contains the target element, or null.
+      // Always called fresh to avoid stale frame references.
+      const findFrame = async (): Promise<import('playwright').Frame | null> => {
+        for (const swFrame of page.frames()) {
+          if (!swFrame.url().startsWith('vscode-webview://') || !swFrame.url().includes('/index.html')) continue;
+          if (allowedFrameNames && !allowedFrameNames.has(swFrame.name())) continue;
+          for (const f of [swFrame, ...swFrame.childFrames()]) {
+            const has = await f.evaluate(
+              (sel: string) => !!document.querySelector(sel), step.selector
+            ).catch(() => false);
+            if (has) return f;
+          }
+        }
+        return null;
+      };
+
+      // Hover + press frames: VS Code's SW webview overlay intercepts real pointer events,
+      // so page.mouse.move() cannot trigger CSS :hover inside the child frame.
+      // Instead, apply VS Code list theme variables directly via element.style to
+      // replicate the hover/active appearance, then restore before dispatching the click.
+      if (captureFrame) {
+        const frame = await findFrame();
+        if (frame) {
+          // Apply hover styles
+          await frame.evaluate((sel: string) => {
+            const el = document.querySelector(sel) as HTMLElement | null;
+            if (!el) return;
+            el.style.backgroundColor = 'var(--vscode-list-hoverBackground)';
+            const btn = el.querySelector('.remove-btn') as HTMLElement | null;
+            if (btn) btn.style.visibility = 'visible';
+          }, step.selector).catch(() => {});
+          await delay(80);
+          await captureFrame(step.caption ?? '');   // hover frame
+
+          // Apply active/press styles (slightly stronger highlight)
+          await frame.evaluate((sel: string) => {
+            const el = document.querySelector(sel) as HTMLElement | null;
+            if (el) el.style.backgroundColor = 'var(--vscode-list-activeSelectionBackground)';
+          }, step.selector).catch(() => {});
+          await delay(80);
+          await captureFrame(step.caption ?? '');   // press frame
+
+          // Restore styles before clicking
+          await frame.evaluate((sel: string) => {
+            const el = document.querySelector(sel) as HTMLElement | null;
+            if (!el) return;
+            el.style.backgroundColor = '';
+            const btn = el.querySelector('.remove-btn') as HTMLElement | null;
+            if (btn) btn.style.visibility = '';
+          }, step.selector).catch(() => {});
+        }
+      }
+
+      // Re-find frame and click (frame may have refreshed during hover phase).
+      // Retry up to 3 times to handle transient detachment.
+      let clicked = false;
+      for (let attempt = 0; attempt < 3 && !clicked; attempt++) {
+        if (attempt > 0) await delay(300);
+        const frame = await findFrame();
+        if (!frame) continue;
+        clicked = await frame.evaluate(
+          (sel: string) => { (document.querySelector(sel) as HTMLElement | null)?.click(); return true; },
+          step.selector
+        ).catch(() => false);
+      }
+
+      // Pass 2: DOM iframe fallback (sidebar webviews that still use DOM iframes)
+      if (!clicked) {
+        const outerSel = step.outerScope ? `${step.outerScope} iframe.webview.ready` : 'iframe.webview.ready';
+        const innerFrame = page.frameLocator(outerSel).frameLocator(step.innerFrame ?? 'iframe');
+        await innerFrame.locator(step.selector).first().click({ timeout: 8000 });
       }
       break;
     }
@@ -533,6 +618,63 @@ async function executeStep(
           await header.click({ position: { x: 10, y: 10 }, timeout: 5000 });
         } else {
           console.log(`    (${name} Section: already ${expand ? 'expanded' : 'collapsed'} — skipping click)`);
+        }
+      }
+      break;
+    }
+
+    case 'debug-webview': {
+      const scopePrefix = step.scope ? `${step.scope} ` : '';
+
+      // 1. List every iframe in the scope (class, src, title)
+      const allIframes = await page.locator(`${scopePrefix}iframe`).all();
+      console.log(`  [debug] iframes found in "${scopePrefix.trim() || 'page'}": ${allIframes.length}`);
+      for (let i = 0; i < allIframes.length; i++) {
+        const cls  = await allIframes[i].getAttribute('class') ?? '(none)';
+        const src  = await allIframes[i].getAttribute('src')   ?? '(none)';
+        const name = await allIframes[i].getAttribute('name')  ?? '(none)';
+        console.log(`  [debug]   [${i}] class="${cls}"  src="${src}"  name="${name}"`);
+      }
+
+      // 2. List all Playwright frames (URL + name)
+      const frames = page.frames();
+      console.log(`  [debug] Playwright frames total: ${frames.length}`);
+      for (const f of frames) {
+        console.log(`  [debug]   frame url="${f.url()}"  name="${f.name()}"`);
+      }
+
+      // 3. Dump HTML from child frames of SW webview frames (actual extension content)
+      // The SW frame (vscode-webview://…/index.html) hosts VS Code's webview shell;
+      // the real extension HTML lives in its child frame (active-frame / fake.html).
+      // When scope is set, filter to SW frames whose name matches DOM iframes in that scope.
+      let debugAllowedNames: Set<string> | null = null;
+      if (step.scope) {
+        const names = await page.evaluate((scope: string) =>
+          Array.from(document.querySelectorAll(`${scope} iframe`))
+            .map(f => (f as HTMLIFrameElement).name).filter(Boolean)
+        , step.scope);
+        if (names.length > 0) debugAllowedNames = new Set(names);
+      }
+      const debugSwFrames = page.frames().filter(f => {
+        if (!f.url().startsWith('vscode-webview://') || !f.url().includes('/index.html')) return false;
+        return !debugAllowedNames || debugAllowedNames.has(f.name());
+      });
+      console.log(`  [debug] vscode-webview index.html frames: ${debugSwFrames.length}`);
+      for (const swFrame of debugSwFrames) {
+        const children = swFrame.childFrames();
+        if (children.length === 0) {
+          console.log(`  [debug] SW frame name="${swFrame.name()}" has no child frames`);
+          continue;
+        }
+        for (let ci = 0; ci < children.length; ci++) {
+          const child = children[ci];
+          try {
+            const html = await child.locator('body').innerHTML({ timeout: 3000 });
+            console.log(`  [debug] SW child[${ci}] url="${child.url()}" HTML (${html.length} chars):\n${html}`);
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.log(`  [debug] SW child[${ci}] url="${child.url()}" HTML failed: ${msg}`);
+          }
         }
       }
       break;

@@ -70,6 +70,15 @@ steps:
     collapsed: [Workflows, Regex Filters, ADB Devices, Runbook]
     capture: false
 
+  # Drag the sash below Quick Access down to give it enough height to
+  # show all items without clipping.  The first .monaco-sash.horizontal
+  # inside .sidebar is the boundary between Quick Access and the section
+  # immediately below it.
+  - type: drag
+    selector: ".sidebar .monaco-sash.horizontal"
+    deltaY: 100
+    capture: false
+
   - type: delay
     ms: 600
 

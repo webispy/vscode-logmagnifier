@@ -457,9 +457,37 @@ async function executeStep(
       break;
     }
 
-    case 'hover':
-      await page.locator(step.selector).first().hover({ timeout: 5000, force: step.force !== false });
+    case 'drag': {
+      const dragEl = page.locator(step.selector).first();
+      await dragEl.waitFor({ state: 'visible', timeout: 5000 });
+      const box = await dragEl.boundingBox();
+      if (!box) {
+        console.warn(`    ⚠ drag: could not get bounding box for "${step.selector}"`);
+        break;
+      }
+      const startX = box.x + box.width / 2;
+      const startY = box.y + box.height / 2;
+      await page.mouse.move(startX, startY);
+      await page.mouse.down();
+      await delay(50);
+      await page.mouse.move(
+        startX + (step.deltaX ?? 0),
+        startY + (step.deltaY ?? 0),
+        { steps: step.steps ?? 10 }
+      );
+      await delay(50);
+      await page.mouse.up();
       break;
+    }
+
+    case 'hover': {
+      const hoverEl = page.locator(step.selector).first();
+      // Scroll into view first — after drag/resize ops the element may be
+      // outside the visible viewport even though it exists in the DOM.
+      await hoverEl.scrollIntoViewIfNeeded({ timeout: 3000 }).catch(() => {});
+      await hoverEl.hover({ timeout: 5000, force: step.force !== false });
+      break;
+    }
 
     case 'ensure-collapsed': {
       // Click the element only if aria-expanded="true" (i.e. currently expanded).

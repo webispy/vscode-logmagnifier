@@ -1,0 +1,566 @@
+# ============================================================
+# Workflow Feature Demo — GIF Recorder Spec
+# ============================================================
+#
+# Demonstrates the Workflows feature end-to-end:
+#
+#   1. Expand Quick Access, Workflows, and Word Filters in the sidebar
+#   2. Drag Quick Access sash to reveal the Filter Profile item
+#   3. Open test_log_android.log
+#   4. Create Filter Profile "Activity Monitor" via Quick Access
+#   5. Add Word Filter group "Camera Events" with keywords:
+#        CameraManagerGlobal, Choreographer
+#   6. Create Filter Profile "Camera State Drill" via Quick Access
+#   7. Add Word Filter group "Camera States" with keyword:
+#        CAMERA_STATE_ACTIVE  (present in CameraManagerGlobal result lines)
+#   8. Create a new Workflow named "Camera Analysis"
+#   9. Add "Activity Monitor" profile to the workflow,
+#      then add "Camera State Drill" profile
+#  10. Run (Apply) the workflow — staged filtered output produced
+#
+# Profiles and filter design:
+#   Activity Monitor     — CameraManagerGlobal + Choreographer (broad pass)
+#   Camera State Drill   — CAMERA_STATE_ACTIVE (narrow from first pass)
+#
+# Representative log lines (test_log_android.log):
+#   Choreographer        — lines 4, 10, 134  (frame-skip & animation logs)
+#   CameraManagerGlobal  — lines 5–9, 139–143  (camera state transitions)
+#   CAMERA_STATE_ACTIVE  — subset of CameraManagerGlobal lines (lines 7, 141)
+#
+# Quick Pick — profile selection uses aria-click(role=option) which matches
+# the profile name label in the VS Code quick-input list.
+#
+# Workflow webview buttons use HTML title attributes:
+#   'Add Profile'    — appends a profile step to the workflow
+#   'Run Workflow'   — executes all steps sequentially
+#
+# Run:
+#   cd scripts/gif-recorder
+#   npm install
+#   npm run record:workflow
+#
+# Output: resources/demo/workflow.gif
+# ============================================================
+
+defaults: shared/common.yaml
+
+name: Workflow Feature Demo
+output: workflow
+
+steps:
+  # ----------------------------------------------------------
+  # SETUP (capture: false) — prepare the UI before recording
+  # ----------------------------------------------------------
+
+  - type: include
+    file: shared/open-logmagnifier.yaml
+
+  - type: setup-sidebar
+    expanded: [Quick Access, Workflows, Word Filters]
+    collapsed: [Regex Filters, ADB Devices, Runbook]
+    capture: false
+
+  # Drag the sash below Quick Access down to reveal the Filter Profile item.
+  - type: drag
+    selector: ".sidebar .monaco-sash.horizontal"
+    deltaY: 100
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # ----------------------------------------------------------
+  # 1. Open test_log_android.log
+  # ----------------------------------------------------------
+
+  - type: key-hint
+    key: "Meta+p"
+    caption: "⌨  Cmd + P — Quick Open"
+    hold: 1200
+    settle: 500
+
+  - type: type
+    text: "test_log_android.log"
+    caption: "Opening Android logcat file"
+    captureEvery: 6
+
+  - type: delay
+    ms: 500
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "test_log_android.log — raw Android logcat output"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 2. Create Filter Profile "Activity Monitor"
+  #    Click the "Filter Profile: …" item in Quick Access to open
+  #    the profile manager Quick Pick, then choose "New Profile…".
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row:has-text('Filter Profile')"
+    caption: "Click Filter Profile to open profile manager"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".monaco-list-row:has-text('Filter Profile')"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: screenshot
+    caption: "Profile manager — New Profile… / existing profiles"
+    hold: 1500
+
+  - type: aria-click
+    role: option
+    name: "New Profile"
+    caption: "Select New Profile…"
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "Activity Monitor"
+    caption: "Naming the profile"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Profile 'Activity Monitor' created and activated"
+    hold: 2000
+
+  # ----------------------------------------------------------
+  # 3. Add Word Filter group "Camera Events" with two keywords
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: "[aria-label='Word Filters Section']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter Group']"
+    caption: "Hover header → Add Word Filter Group"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter Group']"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: type
+    text: "Camera Events"
+    caption: "Naming the filter group"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # 3a. Add keyword: CameraManagerGlobal
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera Events']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter']"
+    caption: "Add keyword to the group"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "CameraManagerGlobal"
+    caption: "Add keyword: CameraManagerGlobal"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # 3b. Add keyword: Choreographer
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera Events']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "Choreographer"
+    caption: "Add keyword: Choreographer"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # Enable the "Camera Events" group
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera Events']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Enable']"
+    caption: "Enable group — keywords activate across the editor"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Enable']"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Profile 1 — CameraManagerGlobal + Choreographer"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 4. Create Filter Profile "Camera State Drill"
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row:has-text('Filter Profile')"
+    caption: "Open profile manager to create second profile"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".monaco-list-row:has-text('Filter Profile')"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: aria-click
+    role: option
+    name: "New Profile"
+    caption: "New Profile… for the second filter set"
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "Camera State Drill"
+    caption: "Naming the second profile"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Profile 'Camera State Drill' created and activated"
+    hold: 2000
+
+  # ----------------------------------------------------------
+  # 5. Add Word Filter group "Camera States" with keyword
+  #    CAMERA_STATE_ACTIVE — this word appears in the
+  #    CameraManagerGlobal lines captured by profile 1.
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: "[aria-label='Word Filters Section']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter Group']"
+    caption: "Add a second filter group"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter Group']"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: type
+    text: "Camera States"
+    caption: "Naming the filter group"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera States']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera States'] [aria-label='Add Word Filter']"
+    caption: "Add keyword to Camera States group"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".monaco-list-row[aria-label*='Camera States'] [aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "CAMERA_STATE_ACTIVE"
+    caption: "Add keyword: CAMERA_STATE_ACTIVE"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # Enable the "Camera States" group
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Camera States']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Enable']"
+    caption: "Enable group — filter activates"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Enable']"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Profile 2 — CAMERA_STATE_ACTIVE (drills into profile 1 results)"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 6. Create Workflow "Camera Analysis"
+  #    The "New Workflow" button lives in the Workflows section
+  #    view-title toolbar.
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: "[aria-label='Workflows Section']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='New Workflow']"
+    caption: "Hover Workflows header → New Workflow button"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='New Workflow']"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: type
+    text: "Camera Analysis"
+    caption: "Naming the workflow"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 1000
+
+  - type: screenshot
+    caption: "Workflow 'Camera Analysis' created"
+    hold: 2000
+
+  # ----------------------------------------------------------
+  # 7a. Add "Activity Monitor" profile as the first step
+  # ----------------------------------------------------------
+
+  - type: webview-click
+    selector: "button[title='Add Profile']"
+    outerScope: ".sidebar"
+    caption: "Add Profile — select first filter stage"
+
+  - type: delay
+    ms: 700
+
+  - type: screenshot
+    caption: "Profile picker — choose the first stage"
+    hold: 1500
+
+  - type: aria-click
+    role: option
+    name: "Activity Monitor"
+    caption: "Select 'Activity Monitor' — broad camera + choreographer pass"
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "'Activity Monitor' added as step 1"
+    hold: 2000
+
+  # ----------------------------------------------------------
+  # 7b. Add "Camera State Drill" profile as the second step
+  # ----------------------------------------------------------
+
+  - type: webview-click
+    selector: "button[title='Add Profile']"
+    outerScope: ".sidebar"
+    caption: "Add Profile — select second filter stage"
+
+  - type: delay
+    ms: 700
+
+  - type: aria-click
+    role: option
+    name: "Camera State Drill"
+    caption: "Select 'Camera State Drill' — drills into CAMERA_STATE_ACTIVE lines"
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Two-step workflow ready: Activity Monitor → Camera State Drill"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 8. Run the workflow (Apply)
+  # ----------------------------------------------------------
+
+  - type: webview-click
+    selector: "button[title='Run Workflow']"
+    outerScope: ".sidebar"
+    caption: "Run Workflow — apply both filter stages sequentially"
+
+  - type: delay
+    ms: 3000
+
+  # ----------------------------------------------------------
+  # Final frame — staged filtered output
+  # ----------------------------------------------------------
+
+  - type: screenshot
+    caption: "Workflow complete — each stage produces its own filtered tab"
+    hold: 3000
+
+  # ----------------------------------------------------------
+  # 9. Navigate to each result tab via the workflow profile steps
+  #    Clicking a profile step row opens its filtered editor tab.
+  #    Steps are in DOM order: nth-child(1)=Activity Monitor,
+  #    nth-child(2)=Camera State Drill.
+  # ----------------------------------------------------------
+
+  - type: webview-click
+    selector: ".profile-steps-container .profile-step:nth-child(1) .profile-row"
+    outerScope: ".sidebar"
+    caption: "Activity Monitor — open its filtered result tab"
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "Activity Monitor result — CameraManagerGlobal + Choreographer lines"
+    hold: 3000
+
+  - type: webview-click
+    selector: ".profile-steps-container .profile-step:nth-child(2) .profile-row"
+    outerScope: ".sidebar"
+    caption: "Camera State Drill — open its filtered result tab"
+
+  - type: delay
+    ms: 1200
+
+  - type: screenshot
+    caption: "Camera State Drill result — CAMERA_STATE_ACTIVE lines only"
+    hold: 5000

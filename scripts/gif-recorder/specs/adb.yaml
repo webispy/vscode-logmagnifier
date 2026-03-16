@@ -1,0 +1,440 @@
+# ============================================================
+# ADB Devices Demo — GIF Recorder Spec
+# ============================================================
+#
+# Demonstrates the ADB Devices feature end-to-end:
+#
+#   1. Ensure the demo emulator is running (setup step)
+#   2. Open the ADB Devices section in the sidebar
+#   3. Select "com.android.settings" as the target app
+#   4. Add a Logcat session for the device (no extra tag filters)
+#   5. Start the session — live logs stream into a new editor tab
+#   6. Switch to Word Filters: add "SettingsSliceProvider" and enable it
+#   7. Live logcat lines containing the keyword are highlighted in real time
+#   8. Take a screenshot — the captured image opens in VS Code
+#
+# Emulator setup:
+#   The `adb-ensure-emulator` step handles everything automatically:
+#     - If AVD "LogMagnifier_Demo" does not exist, it is created:
+#         ~/Library/Android/sdk/cmdline-tools/latest/bin/avdmanager create avd \
+#           --name LogMagnifier_Demo \
+#           --package "system-images;android-35;google_apis_playstore;arm64-v8a" \
+#           --device pixel_6 \
+#           --sdcard 512M
+#     - If an emulator running "LogMagnifier_Demo" is already attached, the
+#       step is a no-op — recording can resume from any state.
+#     - Otherwise the emulator is launched in the background and the runner
+#       waits up to 2 minutes for sys.boot_completed=1, then unlocks the screen.
+#
+#   To create / start the emulator manually before recording:
+#     ~/Library/Android/sdk/emulator/emulator -avd LogMagnifier_Demo -no-snapshot -gpu host &
+#
+#   Required system image (install once via Android Studio SDK Manager or sdkmanager):
+#     system-images;android-35;google_apis_playstore;arm64-v8a
+#
+# Target app: com.android.settings (Settings)
+#   Launch before recording to ensure it appears in the "target app" picker:
+#     adb shell am start -n com.android.settings/.Settings
+#
+# Word Filter keyword: SettingsSliceProvider
+#   This tag appears frequently in Settings logcat output and produces a
+#   visible highlight effect against the streaming log lines.
+#
+# Run:
+#   cd scripts/gif-recorder
+#   npm install
+#   npm run record:adb
+#
+# Output: resources/demo/adb.gif
+# ============================================================
+
+defaults: shared/common.yaml
+
+name: ADB Devices Demo
+output: adb
+
+steps:
+  # ----------------------------------------------------------
+  # SETUP (capture: false) — prepare emulator and VS Code UI
+  # ----------------------------------------------------------
+
+  # Ensure LogMagnifier_Demo emulator is running.
+  # Creates the AVD if missing, starts the emulator if not attached,
+  # and waits for full boot before continuing.
+  - type: adb-ensure-emulator
+    avd: LogMagnifier_Demo
+    package: "system-images;android-35;google_apis_playstore;arm64-v8a"
+    device: pixel_6
+    capture: false
+
+  # Launch Settings app so it appears in the target-app picker.
+  # Required when the emulator has just booted and no apps are running yet.
+  - type: adb-launch-app
+    package: com.android.settings
+    wait: 2000
+
+  - type: include
+    file: shared/open-logmagnifier.yaml
+
+  - type: setup-sidebar
+    expanded: [ADB Devices]
+    collapsed: [Quick Access, Word Filters, Workflows, Regex Filters, Runbook]
+    capture: false
+
+  - type: delay
+    ms: 1200
+
+  # ----------------------------------------------------------
+  # 1. Show the ADB Devices panel — emulator is visible
+  # ----------------------------------------------------------
+
+  - type: screenshot
+    caption: "ADB Devices — sdk_gphone64_arm64 (emulator-5554) detected"
+    hold: 1500
+
+  # ----------------------------------------------------------
+  # 2. Select target app: com.android.settings
+  #    aria-label: "Click to select target application"
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label='Click to select target application']"
+    caption: "Click Target app to pick a specific app to monitor"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".monaco-list-row[aria-label='Click to select target application']"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  - type: screenshot
+    caption: "Running app picker — user apps listed first"
+    hold: 2000
+
+  - type: type
+    text: "settings"
+    caption: "Filter by 'settings'"
+    captureEvery: 4
+
+  - type: delay
+    ms: 500
+
+  - type: aria-click
+    role: option
+    name: "com.android.settings"
+    caption: "Select Settings — all logcat output scoped to this process"
+
+  - type: delay
+    ms: 800
+
+  # DEBUG: confirm target app row updated + reveal Logcat Sessions buttons
+  - type: debug-tree
+    scope: ".sidebar"
+    capture: false
+
+  - type: screenshot
+    caption: "Target app set to com.android.settings"
+    hold: 2500
+
+  # ----------------------------------------------------------
+  # 3. Add a Logcat session (no extra tag filters)
+  #    Hover "Logcat Sessions" row to reveal the "New Logcat Session" button.
+  #    Command title: "New Logcat Session" (logmagnifier.addLogcatSession)
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Logcat Sessions']"
+    caption: "Hover Logcat Sessions → New Logcat Session"
+
+  - type: delay
+    ms: 300
+
+  - type: click
+    selector: ".monaco-list-row[aria-label*='Logcat Sessions'] [aria-label='New Logcat Session']"
+    showPress: false
+    force: true
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # Input box opens with default value "Session 1" pre-selected — confirm with Enter
+  - type: screenshot
+    caption: "Session name input — default 'Session 1'"
+    hold: 1500
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # DEBUG: confirm session row and Start Session button aria-label
+  - type: debug-tree
+    scope: ".sidebar"
+    capture: false
+
+  - type: screenshot
+    caption: "Logcat session added — ready to start"
+    hold: 1500
+
+  # ----------------------------------------------------------
+  # 4. Start the session — live logs begin streaming
+  #    Inline action buttons in VS Code tree rows are display:none until the
+  #    row is CSS-hovered. Hover the row first to reveal them, then force-click
+  #    the button (bypassing the visibility check).
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Session 1']"
+    caption: "Start session — live logcat output opens in a new editor tab"
+
+  - type: delay
+    ms: 300
+
+  - type: click
+    selector: ".monaco-list-row[aria-label*='Session 1'] [aria-label='Start Session']"
+    showPress: false
+    force: true
+    capture: false
+
+  - type: delay
+    ms: 1500
+
+  # Navigate through Settings screens via intent actions to generate log activity.
+  # Using -a (action) instead of -n (component) for Android 35 compatibility.
+  # Each navigation triggers SettingsSliceProvider loading, producing a burst of log lines.
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.WIFI_SETTINGS"]
+    wait: 1200
+
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.DISPLAY_SETTINGS"]
+    wait: 1200
+
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.BLUETOOTH_SETTINGS"]
+    wait: 1200
+
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.SETTINGS"]
+    wait: 800
+
+  - type: screenshot
+    caption: "Live logcat streaming — Settings process logs in real time"
+    hold: 3000
+
+  # ----------------------------------------------------------
+  # 5. Switch to Word Filters (keep ADB Devices expanded too)
+  #    Keywords chosen from observed Settings logcat tag frequency:
+  #      PrefCtrlListHelper  — most frequent tag (~3300 hits per session)
+  #      SliceDataConverter  — common slice-loading tag (~200 hits)
+  #      SettingsSliceProvider — slice provider init tag (~130 hits)
+  # ----------------------------------------------------------
+
+  - type: setup-sidebar
+    expanded: [ADB Devices, Word Filters]
+    collapsed: [Quick Access, Workflows, Regex Filters, Runbook]
+    capture: false
+
+  # Drag the sash between ADB Devices and Word Filters down to give
+  # Word Filters enough visible height to show the group and keywords.
+  - type: drag
+    selector: ".sidebar .monaco-sash.horizontal"
+    deltaY: -120
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: hover
+    selector: "[aria-label='Word Filters Section']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter Group']"
+    caption: "Add Word Filter group — highlight keywords in the live log"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter Group']"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  - type: type
+    text: "Settings Log"
+    caption: "Naming the filter group"
+    captureEvery: 4
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # Add keyword 1: PrefCtrlListHelper (most frequent Settings tag)
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Settings Log']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter']"
+    caption: "Add keyword: PrefCtrlListHelper"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "PrefCtrlListHelper"
+    caption: "Keyword: PrefCtrlListHelper"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # Add keyword 2: SliceDataConverter
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Settings Log']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Add Word Filter']"
+    capture: false
+
+  - type: delay
+    ms: 500
+
+  - type: type
+    text: "EGL_emulation"
+    caption: "Keyword: EGL_emulation"
+    captureEvery: 5
+
+  - type: key
+    key: "Enter"
+    capture: false
+
+  - type: delay
+    ms: 800
+
+  # ----------------------------------------------------------
+  # 6. Enable the group — highlights appear on the live log tab
+  # ----------------------------------------------------------
+
+  - type: hover
+    selector: ".monaco-list-row[aria-label*='Settings Log']"
+    capture: false
+
+  - type: delay
+    ms: 300
+
+  - type: hover
+    selector: "[aria-label='Enable']"
+    caption: "Enable group — keywords light up in the streaming log"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: "[aria-label='Enable']"
+    capture: false
+
+  # Navigate a few more Settings screens to generate fresh highlighted log lines
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.DISPLAY_SETTINGS"]
+    wait: 1000
+
+  - type: adb-shell
+    args: ["am", "start", "-a", "android.settings.WIFI_SETTINGS"]
+    wait: 1000
+
+  - type: delay
+    ms: 1500
+
+  - type: screenshot
+    caption: "Keywords highlighted — PrefCtrlListHelper and EGL_emulation light up across live log lines"
+    hold: 3500
+
+  # ----------------------------------------------------------
+  # 7. Screenshot — capture the device screen
+  # ----------------------------------------------------------
+
+  - type: setup-sidebar
+    expanded: [ADB Devices]
+    collapsed: [Word Filters]
+    capture: false
+
+  - type: delay
+    ms: 600
+
+  # Expand "Control device" to reveal Screenshot button
+  - type: ensure-expanded
+    selector: ".monaco-list-row[aria-label*='Control device']"
+    capture: false
+
+  - type: delay
+    ms: 400
+
+  # DEBUG: confirm Screenshot button aria-label
+  - type: debug-tree
+    scope: ".sidebar"
+    capture: false
+
+  # Tree item label: "Screenshot" (contextValue: controlDeviceAction)
+  - type: hover
+    selector: ".monaco-list-row[aria-label='Screenshot ']"
+    caption: "Screenshot — capture the emulator screen without leaving VS Code"
+
+  - type: delay
+    ms: 200
+
+  - type: click
+    selector: ".monaco-list-row[aria-label='Screenshot ']"
+    capture: false
+
+  - type: delay
+    ms: 2500
+
+  # ----------------------------------------------------------
+  # Final frame — screenshot image opens in VS Code editor
+  # ----------------------------------------------------------
+
+  - type: screenshot
+    caption: "Device screenshot captured and opened directly in VS Code"
+    hold: 5000

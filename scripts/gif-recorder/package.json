@@ -11,6 +11,7 @@
     "record:base": "ts-node src/runner.ts specs/base.yaml",
     "record:bookmark": "ts-node src/runner.ts specs/bookmark.yaml",
     "record:workflow": "ts-node src/runner.ts specs/workflow.yaml",
+    "record:adb": "ts-node src/runner.ts specs/adb.yaml",
     "test:scale": "ts-node src/test-scale.ts"
   },
   "dependencies": {

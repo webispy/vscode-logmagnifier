@@ -63,7 +63,11 @@ export type Step =
   | EnsureExpandedStep
   | SetupSidebarStep
   | DragStep
-  | DebugWebviewStep;
+  | DebugWebviewStep
+  | DebugTreeStep
+  | AdbLaunchAppStep
+  | AdbShellStep
+  | AdbEnsureEmulatorStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
@@ -108,6 +112,28 @@ export interface ClickStep extends BaseStep {
    * Default: true
    */
   showPress?: boolean;
+  /**
+   * Bypass Playwright actionability checks (visible, stable, etc.) and dispatch
+   * the click event directly to the element.
+   *
+   * Use this for hover-revealed inline action buttons in VS Code tree items:
+   * these buttons are `display:none` by default and only become visible while
+   * the parent row is CSS-hovered.  After hovering the row (which reveals the
+   * button), a force click fires the event regardless of the computed style.
+   *
+   * Typically used together with `showPress: false` and `capture: false`:
+   *   - type: hover
+   *     selector: ".monaco-list-row[aria-label*='Session 1']"
+   *     caption: "Hover row to reveal controls"
+   *   - type: click
+   *     selector: ".monaco-list-row[aria-label*='Session 1'] [aria-label='Start Session']"
+   *     showPress: false
+   *     force: true
+   *     capture: false
+   *
+   * Default: false
+   */
+  force?: boolean;
 }
 
 /**
@@ -394,6 +420,125 @@ export interface DebugWebviewStep extends BaseStep {
    * When omitted, searches the entire page.
    */
   scope?: string;
+}
+
+/**
+ * Debug step: dumps all visible .monaco-list-row aria-labels to the console.
+ * Useful for discovering the correct aria-label selectors for tree view items.
+ * Does NOT capture a frame — remove from spec once debugging is done.
+ *
+ * Example:
+ *   - type: debug-tree
+ *     scope: ".sidebar"
+ */
+export interface DebugTreeStep extends BaseStep {
+  type: 'debug-tree';
+  /**
+   * CSS selector to scope the search (e.g. ".sidebar").
+   * When omitted, searches the entire page.
+   */
+  scope?: string;
+}
+
+/**
+ * Launch an app on the connected device via `adb shell monkey`.
+ *
+ * Sends a single launcher intent to the given package, ensuring the app is
+ * running before the next step executes. Use this in the SETUP block to
+ * guarantee a target app appears in the ADB Devices target-app picker.
+ *
+ * Example:
+ *   - type: adb-launch-app
+ *     package: com.android.settings
+ *     wait: 2000
+ *     capture: false
+ */
+export interface AdbLaunchAppStep {
+  type: 'adb-launch-app';
+  /** Package name of the app to launch (e.g. "com.android.settings") */
+  package: string;
+  /**
+   * Milliseconds to wait after launching before the next step.
+   * Give the app time to fully start so it appears in the target-app picker.
+   * Default: 2000
+   */
+  wait?: number;
+}
+
+/**
+ * Run an `adb shell` command on the connected device.
+ *
+ * Arguments are passed as an array to avoid shell injection — each element is
+ * forwarded as a separate argument to `adb shell`.
+ *
+ * This step is always setup-only (no frame is captured).
+ *
+ * Example — navigate to the WiFi settings screen to generate logcat activity:
+ *   - type: adb-shell
+ *     args: ["am", "start", "-n", "com.android.settings/.wifi.WifiSettings"]
+ *     wait: 1500
+ */
+export interface AdbShellStep {
+  type: 'adb-shell';
+  /** Arguments forwarded verbatim to `adb shell <args>`. */
+  args: string[];
+  /**
+   * Milliseconds to wait after the command completes before the next step.
+   * Default: 0
+   */
+  wait?: number;
+}
+
+/**
+ * Ensure an Android emulator is running before the recording begins.
+ *
+ * Execution order:
+ *   1. If an emulator with `avd` is already running → skip everything.
+ *   2. If the AVD does not exist → create it with `avdmanager create avd`.
+ *   3. Start the emulator in the background (`emulator -avd <name> …`).
+ *   4. Poll `adb shell getprop sys.boot_completed` until the device is ready.
+ *   5. Unlock the screen (`adb shell input keyevent 82`).
+ *
+ * This step is always setup-only (no frame is captured).
+ *
+ * Prerequisites (documented in the spec YAML header):
+ *   - Android SDK installed and `adb` on PATH (or `adbPath` set in VS Code settings).
+ *   - `avdmanager` available at ~/Library/Android/sdk/cmdline-tools/latest/bin/avdmanager
+ *   - `emulator` available at ~/Library/Android/sdk/emulator/emulator
+ *   - System image installed for the given `package`.
+ *
+ * Example:
+ *   - type: adb-ensure-emulator
+ *     avd: LogMagnifier_Demo
+ *     package: "system-images;android-35;google_apis_playstore;arm64-v8a"
+ *     device: pixel_6
+ *     capture: false
+ */
+export interface AdbEnsureEmulatorStep {
+  type: 'adb-ensure-emulator';
+  /** AVD name. If an emulator running this AVD is already attached, this step is a no-op. */
+  avd: string;
+  /**
+   * SDK package identifier used to create the AVD when it does not already exist.
+   * Format: "system-images;<api>;<tag>;<abi>"
+   * Default: "system-images;android-35;google_apis_playstore;arm64-v8a"
+   */
+  package?: string;
+  /**
+   * Device definition to use when creating the AVD (avdmanager --device).
+   * Default: "pixel_6"
+   */
+  device?: string;
+  /**
+   * SD card size when creating the AVD (avdmanager --sdcard).
+   * Default: "512M"
+   */
+  sdcard?: string;
+  /**
+   * Maximum milliseconds to wait for the device to finish booting.
+   * Default: 120000 (2 minutes)
+   */
+  bootTimeout?: number;
 }
 
 /** Metadata for a single captured frame (used by runner → composer pipeline) */

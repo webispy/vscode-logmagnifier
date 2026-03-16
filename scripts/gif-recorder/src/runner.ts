@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as yaml from 'js-yaml';
+import { execFileSync, spawn } from 'child_process';
 import { _electron as electron, Page } from 'playwright';
 import { downloadAndUnzipVSCode } from '@vscode/test-electron';
 import { Spec, Step, FrameMeta } from './types';
@@ -59,6 +60,41 @@ async function main() {
       // delay steps just pause — no capture, no further processing
       if (step.type === 'delay') {
         await delay(step.ms);
+        continue;
+      }
+
+      // adb-ensure-emulator: setup-only step — no VS Code interaction, no frame capture
+      if (step.type === 'adb-ensure-emulator') {
+        await ensureAdbEmulator(step.avd, {
+          package: step.package,
+          device: step.device,
+          sdcard: step.sdcard,
+          bootTimeout: step.bootTimeout,
+        });
+        continue;
+      }
+
+      // adb-launch-app: launch an app's main launcher activity via `am start`
+      if (step.type === 'adb-launch-app') {
+        console.log(`  Launching app "${step.package}"…`);
+        execFileSync('adb', [
+          'shell', 'am', 'start',
+          '-a', 'android.intent.action.MAIN',
+          '-c', 'android.intent.category.LAUNCHER',
+          '-p', step.package,
+        ], { stdio: 'pipe' });
+        const waitMs = step.wait ?? 2000;
+        if (waitMs > 0) await delay(waitMs);
+        console.log(`  ✓ "${step.package}" launched`);
+        continue;
+      }
+
+      // adb-shell: run an adb shell command, then optionally wait
+      if (step.type === 'adb-shell') {
+        execFileSync('adb', ['shell', ...step.args], { stdio: 'pipe' });
+        if (step.wait && step.wait > 0) {
+          await delay(step.wait);
+        }
         continue;
       }
 
@@ -363,7 +399,9 @@ async function executeStep(
       } else if (hoverBeforeClick && captureFrame) {
         await clickWithInteraction(el, page, captureFrame, step.caption ?? '');
       } else {
-        await el.click({ position: { x: 10, y: 10 }, timeout: 5000 });
+        // force: true bypasses visibility checks — needed for hover-revealed inline
+        // action buttons in VS Code tree items (display:none until parent row hovered).
+        await el.click({ position: { x: 10, y: 10 }, timeout: 5000, force: step.force ?? false });
       }
       break;
     }
@@ -680,8 +718,24 @@ async function executeStep(
       break;
     }
 
+    case 'debug-tree': {
+      // Dump all visible .monaco-list-row aria-labels to the console so that
+      // the correct selectors can be identified during development.
+      const scopePrefix = step.scope ? `${step.scope} ` : '';
+      const labels = await page.evaluate((sel: string) => {
+        return Array.from(document.querySelectorAll(sel))
+          .map((el, i) => `  [${i}] aria-label="${el.getAttribute('aria-label')}"  data-index="${el.getAttribute('data-index')}"`)
+          .join('\n');
+      }, `${scopePrefix}.monaco-list-row`);
+      console.log(`  [debug-tree] monaco-list-rows in "${scopePrefix.trim() || 'page'}":\n${labels || '  (none found)'}`);
+      break;
+    }
+
     case 'delay':
     case 'key-hint':
+    case 'adb-ensure-emulator':
+    case 'adb-launch-app':
+    case 'adb-shell':
       // Handled in the main loop before executeStep is called — should not reach here
       break;
 
@@ -690,6 +744,146 @@ async function executeStep(
       console.warn(`  ⚠ Unknown step type: ${(_exhaustive as Step).type}`);
     }
   }
+}
+
+// ---------------------------------------------------------------------------
+// ADB emulator helpers
+// ---------------------------------------------------------------------------
+
+const SDK_ROOT = path.join(os.homedir(), 'Library', 'Android', 'sdk');
+const AVD_MANAGER = path.join(SDK_ROOT, 'cmdline-tools', 'latest', 'bin', 'avdmanager');
+const EMULATOR_BIN = path.join(SDK_ROOT, 'emulator', 'emulator');
+
+/**
+ * Ensure the named AVD exists and an emulator instance running it is attached.
+ *
+ * Steps:
+ *  1. Check adb devices for an already-running emulator with this AVD name.
+ *     If found, return immediately (no-op).
+ *  2. Create the AVD with avdmanager if it does not yet exist.
+ *  3. Launch the emulator in the background.
+ *  4. Poll sys.boot_completed until the device is ready.
+ *  5. Unlock the screen.
+ */
+async function ensureAdbEmulator(
+  avd: string,
+  opts: {
+    package?: string;
+    device?: string;
+    sdcard?: string;
+    bootTimeout?: number;
+  } = {}
+): Promise<void> {
+  const pkg         = opts.package     ?? 'system-images;android-35;google_apis_playstore;arm64-v8a';
+  const device      = opts.device      ?? 'pixel_6';
+  const sdcard      = opts.sdcard      ?? '512M';
+  const bootTimeout = opts.bootTimeout ?? 120_000;
+
+  // 1. Check if an emulator running this AVD is already attached
+  const runningSerial = findRunningEmulator(avd);
+  if (runningSerial) {
+    console.log(`  ✓ Emulator already running (${runningSerial}) — skipping launch`);
+    return;
+  }
+
+  // 2. Create the AVD if it does not exist
+  if (!avdExists(avd)) {
+    console.log(`  Creating AVD "${avd}"…`);
+    execFileSync(AVD_MANAGER, [
+      'create', 'avd',
+      '--name', avd,
+      '--package', pkg,
+      '--device', device,
+      '--sdcard', sdcard,
+      '--force',
+    ], { stdio: 'pipe' });
+    console.log(`  ✓ AVD "${avd}" created`);
+  } else {
+    console.log(`  ✓ AVD "${avd}" already exists`);
+  }
+
+  // 3. Launch the emulator in the background
+  console.log(`  Launching emulator "${avd}"…`);
+  const child = spawn(EMULATOR_BIN, ['-avd', avd, '-no-snapshot', '-gpu', 'host'], {
+    detached: true,
+    stdio: 'ignore',
+  });
+  child.unref();
+
+  // 4. Poll for boot completion
+  console.log(`  Waiting for device to boot (timeout: ${bootTimeout}ms)…`);
+  const deadline = Date.now() + bootTimeout;
+  let booted = false;
+  while (Date.now() < deadline) {
+    await delay(2000);
+    try {
+      const out = execFileSync('adb', ['wait-for-device', 'shell', 'getprop', 'sys.boot_completed'], {
+        timeout: 5000,
+        stdio: 'pipe',
+      }).toString().trim();
+      if (out === '1') {
+        booted = true;
+        break;
+      }
+    } catch {
+      // Device not ready yet — keep polling
+    }
+  }
+  if (!booted) {
+    throw new Error(`Emulator "${avd}" did not finish booting within ${bootTimeout}ms`);
+  }
+  console.log(`  ✓ Device booted`);
+
+  // 5. Unlock the screen (wake + dismiss keyguard)
+  await delay(1000);
+  execFileSync('adb', ['shell', 'input', 'keyevent', '82'], { stdio: 'pipe' }); // MENU — wakes screen
+  await delay(500);
+  try {
+    execFileSync('adb', ['shell', 'wm', 'dismiss-keyguard'], { stdio: 'pipe' });
+  } catch {
+    // dismiss-keyguard may not be available on all API levels — ignore
+  }
+  console.log(`  ✓ Screen unlocked`);
+}
+
+/**
+ * Return the adb serial of the first emulator running the given AVD, or null.
+ * Queries each emulator-* device via `adb -s <serial> emu avd name`.
+ */
+function findRunningEmulator(avd: string): string | null {
+  let devicesOut: string;
+  try {
+    devicesOut = execFileSync('adb', ['devices'], { stdio: 'pipe', timeout: 5000 }).toString();
+  } catch {
+    return null;
+  }
+
+  const serials = devicesOut
+    .split('\n')
+    .map(l => l.trim())
+    .filter(l => l.startsWith('emulator-') && l.includes('device'))
+    .map(l => l.split(/\s+/)[0]);
+
+  for (const serial of serials) {
+    try {
+      const name = execFileSync('adb', ['-s', serial, 'emu', 'avd', 'name'], {
+        stdio: 'pipe',
+        timeout: 3000,
+      }).toString().split('\n')[0].trim();
+      if (name === avd) return serial;
+    } catch {
+      // emulator may not respond to emu commands yet — skip
+    }
+  }
+  return null;
+}
+
+/**
+ * Return true if an AVD with the given name exists in ~/.android/avd/.
+ */
+function avdExists(avd: string): boolean {
+  const iniPath = path.join(os.homedir(), '.android', 'avd', `${avd}.ini`);
+  return fs.existsSync(iniPath);
 }
 
 /**

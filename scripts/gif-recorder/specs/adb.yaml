@@ -131,7 +131,7 @@ steps:
   - type: delay
     ms: 800
 
-  # DEBUG: confirm target app row updated + reveal Logcat Sessions buttons
+  # Confirm target app row updated + reveal Logcat Sessions buttons
   - type: debug-tree
     scope: ".sidebar"
     capture: false
@@ -174,7 +174,7 @@ steps:
   - type: delay
     ms: 800
 
-  # DEBUG: confirm session row and Start Session button aria-label
+  # Confirm session row and Start Session button aria-label
   - type: debug-tree
     scope: ".sidebar"
     capture: false
@@ -252,128 +252,16 @@ steps:
   - type: delay
     ms: 600
 
-  - type: hover
-    selector: "[aria-label='Word Filters Section']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter Group']"
-    caption: "Add Word Filter group — highlight keywords in the live log"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter Group']"
-    capture: false
-
-  - type: delay
-    ms: 600
-
-  - type: type
-    text: "Settings Log"
-    caption: "Naming the filter group"
-    captureEvery: 4
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  # Add keyword 1: PrefCtrlListHelper (most frequent Settings tag)
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Settings Log']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter']"
-    caption: "Add keyword: PrefCtrlListHelper"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 500
-
-  - type: type
-    text: "PrefCtrlListHelper"
-    caption: "Keyword: PrefCtrlListHelper"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 600
-
-  # Add keyword 2: SliceDataConverter
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Settings Log']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 500
-
-  - type: type
-    text: "EGL_emulation"
-    caption: "Keyword: EGL_emulation"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
   # ----------------------------------------------------------
-  # 6. Enable the group — highlights appear on the live log tab
+  # 5b. Add "Settings Log" word filter group and enable it
   # ----------------------------------------------------------
 
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Settings Log']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Enable']"
-    caption: "Enable group — keywords light up in the streaming log"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Enable']"
-    capture: false
+  - type: add-word-filter-group
+    group: "Settings Log"
+    words: [PrefCtrlListHelper, EGL_emulation]
+    enable: true
+    caption: "Word filter 'Settings Log' enabled"
+    hold: 1500
 
   # Navigate a few more Settings screens to generate fresh highlighted log lines
   - type: adb-shell
@@ -411,7 +299,7 @@ steps:
   - type: delay
     ms: 400
 
-  # DEBUG: confirm Screenshot button aria-label
+  # Confirm Screenshot button aria-label
   - type: debug-tree
     scope: ".sidebar"
     capture: false

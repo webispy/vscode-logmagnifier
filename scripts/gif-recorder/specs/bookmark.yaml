@@ -17,6 +17,7 @@
 #
 # Run:
 #   cd scripts/gif-recorder
+#   npm install
 #   npm run record:bookmark
 #
 # Output: resources/demo/bookmark.gif
@@ -28,7 +29,9 @@ name: Bookmark Demo
 output: bookmark
 
 steps:
-  # ── SETUP ──────────────────────────────────────────────────────────────────
+  # ----------------------------------------------------------
+  # SETUP (capture: false) — prepare the UI before recording
+  # ----------------------------------------------------------
 
   # 1. Activate the sidebar (activitybar) LogMagnifier tab
   - type: include
@@ -71,9 +74,11 @@ steps:
   - type: delay
     ms: 500
 
-  # ── DEMO ───────────────────────────────────────────────────────────────────
+  # ----------------------------------------------------------
+  # DEMO — recorded steps
+  # ----------------------------------------------------------
 
-  # 5. Click the editor area to return focus to it
+  # 4. Click the editor area to return focus to it
   - type: click
     selector: ".monaco-editor .view-lines"
     caption: "Focus editor"
@@ -82,7 +87,7 @@ steps:
   - type: delay
     ms: 200
 
-  # 5b. Navigate to line 4 with Ctrl+G (Go to Line)
+  # 4b. Navigate to line 4 with Ctrl+G (Go to Line)
   - type: key-hint
     key: "Control+g"
     caption: "⌨  Ctrl + G — Go to Line"
@@ -100,7 +105,7 @@ steps:
   - type: delay
     ms: 300
 
-  # 6. Open Command Palette and run "Add Line to Bookmark"
+  # 5. Open Command Palette and run "Add Line to Bookmark"
   #    VS Code's editor context menu is a native Electron menu — it always appears
   #    at the real OS cursor position and cannot be driven by Playwright. The
   #    Command Palette is the reliable, automation-friendly alternative.
@@ -129,14 +134,16 @@ steps:
   - type: delay
     ms: 800
 
-  # 7. Final result — bookmarked line visible in the Log Bookmark panel
+  # 6. Final result — bookmarked line visible in the Log Bookmark panel
   - type: screenshot
     caption: "Line added to Bookmark"
     hold: 3000
 
-  # ── SCENARIO 2: Add Selection Matches to Bookmark ──────────────────────────
+  # ----------------------------------------------------------
+  # SCENARIO 2 — Add Selection Matches to Bookmark
+  # ----------------------------------------------------------
 
-  # 8. Click the editor to return focus to it
+  # 7. Click the editor to return focus to it
   - type: click
     selector: ".monaco-editor .view-lines"
     caption: "Focus editor"
@@ -145,7 +152,7 @@ steps:
   - type: delay
     ms: 200
 
-  # 9. Go to line 20 where 'handleAppVisibility' appears
+  # 8. Go to line 20 where 'handleAppVisibility' appears
   - type: key-hint
     key: "Control+g"
     caption: "⌨  Ctrl + G — Go to Line 20"
@@ -163,7 +170,7 @@ steps:
   - type: delay
     ms: 300
 
-  # 10. Find 'handleAppVisibility' to visually select the word
+  # 9. Find 'handleAppVisibility' to visually select the word
   - type: key-hint
     key: "Meta+f"
     caption: "⌨  Cmd + F — Find"
@@ -189,7 +196,7 @@ steps:
     caption: "'handleAppVisibility' selected"
     hold: 1200
 
-  # 11. Add all occurrences in the file to Bookmark via Command Palette
+  # 10. Add all occurrences in the file to Bookmark via Command Palette
   - type: key-hint
     key: "Meta+Shift+p"
     caption: "⌨  Cmd + Shift + P — Command Palette"
@@ -215,12 +222,12 @@ steps:
   - type: delay
     ms: 800
 
-  # 12. Bookmark panel now shows all 4 matched lines (20, 121, 144, 196)
+  # 11. Bookmark panel now shows all 4 matched lines (20, 121, 144, 196)
   - type: screenshot
     caption: "4 bookmarks added"
     hold: 1500
 
-  # 13. Re-activate the bookmark panel tab (Command Palette shifts focus to the editor),
+  # 12. Re-activate the bookmark panel tab (Command Palette shifts focus to the editor),
   #     then click each bookmark item and confirm the editor navigates to that line.
   #     The bookmark panel is a webview — items are `.log-line[data-action="lineClick"]`
   #     elements inside the double-iframe. `outerScope` scopes the frameLocator to the

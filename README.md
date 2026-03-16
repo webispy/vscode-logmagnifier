@@ -7,6 +7,8 @@
 
 A powerful log analysis tool for Visual Studio Code, featuring advanced log filtering and diverse highlighting options.
 
+![LogMagnifier Demo](resources/demo/base.gif)
+
 ## Features
 
 - **Filter Groups**: Organize your analysis with named groups of filters.
@@ -93,6 +95,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 ### ADB Devices View
 
+![ADB Devices Demo](resources/demo/adb.gif)
+
 1.  **Devices**:
     - The "ADB Devices" view automatically lists connected Android devices.
     - **Select Target App**: Click the "Target app" item under a device to filter logs by a specific running application.
@@ -113,6 +117,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 ### Log Analysis Workflows
 
+![Workflows Demo](resources/demo/workflow.gif)
+
 1.  **Automation**: Chain multiple profiles to analyze complex issues from various angles sequentially.
 2.  **Cumulative Filtering**: Each step in a workflow inherits filtered results from previous steps (Step N = Profile N applies to results of Step 0..N-1).
 3.  **Manage Workflows**:
@@ -124,6 +130,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 4.  **Execution Feedback**: The sidebar visualizes step progress, indicating the currently active step and completion status.
 
 ### Runbook
+
+![Runbook Demo](resources/demo/runbook.gif)
 
 1.  **Overview**:
     - Manage and execute your operational commands using an interactive, Markdown-based notebook interface.
@@ -141,7 +149,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - **Import/Export**: Use the **Export** and **Import** icons in the view title bar to backup or share runbook configurations as JSON.
     - **Storage**: Files are saved in the extension's `runbooks` global storage directory (`.../globalStorage/webispy.logmagnifier/runbooks`).
 
+### JSON Preview
+
+![JSON Preview Demo](resources/demo/json-preview.gif)
+
+1.  **Open**: Press `Ctrl+Cmd+J` on a log line containing a JSON object to extract and display it in the JSON Preview view.
+2.  **Explore**: Expand or collapse nodes in the tree view to navigate the JSON structure.
+3.  **Depth Control**: Use the **+/-** icons to incrementally expand or collapse all nodes by one level at a time.
+4.  **Search**: Use the search box to filter visible nodes by key or value.
+
 ### Log Bookmarks
+
+![Bookmarks Demo](resources/demo/bookmark.gif)
 
 1.  **Add Bookmark**:
     - Right-click a line in the editor and select **LogMagnifier > Add Line to Bookmark**.

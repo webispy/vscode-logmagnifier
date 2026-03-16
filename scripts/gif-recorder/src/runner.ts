@@ -731,6 +731,67 @@ async function executeStep(
       break;
     }
 
+    case 'add-word-filter-group': {
+      const groupSel = `.monaco-list-row[aria-label*='${step.group}']`;
+
+      // Hover an element, capture hover frame, then capture press (:active) frame and release.
+      // Replicates the hover step + showPress click pattern from the YAML runner.
+      const hoverAndClick = async (selector: string, hoverCaption: string) => {
+        await page.locator(selector).first().hover({ force: true });
+        if (captureFrame) await captureFrame(hoverCaption);
+        await delay(200);
+        await page.mouse.down();
+        await delay(80);
+        if (captureFrame) await captureFrame(hoverCaption);
+        await delay(80);
+        await page.mouse.up();
+      };
+
+      // Type text in chunks, capturing a frame after each chunk to animate typing.
+      const typeAnimated = async (text: string, caption: string) => {
+        const every = 5;
+        for (let i = 0; i < text.length; i += every) {
+          await page.keyboard.type(text.slice(i, i + every), { delay: 50 });
+          if (i + every < text.length && captureFrame) {
+            await captureFrame(caption);
+          }
+        }
+      };
+
+      // 1. Create the group
+      await page.locator("[aria-label='Word Filters Section']").first().hover({ force: true });
+      await delay(300);
+      await hoverAndClick("[aria-label='Add Word Filter Group']", `Hover header → Add Word Filter Group`);
+      await delay(600);
+      await typeAnimated(step.group, `Naming the group`);
+      await page.keyboard.press('Enter');
+      await delay(800);
+      if (captureFrame) await captureFrame(`Group '${step.group}' created`);
+
+      // 2. Add each keyword
+      for (const word of step.words) {
+        const addWordSel = `${groupSel} [aria-label='Add Word Filter']`;
+        await page.locator(groupSel).first().hover({ force: true });
+        await delay(300);
+        await hoverAndClick(addWordSel, `Hover group row → Add Word Filter`);
+        await delay(500);
+        await typeAnimated(word, `Add keyword: ${word}`);
+        await page.keyboard.press('Enter');
+        await delay(600);
+        if (captureFrame) await captureFrame(`Add keyword: ${word}`);
+      }
+
+      // 3. Enable the group if requested
+      if (step.enable) {
+        const enableSel = `${groupSel} [aria-label='Enable']`;
+        await page.locator(groupSel).first().hover({ force: true });
+        await delay(300);
+        await hoverAndClick(enableSel, `Enable group — highlights activate`);
+        await delay(1200);
+      }
+      break;
+    }
+
     case 'delay':
     case 'key-hint':
     case 'adb-ensure-emulator':

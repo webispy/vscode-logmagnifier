@@ -1,5 +1,5 @@
 # ============================================================
-# Workflow Feature Demo — GIF Recorder Spec
+# Workflow Demo — GIF Recorder Spec
 # ============================================================
 #
 # Demonstrates the Workflows feature end-to-end:
@@ -44,7 +44,7 @@
 
 defaults: shared/common.yaml
 
-name: Workflow Feature Demo
+name: Workflow Demo
 output: workflow
 
 steps:
@@ -147,135 +147,13 @@ steps:
     hold: 2000
 
   # ----------------------------------------------------------
-  # 3. Add Word Filter group "Camera Events" with two keywords
+  # 3. Add Word Filter group "Camera Events" with two keywords, enable
   # ----------------------------------------------------------
 
-  - type: hover
-    selector: "[aria-label='Word Filters Section']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter Group']"
-    caption: "Hover header → Add Word Filter Group"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter Group']"
-    capture: false
-
-  - type: delay
-    ms: 600
-
-  - type: type
-    text: "Camera Events"
-    caption: "Naming the filter group"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  # 3a. Add keyword: CameraManagerGlobal
-
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera Events']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter']"
-    caption: "Add keyword to the group"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 500
-
-  - type: type
-    text: "CameraManagerGlobal"
-    caption: "Add keyword: CameraManagerGlobal"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 600
-
-  # 3b. Add keyword: Choreographer
-
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera Events']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 500
-
-  - type: type
-    text: "Choreographer"
-    caption: "Add keyword: Choreographer"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  # Enable the "Camera Events" group
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera Events']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Enable']"
-    caption: "Enable group — keywords activate across the editor"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Enable']"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  - type: screenshot
+  - type: add-word-filter-group
+    group: "Camera Events"
+    words: [CameraManagerGlobal, Choreographer]
+    enable: true
     caption: "Profile 1 — CameraManagerGlobal + Choreographer"
     hold: 2500
 
@@ -322,100 +200,15 @@ steps:
     hold: 2000
 
   # ----------------------------------------------------------
-  # 5. Add Word Filter group "Camera States" with keyword
-  #    CAMERA_STATE_ACTIVE — this word appears in the
-  #    CameraManagerGlobal lines captured by profile 1.
+  # 5. Add Word Filter group "Camera States" with keyword, enable
+  #    CAMERA_STATE_ACTIVE appears in the CameraManagerGlobal lines
+  #    captured by profile 1.
   # ----------------------------------------------------------
 
-  - type: hover
-    selector: "[aria-label='Word Filters Section']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Add Word Filter Group']"
-    caption: "Add a second filter group"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Add Word Filter Group']"
-    capture: false
-
-  - type: delay
-    ms: 600
-
-  - type: type
-    text: "Camera States"
-    caption: "Naming the filter group"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera States']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera States'] [aria-label='Add Word Filter']"
-    caption: "Add keyword to Camera States group"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: ".monaco-list-row[aria-label*='Camera States'] [aria-label='Add Word Filter']"
-    capture: false
-
-  - type: delay
-    ms: 500
-
-  - type: type
-    text: "CAMERA_STATE_ACTIVE"
-    caption: "Add keyword: CAMERA_STATE_ACTIVE"
-    captureEvery: 5
-
-  - type: key
-    key: "Enter"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  # Enable the "Camera States" group
-  - type: hover
-    selector: ".monaco-list-row[aria-label*='Camera States']"
-    capture: false
-
-  - type: delay
-    ms: 300
-
-  - type: hover
-    selector: "[aria-label='Enable']"
-    caption: "Enable group — filter activates"
-
-  - type: delay
-    ms: 200
-
-  - type: click
-    selector: "[aria-label='Enable']"
-    capture: false
-
-  - type: delay
-    ms: 800
-
-  - type: screenshot
+  - type: add-word-filter-group
+    group: "Camera States"
+    words: [CAMERA_STATE_ACTIVE]
+    enable: true
     caption: "Profile 2 — CAMERA_STATE_ACTIVE (drills into profile 1 results)"
     hold: 2500
 

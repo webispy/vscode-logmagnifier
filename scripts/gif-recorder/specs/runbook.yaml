@@ -1,5 +1,5 @@
 # ============================================================
-# Runbook Feature Demo — GIF Recorder Spec
+# Runbook Demo — GIF Recorder Spec
 # ============================================================
 #
 # This spec records a complete walkthrough of the Runbook feature,
@@ -30,7 +30,7 @@
 
 defaults: shared/common.yaml
 
-name: Runbook Feature Demo
+name: Runbook Demo
 output: runbook
 
 steps:

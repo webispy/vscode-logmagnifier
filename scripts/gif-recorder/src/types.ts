@@ -67,7 +67,8 @@ export type Step =
   | DebugTreeStep
   | AdbLaunchAppStep
   | AdbShellStep
-  | AdbEnsureEmulatorStep;
+  | AdbEnsureEmulatorStep
+  | AddWordFilterGroupStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
@@ -539,6 +540,37 @@ export interface AdbEnsureEmulatorStep {
    * Default: 120000 (2 minutes)
    */
   bootTimeout?: number;
+}
+
+/**
+ * Create a Word Filter group, add keywords, and optionally enable the group.
+ *
+ * Replaces the repetitive hover → hover → click → type → Enter sequence that
+ * appears in multiple spec files whenever a filter group is configured.
+ *
+ * Intermediate frames are captured automatically (if captureFrame is available):
+ *   - Hover over the "Add Word Filter Group" button
+ *   - One frame per keyword after it is added to the list
+ *   - Hover over "Enable" (when enable: true)
+ *
+ * The main loop's final frame (with caption/hold) is produced as usual.
+ *
+ * Example:
+ *   - type: add-word-filter-group
+ *     group: "Android Activity"
+ *     words: [Choreographer, CameraManagerGlobal, AdFit]
+ *     enable: true
+ *     caption: "Group enabled — keywords highlighted in the log"
+ *     hold: 3000
+ */
+export interface AddWordFilterGroupStep extends BaseStep {
+  type: 'add-word-filter-group';
+  /** Name of the new word filter group */
+  group: string;
+  /** Keywords to add to the group */
+  words: string[];
+  /** Whether to enable the group after all keywords are added (default: false) */
+  enable?: boolean;
 }
 
 /** Metadata for a single captured frame (used by runner → composer pipeline) */

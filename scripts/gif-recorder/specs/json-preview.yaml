@@ -1,5 +1,5 @@
 # ============================================================
-# JSON Preview Feature Demo — GIF Recorder Spec
+# JSON Preview Demo — GIF Recorder Spec
 # ============================================================
 #
 # This spec records a complete walkthrough of the JSON Preview feature,
@@ -43,7 +43,7 @@
 
 defaults: shared/common.yaml
 
-name: JSON Preview Feature Demo
+name: JSON Preview Demo
 output: json-preview
 
 steps:

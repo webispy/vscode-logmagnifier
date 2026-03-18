@@ -1,5 +1,13 @@
 # Change Log
 
+## [1.6.4]
+
+### Fixed
+- **Filter**: New filters added to a group now receive unique colors instead of all sharing the same color derived from the group name. The first unused color preset is selected, falling back to the hash-based assignment only when all presets are exhausted.
+
+### Build
+- **Marketplace**: Added `Debuggers` category and search keywords (`log`, `filter`, `logcat`, `adb`, `android`, etc.) to improve discoverability. Added explicit `Apache-2.0` license field.
+
 ## [1.6.3]
 
 ### Added

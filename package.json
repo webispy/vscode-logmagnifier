@@ -2,7 +2,7 @@
   "name": "logmagnifier",
   "displayName": "LogMagnifier",
   "description": "A powerful log analysis tool for Visual Studio Code, featuring advanced log filtering and diverse highlighting options.",
-  "version": "1.6.3",
+  "version": "1.6.4",
   "author": "webispy@gmail.com",
   "publisher": "webispy",
   "icon": "icon.png",
@@ -1274,108 +1274,414 @@
     ],
     "menus": {
       "commandPalette": [
-        { "command": "logmagnifier.addMatchListToBookmark", "when": "false" },
-        { "command": "logmagnifier.addFilter", "when": "false" },
-        { "command": "logmagnifier.addRegexFilter", "when": "false" },
-        { "command": "logmagnifier.runFilterGroup", "when": "false" },
-        { "command": "logmagnifier.deleteFilter", "when": "false" },
-        { "command": "logmagnifier.enableGroup", "when": "false" },
-        { "command": "logmagnifier.disableGroup", "when": "false" },
-        { "command": "logmagnifier.enableFilter", "when": "false" },
-        { "command": "logmagnifier.disableFilter", "when": "false" },
-        { "command": "logmagnifier.enableAllItemsInGroup", "when": "false" },
-        { "command": "logmagnifier.disableAllItemsInGroup", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color00", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color01", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color02", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color03", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color04", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color05", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color06", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color07", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color08", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color09", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color10", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color11", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color12", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color13", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color14", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color15", "when": "false" },
-        { "command": "logmagnifier.changeFilterColor.color16", "when": "false" },
-        { "command": "logmagnifier.toggleFilterHighlightMode.word", "when": "false" },
-        { "command": "logmagnifier.toggleFilterHighlightMode.line", "when": "false" },
-        { "command": "logmagnifier.toggleFilterHighlightMode.full", "when": "false" },
-        { "command": "logmagnifier.toggleFilterCaseSensitivity.on", "when": "false" },
-        { "command": "logmagnifier.toggleFilterCaseSensitivity.off", "when": "false" },
-        { "command": "logmagnifier.toggleFilterType.include", "when": "false" },
-        { "command": "logmagnifier.toggleFilterType.exclude", "when": "false" },
-        { "command": "logmagnifier.toggleFilterContextLine_cl0", "when": "false" },
-        { "command": "logmagnifier.toggleFilterContextLine_cl3", "when": "false" },
-        { "command": "logmagnifier.toggleFilterContextLine_cl5", "when": "false" },
-        { "command": "logmagnifier.toggleFilterContextLine_cl9", "when": "false" },
-        { "command": "logmagnifier.togglePrependLineNumbers.enable", "when": "false" },
-        { "command": "logmagnifier.togglePrependLineNumbers.disable", "when": "false" },
-        { "command": "logmagnifier.setFilterType.include", "when": "false" },
-        { "command": "logmagnifier.setFilterType.exclude", "when": "false" },
-        { "command": "logmagnifier.setFilterCaseSensitivity.on", "when": "false" },
-        { "command": "logmagnifier.setFilterCaseSensitivity.off", "when": "false" },
-        { "command": "logmagnifier.setFilterHighlightMode.word", "when": "false" },
-        { "command": "logmagnifier.setFilterHighlightMode.line", "when": "false" },
-        { "command": "logmagnifier.setFilterHighlightMode.full", "when": "false" },
-        { "command": "logmagnifier.setFilterContextLine.none", "when": "false" },
-        { "command": "logmagnifier.setFilterContextLine.cl3", "when": "false" },
-        { "command": "logmagnifier.setFilterContextLine.cl5", "when": "false" },
-        { "command": "logmagnifier.setFilterContextLine.cl9", "when": "false" },
-        { "command": "logmagnifier.setExcludeStyle.lineThrough", "when": "false" },
-        { "command": "logmagnifier.setExcludeStyle.hidden", "when": "false" },
-        { "command": "logmagnifier.createFilter", "when": "false" },
-        { "command": "logmagnifier.createRegexFilter", "when": "false" },
-        { "command": "logmagnifier.deleteGroup", "when": "false" },
-        { "command": "logmagnifier.renameFilterGroup", "when": "false" },
-        { "command": "logmagnifier.editFilterItem", "when": "false" },
-        { "command": "logmagnifier.exportGroup", "when": "false" },
-        { "command": "logmagnifier.copyGroupEnabledItems", "when": "false" },
-        { "command": "logmagnifier.copyGroupEnabledItemsSingleLine", "when": "false" },
-        { "command": "logmagnifier.copyGroupEnabledItemsWithTag", "when": "false" },
-        { "command": "logmagnifier.expandAllWordGroups", "when": "false" },
-        { "command": "logmagnifier.collapseAllWordGroups", "when": "false" },
-        { "command": "logmagnifier.expandAllRegexGroups", "when": "false" },
-        { "command": "logmagnifier.collapseAllRegexGroups", "when": "false" },
-        { "command": "logmagnifier.jumpToBookmark", "when": "false" },
-        { "command": "logmagnifier.removeBookmark", "when": "false" },
-        { "command": "logmagnifier.refreshDevices", "when": "false" },
-        { "command": "logmagnifier.refreshRunbookView", "when": "false" },
-        { "command": "logmagnifier.pickTargetApp", "when": "false" },
-        { "command": "logmagnifier.pickAndLaunchInstalledApp", "when": "false" },
-        { "command": "logmagnifier.addLogcatSession", "when": "false" },
-        { "command": "logmagnifier.startLogcatSession", "when": "false" },
-        { "command": "logmagnifier.stopLogcatSession", "when": "false" },
-        { "command": "logmagnifier.removeLogcatSession", "when": "false" },
-        { "command": "logmagnifier.addLogcatTag", "when": "false" },
-        { "command": "logmagnifier.editLogcatTag", "when": "false" },
-        { "command": "logmagnifier.removeLogcatTag", "when": "false" },
-        { "command": "logmagnifier.session.enableTimeFilter", "when": "false" },
-        { "command": "logmagnifier.session.disableTimeFilter", "when": "false" },
-        { "command": "logmagnifier.control.uninstall", "when": "false" },
-        { "command": "logmagnifier.control.clearStorage", "when": "false" },
-        { "command": "logmagnifier.control.clearCache", "when": "false" },
-        { "command": "logmagnifier.control.toggleShowTouches", "when": "false" },
-        { "command": "logmagnifier.openChromeInspect", "when": "false" },
-        { "command": "logmagnifier.workflow.openResult", "when": "false" },
-        { "command": "logmagnifier.workflow.openAllResults", "when": "false" },
-        { "command": "logmagnifier.workflow.closeAllResults", "when": "false" },
-        { "command": "logmagnifier.workflow.edit", "when": "false" },
-        { "command": "logmagnifier.workflow.run", "when": "false" },
-        { "command": "logmagnifier.workflow.rename", "when": "false" },
-        { "command": "logmagnifier.runbook.editMarkdown", "when": "false" },
-        { "command": "logmagnifier.runbook.addGroup", "when": "false" },
-        { "command": "logmagnifier.runbook.addItem", "when": "false" },
-        { "command": "logmagnifier.runbook.deleteGroup", "when": "false" },
-        { "command": "logmagnifier.runbook.deleteItem", "when": "false" },
-        { "command": "logmagnifier.runbook.renameGroup", "when": "false" },
-        { "command": "logmagnifier.runbook.renameItem", "when": "false" },
-        { "command": "logmagnifier.toggleFileSizeUnit", "when": "false" }
+        {
+          "command": "logmagnifier.addMatchListToBookmark",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.addFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.addRegexFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runFilterGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.deleteFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.enableGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.disableGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.enableFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.disableFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.enableAllItemsInGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.disableAllItemsInGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color00",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color01",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color02",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color03",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color04",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color05",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color06",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color07",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color08",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color09",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color10",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color11",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color12",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color13",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color14",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color15",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.changeFilterColor.color16",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterHighlightMode.word",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterHighlightMode.line",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterHighlightMode.full",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterCaseSensitivity.on",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterCaseSensitivity.off",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterType.include",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterType.exclude",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterContextLine_cl0",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterContextLine_cl3",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterContextLine_cl5",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFilterContextLine_cl9",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.togglePrependLineNumbers.enable",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.togglePrependLineNumbers.disable",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterType.include",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterType.exclude",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterCaseSensitivity.on",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterCaseSensitivity.off",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterHighlightMode.word",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterHighlightMode.line",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterHighlightMode.full",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterContextLine.none",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterContextLine.cl3",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterContextLine.cl5",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setFilterContextLine.cl9",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setExcludeStyle.lineThrough",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.setExcludeStyle.hidden",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.createFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.createRegexFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.deleteGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.renameFilterGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.editFilterItem",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.exportGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.copyGroupEnabledItems",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.copyGroupEnabledItemsSingleLine",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.copyGroupEnabledItemsWithTag",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.expandAllWordGroups",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.collapseAllWordGroups",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.expandAllRegexGroups",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.collapseAllRegexGroups",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.jumpToBookmark",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.removeBookmark",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.refreshDevices",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.refreshRunbookView",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.pickTargetApp",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.pickAndLaunchInstalledApp",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.addLogcatSession",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.startLogcatSession",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.stopLogcatSession",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.removeLogcatSession",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.addLogcatTag",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.editLogcatTag",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.removeLogcatTag",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.session.enableTimeFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.session.disableTimeFilter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.control.uninstall",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.control.clearStorage",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.control.clearCache",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.control.toggleShowTouches",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.openChromeInspect",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.openResult",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.openAllResults",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.closeAllResults",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.edit",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.run",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.workflow.rename",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.editMarkdown",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.addGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.addItem",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.deleteGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.deleteItem",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.renameGroup",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.runbook.renameItem",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.toggleFileSizeUnit",
+          "when": "false"
+        }
       ],
       "logmagnifier.editorContextSubmenu": [
         {

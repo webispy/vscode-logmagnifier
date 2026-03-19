@@ -293,5 +293,8 @@ export const Ids = {
         ContextLineLevels: [0, 3, 5, 9] as readonly number[],
         MaxKeywordLength: 500,
         MaxNameLength: 100,
+        FlashDurationMs: 500,
+        NavigationWindowMs: 10_000,
+        ChunkedProcessingThreshold: 5_000,
     },
 } as const;

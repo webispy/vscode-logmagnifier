@@ -116,7 +116,7 @@ export class SourceMapService {
 
         if (isSameUri &&
             this.pendingNavigation.line === line &&
-            (now - this.pendingNavigation.timestamp) < 10000) {
+            (now - this.pendingNavigation.timestamp) < Constants.Defaults.NavigationWindowMs) {
 
             this.pendingNavigation = undefined; // Consume
             return true;

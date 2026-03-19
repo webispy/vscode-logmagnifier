@@ -313,18 +313,14 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                     const uri = activeTab.input.uri;
                     try {
                         if (uri.scheme === Constants.Schemes.File) {
-                            try {
-                                const stat = await vscode.workspace.fs.stat(uri);
-                                const sizeMB = stat.size / (1024 * 1024);
-                                if (sizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
-                                    setLastProcessedDoc(undefined);
-                                    resultCountService.clearCounts();
-                                    quickAccessProvider.refresh();
-                                    logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit ${Constants.Defaults.LargeFileSizeLimitMB}MB).`);
-                                    vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to ${Constants.Defaults.LargeFileSizeLimitMB}MB.`, 5000);
-                                }
-                            } catch (e) {
-                                logger.error(`Error checking file size (async): ${e}`);
+                            const stat = await vscode.workspace.fs.stat(uri);
+                            const sizeMB = stat.size / (1024 * 1024);
+                            if (sizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
+                                setLastProcessedDoc(undefined);
+                                resultCountService.clearCounts();
+                                quickAccessProvider.refresh();
+                                logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit ${Constants.Defaults.LargeFileSizeLimitMB}MB).`);
+                                vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to ${Constants.Defaults.LargeFileSizeLimitMB}MB.`, 5000);
                             }
                         }
                     } catch (e) {

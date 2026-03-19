@@ -13,6 +13,7 @@ export class RunbookWebviewPanel {
     private _currentItem: RunbookMarkdown;
     private readonly _htmlGenerator: RunbookHtmlGenerator;
     private _runningProcesses: Map<string, cp.ChildProcess> = new Map();
+    private _scriptExecutionAllowed: boolean = false;
 
     public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown) {
         const column = vscode.window.activeTextEditor
@@ -72,6 +73,9 @@ export class RunbookWebviewPanel {
     }
 
     public async update(item: RunbookMarkdown) {
+        if (item.filePath !== this._currentItem.filePath) {
+            this._scriptExecutionAllowed = false;
+        }
         this._currentItem = item;
         this._panel.title = `Runbook: ${item.label}`;
         this._panel.webview.html = await this._htmlGenerator.generate(this._panel.webview, item);
@@ -108,12 +112,19 @@ export class RunbookWebviewPanel {
             return;
         }
 
-        const confirmed = await vscode.window.showWarningMessage(
-            'Execute shell command?',
-            { modal: true, detail: script.substring(0, 500) },
-            'Execute'
-        );
-        if (confirmed !== 'Execute') { return; }
+        if (!this._scriptExecutionAllowed) {
+            const confirmed = await vscode.window.showWarningMessage(
+                'Execute shell command?',
+                { modal: true, detail: script.substring(0, 500) },
+                'Execute',
+                'Allow All for this Runbook'
+            );
+            if (confirmed === 'Allow All for this Runbook') {
+                this._scriptExecutionAllowed = true;
+            } else if (confirmed !== 'Execute') {
+                return;
+            }
+        }
 
         // Kill any existing process for this block before starting a new one
         const existing = this._runningProcesses.get(blockId);

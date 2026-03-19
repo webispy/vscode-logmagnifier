@@ -7,6 +7,7 @@ import { Logger } from '../services/Logger';
 import { SourceMapService } from '../services/SourceMapService';
 import { FilterGroup, FilterItem } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
@@ -118,11 +119,11 @@ export class FilterExecutionCommandManager {
                     // Handle Untitled Files: Write to temp file first to use standard processor
                     if (document && document.isUntitled) {
                         const tmpDir = os.tmpdir();
-                        const randomSuffix = Math.random().toString(36).substring(7);
+                        const randomSuffix = crypto.randomBytes(4).toString('hex');
                         tempInputPath = path.join(tmpDir, `vscode_loglens_untitled_${randomSuffix}.log`);
 
                         try {
-                            fs.writeFileSync(tempInputPath, document.getText(), 'utf8');
+                            await fs.promises.writeFile(tempInputPath, document.getText(), 'utf8');
                             targetPath = tempInputPath;
                         } catch (e) {
                             this.logger.error(`Failed to create temp file for untitled document: ${e}`);

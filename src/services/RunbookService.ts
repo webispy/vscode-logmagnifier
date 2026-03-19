@@ -231,8 +231,17 @@ uptime
     }
 
     private isWithinBase(base: string, candidate: string): boolean {
-        const rel = path.relative(base, path.resolve(candidate));
-        return !rel.startsWith('..') && !path.isAbsolute(rel);
+        try {
+            const realBase = fs.realpathSync(base);
+            const resolved = path.resolve(candidate);
+            // For paths that don't exist yet, resolve the existing parent
+            const realCandidate = fs.existsSync(resolved)
+                ? fs.realpathSync(resolved)
+                : path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
+            return realCandidate.startsWith(realBase + path.sep) || realCandidate === realBase;
+        } catch {
+            return false;
+        }
     }
 
     private async deserializeItems(items: ExportedRunbookItem[], currentPath: string): Promise<void> {

@@ -36,7 +36,6 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     }
 
     refresh(element?: TreeItem): void {
-        this.iconCache.clear();
         this._onDidChangeTreeData.fire(element);
     }
 

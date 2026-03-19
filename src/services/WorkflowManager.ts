@@ -557,7 +557,7 @@ export class WorkflowManager implements vscode.Disposable {
         if (isDirty || isUntitled) {
             const tmpDir = os.tmpdir();
             const scanPrefix = Constants.Defaults.TempFilePrefix.replace(/[^a-zA-Z0-9]/g, '');
-            const randomSuffix = Math.random().toString(36).substring(7);
+            const randomSuffix = crypto.randomBytes(4).toString('hex');
             const tempInputPath = path.join(tmpDir, `${scanPrefix}_source_${randomSuffix}.log`);
 
             try {

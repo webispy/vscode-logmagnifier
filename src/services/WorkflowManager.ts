@@ -392,38 +392,24 @@ export class WorkflowManager implements vscode.Disposable {
         const original = this.getWorkflow(id);
         if (!original) { return undefined; }
 
+        const idMap = new Map<string, string>();
+        const newSteps = (original.steps ?? []).map(s => {
+            const newId = crypto.randomUUID();
+            idMap.set(s.id, newId);
+            return { ...s, id: newId };
+        });
+        for (const step of newSteps) {
+            if (step.parentId && idMap.has(step.parentId)) {
+                step.parentId = idMap.get(step.parentId);
+            }
+        }
+
         const newSim: Workflow = {
             ...original,
             id: crypto.randomUUID(),
             name: `${original.name} (Copy)`,
-            steps: original.steps ? original.steps.map(s => ({
-                ...s,
-                id: crypto.randomUUID(),
-                // parentId needs remapping if we were to support deep copy of tree,
-                // but for now, if IDs change, parentIds break.
-                // TODO: Remap parentIds. For now, flat copy is safer or simple re-id.
-                // Actually, if we just re-generate IDs, the parent links break.
-                // We must maintain the structure.
-            })) : []
+            steps: newSteps
         };
-
-        // Fix parentIds for duplicated steps
-        if (original.steps) {
-            const idMap = new Map<string, string>();
-            // 1. Create new IDs and map old->new
-            const newSteps = original.steps.map(s => {
-                const newId = crypto.randomUUID();
-                idMap.set(s.id, newId);
-                return { ...s, id: newId };
-            });
-            // 2. Update parentIds
-            for (const step of newSteps) {
-                if (step.parentId && idMap.has(step.parentId)) {
-                    step.parentId = idMap.get(step.parentId);
-                }
-            }
-            newSim.steps = newSteps;
-        }
 
         this.workflows.push(newSim);
         await this.saveToState();

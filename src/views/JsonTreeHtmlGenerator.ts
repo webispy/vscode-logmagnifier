@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import * as path from 'path';
-import { getNonce, escapeHtml } from '../utils/WebviewUtils';
+import { getNonce, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class JsonTreeHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext) { }
@@ -27,8 +27,6 @@ export class JsonTreeHtmlGenerator {
             console.error('Failed to read JSON Tree template:', err);
             return `<html><body>Failed to load template. Error: ${escapeHtml(String(err))}</body></html>`;
         }
-
-        const safeJson = (val: unknown) => JSON.stringify(val).replace(/</g, '\\u003c');
 
         const nonce = getNonce();
 

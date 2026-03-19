@@ -4,6 +4,7 @@ import { AdbClient } from './AdbClient';
 import { AdbDevice } from '../../models/AdbModels';
 
 export class AdbTargetAppService {
+    private static readonly SCAN_CONCURRENCY = 8;
     private deviceTargetApps: Map<string, string> = new Map(); // deviceId -> packageName
     private launchableAppsCache: Map<string, { packageName: string, componentName: string }[]> = new Map();
     private launchableAppScanPromises: Map<string, Promise<void>> = new Map();
@@ -321,7 +322,6 @@ export class AdbTargetAppService {
     }
 
     private async resolveLaunchableComponents(deviceId: string, packages: string[]): Promise<{ packageName: string, componentName: string }[]> {
-        const CONCURRENCY = 8;
         const results: { packageName: string, componentName: string }[] = [];
         let cursor = 0;
 
@@ -340,7 +340,7 @@ export class AdbTargetAppService {
             }
         };
 
-        await Promise.all(Array.from({ length: Math.min(CONCURRENCY, packages.length) }, () => worker()));
+        await Promise.all(Array.from({ length: Math.min(AdbTargetAppService.SCAN_CONCURRENCY, packages.length) }, () => worker()));
         results.sort((a, b) => a.packageName.localeCompare(b.packageName));
         return results;
     }

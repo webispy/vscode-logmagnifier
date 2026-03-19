@@ -85,6 +85,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    private static readonly SAVE_DEBOUNCE_MS = 300;
     private saveDebounceTimer: NodeJS.Timeout | undefined;
 
     public async saveFilters(): Promise<void> {
@@ -109,7 +110,7 @@ export class FilterManager implements vscode.Disposable {
         }
         this.saveDebounceTimer = setTimeout(() => {
             this.saveFilters();
-        }, 300);
+        }, FilterManager.SAVE_DEBOUNCE_MS);
     }
 
     private initDefaultFilters(): void {

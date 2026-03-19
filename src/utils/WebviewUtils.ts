@@ -1,7 +1,19 @@
 import * as crypto from 'crypto';
+import * as vscode from 'vscode';
 
 export function getNonce(): string {
     return crypto.randomBytes(16).toString('base64');
+}
+
+/**
+ * Injects a fresh nonce and CSP source into a webview HTML template.
+ * Templates should use `{{ CSP_SOURCE }}` and `{{ NONCE }}` placeholders.
+ */
+export function applyWebviewTemplate(html: string, webview: vscode.Webview): string {
+    const nonce = getNonce();
+    return html
+        .replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource)
+        .replace(/{{\s*NONCE\s*}}/g, nonce);
 }
 
 export function safeJson(val: unknown): string {

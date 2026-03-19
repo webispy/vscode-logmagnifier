@@ -60,9 +60,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         item.id = group.id;
         item.contextValue = 'runbookGroup';
 
-        const isDark = ThemeUtils.isDarkTheme();
-        const strokeColor = isDark ? '#cccccc' : '#333333';
-        const svg = IconUtils.generateGroupSvg(strokeColor);
+        const svg = IconUtils.generateGroupSvg(ThemeUtils.strokeColor);
         item.iconPath = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`);
 
         item.tooltip = group.dirPath;

@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 
 import * as path from 'path';
-import { getNonce, escapeHtml, safeJson } from '../utils/WebviewUtils';
+import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class JsonTreeHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext) { }
@@ -28,11 +28,7 @@ export class JsonTreeHtmlGenerator {
             return `<html><body>Failed to load template. Error: ${escapeHtml(String(err))}</body></html>`;
         }
 
-        const nonce = getNonce();
-
-        // Replace placeholders with regex to handle potential spacing from formatters
-        html = html.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
-        html = html.replace(/{{\s*NONCE\s*}}/g, nonce);
+        html = applyWebviewTemplate(html, webview);
         html = html.replace(/{{\s*INITIAL_DATA\s*}}/g, safeJson(data));
         html = html.replace(/{{\s*STATUS\s*}}/g, safeJson(status));
         html = html.replace(/{{\s*TAB_SIZE\s*}}/g, String(tabSize));

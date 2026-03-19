@@ -48,13 +48,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 item.id = element.id;
 
                 // UX Improvement: Distinct Group Icons
-                const isDark = ThemeUtils.isDarkTheme();
-                const strokeColor = isDark ? '#cccccc' : '#333333';
-                const dimmedColor = isDark ? '#555555' : '#cccccc';
-
                 const isEnabled = element.isEnabled;
-                const folderColor = isEnabled ? strokeColor : dimmedColor;
-                const overlayColor = isEnabled ? undefined : strokeColor;
+                const folderColor = isEnabled ? ThemeUtils.strokeColor : ThemeUtils.dimmedColor;
+                const overlayColor = isEnabled ? undefined : ThemeUtils.strokeColor;
 
                 item.iconPath = this.getCachedIcon(`group_${folderColor}_${overlayColor}`, () => IconUtils.generateGroupSvg(folderColor, overlayColor));
 
@@ -90,9 +86,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
                 if (element.isEnabled) {
                     if (element.type === 'exclude') {
-                        const fillColor = '#808080';
-                        const isDark = ThemeUtils.isDarkTheme();
-                        const strokeColor = isDark ? '#cccccc' : '#333333';
+                        const fillColor = ThemeUtils.neutralColor;
+                        const strokeColor = ThemeUtils.strokeColor;
                         const style = element.excludeStyle || 'line-through';
 
                         item.iconPath = this.getCachedIcon(`exclude_${fillColor}_${strokeColor}_${style}`, () => IconUtils.generateExcludeSvg(fillColor, strokeColor, style));
@@ -115,7 +110,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                         }
                     }
                 } else {
-                    const offColor = '#808080';
+                    const offColor = ThemeUtils.neutralColor;
                     item.iconPath = this.getCachedIcon(`off_${offColor}`, () => IconUtils.generateOffSvg(offColor));
                 }
 
@@ -240,6 +235,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     }
 
     public dispose() {
+        this.iconCache.clear();
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }

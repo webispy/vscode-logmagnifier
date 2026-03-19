@@ -57,7 +57,7 @@ export class IconUtils {
 
     public static generateIncludeSvg(fillColor: string, mode: number, elementId: string): string {
         const isTransparent = fillColor === 'rgba(0,0,0,0)' || fillColor === 'rgba(0, 0, 0, 0)' || fillColor === 'transparent';
-        const strokeColor = ThemeUtils.isDarkTheme() ? '#cccccc' : '#333333';
+        const strokeColor = ThemeUtils.strokeColor;
         const strokeAttr = `stroke="${strokeColor}" stroke-width="1.0" fill="none"`;
         const fillAttr = `fill="${fillColor}"`;
 

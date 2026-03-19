@@ -3,6 +3,7 @@ import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
 import { FilterGroup } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
+import { ThemeUtils } from '../utils/ThemeUtils';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as os from 'os';
@@ -61,9 +62,8 @@ export class FilterExportImportCommandManager {
         const updateItems = () => {
             quickPick.items = allGroups.map(g => {
                 // Icon Generation
-                const isDark = vscode.window.activeColorTheme.kind === vscode.ColorThemeKind.Dark;
-                const strokeColor = isDark ? '#cccccc' : '#333333';
-                const dimmedColor = isDark ? '#555555' : '#cccccc';
+                const strokeColor = ThemeUtils.strokeColor;
+                const dimmedColor = ThemeUtils.dimmedColor;
 
                 const folderColor = g.isEnabled ? strokeColor : dimmedColor;
                 const overlayColor = g.isEnabled ? undefined : strokeColor;

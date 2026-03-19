@@ -30,9 +30,16 @@ export class RegexUtils {
             const flags = caseSensitive ? 'g' : 'gi';
             let regex: RegExp;
             if (isRegex) {
-                // Reject patterns with nested quantifiers that cause catastrophic backtracking
-                // e.g. (a+)+$
-                if (/(\+|\*|\{)\)?(\+|\*|\{)/.test(keyword)) {
+                // Reject patterns that may cause catastrophic backtracking (ReDoS)
+                const MAX_REGEX_LENGTH = 500;
+                const REDOS_PATTERNS = [
+                    /(\+|\*|\{)\)?(\+|\*|\{)/,  // consecutive quantifiers: (a+)+, a**
+                    /\([^)]*[+*]\)[+*{]/,        // group+quantifier combo: (a+)+, (a|b)*{2}
+                ];
+                if (keyword.length > MAX_REGEX_LENGTH) {
+                    throw new Error('Pattern too long');
+                }
+                if (REDOS_PATTERNS.some(p => p.test(keyword))) {
                     throw new Error('Pattern contains nested quantifiers that may cause performance issues');
                 }
                 regex = new RegExp(keyword, flags);

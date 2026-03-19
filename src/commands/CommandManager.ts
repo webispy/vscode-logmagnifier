@@ -18,31 +18,56 @@ import { FilterExportImportCommandManager } from './FilterExportImportCommandMan
 import { FilterExecutionCommandManager } from './FilterExecutionCommandManager';
 import { EditorToggleCommandManager } from './EditorToggleCommandManager';
 
+export interface CommandManagerServices {
+    filterManager: FilterManager;
+    highlightService: HighlightService;
+    resultCountService: ResultCountService;
+    logProcessor: LogProcessor;
+    quickAccessProvider: QuickAccessProvider;
+    logger: Logger;
+    wordTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    jsonPrettyService: JsonPrettyService;
+    sourceMapService: SourceMapService;
+}
+
 export class CommandManager {
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
     private debounceTimer: NodeJS.Timeout | undefined;
 
+    private readonly filterManager: FilterManager;
+    private readonly highlightService: HighlightService;
+    private readonly resultCountService: ResultCountService;
+    private readonly logProcessor: LogProcessor;
+    private readonly quickAccessProvider: QuickAccessProvider;
+    private readonly logger: Logger;
+    private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    private readonly jsonPrettyService: JsonPrettyService;
+    private readonly sourceMapService: SourceMapService;
+
     constructor(
         private context: vscode.ExtensionContext,
-        private filterManager: FilterManager,
-        private highlightService: HighlightService,
-        private resultCountService: ResultCountService,
-        private logProcessor: LogProcessor,
-        private quickAccessProvider: QuickAccessProvider,
-        private logger: Logger,
-        private wordTreeView: vscode.TreeView<FilterGroup | FilterItem>,
-        private regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
-        private jsonPrettyService: JsonPrettyService,
-        private sourceMapService: SourceMapService
+        services: CommandManagerServices
     ) {
+        this.filterManager = services.filterManager;
+        this.highlightService = services.highlightService;
+        this.resultCountService = services.resultCountService;
+        this.logProcessor = services.logProcessor;
+        this.quickAccessProvider = services.quickAccessProvider;
+        this.logger = services.logger;
+        this.wordTreeView = services.wordTreeView;
+        this.regexTreeView = services.regexTreeView;
+        this.jsonPrettyService = services.jsonPrettyService;
+        this.sourceMapService = services.sourceMapService;
         // Instantiate sub-modules
-        new FilterGroupCommandManager(context, filterManager, logger);
-        new FilterItemCommandManager(context, filterManager, logger, wordTreeView);
-        new FilterPropertyCommandManager(context, filterManager);
-        new FilterExportImportCommandManager(context, filterManager);
-        new FilterExecutionCommandManager(context, filterManager, highlightService, logProcessor, logger, sourceMapService, wordTreeView, regexTreeView);
-        new EditorToggleCommandManager(context, quickAccessProvider, jsonPrettyService);
+        new FilterGroupCommandManager(context, this.filterManager, this.logger);
+        new FilterItemCommandManager(context, this.filterManager, this.logger, this.wordTreeView);
+        new FilterPropertyCommandManager(context, this.filterManager);
+        new FilterExportImportCommandManager(context, this.filterManager);
+        new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.sourceMapService, this.wordTreeView, this.regexTreeView);
+        new EditorToggleCommandManager(context, this.quickAccessProvider, this.jsonPrettyService);
 
         this.registerClearDataCommand();
         this.registerEventListeners();

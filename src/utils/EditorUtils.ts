@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Constants } from '../Constants';
 
+
 export class EditorUtils {
 
     /**
@@ -25,7 +26,7 @@ export class EditorUtils {
                     const size = await this.getFileSizeAsync(uri);
                     const sizeMB = (size || 0) / (1024 * 1024);
 
-                    if (sizeMB > 50) {
+                    if (sizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
                         vscode.window.showErrorMessage(Constants.Messages.Error.FileTooLarge.replace('{0}', operationName));
                         return undefined;
                     }

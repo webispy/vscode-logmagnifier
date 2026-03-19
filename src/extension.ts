@@ -133,7 +133,11 @@ export function activate(context: vscode.ExtensionContext) {
 
     const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
     context.subscriptions.push(jsonPrettyService);
-    new CommandManager(context, filterManager, highlightService, resultCountService, logProcessor, quickAccessProvider, logger, wordTreeView, regexTreeView, jsonPrettyService, sourceMapService);
+    new CommandManager(context, {
+        filterManager, highlightService, resultCountService, logProcessor,
+        quickAccessProvider, logger, wordTreeView, regexTreeView,
+        jsonPrettyService, sourceMapService
+    });
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
     // File Hierarchy Service & Navigation
@@ -190,6 +194,69 @@ export function activate(context: vscode.ExtensionContext) {
     );
     logger.info('QuickAccessProvider registered');
 
+    // Initial highlight
+    if (vscode.window.activeTextEditor) {
+        const editor = vscode.window.activeTextEditor;
+        const scheme = editor.document.uri.scheme;
+        const fileName = editor.document.fileName;
+        logger.info(`Initial active editor: ${fileName} (Scheme: ${scheme})`);
+
+        refreshHighlightsForEditor(editor).catch(e => logger.error(`Initial highlight failed: ${e}`));
+        lastProcessedDoc = editor.document;
+    }
+
+    registerEditorEventListeners(context, {
+        logger, sourceMapService, highlightService, resultCountService,
+        quickAccessProvider, refreshHighlightsForEditor,
+        getLastProcessedDoc: () => lastProcessedDoc,
+        setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
+        getDebounceTimer: () => debounceTimer,
+        setDebounceTimer: (t) => { debounceTimer = t; },
+    });
+
+    registerFilterEventListeners(context, {
+        logger, filterManager, highlightService, quickAccessProvider,
+        wordTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
+        refreshHighlightsForEditor,
+        setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
+    });
+
+    return {
+        filterManager,
+        bookmarkService,
+        highlightService,
+        sourceMapService,
+        adbService
+    };
+}
+
+export function deactivate() {
+    Logger.getInstance().info('LogMagnifier deactivated');
+}
+
+function isSupportedScheme(uri: vscode.Uri): boolean {
+    return uri.scheme === Constants.Schemes.File || uri.scheme === Constants.Schemes.Untitled;
+}
+
+interface EditorEventListenerDeps {
+    logger: Logger;
+    sourceMapService: SourceMapService;
+    highlightService: HighlightService;
+    resultCountService: ResultCountService;
+    quickAccessProvider: QuickAccessProvider;
+    refreshHighlightsForEditor: (editor: vscode.TextEditor) => Promise<void>;
+    getLastProcessedDoc: () => vscode.TextDocument | undefined;
+    setLastProcessedDoc: (doc: vscode.TextDocument | undefined) => void;
+    getDebounceTimer: () => NodeJS.Timeout | undefined;
+    setDebounceTimer: (t: NodeJS.Timeout | undefined) => void;
+}
+
+function registerEditorEventListeners(context: vscode.ExtensionContext, deps: EditorEventListenerDeps) {
+    const { logger, sourceMapService, highlightService, resultCountService,
+        quickAccessProvider, refreshHighlightsForEditor,
+        getLastProcessedDoc, setLastProcessedDoc,
+        getDebounceTimer, setDebounceTimer } = deps;
+
     // Listen for selection changes to trigger navigation animation (flash)
     context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
         try {
@@ -223,7 +290,7 @@ export function activate(context: vscode.ExtensionContext) {
                     return;
                 }
 
-                if (lastProcessedDoc && editor.document === lastProcessedDoc) {
+                if (getLastProcessedDoc() && editor.document === getLastProcessedDoc()) {
                     return;
                 }
 
@@ -235,29 +302,25 @@ export function activate(context: vscode.ExtensionContext) {
                 quickAccessProvider.refresh();
 
                 await refreshHighlightsForEditor(editor);
-                lastProcessedDoc = editor.document;
+                setLastProcessedDoc(editor.document);
             } else {
                 // Fallback for large files where activeTextEditor is undefined
-                // We only want to handle the specific case where a file is too large for VS Code to provide an editor.
-                // Other cases (e.g. focus lost to Output panel, transition states) should be ignored to prevent redundant refreshes/logs.
                 const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
                 if (activeTab && activeTab.input instanceof vscode.TabInputText) {
                     const uri = activeTab.input.uri;
                     try {
                         if (uri.scheme === Constants.Schemes.File) {
-                            // Use EditorUtils or direct async fs
                             try {
                                 const stat = await vscode.workspace.fs.stat(uri);
                                 const sizeMB = stat.size / (1024 * 1024);
-                                if (sizeMB > 50) {
-                                    lastProcessedDoc = undefined;
+                                if (sizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
+                                    setLastProcessedDoc(undefined);
                                     resultCountService.clearCounts();
                                     quickAccessProvider.refresh();
-                                    logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit 50MB).`);
-                                    vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to 50MB.`, 5000);
+                                    logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit ${Constants.Defaults.LargeFileSizeLimitMB}MB).`);
+                                    vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to ${Constants.Defaults.LargeFileSizeLimitMB}MB.`, 5000);
                                 }
                             } catch (e) {
-                                // Fallback only if needed, but workspace.fs should work for local files
                                 logger.error(`Error checking file size (async): ${e}`);
                             }
                         }
@@ -271,70 +334,6 @@ export function activate(context: vscode.ExtensionContext) {
         }
     }));
 
-    // Update highlights when filters change
-    context.subscriptions.push(filterManager.onDidChangeFilters(async () => {
-        try {
-            lastProcessedDoc = undefined; // Force update
-            if (vscode.window.activeTextEditor) {
-                if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
-                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                    lastProcessedDoc = vscode.window.activeTextEditor.document;
-                }
-            }
-        } catch (error) {
-            logger.error(`Error in onDidChangeFilters: ${error}`);
-        }
-    }));
-
-    // Update highlights when configuration changes (e.g. color)
-    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async e => {
-        try {
-            if (e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.HighlightColor}`) ||
-                e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.EnableHighlight}`)) {
-                highlightService.refreshDecorationType();
-                lastProcessedDoc = undefined; // Force update
-                if (vscode.window.activeTextEditor) {
-                    if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
-                        await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                        lastProcessedDoc = vscode.window.activeTextEditor.document;
-                    }
-                }
-            }
-
-            // Refresh Quick Access view if editor settings change
-            if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
-                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
-                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
-                quickAccessProvider.refresh();
-            }
-        } catch (error) {
-            logger.error(`Error in onDidChangeConfiguration: ${error}`);
-        }
-    }));
-
-    // Refresh tree views when color theme changes to update icons
-    context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(() => {
-        try {
-            wordTreeDataProvider.refresh();
-            regexTreeDataProvider.refresh();
-            runbookTreeDataProvider.refresh();
-        } catch (error) {
-            logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
-        }
-    }));
-
-    // Initial highlight
-    if (vscode.window.activeTextEditor) {
-        const editor = vscode.window.activeTextEditor;
-        const scheme = editor.document.uri.scheme;
-        const fileName = editor.document.fileName;
-        logger.info(`Initial active editor: ${fileName} (Scheme: ${scheme})`);
-
-        // Initial highlight (async)
-        refreshHighlightsForEditor(editor).catch(e => logger.error(`Initial highlight failed: ${e}`));
-        lastProcessedDoc = editor.document;
-    }
-
     // Update counts when text changes
     context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
         try {
@@ -343,22 +342,24 @@ export function activate(context: vscode.ExtensionContext) {
                     return;
                 }
 
-                lastProcessedDoc = undefined; // Invalidate because content changed
+                setLastProcessedDoc(undefined); // Invalidate because content changed
 
-                if (debounceTimer) {
-                    clearTimeout(debounceTimer);
+                const timer = getDebounceTimer();
+                if (timer) {
+                    clearTimeout(timer);
                 }
 
-                debounceTimer = setTimeout(async () => {
+                setDebounceTimer(setTimeout(async () => {
                     if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
                         try {
                             await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                            lastProcessedDoc = vscode.window.activeTextEditor.document;
+                            setLastProcessedDoc(vscode.window.activeTextEditor.document);
                         } catch (innerError) {
                             logger.error(`Error in onDidChangeTextEditor debounce: ${innerError}`);
                         }
                     }
-                }, 500);
+                    setDebounceTimer(undefined);
+                }, 500));
 
                 // Update Quick Access if untitled (size changes)
                 if (e.document.isUntitled) {
@@ -384,32 +385,85 @@ export function activate(context: vscode.ExtensionContext) {
     // Prevent memory leak by clearing reference to closed documents
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
         try {
-            if (lastProcessedDoc === doc) {
-                lastProcessedDoc = undefined;
+            if (getLastProcessedDoc() === doc) {
+                setLastProcessedDoc(undefined);
                 resultCountService.clearCounts();
                 quickAccessProvider.refresh();
             }
             sourceMapService.unregister(doc.uri);
             highlightService.unregisterDocumentFilters(doc.uri);
-            // Hierarchy unregister handled above
         } catch (error) {
             logger.error(`Error in onDidCloseTextDocument: ${error}`);
         }
     }));
-
-    return {
-        filterManager,
-        bookmarkService,
-        highlightService,
-        sourceMapService,
-        adbService
-    };
 }
 
-export function deactivate() {
-    Logger.getInstance().info('LogMagnifier deactivated');
+interface FilterEventListenerDeps {
+    logger: Logger;
+    filterManager: FilterManager;
+    highlightService: HighlightService;
+    quickAccessProvider: QuickAccessProvider;
+    wordTreeDataProvider: FilterTreeDataProvider;
+    regexTreeDataProvider: FilterTreeDataProvider;
+    runbookTreeDataProvider: RunbookTreeDataProvider;
+    refreshHighlightsForEditor: (editor: vscode.TextEditor) => Promise<void>;
+    setLastProcessedDoc: (doc: vscode.TextDocument | undefined) => void;
 }
 
-function isSupportedScheme(uri: vscode.Uri): boolean {
-    return uri.scheme === Constants.Schemes.File || uri.scheme === Constants.Schemes.Untitled;
+function registerFilterEventListeners(context: vscode.ExtensionContext, deps: FilterEventListenerDeps) {
+    const { logger, filterManager, highlightService, quickAccessProvider,
+        wordTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
+        refreshHighlightsForEditor, setLastProcessedDoc } = deps;
+
+    // Update highlights when filters change
+    context.subscriptions.push(filterManager.onDidChangeFilters(async () => {
+        try {
+            setLastProcessedDoc(undefined);
+            if (vscode.window.activeTextEditor) {
+                if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
+                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
+                    setLastProcessedDoc(vscode.window.activeTextEditor.document);
+                }
+            }
+        } catch (error) {
+            logger.error(`Error in onDidChangeFilters: ${error}`);
+        }
+    }));
+
+    // Update highlights when configuration changes (e.g. color)
+    context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async e => {
+        try {
+            if (e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.HighlightColor}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Section}.${Constants.Configuration.Regex.EnableHighlight}`)) {
+                highlightService.refreshDecorationType();
+                setLastProcessedDoc(undefined);
+                if (vscode.window.activeTextEditor) {
+                    if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
+                        await refreshHighlightsForEditor(vscode.window.activeTextEditor);
+                        setLastProcessedDoc(vscode.window.activeTextEditor.document);
+                    }
+                }
+            }
+
+            // Refresh Quick Access view if editor settings change
+            if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
+                e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
+                quickAccessProvider.refresh();
+            }
+        } catch (error) {
+            logger.error(`Error in onDidChangeConfiguration: ${error}`);
+        }
+    }));
+
+    // Refresh tree views when color theme changes to update icons
+    context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(() => {
+        try {
+            wordTreeDataProvider.refresh();
+            regexTreeDataProvider.refresh();
+            runbookTreeDataProvider.refresh();
+        } catch (error) {
+            logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
+        }
+    }));
 }

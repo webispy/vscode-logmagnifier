@@ -34,8 +34,8 @@ export class AdbClient {
             if (stdout.trim()) {
                 return stdout.trim();
             }
-        } catch {
-            // Ignore error, try fallback
+        } catch (e) {
+            this.logger.info(`[ADB] pidof not available for ${search}: ${e}`);
         }
 
         try {
@@ -44,8 +44,8 @@ export class AdbClient {
                 const pid = this.parsePsForPid(stdout, search);
                 if (pid) { return pid; }
             }
-        } catch {
-            // Ignore error, try fallback
+        } catch (e) {
+            this.logger.info(`[ADB] ps -A not available for ${search}: ${e}`);
         }
 
         try {
@@ -53,8 +53,8 @@ export class AdbClient {
             if (stdout) {
                 return this.parsePsForPid(stdout, search);
             }
-        } catch {
-            // Ignore error
+        } catch (e) {
+            this.logger.info(`[ADB] ps not available for ${search}: ${e}`);
         }
 
         return undefined;

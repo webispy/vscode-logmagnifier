@@ -330,7 +330,7 @@ export class FilterManager implements vscode.Disposable {
         const found = this._findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
-            const levels = [0, 3, 5, 9];
+            const levels = Constants.Defaults.ContextLineLevels;
             const currentIndex = levels.indexOf(filter.contextLine ?? 0);
             const nextIndex = (currentIndex + 1) % levels.length;
             filter.contextLine = levels[nextIndex];

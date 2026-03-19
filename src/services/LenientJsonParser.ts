@@ -30,7 +30,7 @@ export class LenientJsonParser {
         if (data === undefined) { return { type: 'undefined' }; }
 
         if (Array.isArray(data)) {
-            const items = data.map(item => this.toParsedNode(item));
+            const items = data.map(item => LenientJsonParser.toParsedNode(item));
             return { type: 'array', items };
         }
 
@@ -38,7 +38,7 @@ export class LenientJsonParser {
             const obj = data as Record<string, unknown>;
             const children: ParsedProperty[] = Object.keys(obj).map(key => ({
                 key,
-                value: this.toParsedNode(obj[key])
+                value: LenientJsonParser.toParsedNode(obj[key])
             }));
             return { type: 'object', children };
         }

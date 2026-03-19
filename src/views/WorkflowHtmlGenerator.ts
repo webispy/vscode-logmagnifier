@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { WorkflowViewModel } from '../services/WorkflowManager';
-import { escapeHtml, getNonce } from '../utils/WebviewUtils';
+import { escapeHtml, getNonce, safeJson } from '../utils/WebviewUtils';
 
 export class WorkflowHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext) { }
@@ -36,14 +36,6 @@ export class WorkflowHtmlGenerator {
         ];
 
         const nonce = getNonce();
-        const safeJson = (val: unknown) => {
-            try {
-                return JSON.stringify(val).replace(/</g, '\\u003c');
-            } catch (e) {
-                console.error('JSON Stringify Error:', e);
-                return 'null'; // Fallback
-            }
-        };
 
         const viewData = {
             workflows: workflows || [],

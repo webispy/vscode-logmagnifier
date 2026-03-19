@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import { Constants } from '../Constants';
+import { Logger } from '../services/Logger';
 
 
 export class EditorUtils {
@@ -106,7 +107,7 @@ export class EditorUtils {
                     try {
                         document = await vscode.workspace.openTextDocument(uri);
                     } catch (e) {
-                        console.error('Failed to resolve document from tab:', e);
+                        Logger.getInstance().error(`Failed to resolve document from tab: ${e}`);
                     }
                 }
             }

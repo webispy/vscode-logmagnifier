@@ -225,6 +225,7 @@ export class AdbLogcatService {
     }
 
     private static readonly MAX_BUFFER_LINES = 10_000;
+    private static readonly FLUSH_INTERVAL_MS = 500;
 
     private bufferLogs(sessionId: string, lines: string[]) {
         const buffer = this.buffers.get(sessionId) || [];
@@ -236,7 +237,7 @@ export class AdbLogcatService {
         this.buffers.set(sessionId, buffer);
 
         if (!this.flushTimers.has(sessionId)) {
-            const timer = setInterval(() => this.flushLogs(sessionId), 500);
+            const timer = setInterval(() => this.flushLogs(sessionId), AdbLogcatService.FLUSH_INTERVAL_MS);
             this.flushTimers.set(sessionId, timer);
         }
     }

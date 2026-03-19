@@ -1,6 +1,5 @@
 export interface WebviewMessage {
     type: string;
-    [key: string]: unknown;
 }
 
 export interface BookmarkWebviewMessage extends WebviewMessage {

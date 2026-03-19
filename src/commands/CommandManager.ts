@@ -32,6 +32,7 @@ export interface CommandManagerServices {
 }
 
 export class CommandManager {
+    private static readonly JSON_PREVIEW_DEBOUNCE_MS = 50;
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
     private debounceTimer: NodeJS.Timeout | undefined;
@@ -71,6 +72,16 @@ export class CommandManager {
 
         this.registerClearDataCommand();
         this.registerEventListeners();
+
+        // Ensure debounce timer is cleared on dispose
+        context.subscriptions.push({
+            dispose: () => {
+                if (this.debounceTimer) {
+                    clearTimeout(this.debounceTimer);
+                    this.debounceTimer = undefined;
+                }
+            }
+        });
     }
 
     private registerEventListeners() {
@@ -136,7 +147,7 @@ export class CommandManager {
         this.debounceTimer = setTimeout(() => {
             this.jsonPrettyService.execute(true, editor);
             this.debounceTimer = undefined;
-        }, 50);
+        }, CommandManager.JSON_PREVIEW_DEBOUNCE_MS);
     }
 
     private registerClearDataCommand() {

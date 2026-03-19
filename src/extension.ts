@@ -63,8 +63,13 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
     );
 
+    let highlightCts: vscode.CancellationTokenSource | undefined;
+
     const refreshHighlightsForEditor = async (editor: vscode.TextEditor) => {
-        const counts = await highlightService.updateHighlights(editor);
+        highlightCts?.cancel();
+        highlightCts?.dispose();
+        highlightCts = new vscode.CancellationTokenSource();
+        const counts = await highlightService.updateHighlights(editor, highlightCts.token);
         if (counts) {
             resultCountService.updateCounts(counts);
         }
@@ -385,6 +390,7 @@ export function activate(context: vscode.ExtensionContext) {
                 quickAccessProvider.refresh();
             }
             sourceMapService.unregister(doc.uri);
+            highlightService.unregisterDocumentFilters(doc.uri);
             // Hierarchy unregister handled above
         } catch (error) {
             logger.error(`Error in onDidCloseTextDocument: ${error}`);

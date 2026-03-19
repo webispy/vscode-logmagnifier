@@ -35,6 +35,10 @@ export class HighlightService implements vscode.Disposable {
         this.documentFilters.set(uri.toString(), filters);
     }
 
+    public unregisterDocumentFilters(uri: vscode.Uri) {
+        this.documentFilters.delete(uri.toString());
+    }
+
     private getDecorationKey(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, textColor?: string): string {
         let colorKey = 'undefined';
         if (typeof colorNameOrValue === 'string') {
@@ -126,7 +130,7 @@ export class HighlightService implements vscode.Disposable {
         this.decorationTypes.clear();
     }
 
-    public async updateHighlights(editor: vscode.TextEditor): Promise<Map<string, number>> {
+    public async updateHighlights(editor: vscode.TextEditor, token?: vscode.CancellationToken): Promise<Map<string, number>> {
         if (!editor) {
             return new Map();
         }
@@ -135,7 +139,7 @@ export class HighlightService implements vscode.Disposable {
         // Use chunked processing for files larger than 5000 lines
         // This threshold balances responsiveness and overhead
         if (lineCount > 5000) {
-            return this.updateHighlightsChunked(editor);
+            return this.updateHighlightsChunked(editor, token);
         } else {
             return this.updateHighlightsSync(editor);
         }
@@ -182,7 +186,7 @@ export class HighlightService implements vscode.Disposable {
         return matchCounts;
     }
 
-    private async updateHighlightsChunked(editor: vscode.TextEditor): Promise<Map<string, number>> {
+    private async updateHighlightsChunked(editor: vscode.TextEditor, token?: vscode.CancellationToken): Promise<Map<string, number>> {
         const CHUNK_SIZE = 2000;
         const YIELD_INTERVAL = 50; // ms
 
@@ -231,6 +235,11 @@ export class HighlightService implements vscode.Disposable {
             if (Date.now() - lastYield > YIELD_INTERVAL) {
                 await new Promise(resolve => setTimeout(resolve, 0));
                 lastYield = Date.now();
+            }
+
+            if (token?.isCancellationRequested) {
+                this.logger.info('Highlighting cancelled');
+                return matchCounts;
             }
         }
 

@@ -249,8 +249,14 @@ uptime
         }
     }
 
-    private async deserializeItems(items: ExportedRunbookItem[], currentPath: string): Promise<void> {
+    private static readonly MAX_IMPORT_DEPTH = 10;
+
+    private async deserializeItems(items: ExportedRunbookItem[], currentPath: string, depth: number = 0): Promise<void> {
         if (!Array.isArray(items)) { return; }
+        if (depth > RunbookService.MAX_IMPORT_DEPTH) {
+            Logger.getInstance().warn(`Runbook import: max nesting depth (${RunbookService.MAX_IMPORT_DEPTH}) exceeded, skipping deeper items`);
+            return;
+        }
 
         for (const item of items) {
             if (!item || !item.type || !item.name) { continue; }
@@ -265,7 +271,7 @@ uptime
                     fs.mkdirSync(groupPath, { recursive: true });
                 }
                 if (item.children) {
-                    await this.deserializeItems(item.children, groupPath);
+                    await this.deserializeItems(item.children, groupPath, depth + 1);
                 }
             } else if (item.type === 'markdown') {
                 const fileName = item.name.endsWith('.md') ? item.name : item.name + '.md';

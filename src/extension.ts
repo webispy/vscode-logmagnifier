@@ -31,6 +31,7 @@ import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
 export function activate(context: vscode.ExtensionContext) {
+  try {
     const logger = Logger.getInstance();
     context.subscriptions.push(logger);
     logger.info('LogMagnifier activated');
@@ -224,6 +225,12 @@ export function activate(context: vscode.ExtensionContext) {
         sourceMapService,
         adbService
     };
+  } catch (err) {
+    vscode.window.showErrorMessage(
+        `LogMagnifier failed to activate: ${err instanceof Error ? err.message : err}`
+    );
+    throw err;
+  }
 }
 
 export function deactivate() {

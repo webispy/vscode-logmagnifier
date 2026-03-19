@@ -29,6 +29,8 @@ export class LogBookmarkService implements vscode.Disposable {
     private _missingFiles: Set<string> = new Set();
     // Map of directory path -> FileSystemWatcher
     private _fileWatchers: Map<string, vscode.FileSystemWatcher> = new Map();
+    private _saveDebounceTimer: NodeJS.Timeout | undefined;
+    private _watcherDebounceTimer: NodeJS.Timeout | undefined;
 
     constructor(context: vscode.ExtensionContext) {
         this.context = context;
@@ -67,6 +69,16 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     private updateWatcher() {
+        if (this._watcherDebounceTimer) {
+            clearTimeout(this._watcherDebounceTimer);
+        }
+        this._watcherDebounceTimer = setTimeout(() => {
+            this._watcherDebounceTimer = undefined;
+            this.updateWatcherImmediate();
+        }, 150);
+    }
+
+    private updateWatcherImmediate() {
         // Identify all unique directories for current bookmarks
         const directories = new Set<string>();
         for (const key of this._bookmarks.keys()) {
@@ -248,7 +260,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
             this.refreshAllDecorations();
-            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+            this.debouncedSave();
             return { success: true };
         } catch (e) {
             this.logger.error(`Error adding bookmark: ${e}`);
@@ -301,7 +313,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
             this.refreshAllDecorations();
-            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+            this.debouncedSave();
         }
 
         return addedCount;
@@ -320,7 +332,7 @@ export class LogBookmarkService implements vscode.Disposable {
                 }
                 this._onDidChangeBookmarks.fire();
                 this.refreshAllDecorations();
-                this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+                this.debouncedSave();
             }
         }
     }
@@ -339,7 +351,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this.updateWatcher();
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
-            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+            this.debouncedSave();
         }
     }
 
@@ -382,7 +394,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
-            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+            this.debouncedSave();
         }
     }
 
@@ -484,6 +496,14 @@ export class LogBookmarkService implements vscode.Disposable {
     }
 
     public dispose() {
+        if (this._saveDebounceTimer) {
+            clearTimeout(this._saveDebounceTimer);
+            this._saveDebounceTimer = undefined;
+        }
+        if (this._watcherDebounceTimer) {
+            clearTimeout(this._watcherDebounceTimer);
+            this._watcherDebounceTimer = undefined;
+        }
         this.decorationType.dispose();
         this._onDidChangeBookmarks.dispose();
         this._onDidAddBookmark.dispose();
@@ -492,6 +512,16 @@ export class LogBookmarkService implements vscode.Disposable {
             watcher.dispose();
         }
         this._fileWatchers.clear();
+    }
+
+    private debouncedSave() {
+        if (this._saveDebounceTimer) {
+            clearTimeout(this._saveDebounceTimer);
+        }
+        this._saveDebounceTimer = setTimeout(() => {
+            this._saveDebounceTimer = undefined;
+            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+        }, 150);
     }
 
     private async saveToState() {

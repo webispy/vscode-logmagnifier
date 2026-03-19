@@ -369,11 +369,31 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /**
+     * Detects whether setting parentId on stepId would create a cycle in the step tree.
+     */
+    private hasCycle(steps: WorkflowStep[], stepId: string, parentId: string): boolean {
+        let current: string | undefined = parentId;
+        const visited = new Set<string>();
+        while (current !== undefined) {
+            if (current === stepId) { return true; }
+            if (visited.has(current)) { return true; }
+            visited.add(current);
+            current = steps.find(s => s.id === current)?.parentId;
+        }
+        return false;
+    }
+
     public async addProfileToWorkflow(workflowId: string, profileName: string, parentId?: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
+            const newId = crypto.randomUUID();
+            if (parentId && this.hasCycle(workflow.steps, newId, parentId)) {
+                this.logger.warn(`[Workflow] Cycle detected: cannot add step under ${parentId}`);
+                return;
+            }
             workflow.steps.push({
-                id: crypto.randomUUID(),
+                id: newId,
                 profileName: profileName,
                 parentId: parentId,
                 executionMode: parentId ? 'cumulative' : 'sequential'
@@ -533,7 +553,16 @@ export class WorkflowManager implements vscode.Disposable {
                 await this.profileManager.importProfile(finalName, pData.groups, true); // true because we either decided to overwrite or we have a unique name
             }
 
-            // 4. Save Workflow
+            // 4. Validate imported steps for cycles
+            for (const step of pkg.workflow.steps) {
+                if (step.parentId && this.hasCycle(pkg.workflow.steps, step.id, step.parentId)) {
+                    this.logger.warn(`[Workflow] Cycle detected in imported workflow step ${step.id}, clearing parentId`);
+                    step.parentId = undefined;
+                    step.executionMode = 'sequential';
+                }
+            }
+
+            // 5. Save Workflow
             // Check if workflow ID exists
             const existingIndex = this.workflows.findIndex(s => s.id === pkg.workflow.id);
             if (existingIndex !== -1) {

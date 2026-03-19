@@ -10,10 +10,13 @@ export class AdbClient {
         return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) || Constants.Defaults.AdbPath;
     }
 
+    private static readonly DEFAULT_TIMEOUT_MS = 30_000;
+
     public async execAdb(args: string[], options?: cp.ExecFileOptions): Promise<string> {
         return new Promise((resolve, reject) => {
             const adbPath = this.getAdbPath();
-            cp.execFile(adbPath, args, options, (err, stdout, stderr) => {
+            const opts = { timeout: AdbClient.DEFAULT_TIMEOUT_MS, ...options };
+            cp.execFile(adbPath, args, opts, (err, stdout, stderr) => {
                 if (err) {
                     reject(new Error(`${err.message} (stderr: ${stderr})`));
                     return;

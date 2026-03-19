@@ -307,7 +307,12 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             const { filter } = found;
             // Cycle: Word -> Line -> FullLine -> Word
-            filter.highlightMode = ((filter.highlightMode ?? HighlightMode.Word) + 1) % 3;
+            const nextMode: Record<HighlightMode, HighlightMode> = {
+                [HighlightMode.Word]: HighlightMode.Line,
+                [HighlightMode.Line]: HighlightMode.FullLine,
+                [HighlightMode.FullLine]: HighlightMode.Word,
+            };
+            filter.highlightMode = nextMode[filter.highlightMode ?? HighlightMode.Word];
             this.notifyChange();
         }
     }

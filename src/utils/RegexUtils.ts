@@ -4,7 +4,7 @@ import { Constants } from '../Constants';
 export class RegexUtils {
     // Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex.
     private static cache: Map<string, RegExp> = new Map();
-    private static readonly MAX_CACHE_SIZE = 500;
+    private static readonly MAX_CACHE_SIZE = Constants.Defaults.RegexCacheSize;
     private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
 
     private static readonly MAX_REPORTED_ERRORS = 200;

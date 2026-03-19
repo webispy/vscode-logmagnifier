@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { WorkflowViewModel } from '../services/WorkflowManager';
-import { escapeHtml, getNonce, safeJson } from '../utils/WebviewUtils';
+import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class WorkflowHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext) { }
@@ -35,8 +35,6 @@ export class WorkflowHtmlGenerator {
             'var(--vscode-charts-purple)'
         ];
 
-        const nonce = getNonce();
-
         const viewData = {
             workflows: workflows || [],
             activeId: activeId || '',
@@ -44,10 +42,8 @@ export class WorkflowHtmlGenerator {
             graphColors: graphColors
         };
 
-        // Replace placeholders
+        html = applyWebviewTemplate(html, webview);
         html = html.replace(/{{\s*VIEW_DATA\s*}}/g, safeJson(viewData));
-        html = html.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
-        html = html.replace(/{{\s*NONCE\s*}}/g, nonce);
 
         return html;
     }

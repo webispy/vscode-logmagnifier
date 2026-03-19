@@ -3,10 +3,12 @@ import * as vscode from 'vscode';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { SerializedBookmarkItem } from '../models/WebviewModels';
-import { getNonce, escapeHtml } from '../utils/WebviewUtils';
+import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
 import { Logger } from '../services/Logger';
 
 export class LogBookmarkHtmlGenerator {
+    private regexCache = new Map<string, RegExp>();
+
     constructor(
         private readonly _extensionUri: vscode.Uri,
         private readonly _bookmarkService: LogBookmarkService,
@@ -28,7 +30,7 @@ export class LogBookmarkHtmlGenerator {
         const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'copy.svg'));
         const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'link-external.svg'));
 
-        const nonce = getNonce();
+        // nonce is injected via applyWebviewTemplate below
 
         for (const uriStr of sortedUris) {
             const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
@@ -113,7 +115,12 @@ export class LogBookmarkHtmlGenerator {
                     const combinedPattern = escapedMatches.join('|');
 
                     try {
-                        const regex = new RegExp(combinedPattern, 'gi');
+                        let regex = this.regexCache.get(combinedPattern);
+                        if (!regex) {
+                            regex = new RegExp(combinedPattern, 'gi');
+                            this.regexCache.set(combinedPattern, regex);
+                        }
+                        regex.lastIndex = 0;
                         const parts: string[] = [];
                         let lastIndex = 0;
                         let match: RegExpExecArray | null;
@@ -209,8 +216,7 @@ export class LogBookmarkHtmlGenerator {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             let template = new TextDecoder('utf-8').decode(templateBytes);
 
-            template = template.replace(/{{\s*CSP_SOURCE\s*}}/g, webview.cspSource);
-            template = template.replace(/{{\s*NONCE\s*}}/g, nonce);
+            template = applyWebviewTemplate(template, webview);
             template = template.replace(/{{\s*NAV_BAR\s*}}/g, headerButtonsHtml);
             template = template.replace(/{{\s*WORD_WRAP_CLASS\s*}}/g, wordWrapEnabled ? 'word-wrap' : '');
             template = template.replace(/{{\s*CONTENT\s*}}/g, finalHtml);

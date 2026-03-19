@@ -4,7 +4,7 @@ import { Logger } from '../services/Logger';
 import * as marked from 'marked';
 import * as fs from 'fs';
 import * as path from 'path';
-import { getNonce, escapeHtml } from '../utils/WebviewUtils';
+import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
 import sanitizeHtmlLib from 'sanitize-html';
 
 export class RunbookHtmlGenerator {
@@ -99,12 +99,10 @@ export class RunbookHtmlGenerator {
             return `<html><body><div style="padding: 10px;">Error loading runbook view template</div></body></html>`;
         }
 
-        const nonce = getNonce();
         const codiconCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css')).toString();
 
+        html = applyWebviewTemplate(html, webview);
         html = html.replace(/{{ TITLE }}/g, item.label);
-        html = html.replace(/{{ CSP_SOURCE }}/g, webview.cspSource);
-        html = html.replace(/{{ NONCE }}/g, nonce);
         html = html.replace(/{{ CODICON_CSS_URI }}/g, codiconCssUri);
         html = html.replace(/{{ HTML_CONTENT }}/g, htmlContent);
         const safeScriptMapJson = scriptMapJson.replace(/<\//g, '<\\/');

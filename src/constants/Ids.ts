@@ -296,5 +296,7 @@ export const Ids = {
         FlashDurationMs: 500,
         NavigationWindowMs: 10_000,
         ChunkedProcessingThreshold: 5_000,
+        RegexCacheSize: 500,
+        DecorationCacheSize: 1_000,
     },
 } as const;

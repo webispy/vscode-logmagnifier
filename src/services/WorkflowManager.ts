@@ -752,8 +752,11 @@ export class WorkflowManager implements vscode.Disposable {
 
                     // Determine Input File
                     let inputFile = currentFilePath; // Default to root source
-                    if (step.parentId && stepIdToResult.has(step.parentId)) {
-                        inputFile = stepIdToResult.get(step.parentId)!.outputFilePath;
+                    if (step.parentId) {
+                        const parentResult = stepIdToResult.get(step.parentId);
+                        if (parentResult) {
+                            inputFile = parentResult.outputFilePath;
+                        }
                     }
 
                     // Calculate Filters based on Mode

@@ -30,6 +30,17 @@ import { WorkflowManager } from './services/WorkflowManager';
 import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 
+// Cache frequently-read config values; invalidated in onDidChangeConfiguration
+let cachedLargeFileOptimizations: boolean | undefined = vscode.workspace
+    .getConfiguration(Constants.Configuration.Editor.Section)
+    .get<boolean>(Constants.Configuration.Editor.LargeFileOptimizations);
+
+function invalidateCachedConfig(): void {
+    cachedLargeFileOptimizations = vscode.workspace
+        .getConfiguration(Constants.Configuration.Editor.Section)
+        .get<boolean>(Constants.Configuration.Editor.LargeFileOptimizations);
+}
+
 export function activate(context: vscode.ExtensionContext) {
   try {
     const logger = Logger.getInstance();
@@ -296,7 +307,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                     return;
                 }
 
-                const largeFileOptimizations = vscode.workspace.getConfiguration(Constants.Configuration.Editor.Section).get<boolean>(Constants.Configuration.Editor.LargeFileOptimizations);
+                const largeFileOptimizations = cachedLargeFileOptimizations;
                 const fileName = editor.document.fileName;
                 const scheme = editor.document.uri.scheme;
                 logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
@@ -442,6 +453,11 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
                         setLastProcessedDoc(vscode.window.activeTextEditor.document);
                     }
                 }
+            }
+
+            // Invalidate cached editor config
+            if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.LargeFileOptimizations}`)) {
+                invalidateCachedConfig();
             }
 
             // Refresh Quick Access view if editor settings change

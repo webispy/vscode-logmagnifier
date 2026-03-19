@@ -21,7 +21,7 @@ export class HighlightService implements vscode.Disposable {
     private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
 
     // Map of color string -> DecorationType
-    private static readonly MAX_DECORATION_CACHE = 1000;
+    private static readonly MAX_DECORATION_CACHE = Constants.Defaults.DecorationCacheSize;
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;

@@ -99,7 +99,19 @@ export class RunbookWebviewPanel {
         }
     }
 
-    private executeScript(script: string, blockId: string) {
+    private async executeScript(script: string, blockId: string) {
+        if (!vscode.workspace.isTrusted) {
+            vscode.window.showWarningMessage('Cannot execute scripts in untrusted workspaces.');
+            return;
+        }
+
+        const confirmed = await vscode.window.showWarningMessage(
+            'Execute shell command?',
+            { modal: true, detail: script.substring(0, 500) },
+            'Execute'
+        );
+        if (confirmed !== 'Execute') { return; }
+
         // Kill any existing process for this block before starting a new one
         const existing = this._runningProcesses.get(blockId);
         if (existing) {

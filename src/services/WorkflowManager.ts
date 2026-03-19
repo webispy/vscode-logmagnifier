@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { Constants } from '../Constants';
-import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult, WorkflowViewModel, ProfileViewModel } from '../models/Workflow';
+import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult, WorkflowViewModel } from '../models/Workflow';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
 import { Logger } from './Logger';

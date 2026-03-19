@@ -138,8 +138,7 @@ export function activate(context: vscode.ExtensionContext) {
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
     // File Hierarchy Service & Navigation
-    const fileHierarchyService = FileHierarchyService.getInstance();
-    fileHierarchyService.initialize(context);
+    const fileHierarchyService = FileHierarchyService.createInstance(context);
     new NavigationCommandManager(context, fileHierarchyService);
     const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
     context.subscriptions.push(

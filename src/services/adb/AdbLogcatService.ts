@@ -141,7 +141,7 @@ export class AdbLogcatService {
                 session.isRunning = false;
                 this.processes.delete(sessionId);
                 this._onDidChangeSessions.fire();
-                this.flushLogs(sessionId);
+                this.flushLogs(sessionId).catch(e => this.logger.error(`Final flush failed: ${e}`));
             });
 
             child.on('error', (err) => {

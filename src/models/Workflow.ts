@@ -50,3 +50,26 @@ export interface WorkflowPackage {
         groups: FilterGroup[];
     }[];
 }
+
+export interface WorkflowViewModel {
+    id: string;
+    name: string;
+    isExpanded: boolean;
+    lastRunFile?: string;
+    profiles: ProfileViewModel[];
+}
+
+export interface ProfileViewModel {
+    id: string;
+    name: string;
+    filterCount: number;
+    groups: FilterGroup[];
+    isMissing?: boolean;
+    parentId?: string;
+    executionMode?: 'sequential' | 'cumulative';
+    depth?: number;
+    isLastChild?: boolean;
+    connectionType?: 'branch' | 'continuous';
+    hasChildren?: boolean;
+    nodeType?: 'seq-complex' | 'seq-simple' | 'cumulative';
+}

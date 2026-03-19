@@ -1,5 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
+import * as fs from 'fs';
+import * as os from 'os';
 
 export interface HierarchyNode {
     uri: vscode.Uri;
@@ -30,6 +32,7 @@ export class FileHierarchyService {
     public initialize(context: vscode.ExtensionContext) {
         this.storage = context.workspaceState;
         this.restore();
+        this.pruneStaleNodes();
     }
 
     private save() {
@@ -220,5 +223,43 @@ export class FileHierarchyService {
 
     public getNode(uri: vscode.Uri): HierarchyNode | undefined {
         return this.nodes.get(uri.toString());
+    }
+
+    /**
+     * Removes nodes whose temp files no longer exist on disk.
+     * Only prunes files under the OS temp directory to avoid removing
+     * legitimate entries for files on removable/network drives.
+     */
+    private pruneStaleNodes() {
+        const tmpDir = os.tmpdir();
+        const staleKeys: string[] = [];
+        for (const [key, node] of this.nodes) {
+            if (node.uri.scheme === 'file' && node.uri.fsPath.startsWith(tmpDir)) {
+                try {
+                    if (!fs.existsSync(node.uri.fsPath)) {
+                        staleKeys.push(key);
+                    }
+                } catch {
+                    staleKeys.push(key);
+                }
+            }
+        }
+
+        if (staleKeys.length === 0) { return; }
+
+        for (const key of staleKeys) {
+            const node = this.nodes.get(key);
+            if (node) {
+                // Remove from parent's children
+                if (node.parentId) {
+                    const parent = this.nodes.get(node.parentId);
+                    if (parent) {
+                        parent.children.delete(key);
+                    }
+                }
+                this.nodes.delete(key);
+            }
+        }
+        this.save();
     }
 }

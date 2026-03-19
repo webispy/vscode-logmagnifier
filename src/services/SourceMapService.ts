@@ -8,6 +8,7 @@ interface SourceMapping {
 
 export class SourceMapService {
     private static instance: SourceMapService;
+    private static readonly MAX_MAPPINGS = 500;
     private mappings: Map<string, SourceMapping> = new Map();
 
     private constructor() { }
@@ -26,6 +27,10 @@ export class SourceMapService {
      * @param lineMapping Array where index is filtered line number and value is source line number
      */
     public register(filteredUri: vscode.Uri, sourceUri: vscode.Uri, lineMapping: number[]): void {
+        if (this.mappings.size >= SourceMapService.MAX_MAPPINGS) {
+            const oldestKey = this.mappings.keys().next().value;
+            if (oldestKey) { this.mappings.delete(oldestKey); }
+        }
         this.mappings.set(filteredUri.toString(), {
             sourceUri,
             lineMapping

@@ -248,7 +248,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
             this.refreshAllDecorations();
-            this.saveToState();
+            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
             return { success: true };
         } catch (e) {
             this.logger.error(`Error adding bookmark: ${e}`);
@@ -301,7 +301,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this._onDidChangeBookmarks.fire();
             this._onDidAddBookmark.fire(uri);
             this.refreshAllDecorations();
-            this.saveToState();
+            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
         }
 
         return addedCount;
@@ -320,7 +320,7 @@ export class LogBookmarkService implements vscode.Disposable {
                 }
                 this._onDidChangeBookmarks.fire();
                 this.refreshAllDecorations();
-                this.saveToState();
+                this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
             }
         }
     }
@@ -339,7 +339,7 @@ export class LogBookmarkService implements vscode.Disposable {
             this.updateWatcher();
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
-            this.saveToState();
+            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
         }
     }
 
@@ -382,7 +382,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
             this._onDidChangeBookmarks.fire();
             this.refreshAllDecorations();
-            this.saveToState();
+            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
         }
     }
 
@@ -462,7 +462,8 @@ export class LogBookmarkService implements vscode.Disposable {
         // Filter out any keys that might have been deleted from _bookmarks but lingering in _fileOrder (safety check)
         // And append any new keys that might be in _bookmarks but not in _fileOrder (migration/safety)
         const validKeys = this._fileOrder.filter(key => this._bookmarks.has(key));
-        const missingKeys = Array.from(this._bookmarks.keys()).filter(key => !validKeys.includes(key));
+        const validSet = new Set(validKeys);
+        const missingKeys = Array.from(this._bookmarks.keys()).filter(key => !validSet.has(key));
         return [...validKeys, ...missingKeys.sort()]; // Fallback to alpha sort for missing
     }
 

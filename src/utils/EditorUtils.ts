@@ -3,7 +3,6 @@ import * as fs from 'fs';
 import { Constants } from '../Constants';
 import { Logger } from '../services/Logger';
 
-
 export class EditorUtils {
 
     /**

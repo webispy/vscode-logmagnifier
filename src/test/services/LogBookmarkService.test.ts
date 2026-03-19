@@ -294,7 +294,7 @@ suite('LogBookmarkService Test Suite', () => {
             const copy = service.getBookmarks();
             const items = copy.get(uri.toString());
             assert.ok(items);
-            items.push({} as any); // mutate the copy
+            items.push({} as unknown as import('../../models/Bookmark').BookmarkItem); // mutate the copy
 
             // Original should be unaffected
             assert.strictEqual(service.getFileActiveLinesCount(uri.toString()), 1);

@@ -14,9 +14,12 @@ suite('JsonPrettyService Test Suite', () => {
         // Create a minimal instance just to access private methods
         // The constructor requires vscode dependencies, so we use Object.create to skip it
         const proto = JsonPrettyService.prototype;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         extractJsons = (proto as any).extractJsons.bind({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             findBoundedJson: (proto as any).findBoundedJson
         });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         bestEffortFormat = (proto as any).bestEffortFormat;
     });
 
@@ -48,15 +51,15 @@ suite('JsonPrettyService Test Suite', () => {
             const result = extractJsons('{"outer": {"inner": [1, {"deep": true}]}}');
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].type, 'valid');
-            const parsed = result[0].parsed as any;
-            assert.strictEqual(parsed.outer.inner[1].deep, true);
+            const parsed = result[0].parsed as Record<string, { inner: Array<number | { deep: boolean }> }>;
+            assert.strictEqual((parsed.outer.inner[1] as { deep: boolean }).deep, true);
         });
 
         test('Should handle strings containing braces', () => {
             const result = extractJsons('{"msg": "contains { and } chars"}');
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].type, 'valid');
-            assert.strictEqual((result[0].parsed as any).msg, 'contains { and } chars');
+            assert.strictEqual((result[0].parsed as Record<string, string>).msg, 'contains { and } chars');
         });
 
         test('Should handle escaped quotes in strings', () => {
@@ -94,7 +97,7 @@ suite('JsonPrettyService Test Suite', () => {
             const result = extractJsons(logLine);
             assert.strictEqual(result.length, 1);
             assert.strictEqual(result[0].type, 'valid');
-            assert.strictEqual((result[0].parsed as any).status, 200);
+            assert.strictEqual((result[0].parsed as Record<string, unknown>).status, 200);
         });
     });
 

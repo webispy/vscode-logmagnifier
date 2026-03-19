@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { HighlightService } from '../../services/HighlightService';
 import { FilterManager } from '../../services/FilterManager';
+import { HighlightMode } from '../../models/Filter';
 import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 
@@ -154,7 +155,7 @@ suite('HighlightService Test Suite', () => {
         // Mode 1: Line (from keyword to end)
         highlightService.refreshDecorationType();
         editor.getDecorations().clear();
-        filterManager.setFilterHighlightMode(group.id, filter.id, 1);
+        filterManager.setFilterHighlightMode(group.id, filter.id, HighlightMode.Line);
         await highlightService.updateHighlights(editor);
         activeDecorations = editor.getDecorations();
         ranges = Array.from(activeDecorations.values())[0];
@@ -164,7 +165,7 @@ suite('HighlightService Test Suite', () => {
         // Mode 2: Full Line
         highlightService.refreshDecorationType();
         editor.getDecorations().clear();
-        filterManager.setFilterHighlightMode(group.id, filter.id, 2);
+        filterManager.setFilterHighlightMode(group.id, filter.id, HighlightMode.FullLine);
         await highlightService.updateHighlights(editor);
         activeDecorations = editor.getDecorations();
         ranges = Array.from(activeDecorations.values())[0];

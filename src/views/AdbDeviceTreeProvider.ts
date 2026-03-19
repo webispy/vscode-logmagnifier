@@ -323,7 +323,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                     { type: 'controlDeviceAction', actionType: 'showTouches', device: element.device, meta: { enabled: String(showTouchesState) } } as ControlDeviceActionItem,
                     { type: 'controlDeviceAction', actionType: 'moreControl', device: element.device } as ControlDeviceActionItem
                 ];
-            })();
+            })().catch(() => []);
         } else if (this.isSessionGroup(element)) {
             return this.adbService.getSessions().filter(s => s.device.id === element.device.id);
         } else if (this.isSession(element)) {

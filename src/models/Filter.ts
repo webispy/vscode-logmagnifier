@@ -1,5 +1,11 @@
 export type FilterType = 'include' | 'exclude';
 
+export enum HighlightMode {
+    Word = 0,
+    Line = 1,
+    FullLine = 2,
+}
+
 export interface FilterItem {
     id: string;
     keyword: string;
@@ -8,7 +14,7 @@ export interface FilterItem {
     isRegex?: boolean;
     nickname?: string;
     color?: string;
-    highlightMode?: number; // 0: Word, 1: Line, 2: Full Line
+    highlightMode?: HighlightMode;
     caseSensitive?: boolean;
     resultCount?: number;
     contextLine?: number; // 0, 3, 5, 9

@@ -566,8 +566,7 @@ export class WorkflowManager implements vscode.Disposable {
                 this.sessionFiles.add(currentFilePath);
                 this.logger.info(`Created temp source file for simulation (dirty/untitled): ${currentFilePath}`);
             } catch (e) {
-                this.logger.error(`Failed to create temp file for document: ${e}`);
-                this.logger.error(`[WorkflowManager] Error creating temp file: ${e}`);
+                this.logger.error(`[WorkflowManager] Failed to create temp file for document: ${e}`);
                 if (isUntitled) {
                     throw new Error("Failed to process untitled file");
                 }

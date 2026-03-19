@@ -65,7 +65,12 @@ export class RegexUtils {
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {
                 if (RegexUtils.reportedErrors.size >= RegexUtils.MAX_REPORTED_ERRORS) {
-                    RegexUtils.reportedErrors.clear();
+                    // Evict oldest half instead of clearing all
+                    const entries = Array.from(RegexUtils.reportedErrors);
+                    const half = Math.floor(entries.length / 2);
+                    for (let i = 0; i < half; i++) {
+                        RegexUtils.reportedErrors.delete(entries[i]);
+                    }
                 }
                 RegexUtils.reportedErrors.add(errorKey);
                 // We dynamically import vscode to avoid hard dependency if this util is used outside extension context context

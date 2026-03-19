@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { ThemeUtils } from '../utils/ThemeUtils';
 import { FilterManager } from '../services/FilterManager';
-import { FilterGroup, FilterItem } from '../models/Filter';
+import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 
 import { IconUtils } from '../utils/IconUtils';
 
@@ -105,7 +105,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                             fillColor = isDark ? preset.dark : preset.light;
                         }
 
-                        const mode = element.highlightMode ?? 0;
+                        const mode = element.highlightMode ?? HighlightMode.Word;
                         item.iconPath = this.getCachedIcon(`include_${fillColor}_${mode}`, () => IconUtils.generateIncludeSvg(fillColor, mode, element.id));
                     } else {
                         if (this.mode === 'regex') {

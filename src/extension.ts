@@ -22,7 +22,7 @@ import { RunbookService } from './services/RunbookService';
 import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
 import { RunbookCommandManager } from './commands/RunbookCommandManager';
 import { Constants } from './Constants';
-import { FilterGroup, FilterItem } from './models/Filter';
+import { FilterGroup, FilterItem, isFilterGroup } from './models/Filter';
 import { FileHierarchyService } from './services/FileHierarchyService';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
 import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
@@ -94,18 +94,14 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     // Sync expansion state
-    const isGroup = (item: unknown): item is import('./models/Filter').FilterGroup => {
-        return typeof item === 'object' && item !== null && Array.isArray((item as import('./models/Filter').FilterGroup).filters);
-    };
-
     const setupExpansionSync = (view: vscode.TreeView<FilterGroup | FilterItem>) => {
         context.subscriptions.push(view.onDidExpandElement(e => {
-            if (isGroup(e.element)) {
+            if (isFilterGroup(e.element)) {
                 filterManager.setGroupExpanded(e.element.id, true);
             }
         }));
         context.subscriptions.push(view.onDidCollapseElement(e => {
-            if (isGroup(e.element)) {
+            if (isFilterGroup(e.element)) {
                 filterManager.setGroupExpanded(e.element.id, false);
             }
         }));

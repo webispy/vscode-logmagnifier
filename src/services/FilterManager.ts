@@ -544,9 +544,6 @@ export class FilterManager implements vscode.Disposable {
 
             if (exists) {
                 this.logger.warn(`Cannot move filter: Duplicate exists in target group '${targetGroup.name}'`);
-                // Optionally show a UI message? For now, we just abort.
-                // Since this is a void method called from drop handler, we can't easily bubble up error message to UI
-                // without changing architecture, but logging is good.
                 vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', activeFilter.keyword).replace('{1}', targetGroup.name));
                 return;
             }

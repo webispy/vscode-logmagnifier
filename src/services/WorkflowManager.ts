@@ -753,10 +753,6 @@ export class WorkflowManager implements vscode.Disposable {
                             vscode.Uri.file(inputFile),
                             result.lineMapping
                         );
-                        // Delay opening slightly to prevent UI flicker or race conditions
-                        await new Promise(resolve => setTimeout(resolve, 50));
-                        // Optional: auto-open? Maybe just store result.
-                        // Keeping existing behavior:
                         await this.openStepResult(stepResult);
 
                     }

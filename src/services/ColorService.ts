@@ -93,11 +93,15 @@ export class ColorService {
 
     public assignColor(group: FilterGroup): string {
         // Deterministically assign a color based on the group name's hash
+        const available = this.colorPresets.filter(p => p.id !== 'color00');
+        if (available.length === 0) {
+            return this.colorPresets.length > 0 ? this.colorPresets[0].id : 'color01';
+        }
         let hash = 0;
         for (let i = 0; i < group.name.length; i++) {
             hash = group.name.charCodeAt(i) + ((hash << 5) - hash);
         }
-        const index = Math.abs(hash) % this.colorPresets.length;
-        return this.colorPresets[index].id;
+        const index = Math.abs(hash) % available.length;
+        return available[index].id;
     }
 }

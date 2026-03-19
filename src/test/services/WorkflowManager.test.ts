@@ -205,10 +205,11 @@ suite('Workflow Pipeline Tests', () => {
         const document = { uri: vscode.Uri.file('/tmp/input.log'), getText: () => '', lineCount: 100, isUntitled: false } as vscode.TextDocument;
 
         // Mock LogProcessor to track inputs
+        let processCounter = 0;
         const processedDetails: { input: string, output: string, profile: string }[] = [];
         logProcessor.processFile = async (inputPath, groups, options) => {
             const profileName = (options?.mergeGroups && groups.length > 1) ? 'Merged Group' : (groups[0]?.name || 'unknown');
-            const output = `/tmp/output_${Date.now()}_${profileName.replace(/\s+/g, '_')}.log`;
+            const output = `/tmp/output_${++processCounter}_${profileName.replace(/\s+/g, '_')}.log`;
             processedDetails.push({ input: inputPath, output: output, profile: profileName });
             return {
                 outputPath: output,

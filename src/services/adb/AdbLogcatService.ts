@@ -113,8 +113,13 @@ export class AdbLogcatService {
 
             // Tag filters
             if (session.tags.length > 0) {
+                const TAG_NAME_PATTERN = /^[a-zA-Z0-9._\-/]+$/;
                 session.tags.forEach(tag => {
                     if (tag.isEnabled) {
+                        if (!TAG_NAME_PATTERN.test(tag.name)) {
+                            this.logger.warn(`[ADB] Skipping invalid tag name: ${tag.name}`);
+                            return;
+                        }
                         args.push(`${tag.name}:${tag.priority}`);
                     }
                 });

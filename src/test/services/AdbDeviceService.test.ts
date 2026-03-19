@@ -19,7 +19,8 @@ suite('AdbDeviceService Test Suite', () => {
         adbClient = {
             getAdbPath: () => 'adb',
             execAdb: async () => '',
-            spawnAdb: () => ({}) as unknown as import('child_process').ChildProcess
+            spawnAdb: () => ({}) as unknown as import('child_process').ChildProcess,
+            findPid: async () => undefined
         } as unknown as AdbClient;
 
         service = new AdbDeviceService(logger, adbClient);

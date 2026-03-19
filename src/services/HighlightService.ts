@@ -58,7 +58,13 @@ export class HighlightService implements vscode.Disposable {
     private getDecorationInfo(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean = false, textDecoration?: string, fontWeight?: string, textColor?: string): { decoration: vscode.TextEditorDecorationType, config: DecorationConfig } {
         const key = this.getDecorationKey(colorNameOrValue, isFullLine, textDecoration, fontWeight, textColor);
 
-        if (!this.decorationTypes.has(key)) {
+        if (this.decorationTypes.has(key)) {
+            // LRU: promote to most-recently-used by delete-and-reinsert
+            const entry = this.decorationTypes.get(key)!;
+            this.decorationTypes.delete(key);
+            this.decorationTypes.set(key, entry);
+            return entry;
+        } else {
             let decorationOptions: vscode.DecorationRenderOptions;
 
             const config = { colorNameOrValue, isFullLine, textDecoration, fontWeight, textColor };

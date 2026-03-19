@@ -11,6 +11,7 @@ export class FilterManager implements vscode.Disposable {
     private groups: FilterGroup[] = [];
     private colorPresets: ColorPreset[] = [];
     private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
+    private _isDirty: boolean = false;
     private _onDidChangeFilters: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeFilters: vscode.Event<void> = this._onDidChangeFilters.event;
 
@@ -95,12 +96,14 @@ export class FilterManager implements vscode.Disposable {
             this.stateService.saveToState(this.groups);
             const activeWrapper = this.profileManager.getActiveProfile();
             await this.profileManager.updateProfileData(activeWrapper, this.groups);
+            this._isDirty = false;
         } catch (e) {
             this.logger.error(`Failed to save state: ${e}`);
         }
     }
 
     private debouncedSaveToState() {
+        this._isDirty = true;
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
         }
@@ -858,6 +861,11 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public async loadProfile(name: string): Promise<boolean> {
+        // Flush any pending debounced save before switching
+        if (this._isDirty && this.saveDebounceTimer) {
+            await this.saveFilters();
+        }
+
         const groups = await this.profileManager.loadProfile(name);
 
         if (groups) {

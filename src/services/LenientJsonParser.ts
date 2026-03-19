@@ -20,8 +20,10 @@ export interface ParsedProperty {
 }
 
 export class LenientJsonParser {
+    private static readonly MAX_DEPTH = 100;
     private index = 0;
     private text = '';
+    private depth = 0;
 
     constructor() { }
 
@@ -53,6 +55,7 @@ export class LenientJsonParser {
     public parse(text: string): ParsedNode {
         this.text = text;
         this.index = 0;
+        this.depth = 0;
         this.skipWhitespace();
 
         if (this.index >= this.text.length) {
@@ -70,6 +73,10 @@ export class LenientJsonParser {
         this.skipWhitespace();
         if (this.index >= this.text.length) {
             return { type: 'undefined' };
+        }
+
+        if (this.depth > LenientJsonParser.MAX_DEPTH) {
+            return { type: 'string', value: '[max depth exceeded]', isError: true };
         }
 
         const char = this.text[this.index];
@@ -98,85 +105,95 @@ export class LenientJsonParser {
     private parseObject(): ParsedNode {
         const children: ParsedProperty[] = [];
         this.index++; // consume '{'
+        this.depth++;
 
-        while (this.index < this.text.length) {
-            this.skipWhitespace();
-            if (this.peek() === '}') {
-                this.index++;
-                return { type: 'object', children };
-            }
-
-            // Expect Key
-            let key = this.parseString();
-            let isKeyError = false;
-
-            if (key === undefined) {
-                key = this.parseUnquotedString();
-                // Unquoted key is invalid strict JSON, but maybe not "Error" in lenient?
-                // User wants "Invalid JSON" tags marked. Unquoted key is definitely invalid.
-                if (key) { isKeyError = true; }
-            }
-
-            if (!key) {
+        try {
+            while (this.index < this.text.length) {
+                this.skipWhitespace();
                 if (this.peek() === '}') {
                     this.index++;
                     return { type: 'object', children };
                 }
-                this.index++;
-                continue;
-            }
 
-            this.skipWhitespace();
-            if (this.peek() === ':') {
-                this.index++;
-            } else {
-                // Missing colon is error
-                isKeyError = true;
-            }
+                // Expect Key
+                let key = this.parseString();
+                let isKeyError = false;
 
-            // Expect Value
-            const value = this.parseValue();
-            children.push({ key, value, isKeyError });
+                if (key === undefined) {
+                    key = this.parseUnquotedString();
+                    // Unquoted key is invalid strict JSON, but maybe not "Error" in lenient?
+                    // User wants "Invalid JSON" tags marked. Unquoted key is definitely invalid.
+                    if (key) { isKeyError = true; }
+                }
 
-            this.skipWhitespace();
-            if (this.peek() === ',') {
-                this.index++;
-            } else if (this.peek() === '}') {
-                this.index++;
-                return { type: 'object', children };
-            } else {
-                // Missing comma -> likely error
-                // We don't mark the *previous* item error, but the parser flow is broken.
-                // We'll proceed.
+                if (!key) {
+                    if (this.peek() === '}') {
+                        this.index++;
+                        return { type: 'object', children };
+                    }
+                    this.index++;
+                    continue;
+                }
+
+                this.skipWhitespace();
+                if (this.peek() === ':') {
+                    this.index++;
+                } else {
+                    // Missing colon is error
+                    isKeyError = true;
+                }
+
+                // Expect Value
+                const value = this.parseValue();
+                children.push({ key, value, isKeyError });
+
+                this.skipWhitespace();
+                if (this.peek() === ',') {
+                    this.index++;
+                } else if (this.peek() === '}') {
+                    this.index++;
+                    return { type: 'object', children };
+                } else {
+                    // Missing comma -> likely error
+                    // We don't mark the *previous* item error, but the parser flow is broken.
+                    // We'll proceed.
+                }
             }
+            return { type: 'object', children, isError: true }; // Unclosed object
+        } finally {
+            this.depth--;
         }
-        return { type: 'object', children, isError: true }; // Unclosed object
     }
 
     private parseArray(): ParsedNode {
         const items: ParsedNode[] = [];
         this.index++; // consume '['
+        this.depth++;
 
-        while (this.index < this.text.length) {
-            this.skipWhitespace();
-            if (this.peek() === ']') {
-                this.index++;
-                return { type: 'array', items };
+        try {
+            while (this.index < this.text.length) {
+                this.skipWhitespace();
+                if (this.peek() === ']') {
+                    this.index++;
+                    return { type: 'array', items };
+                }
+
+                const value = this.parseValue();
+                items.push(value);
+
+                this.skipWhitespace();
+                if (this.peek() === ',') {
+                    this.index++;
+                } else if (this.peek() === ']') {
+                    this.index++;
+                    return { type: 'array', items };
+                }
+                // Missing comma handled by loop
             }
-
-            const value = this.parseValue();
-            items.push(value);
-
-            this.skipWhitespace();
-            if (this.peek() === ',') {
-                this.index++;
-            } else if (this.peek() === ']') {
-                this.index++;
-                return { type: 'array', items };
-            }
-            // Missing comma handled by loop
+            return { type: 'array', items, isError: true }; // Unclosed array
+        } finally {
+            this.depth--;
         }
-        return { type: 'array', items, isError: true }; // Unclosed array
     }
 
     private parseString(): string | undefined {

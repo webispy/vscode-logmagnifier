@@ -36,8 +36,12 @@ export class RegexUtils {
                 // Reject patterns that may cause catastrophic backtracking (ReDoS)
                 const MAX_REGEX_LENGTH = 500;
                 const REDOS_PATTERNS = [
-                    /(\+|\*|\{)\)?(\+|\*|\{)/,  // consecutive quantifiers: (a+)+, a**
-                    /\([^)]*[+*]\)[+*{]/,        // group+quantifier combo: (a+)+, (a|b)*{2}
+                    /(\+|\*|\{)\)?(\+|\*|\{)/,       // consecutive quantifiers: (a+)+, a**
+                    /\([^)]*[+*]\)[+*{]/,             // group+quantifier combo: (a+)+, (a|b)*{2}
+                    /\([^)]*\|[^)]*\)[*+{]/,          // alternation with quantifier: (a|b)+
+                    /\([^)]*[+*][^)]*\|[^)]*\)[*+]/,  // overlap in alternation: (a+|a)*
+                    /(\.\*){2,}/,                      // multiple greedy wildcards: .*.*
+                    /\(\.[\*\+]\)\{/,                  // dot-star/plus in group with repetition: (.*){n}
                 ];
                 if (keyword.length > MAX_REGEX_LENGTH) {
                     throw new Error('Pattern too long');

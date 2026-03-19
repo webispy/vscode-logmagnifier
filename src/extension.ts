@@ -353,10 +353,11 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                 }
 
                 setDebounceTimer(setTimeout(async () => {
-                    if (vscode.window.activeTextEditor && e.document === vscode.window.activeTextEditor.document) {
+                    const editor = vscode.window.activeTextEditor;
+                    if (editor && e.document === editor.document) {
                         try {
-                            await refreshHighlightsForEditor(vscode.window.activeTextEditor);
-                            setLastProcessedDoc(vscode.window.activeTextEditor.document);
+                            await refreshHighlightsForEditor(editor);
+                            setLastProcessedDoc(editor.document);
                         } catch (innerError) {
                             logger.error(`Error in onDidChangeTextEditor debounce: ${innerError}`);
                         }

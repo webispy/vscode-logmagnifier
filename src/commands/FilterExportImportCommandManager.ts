@@ -304,15 +304,18 @@ export class FilterExportImportCommandManager {
 
                     if (label.includes('New Profile')) {
                         quickPick.hide();
-                        const name = await vscode.window.showInputBox({
+                        const name = (await vscode.window.showInputBox({
                             prompt: Constants.Prompts.EnterNewProfileName,
                             validateInput: (value) => {
+                                if (value.length > Constants.Defaults.MaxNameLength) {
+                                    return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength));
+                                }
                                 if (profilesMetadata.some(p => p.name === value)) {
                                     return 'Profile with this name already exists';
                                 }
                                 return null;
                             }
-                        });
+                        }))?.trim();
                         if (name) {
                             const success = await this.filterManager.createProfile(name);
                             if (success) {
@@ -324,10 +327,13 @@ export class FilterExportImportCommandManager {
 
                     } else if (label.includes('Duplicate Profile')) {
                         quickPick.hide();
-                        const name = await vscode.window.showInputBox({
+                        const name = (await vscode.window.showInputBox({
                             prompt: Constants.Prompts.EnterDuplicateProfileName,
-                            value: `${activeProfile} (Copy)`
-                        });
+                            value: `${activeProfile} (Copy)`,
+                            validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                                ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                                : null,
+                        }))?.trim();
                         if (name) {
                             await this.filterManager.saveProfile(name);
                             vscode.window.showInformationMessage(Constants.Messages.Info.ProfileDuplicated.replace('{0}', name));

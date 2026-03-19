@@ -15,7 +15,12 @@ export class FilterGroupCommandManager {
 
     private registerCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilterGroup, async () => {
-            const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterGroupName });
+            const name = (await vscode.window.showInputBox({
+                prompt: Constants.Prompts.EnterFilterGroupName,
+                validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                    : null,
+            }))?.trim();
             if (name) {
                 const group = this.filterManager.addGroup(name, false);
                 if (!group) {
@@ -25,7 +30,12 @@ export class FilterGroupCommandManager {
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddRegexFilterGroup, async () => {
-            const name = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterRegexFilterGroupName });
+            const name = (await vscode.window.showInputBox({
+                prompt: Constants.Prompts.EnterRegexFilterGroupName,
+                validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                    : null,
+            }))?.trim();
             if (name) {
                 const group = this.filterManager.addGroup(name, true);
                 if (!group) {
@@ -38,10 +48,13 @@ export class FilterGroupCommandManager {
             if (!group) {
                 return;
             }
-            const newName = await vscode.window.showInputBox({
+            const newName = (await vscode.window.showInputBox({
                 prompt: Constants.Prompts.EnterNewGroupName,
-                value: group.name
-            });
+                value: group.name,
+                validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                    : null,
+            }))?.trim();
             if (newName && newName !== group.name) {
                 this.filterManager.renameGroup(group.id, newName);
             }

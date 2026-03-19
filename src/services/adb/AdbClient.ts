@@ -3,6 +3,15 @@ import * as cp from 'child_process';
 import { Constants } from '../../Constants';
 import { Logger } from '../Logger';
 
+export type AdbErrorKind = 'not-found' | 'device-offline' | 'command-failed' | 'timeout';
+
+export class AdbCommandError extends Error {
+    constructor(public readonly kind: AdbErrorKind, message: string) {
+        super(message);
+        this.name = 'AdbCommandError';
+    }
+}
+
 export class AdbClient {
     constructor(private logger: Logger) { }
 
@@ -18,7 +27,16 @@ export class AdbClient {
             const opts = { timeout: AdbClient.DEFAULT_TIMEOUT_MS, ...options };
             cp.execFile(adbPath, args, opts, (err, stdout, stderr) => {
                 if (err) {
-                    reject(new Error(`${err.message} (stderr: ${stderr})`));
+                    const stderrStr = typeof stderr === 'string' ? stderr : '';
+                    if (err.message.includes('ENOENT')) {
+                        reject(new AdbCommandError('not-found', 'ADB not found. Check logMagnifier.adb.path setting.'));
+                    } else if (stderrStr.includes('device offline')) {
+                        reject(new AdbCommandError('device-offline', 'Device is offline. Please reconnect.'));
+                    } else if (err.killed || (err as NodeJS.ErrnoException).code === 'ETIMEDOUT') {
+                        reject(new AdbCommandError('timeout', `ADB command timed out after ${opts.timeout}ms.`));
+                    } else {
+                        reject(new AdbCommandError('command-failed', `${err.message} (stderr: ${stderrStr})`));
+                    }
                     return;
                 }
                 resolve(stdout.toString());

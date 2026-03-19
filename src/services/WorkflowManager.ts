@@ -511,6 +511,36 @@ export class WorkflowManager implements vscode.Disposable {
                 throw new Error("Invalid Workflow Package format");
             }
 
+            // Validate workflow name
+            if (typeof pkg.workflow.name !== 'string' || pkg.workflow.name.length === 0) {
+                throw new Error("Invalid workflow name");
+            }
+            pkg.workflow.name = pkg.workflow.name.slice(0, 200).replace(/[\x00-\x1f]/g, '');
+
+            // Validate workflow steps
+            const MAX_NAME_LENGTH = 200;
+            if (!Array.isArray(pkg.workflow.steps)) {
+                throw new Error("Invalid workflow steps");
+            }
+            for (const step of pkg.workflow.steps) {
+                if (typeof step.profileName !== 'string' || step.profileName.length === 0 || step.profileName.length > MAX_NAME_LENGTH) {
+                    throw new Error('Invalid step profile name');
+                }
+                step.profileName = step.profileName.replace(/[\x00-\x1f]/g, '');
+                step.executionMode = step.executionMode === 'cumulative' ? 'cumulative' : 'sequential';
+            }
+
+            // Validate profiles
+            if (!Array.isArray(pkg.profiles)) {
+                throw new Error("Invalid profiles data");
+            }
+            for (const pData of pkg.profiles) {
+                if (typeof pData.name !== 'string' || pData.name.length === 0 || pData.name.length > MAX_NAME_LENGTH) {
+                    throw new Error('Invalid profile name');
+                }
+                pData.name = pData.name.replace(/[\x00-\x1f]/g, '');
+            }
+
             const profileNameMapping: Map<string, string> = new Map();
 
             // 1. Resolve Profile Conflicts

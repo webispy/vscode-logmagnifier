@@ -6,6 +6,7 @@ import * as path from 'path';
 import { WorkflowManager } from '../../services/WorkflowManager';
 import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
+import { FileHierarchyService } from '../../services/FileHierarchyService';
 
 function createFilter(pattern: string) {
     return {
@@ -46,6 +47,11 @@ suite('Workflow Final Verification', () => {
             extensionPath: '/mock/extension'
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any;
+
+        // Ensure FileHierarchyService is initialized (used by LogProcessor.processFile)
+        // @ts-expect-error: Resetting private singleton instance for testing
+        FileHierarchyService.instance = undefined;
+        FileHierarchyService.createInstance(context);
 
         // Mock Logger
         logger = {

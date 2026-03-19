@@ -14,68 +14,67 @@ export interface HierarchyNode {
 export class FileHierarchyService {
     private static instance: FileHierarchyService;
     private nodes: Map<string, HierarchyNode> = new Map();
-    private storage: vscode.Memento | undefined;
+    private storage: vscode.Memento;
     private readonly STORAGE_KEY = 'logmagnifier.fileHierarchy';
 
     private _onDidChangeHierarchy: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     public readonly onDidChangeHierarchy: vscode.Event<void> = this._onDidChangeHierarchy.event;
 
-    private constructor() { }
-
-    public static getInstance(): FileHierarchyService {
-        if (!FileHierarchyService.instance) {
-            FileHierarchyService.instance = new FileHierarchyService();
-        }
-        return FileHierarchyService.instance;
-    }
-
-    public initialize(context: vscode.ExtensionContext) {
-        this.storage = context.workspaceState;
+    private constructor(storage: vscode.Memento) {
+        this.storage = storage;
         this.restore();
         this.pruneStaleNodes();
     }
 
-    private save() {
-        if (this.storage) {
-            // Convert Map to array of entries for JSON stringification
-            // Set does not stringify well, convert to Array
-            const entries = Array.from(this.nodes.entries()).map(([key, node]) => {
-                return [key, {
-                    ...node,
-                    children: Array.from(node.children) // Convert Set to Array
-                }];
-            });
-            this.storage.update(this.STORAGE_KEY, entries);
+    public static createInstance(context: vscode.ExtensionContext): FileHierarchyService {
+        FileHierarchyService.instance = new FileHierarchyService(context.workspaceState);
+        return FileHierarchyService.instance;
+    }
+
+    public static getInstance(): FileHierarchyService {
+        if (!FileHierarchyService.instance) {
+            throw new Error('FileHierarchyService not initialized. Call createInstance(context) first.');
         }
+        return FileHierarchyService.instance;
+    }
+
+    private save() {
+        // Convert Map to array of entries for JSON stringification
+        // Set does not stringify well, convert to Array
+        const entries = Array.from(this.nodes.entries()).map(([key, node]) => {
+            return [key, {
+                ...node,
+                children: Array.from(node.children) // Convert Set to Array
+            }];
+        });
+        this.storage.update(this.STORAGE_KEY, entries);
     }
 
     private restore() {
-        if (this.storage) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const entries = this.storage.get<[string, any][]>(this.STORAGE_KEY, []);
-            this.nodes = new Map();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const entries = this.storage.get<[string, any][]>(this.STORAGE_KEY, []) ?? [];
+        this.nodes = new Map();
 
-            for (const [key, rawNode] of entries) {
-                // Re-hydrate URIs and Sets
-                let uri: vscode.Uri;
-                if (rawNode.uri && typeof rawNode.uri === 'object' && rawNode.uri.path) {
-                    // Revive URI from object
-                    uri = vscode.Uri.from(rawNode.uri);
-                } else if (typeof rawNode.uri === 'string') {
-                    uri = vscode.Uri.parse(rawNode.uri);
-                } else {
-                    // Fallback/Error?
-                    continue;
-                }
-
-                this.nodes.set(key, {
-                    uri: uri,
-                    parentId: rawNode.parentId,
-                    children: new Set(rawNode.children || []), // Convert Array back to Set
-                    type: rawNode.type,
-                    label: rawNode.label
-                });
+        for (const [key, rawNode] of entries) {
+            // Re-hydrate URIs and Sets
+            let uri: vscode.Uri;
+            if (rawNode.uri && typeof rawNode.uri === 'object' && rawNode.uri.path) {
+                // Revive URI from object
+                uri = vscode.Uri.from(rawNode.uri);
+            } else if (typeof rawNode.uri === 'string') {
+                uri = vscode.Uri.parse(rawNode.uri);
+            } else {
+                // Fallback/Error?
+                continue;
             }
+
+            this.nodes.set(key, {
+                uri: uri,
+                parentId: rawNode.parentId,
+                children: new Set(rawNode.children || []), // Convert Array back to Set
+                type: rawNode.type,
+                label: rawNode.label
+            });
         }
     }
 

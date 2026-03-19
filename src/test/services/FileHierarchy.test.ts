@@ -14,11 +14,10 @@ suite('FileHierarchyService Test Suite', () => {
 
     setup(() => {
         mockContext = new MockExtensionContext();
-        // Reset singleton for testing (hacky but necessary since getInstance returns singleton)
+        // Reset singleton for testing
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        service = FileHierarchyService.getInstance();
-        service.initialize(mockContext as unknown as vscode.ExtensionContext);
+        service = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
     });
 
     test('Scenario 1: Original > Filter1 > Parent > Original', () => {
@@ -102,8 +101,7 @@ suite('FileHierarchyService Test Suite', () => {
         // 3. Simulate Restart: New Service Instance with same context
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        const newService = FileHierarchyService.getInstance();
-        newService.initialize(mockContext as unknown as vscode.ExtensionContext);
+        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
 
         // 4. Verify restored state
         const parent = newService.getParent(filter1Uri);
@@ -118,8 +116,7 @@ suite('FileHierarchyService Test Suite', () => {
         // Restart
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        const newService = FileHierarchyService.getInstance();
-        newService.initialize(mockContext as unknown as vscode.ExtensionContext); // Context still has data from previous steps
+        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
 
         // Verify Bookmark -> Parent is Filter1
         const bkParent = newService.getParent(bookmarkUri);

@@ -289,5 +289,7 @@ export const Ids = {
         TempFilePrefix: 'filtered_',
         AdbPath: 'adb',
         AdbDefaultOptions: '-v threadtime',
+        LargeFileSizeLimitMB: 50,
+        ContextLineLevels: [0, 3, 5, 9] as unknown as number[],
     },
 } as const;

@@ -456,12 +456,18 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
         }
     }));
 
-    // Refresh tree views when color theme changes to update icons
-    context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(() => {
+    // Refresh tree views and highlights when color theme changes
+    context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(async () => {
         try {
+            highlightService.refreshDecorationType();
             wordTreeDataProvider.refresh();
             regexTreeDataProvider.refresh();
             runbookTreeDataProvider.refresh();
+            if (vscode.window.activeTextEditor) {
+                if (isSupportedScheme(vscode.window.activeTextEditor.document.uri)) {
+                    await refreshHighlightsForEditor(vscode.window.activeTextEditor);
+                }
+            }
         } catch (error) {
             logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
         }

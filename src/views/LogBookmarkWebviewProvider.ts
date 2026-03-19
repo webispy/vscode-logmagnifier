@@ -37,7 +37,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             // Clear flash after 1 second
             setTimeout(() => {
                 this._lastAddedUri = undefined;
-                this.updateContent();
+                this.updateContent().catch(e =>
+                    this._logger.error(`[BookmarkWebview] Failed to update after flash: ${e}`)
+                );
             }, 1000);
         }));
 

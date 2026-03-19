@@ -74,11 +74,17 @@ export class AdbLogcatService {
             const args = ['-s', session.device.id, 'logcat'];
             const startFromNow = session.useStartFromCurrentTime !== false;
 
-            // Parse default options
+            // Parse default options (allowlist to prevent argument injection)
+            const ALLOWED_LOGCAT_FLAGS = new Set(['-v', '-b', '-T', '-t', '-d', '-e', '-s', '--regex', '--pid', '-c']);
             if (defaultOptions.trim().length > 0) {
                 const parts = defaultOptions.split(/\s+/);
                 for (let i = 0; i < parts.length; i++) {
                     const part = parts[i];
+                    const flag = part.split('=')[0];
+                    if (!ALLOWED_LOGCAT_FLAGS.has(flag)) {
+                        this.logger.warn(`[ADB] Ignoring unrecognised default option: ${part}`);
+                        continue;
+                    }
                     if (part === '-T' || part === '-t') {
                         if (!startFromNow) {
                             i++;

@@ -137,7 +137,7 @@ export class RunbookWebviewPanel {
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
 
-        const child = cp.exec(script, { cwd });
+        const child = cp.exec(script, { cwd, timeout: 60_000, maxBuffer: 5 * 1024 * 1024 });
         this._runningProcesses.set(blockId, child);
 
         child.stdout?.on('data', (data) => {

@@ -11,7 +11,7 @@ suite('RunbookService Test Suite', () => {
     let tempDir: string;
     let context: vscode.ExtensionContext;
 
-    setup(() => {
+    setup(async () => {
         tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runbook-test-'));
         const globalStoragePath = path.join(tempDir, 'globalStorage');
         fs.mkdirSync(globalStoragePath, { recursive: true });
@@ -23,6 +23,7 @@ suite('RunbookService Test Suite', () => {
         } as unknown as vscode.ExtensionContext;
 
         service = new RunbookService(context);
+        await service.ready;
     });
 
     teardown(() => {
@@ -61,9 +62,10 @@ suite('RunbookService Test Suite', () => {
             assert.strictEqual(item!.kind, 'markdown');
         });
 
-        test('Should not recreate default config if runbooks dir already exists', () => {
+        test('Should not recreate default config if runbooks dir already exists', async () => {
             // Create a second service with same context - should not fail
             const service2 = new RunbookService(context);
+            await service2.ready;
             const items = service2.items;
             // Should still have the adb item from the first init
             assert.ok(items.length > 0);

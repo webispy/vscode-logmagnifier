@@ -51,14 +51,21 @@ export class FileHierarchyService {
     }
 
     private restore() {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const entries = this.storage.get<[string, any][]>(this.STORAGE_KEY, []) ?? [];
+        interface StoredNode {
+            uri: { scheme: string; authority: string; path: string } | string;
+            parentId?: string;
+            children?: string[];
+            type: 'original' | 'filter' | 'bookmark';
+            label?: string;
+        }
+        const entries = this.storage.get<[string, StoredNode][]>(this.STORAGE_KEY, []) ?? [];
         this.nodes = new Map();
 
         for (const [key, rawNode] of entries) {
+            if (!rawNode || typeof rawNode !== 'object') { continue; }
             // Re-hydrate URIs and Sets
             let uri: vscode.Uri;
-            if (rawNode.uri && typeof rawNode.uri === 'object' && rawNode.uri.path) {
+            if (rawNode.uri && typeof rawNode.uri === 'object' && 'path' in rawNode.uri) {
                 // Revive URI from object
                 uri = vscode.Uri.from(rawNode.uri);
             } else if (typeof rawNode.uri === 'string') {
@@ -73,7 +80,7 @@ export class FileHierarchyService {
                 parentId: rawNode.parentId,
                 children: new Set(rawNode.children || []), // Convert Array back to Set
                 type: rawNode.type,
-                label: rawNode.label
+                label: rawNode.label ?? ''
             });
         }
     }

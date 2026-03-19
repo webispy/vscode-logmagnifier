@@ -4,6 +4,7 @@ import { FilterManager } from '../services/FilterManager';
 import { FilterGroup } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -147,7 +148,7 @@ export class FilterExportImportCommandManager {
 
         if (uri) {
             try {
-                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
+                await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Word' : 'Regex').replace('{1}', uri.fsPath));
             } catch (err) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
@@ -185,7 +186,7 @@ export class FilterExportImportCommandManager {
 
         if (uri) {
             try {
-                fs.writeFileSync(uri.fsPath, filtersJson, 'utf8');
+                await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportGroupSuccess.replace('{0}', group.name).replace('{1}', uri.fsPath));
             } catch (err) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
@@ -202,7 +203,14 @@ export class FilterExportImportCommandManager {
 
         if (uris && uris.length > 0) {
             try {
-                const json = fs.readFileSync(uris[0].fsPath, 'utf8');
+                const MAX_IMPORT_SIZE = 10 * 1024 * 1024; // 10 MB
+                const stat = await fsp.stat(uris[0].fsPath);
+                if (stat.size > MAX_IMPORT_SIZE) {
+                    vscode.window.showErrorMessage(`Import file too large (${(stat.size / 1024 / 1024).toFixed(1)} MB). Maximum is 10 MB.`);
+                    return;
+                }
+
+                const json = await fsp.readFile(uris[0].fsPath, 'utf8');
 
                 const choice = await vscode.window.showQuickPick(
                     [Constants.ImportModes.Merge, Constants.ImportModes.Overwrite],

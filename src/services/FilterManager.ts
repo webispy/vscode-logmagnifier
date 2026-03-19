@@ -71,9 +71,7 @@ export class FilterManager implements vscode.Disposable {
             this.logger.warn(`Failed to load groups for profile: ${activeProfileName}`);
         }
 
-        this.debouncedSaveToState();
-        this.invalidateCache();
-        this._onDidChangeFilters.fire();
+        this.notifyChange();
     }
 
     private resetCounts() {
@@ -164,6 +162,12 @@ export class FilterManager implements vscode.Disposable {
         this.activeFiltersCache = null;
     }
 
+    private notifyChange() {
+        this.invalidateCache();
+        this.debouncedSaveToState();
+        this._onDidChangeFilters.fire();
+    }
+
     public getAvailableColors(): string[] {
         return this.colorService.getAvailableColors();
     }
@@ -207,9 +211,7 @@ export class FilterManager implements vscode.Disposable {
         };
         this.groups.push(newGroup);
         this.logger.info(`Filter group added: ${name} (Regex: ${isRegex})`);
-        this.debouncedSaveToState();
-        this.invalidateCache();
-        this._onDidChangeFilters.fire();
+        this.notifyChange();
         return newGroup;
     }
 
@@ -250,9 +252,7 @@ export class FilterManager implements vscode.Disposable {
             };
             group.filters.push(newFilter);
             this.logger.info(`Filter added to group '${group.name}': ${keyword} (Type: ${type}, Regex: ${isRegex})`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
             return newFilter;
         }
         return undefined;
@@ -274,9 +274,7 @@ export class FilterManager implements vscode.Disposable {
         const found = this._findFilter(groupId, filterId);
         if (found) {
             found.filter.color = color;
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -285,9 +283,7 @@ export class FilterManager implements vscode.Disposable {
         if (group) {
             group.name = newName;
             this.logger.info(`Filter group renamed to: ${newName}`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -302,9 +298,7 @@ export class FilterManager implements vscode.Disposable {
                 filter.nickname = updates.nickname;
             }
             this.logger.info(`Filter '${filter.id}' updated`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -314,9 +308,7 @@ export class FilterManager implements vscode.Disposable {
             const { filter } = found;
             // Cycle: Word -> Line -> FullLine -> Word
             filter.highlightMode = ((filter.highlightMode ?? HighlightMode.Word) + 1) % 3;
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -324,9 +316,7 @@ export class FilterManager implements vscode.Disposable {
         const found = this._findFilter(groupId, filterId);
         if (found) {
             found.filter.caseSensitive = !found.filter.caseSensitive;
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -338,9 +328,7 @@ export class FilterManager implements vscode.Disposable {
             const currentIndex = levels.indexOf(filter.contextLine ?? 0);
             const nextIndex = (currentIndex + 1) % levels.length;
             filter.contextLine = levels[nextIndex];
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -349,9 +337,7 @@ export class FilterManager implements vscode.Disposable {
         if (group) {
             group.filters = group.filters.filter(f => f.id !== filterId);
             this.logger.info(`Filter removed from group '${group.name}': ${filterId}`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -366,9 +352,7 @@ export class FilterManager implements vscode.Disposable {
                 this.initDefaultFilters();
             }
 
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -377,9 +361,7 @@ export class FilterManager implements vscode.Disposable {
         if (group) {
             group.isEnabled = !group.isEnabled;
             this.logger.info(`Filter group '${group.name}' ${group.isEnabled ? 'enabled' : 'disabled'}`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -395,9 +377,7 @@ export class FilterManager implements vscode.Disposable {
             }
             if (changed) {
                 this.logger.info(`All filters enabled in group '${group.name}'`);
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -414,9 +394,7 @@ export class FilterManager implements vscode.Disposable {
             }
             if (changed) {
                 this.logger.info(`All filters disabled in group '${group.name}'`);
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -431,9 +409,7 @@ export class FilterManager implements vscode.Disposable {
             const { group, filter } = found;
             filter.isEnabled = !filter.isEnabled;
             this.logger.info(`Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
-            this.debouncedSaveToState();
-            this.invalidateCache();
-            this._onDidChangeFilters.fire();
+            this.notifyChange();
         }
     }
 
@@ -459,9 +435,7 @@ export class FilterManager implements vscode.Disposable {
                 }
 
                 this.logger.info(`Filter '${filter.keyword}' type set to: ${filter.type}`);
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -471,9 +445,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             if (found.filter.caseSensitive !== enable) {
                 found.filter.caseSensitive = enable;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -483,9 +455,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             if (found.filter.excludeStyle !== style) {
                 found.filter.excludeStyle = style;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -495,9 +465,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             if (found.filter.highlightMode !== mode) {
                 found.filter.highlightMode = mode;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -507,9 +475,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             if (found.filter.contextLine !== lines) {
                 found.filter.contextLine = lines;
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
         }
     }
@@ -586,9 +552,7 @@ export class FilterManager implements vscode.Disposable {
             }
         }
 
-        this.debouncedSaveToState();
-        this.invalidateCache();
-        this._onDidChangeFilters.fire();
+        this.notifyChange();
     }
 
     public moveGroup(activeGroupId: string, targetGroupId: string | undefined, position: 'before' | 'after' | 'append'): void {
@@ -626,9 +590,7 @@ export class FilterManager implements vscode.Disposable {
             }
         }
 
-        this.debouncedSaveToState();
-        this.invalidateCache();
-        this._onDidChangeFilters.fire();
+        this.notifyChange();
     }
 
     public exportFilters(mode: 'word' | 'regex', groupIds?: string[]): string {
@@ -740,9 +702,7 @@ export class FilterManager implements vscode.Disposable {
             }
 
             if (addedCount > 0) {
-                this.debouncedSaveToState();
-                this.invalidateCache();
-                this._onDidChangeFilters.fire();
+                this.notifyChange();
             }
 
             this.logger.info(`Import completed: ${addedCount} ${mode} filter groups added.`);
@@ -759,12 +719,26 @@ export class FilterManager implements vscode.Disposable {
         const contextLine = typeof f.contextLine === 'number' && validContextLines.includes(f.contextLine) ? f.contextLine : 0;
         const highlightMode = typeof f.highlightMode === 'number' && [0, 1, 2].includes(f.highlightMode) ? f.highlightMode as HighlightMode : undefined;
 
+        const keyword = typeof f.keyword === 'string' ? f.keyword.slice(0, 500) : '';
+        const isRegex = typeof f.isRegex === 'boolean' ? f.isRegex : false;
+
+        // Validate regex syntax at import time to prevent invalid patterns from persisting in state
+        let isEnabled = typeof f.isEnabled === 'boolean' ? f.isEnabled : true;
+        if (isRegex && keyword) {
+            try {
+                new RegExp(keyword);
+            } catch {
+                this.logger.warn(`Imported filter has invalid regex, disabling: ${keyword}`);
+                isEnabled = false;
+            }
+        }
+
         return {
             id: crypto.randomUUID(),
-            keyword: typeof f.keyword === 'string' ? f.keyword.slice(0, 500) : '',
+            keyword,
             type: f.type === 'include' || f.type === 'exclude' ? f.type : 'include',
-            isEnabled: typeof f.isEnabled === 'boolean' ? f.isEnabled : true,
-            isRegex: typeof f.isRegex === 'boolean' ? f.isRegex : false,
+            isEnabled,
+            isRegex,
             nickname: typeof f.nickname === 'string' ? f.nickname.slice(0, 200) : undefined,
             color: typeof f.color === 'string' ? f.color : undefined,
             highlightMode,

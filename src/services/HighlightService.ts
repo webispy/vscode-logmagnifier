@@ -25,6 +25,7 @@ export class HighlightService implements vscode.Disposable {
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;
+    private shownErrorFilterIds: Set<string> = new Set();
 
     constructor(
         private filterManager: FilterManager,
@@ -363,20 +364,22 @@ export class HighlightService implements vscode.Disposable {
             // Logic to show error message (debounce needed?)
             // I'll keep it simple for now as requested.
 
-            if (filter.isRegex) {
-                // Optimization: Avoid showing message repeatedly?
-                // VS Code suppresses duplicate notifications usually.
+            if (filter.isRegex && !this.shownErrorFilterIds.has(filter.id)) {
+                this.shownErrorFilterIds.add(filter.id);
                 vscode.window.showErrorMessage(
                     Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.keyword),
                     'Edit Filter',
                     'Disable Filter'
                 ).then(selection => {
+                    this.shownErrorFilterIds.delete(filter.id);
                     if (selection === 'Edit Filter') {
                         vscode.commands.executeCommand('logmagnifier.editFilter', filter);
                     } else if (selection === 'Disable Filter') {
                         this.filterManager.toggleFilter(groupId, filter.id);
                     }
-                }, () => { /* dismissed */ });
+                }, () => {
+                    this.shownErrorFilterIds.delete(filter.id);
+                });
             }
         }
     }

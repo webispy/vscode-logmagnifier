@@ -137,7 +137,9 @@ uptime
     }
 
     public async createGroup(groupName: string): Promise<void> {
-        const targetPath = path.join(this.storagePath, groupName);
+        const safeName = path.basename(groupName);
+        const targetPath = path.join(this.storagePath, safeName);
+        if (!this.isWithinBase(this.storagePath, targetPath)) { return; }
         if (!fs.existsSync(targetPath)) {
             fs.mkdirSync(targetPath, { recursive: true });
             await this.refresh();
@@ -145,8 +147,10 @@ uptime
     }
 
     public async createItem(parentPath: string, fileName: string): Promise<void> {
-        if (!fileName.endsWith('.md')) { fileName += '.md'; }
+        const safeName = path.basename(fileName);
+        if (!safeName.endsWith('.md')) { fileName = safeName + '.md'; } else { fileName = safeName; }
         const targetPath = path.join(parentPath, fileName);
+        if (!this.isWithinBase(this.storagePath, targetPath)) { return; }
         if (!fs.existsSync(targetPath)) {
             fs.writeFileSync(targetPath, '# New Runbook\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
             await this.refresh();
@@ -155,8 +159,9 @@ uptime
 
     public async renamePath(oldPath: string, newLabel: string, isGroup: boolean): Promise<void> {
         const parentDir = path.dirname(oldPath);
-        const newName = isGroup ? newLabel : (newLabel.endsWith('.md') ? newLabel : newLabel + '.md');
-        const newPath = path.join(parentDir, newName);
+        const safeName = path.basename(isGroup ? newLabel : (newLabel.endsWith('.md') ? newLabel : newLabel + '.md'));
+        const newPath = path.join(parentDir, safeName);
+        if (!this.isWithinBase(this.storagePath, newPath)) { return; }
 
         if (oldPath !== newPath) {
             fs.renameSync(oldPath, newPath);

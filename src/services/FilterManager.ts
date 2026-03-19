@@ -755,19 +755,22 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public updateResultCounts(counts: { filterId: string, count: number }[], groupCounts: { groupId: string, count: number }[]): void {
+        const filterCountMap = new Map(counts.map(c => [c.filterId, c.count]));
+        const groupCountMap = new Map(groupCounts.map(c => [c.groupId, c.count]));
+
         let changed = false;
         for (const group of this.groups) {
-            const gCount = groupCounts.find(c => c.groupId === group.id);
-            if (gCount !== undefined && group.resultCount !== gCount.count) {
-                group.resultCount = gCount.count;
+            const gCount = groupCountMap.get(group.id);
+            if (gCount !== undefined && group.resultCount !== gCount) {
+                group.resultCount = gCount;
                 changed = true;
             }
 
             for (const filter of group.filters) {
-                const fCount = counts.find(c => c.filterId === filter.id);
-                if (fCount !== undefined && filter.resultCount !== fCount.count) {
-                    filter.resultCount = fCount.count;
-                    this._onDidChangeResultCounts.fire(filter); // Fire for specific item
+                const fCount = filterCountMap.get(filter.id);
+                if (fCount !== undefined && filter.resultCount !== fCount) {
+                    filter.resultCount = fCount;
+                    this._onDidChangeResultCounts.fire(filter);
                     changed = true;
                 }
             }
@@ -811,26 +814,26 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public async createProfile(name: string): Promise<boolean> {
-        // Create new profile with default filters (fresh start)
-        // We temporarily use this.groups to generate defaults or we can refactor initDefaultFilters.
-        // For now, let's manually create the default group structure or just use empty if initDefaultFilters depends on this.groups state.
-        const previousGroups = this.stateService.deepCopy(this.groups);
-        this.groups = [];
+        // Build default filters in a temporary variable to avoid mutating live state
+        const previousGroups = this.groups;
+        const tempGroups: FilterGroup[] = [];
+        this.groups = tempGroups;
         this.initDefaultFilters();
+        const newProfileGroups = this.stateService.deepCopy(tempGroups);
+        // Restore live state immediately
+        this.groups = previousGroups;
 
-        const success = await this.profileManager.createProfile(name, this.stateService.deepCopy(this.groups));
+        const success = await this.profileManager.createProfile(name, newProfileGroups);
         if (success) {
+            this.groups = tempGroups;
             this.stateService.saveToState(this.groups);
             await this.profileManager.loadProfile(name);
             this.invalidateCache();
             this._onDidChangeFilters.fire();
             this.logger.info(`Created and switched to new profile: ${name}`);
             return true;
-        } else {
-            // Restore
-            this.groups = previousGroups;
-            return false;
         }
+        return false;
     }
 
     public async duplicateProfile(name: string): Promise<boolean> {

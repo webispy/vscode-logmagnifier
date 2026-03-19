@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { Constants } from '../Constants';
-import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult } from '../models/Workflow';
+import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult, WorkflowViewModel, ProfileViewModel } from '../models/Workflow';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
 import { Logger } from './Logger';
@@ -37,6 +37,7 @@ export class WorkflowManager implements vscode.Disposable {
         private sourceMapService: SourceMapService
     ) {
         this.workflows = this.loadFromState();
+        this.cleanupStaleTempFiles();
 
         // Subscribe to profile changes to update workflow UI when profiles are deleted
         this._disposables.push(
@@ -44,6 +45,36 @@ export class WorkflowManager implements vscode.Disposable {
                 this._onDidChangeWorkflow.fire();
             })
         );
+    }
+
+    /**
+     * Cleans up stale LM_ temp files from previous sessions (e.g. after a crash).
+     * Removes files with the LM_ prefix that are older than 24 hours.
+     */
+    private cleanupStaleTempFiles() {
+        try {
+            const tmpDir = os.tmpdir();
+            const prefix = Constants.Defaults.TempFilePrefix.replace(/[^a-zA-Z0-9]/g, '');
+            const now = Date.now();
+            const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+            const files = fs.readdirSync(tmpDir);
+            for (const file of files) {
+                if (!file.startsWith(prefix)) { continue; }
+                const filePath = path.join(tmpDir, file);
+                try {
+                    const stat = fs.statSync(filePath);
+                    if (stat.isFile() && (now - stat.mtimeMs) > maxAge) {
+                        fs.unlinkSync(filePath);
+                        this.logger.info(`[Workflow] Cleaned up stale temp file: ${file}`);
+                    }
+                } catch {
+                    // Ignore per-file errors
+                }
+            }
+        } catch {
+            // Non-critical — don't block startup
+        }
     }
 
     private loadFromState(): Workflow[] {
@@ -190,9 +221,16 @@ export class WorkflowManager implements vscode.Disposable {
                 traverse(rootId, 1, index === roots.length - 1, 'branch');
             });
 
-            const profiles = await Promise.all(flattenedSteps.map(async step => {
-                const groups = await this.profileManager.getProfileGroups(step.profileName);
-                const isMissing = !this.profileManager.getProfileNames().includes(step.profileName);
+            // Pre-fetch unique profiles to avoid redundant lookups
+            const uniqueProfileNames = [...new Set(flattenedSteps.map(s => s.profileName))];
+            const profileCache = new Map<string, FilterGroup[] | undefined>(
+                await Promise.all(uniqueProfileNames.map(async n => [n, await this.profileManager.getProfileGroups(n)] as const))
+            );
+            const existingProfileNames = new Set(this.profileManager.getProfileNames());
+
+            const profiles = flattenedSteps.map(step => {
+                const groups = profileCache.get(step.profileName);
+                const isMissing = !existingProfileNames.has(step.profileName);
                 let filterCount = 0;
                 if (groups) {
                     filterCount = groups.reduce((acc, g) => acc + g.filters.length, 0);
@@ -222,7 +260,7 @@ export class WorkflowManager implements vscode.Disposable {
                     hasChildren: hasChildren,
                     nodeType: nodeType
                 };
-            }));
+            });
             const lastRunResult = this.lastRunResults.get(workflow.id);
             return {
 
@@ -894,25 +932,5 @@ export class WorkflowManager implements vscode.Disposable {
     }
 }
 
-export interface WorkflowViewModel {
-    id: string;
-    name: string;
-    isExpanded: boolean;
-    lastRunFile?: string;
-    profiles: ProfileViewModel[];
-}
-
-export interface ProfileViewModel {
-    id: string;
-    name: string;
-    filterCount: number;
-    groups: FilterGroup[];
-    isMissing?: boolean;
-    parentId?: string;
-    executionMode?: 'sequential' | 'cumulative';
-    depth?: number;
-    isLastChild?: boolean;
-    connectionType?: 'branch' | 'continuous';
-    hasChildren?: boolean;
-    nodeType?: 'seq-complex' | 'seq-simple' | 'cumulative';
-}
+// Re-export view model interfaces from their canonical location
+export { WorkflowViewModel, ProfileViewModel } from '../models/Workflow';

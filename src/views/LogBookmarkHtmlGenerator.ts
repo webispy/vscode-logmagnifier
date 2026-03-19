@@ -214,7 +214,8 @@ export class LogBookmarkHtmlGenerator {
             template = template.replace(/{{\s*NAV_BAR\s*}}/g, headerButtonsHtml);
             template = template.replace(/{{\s*WORD_WRAP_CLASS\s*}}/g, wordWrapEnabled ? 'word-wrap' : '');
             template = template.replace(/{{\s*CONTENT\s*}}/g, finalHtml);
-            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, JSON.stringify(itemsMap)); // itemsMap is structured data, JSON stringify is safe here as it's typically assigned to JS var
+            const safeItemsMap = JSON.stringify(itemsMap).replace(/<\//g, '<\\/');
+            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, safeItemsMap);
 
             return template;
         } catch (e) {

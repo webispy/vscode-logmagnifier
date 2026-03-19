@@ -727,13 +727,12 @@ export class FilterManager implements vscode.Disposable {
                 // Usually append with a new ID is safer.
                 const newGroupId = crypto.randomUUID();
                 const newGroup: FilterGroup = {
-                    ...group,
                     id: newGroupId,
+                    name: typeof group.name === 'string' ? group.name.slice(0, 200) : 'Imported Group',
+                    isEnabled: typeof group.isEnabled === 'boolean' ? group.isEnabled : true,
+                    isRegex: !!group.isRegex,
                     isExpanded: group.isExpanded ?? true,
-                    filters: (group.filters || []).map(f => ({
-                        ...f,
-                        id: crypto.randomUUID()
-                    }))
+                    filters: (group.filters || []).map((f: unknown) => this.sanitizeImportedFilter(f as Record<string, unknown>))
                 };
 
                 this.groups.push(newGroup);
@@ -753,6 +752,26 @@ export class FilterManager implements vscode.Disposable {
             this.logger.error(`Import failed: ${errorMessage}`);
             return { count: 0, error: errorMessage };
         }
+    }
+
+    private sanitizeImportedFilter(f: Record<string, unknown>): FilterItem {
+        const validContextLines = Constants.Defaults.ContextLineLevels as readonly number[];
+        const contextLine = typeof f.contextLine === 'number' && validContextLines.includes(f.contextLine) ? f.contextLine : 0;
+        const highlightMode = typeof f.highlightMode === 'number' && [0, 1, 2].includes(f.highlightMode) ? f.highlightMode as HighlightMode : undefined;
+
+        return {
+            id: crypto.randomUUID(),
+            keyword: typeof f.keyword === 'string' ? f.keyword.slice(0, 500) : '',
+            type: f.type === 'include' || f.type === 'exclude' ? f.type : 'include',
+            isEnabled: typeof f.isEnabled === 'boolean' ? f.isEnabled : true,
+            isRegex: typeof f.isRegex === 'boolean' ? f.isRegex : false,
+            nickname: typeof f.nickname === 'string' ? f.nickname.slice(0, 200) : undefined,
+            color: typeof f.color === 'string' ? f.color : undefined,
+            highlightMode,
+            caseSensitive: typeof f.caseSensitive === 'boolean' ? f.caseSensitive : undefined,
+            contextLine,
+            excludeStyle: f.excludeStyle === 'hidden' ? 'hidden' : undefined,
+        };
     }
 
     public updateResultCounts(counts: { filterId: string, count: number }[], groupCounts: { groupId: string, count: number }[]): void {

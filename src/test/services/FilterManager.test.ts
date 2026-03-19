@@ -162,6 +162,128 @@ suite('FilterManager Export/Import Test Suite', () => {
         assert.strictEqual(importedGroup.filters[0].keyword, 'Imported Key');
     });
 
+    test('Import preserves keyword whitespace', () => {
+        const importData = {
+            version: '1.0.0',
+            groups: [{
+                id: 'ws-1',
+                name: 'Whitespace Group',
+                isRegex: false,
+                isEnabled: true,
+                filters: [
+                    { id: 'f1', keyword: ' ERROR ', type: 'include', isEnabled: true },
+                    { id: 'f2', keyword: '  leading', type: 'include', isEnabled: true },
+                    { id: 'f3', keyword: 'trailing  ', type: 'exclude', isEnabled: true },
+                ]
+            }]
+        };
+
+        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        assert.strictEqual(result.count, 1);
+
+        const group = filterManager.getGroups().find(g => g.name === 'Whitespace Group');
+        assert.ok(group);
+        assert.strictEqual(group.filters[0].keyword, ' ERROR ');
+        assert.strictEqual(group.filters[1].keyword, '  leading');
+        assert.strictEqual(group.filters[2].keyword, 'trailing  ');
+    });
+
+    test('Import sanitizes filter properties with type validation', () => {
+        const importData = {
+            version: '1.0.0',
+            groups: [{
+                id: 'bad-1',
+                name: 'Malicious Group',
+                isRegex: false,
+                isEnabled: true,
+                filters: [{
+                    id: 'f-bad',
+                    keyword: 12345,              // wrong type: number instead of string
+                    type: 'invalid_type',         // invalid enum value
+                    isEnabled: 'yes',             // wrong type: string instead of boolean
+                    isRegex: 'true',              // wrong type: string instead of boolean
+                    highlightMode: 99,            // out of range
+                    caseSensitive: 1,             // wrong type: number instead of boolean
+                    contextLine: 7,               // not in allowed levels [0,3,5,9]
+                    excludeStyle: 'bold',         // invalid value
+                }]
+            }]
+        };
+
+        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        assert.strictEqual(result.count, 1);
+
+        const group = filterManager.getGroups().find(g => g.name === 'Malicious Group');
+        assert.ok(group);
+        const filter = group.filters[0];
+
+        // All invalid values should fall back to safe defaults
+        assert.strictEqual(filter.keyword, '', 'Non-string keyword should become empty');
+        assert.strictEqual(filter.type, 'include', 'Invalid type should default to include');
+        assert.strictEqual(filter.isEnabled, true, 'Non-boolean isEnabled should default to true');
+        assert.strictEqual(filter.isRegex, false, 'Non-boolean isRegex should default to false');
+        assert.strictEqual(filter.highlightMode, undefined, 'Out-of-range highlightMode should become undefined');
+        assert.strictEqual(filter.caseSensitive, undefined, 'Non-boolean caseSensitive should become undefined');
+        assert.strictEqual(filter.contextLine, 0, 'Invalid contextLine should default to 0');
+        assert.strictEqual(filter.excludeStyle, undefined, 'Invalid excludeStyle should become undefined');
+    });
+
+    test('Import truncates oversized keyword and name', () => {
+        const longKeyword = 'x'.repeat(1000);
+        const longName = 'G'.repeat(500);
+        const longNickname = 'N'.repeat(400);
+        const importData = {
+            version: '1.0.0',
+            groups: [{
+                id: 'long-1',
+                name: longName,
+                isRegex: false,
+                isEnabled: true,
+                filters: [{
+                    id: 'f-long',
+                    keyword: longKeyword,
+                    type: 'include',
+                    isEnabled: true,
+                    nickname: longNickname,
+                }]
+            }]
+        };
+
+        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        assert.strictEqual(result.count, 1);
+
+        const group = filterManager.getGroups().find(g => g.name === longName.slice(0, 200));
+        assert.ok(group, 'Group name should be truncated to 200 chars');
+        assert.strictEqual(group.name.length, 200);
+        assert.strictEqual(group.filters[0].keyword.length, 500, 'Keyword should be truncated to 500 chars');
+        assert.strictEqual(group.filters[0].nickname?.length, 200, 'Nickname should be truncated to 200 chars');
+    });
+
+    test('Import assigns new IDs to groups and filters', () => {
+        const importData = {
+            version: '1.0.0',
+            groups: [{
+                id: 'original-group-id',
+                name: 'ID Test Group',
+                isRegex: false,
+                isEnabled: true,
+                filters: [{
+                    id: 'original-filter-id',
+                    keyword: 'test',
+                    type: 'include',
+                    isEnabled: true,
+                }]
+            }]
+        };
+
+        filterManager.importFilters(JSON.stringify(importData), 'word', false);
+
+        const group = filterManager.getGroups().find(g => g.name === 'ID Test Group');
+        assert.ok(group);
+        assert.notStrictEqual(group.id, 'original-group-id', 'Group ID should be regenerated');
+        assert.notStrictEqual(group.filters[0].id, 'original-filter-id', 'Filter ID should be regenerated');
+    });
+
     test('Import Filters with Overwrite', () => {
         // 1. Create existing group
         filterManager.addGroup('Existing Group', false);

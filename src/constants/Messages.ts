@@ -184,6 +184,7 @@ export const Messages = {
             RetrieveRecordingFailed: 'Failed to retrieve screen recording.',
             InvalidRegexPatternDetailed: 'Invalid Regex Pattern: "{0}". Error: {1}',
             OpenFileFailed: 'Failed to open file: {0}',
+            InputTooLong: 'Must be {0} characters or fewer',
         },
         Progress: {
             Processing: 'Processing...',

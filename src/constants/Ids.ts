@@ -291,5 +291,7 @@ export const Ids = {
         AdbDefaultOptions: '-v threadtime',
         LargeFileSizeLimitMB: 50,
         ContextLineLevels: [0, 3, 5, 9] as readonly number[],
+        MaxKeywordLength: 500,
+        MaxNameLength: 100,
     },
 } as const;

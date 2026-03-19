@@ -377,7 +377,7 @@ export class HighlightService implements vscode.Disposable {
                     } else if (selection === 'Disable Filter') {
                         this.filterManager.toggleFilter(groupId, filter.id);
                     }
-                });
+                }, () => { /* dismissed */ });
             }
         }
     }

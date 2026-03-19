@@ -59,10 +59,13 @@ export class FilterItemCommandManager {
 
             if (group.isRegex) {
                 // Regex Filter: 2-step edit (Name -> Regex)
-                const newNickname = await vscode.window.showInputBox({
+                const newNickname = (await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterNickname,
-                    value: item.nickname || ''
-                });
+                    value: item.nickname || '',
+                    validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                        ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                        : null,
+                }))?.trim();
 
                 if (newNickname === undefined) {
                     return;
@@ -72,6 +75,9 @@ export class FilterItemCommandManager {
                     prompt: Constants.Prompts.EnterRegexPattern,
                     value: item.keyword,
                     validateInput: (value) => {
+                        if (value.length > Constants.Defaults.MaxKeywordLength) {
+                            return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength));
+                        }
                         try {
                             new RegExp(value);
                             return null;
@@ -96,7 +102,10 @@ export class FilterItemCommandManager {
                 // Word Filter: simple keyword edit
                 const newKeyword = await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterNewKeyword,
-                    value: item.keyword
+                    value: item.keyword,
+                    validateInput: (v) => v.length > Constants.Defaults.MaxKeywordLength
+                        ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength))
+                        : null,
                 });
 
                 if (newKeyword && newKeyword !== item.keyword) {
@@ -113,7 +122,12 @@ export class FilterItemCommandManager {
                 return;
             }
 
-            const keyword = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterKeyword });
+            const keyword = await vscode.window.showInputBox({
+                prompt: Constants.Prompts.EnterFilterKeyword,
+                validateInput: (v) => v.length > Constants.Defaults.MaxKeywordLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength))
+                    : null,
+            });
             if (!keyword) {
                 return;
             }
@@ -131,7 +145,12 @@ export class FilterItemCommandManager {
                 return;
             }
 
-            const nickname = await vscode.window.showInputBox({ prompt: Constants.Prompts.EnterFilterNickname });
+            const nickname = (await vscode.window.showInputBox({
+                prompt: Constants.Prompts.EnterFilterNickname,
+                validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxNameLength))
+                    : null,
+            }))?.trim();
             if (!nickname) {
                 return;
             }
@@ -139,6 +158,9 @@ export class FilterItemCommandManager {
             const pattern = await vscode.window.showInputBox({
                 prompt: Constants.Prompts.EnterRegexPattern,
                 validateInput: (value) => {
+                    if (value.length > Constants.Defaults.MaxKeywordLength) {
+                        return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength));
+                    }
                     try {
                         new RegExp(value);
                         return null;

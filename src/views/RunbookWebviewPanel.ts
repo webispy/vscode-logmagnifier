@@ -3,7 +3,7 @@ import { RunbookMarkdown } from '../models/Runbook';
 import * as path from 'path';
 import * as cp from 'child_process';
 import * as os from 'os';
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
@@ -136,8 +136,15 @@ export class RunbookWebviewPanel {
         this._panel.webview.postMessage({ command: 'command-running', blockId });
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
+        const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/sh';
+        const shellArgs = os.platform() === 'win32' ? ['/c', script] : ['-c', script];
 
-        const child = cp.exec(script, { cwd, timeout: 60_000, maxBuffer: 5 * 1024 * 1024 });
+        const child = cp.execFile(shell, shellArgs, {
+            cwd,
+            timeout: 60_000,
+            maxBuffer: 5 * 1024 * 1024,
+            env: { ...process.env, PATH: process.env.PATH }
+        });
         this._runningProcesses.set(blockId, child);
 
         child.stdout?.on('data', (data) => {
@@ -174,13 +181,13 @@ export class RunbookWebviewPanel {
         });
     }
 
-    private updateScriptInFile(blockId: string, newScript: string) {
+    private async updateScriptInFile(blockId: string, newScript: string): Promise<void> {
         const indexMatch = blockId.match(/^block_(\d+)$/);
         if (!indexMatch) { return; }
         const targetIndex = parseInt(indexMatch[1], 10);
 
         try {
-            const content = fs.readFileSync(this._currentItem.filePath, 'utf-8');
+            const content = await fsp.readFile(this._currentItem.filePath, 'utf-8');
             const codeBlockRegex = /```(sh|bash|shell)\s*\n([\s\S]*?)```/g;
 
             let match;
@@ -193,7 +200,7 @@ export class RunbookWebviewPanel {
                     const after = content.substring(match.index + match[0].length);
                     const normalizedScript = newScript.endsWith('\n') ? newScript : newScript + '\n';
                     const newContent = before + '```' + lang + '\n' + normalizedScript + '```' + after;
-                    fs.writeFileSync(this._currentItem.filePath, newContent, 'utf-8');
+                    await fsp.writeFile(this._currentItem.filePath, newContent, 'utf-8');
                     return;
                 }
                 currentIndex++;

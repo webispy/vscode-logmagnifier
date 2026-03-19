@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
@@ -165,7 +166,7 @@ export class CommandManager {
                         this.logger.info(`Clearing globalState key: ${key}`);
                         await this.context.globalState.update(key, undefined);
                     }
-                    this.deleteRunbookStorage();
+                    await this.deleteRunbookStorage();
                     await this.showClearResult(Constants.Messages.Info.ClearAllDataCompleted);
                 }
             }),
@@ -229,7 +230,7 @@ export class CommandManager {
                 );
 
                 if (answer === 'Yes') {
-                    this.deleteRunbookStorage();
+                    await this.deleteRunbookStorage();
                     await this.showClearResult(Constants.Messages.Info.ClearRunbookDataCompleted);
                 }
             }),
@@ -243,10 +244,10 @@ export class CommandManager {
         }
     }
 
-    private deleteRunbookStorage() {
+    private async deleteRunbookStorage(): Promise<void> {
         const runbookPath = path.join(this.context.globalStorageUri.fsPath, 'runbooks');
         if (fs.existsSync(runbookPath)) {
-            fs.rmSync(runbookPath, { recursive: true, force: true });
+            await fsp.rm(runbookPath, { recursive: true, force: true });
             this.logger.info(`Cleared runbook storage: ${runbookPath}`);
         }
     }

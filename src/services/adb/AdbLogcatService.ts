@@ -278,6 +278,7 @@ export class AdbLogcatService {
             }
         } catch (e) {
             this.logger.error(`Flush logs failed: ${e}`);
+            vscode.window.showWarningMessage(`Log flush failed for session — some log data may be lost.`);
         }
     }
 

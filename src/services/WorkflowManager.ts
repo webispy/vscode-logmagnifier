@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import * as os from 'os';
 import { Constants } from '../Constants';
@@ -51,21 +52,21 @@ export class WorkflowManager implements vscode.Disposable {
      * Cleans up stale LM_ temp files from previous sessions (e.g. after a crash).
      * Removes files with the LM_ prefix that are older than 24 hours.
      */
-    private cleanupStaleTempFiles() {
+    private async cleanupStaleTempFiles(): Promise<void> {
         try {
             const tmpDir = os.tmpdir();
             const prefix = Constants.Defaults.TempFilePrefix.replace(/[^a-zA-Z0-9]/g, '');
             const now = Date.now();
             const maxAge = 24 * 60 * 60 * 1000; // 24 hours
 
-            const files = fs.readdirSync(tmpDir);
+            const files = await fsp.readdir(tmpDir);
             for (const file of files) {
                 if (!file.startsWith(prefix)) { continue; }
                 const filePath = path.join(tmpDir, file);
                 try {
-                    const stat = fs.statSync(filePath);
+                    const stat = await fsp.stat(filePath);
                     if (stat.isFile() && (now - stat.mtimeMs) > maxAge) {
-                        fs.unlinkSync(filePath);
+                        await fsp.unlink(filePath);
                         this.logger.info(`[Workflow] Cleaned up stale temp file: ${file}`);
                     }
                 } catch {
@@ -174,96 +175,11 @@ export class WorkflowManager implements vscode.Disposable {
     // ViewModel for UI
     public async getWorkflowViewModels(): Promise<WorkflowViewModel[]> {
         return Promise.all(this.workflows.map(async workflow => {
-            // Build Tree
-            const stepMap = new Map<string, WorkflowStep & { children: string[] }>();
-            const roots: string[] = [];
+            const { stepMap, flattenedSteps } = this.buildStepHierarchy(workflow.steps);
+            const profiles = await this.resolveStepProfiles(flattenedSteps, stepMap);
 
-            // 1. Initialize Map
-            workflow.steps.forEach(step => {
-                stepMap.set(step.id, { ...step, children: [] });
-            });
-
-            // 2. Build Hierarchy
-            workflow.steps.forEach(step => {
-                if (step.parentId && stepMap.has(step.parentId)) {
-                    stepMap.get(step.parentId)!.children.push(step.id);
-                } else {
-                    roots.push(step.id);
-                }
-            });
-
-            // 3. DFS Flattening
-            const flattenedSteps: (WorkflowStep & { depth: number; isLastChild: boolean; connectionType: 'branch' | 'continuous' })[] = [];
-
-            const traverse = (stepId: string, depth: number, isLast: boolean, type: 'branch' | 'continuous') => {
-                const step = stepMap.get(stepId);
-                if (!step) { return; }
-
-                flattenedSteps.push({
-                    ...step,
-                    depth,
-                    isLastChild: isLast,
-                    connectionType: type
-                });
-
-                step.children.forEach((childId: string, index: number) => {
-                    const childStep = stepMap.get(childId);
-                    if (childStep) {
-                        const childType = childStep.executionMode === 'sequential' ? 'branch' : 'continuous';
-                        traverse(childId, depth + 1, index === step.children.length - 1, childType);
-                    }
-                });
-            };
-
-            roots.forEach((rootId, index) => {
-                // Root steps start at depth 1 (depth 0 is reserved for "All Logs" node in UI)
-                // Roots are always "Sequential", so they should be branches.
-                traverse(rootId, 1, index === roots.length - 1, 'branch');
-            });
-
-            // Pre-fetch unique profiles to avoid redundant lookups
-            const uniqueProfileNames = [...new Set(flattenedSteps.map(s => s.profileName))];
-            const profileCache = new Map<string, FilterGroup[] | undefined>(
-                await Promise.all(uniqueProfileNames.map(async n => [n, await this.profileManager.getProfileGroups(n)] as const))
-            );
-            const existingProfileNames = new Set(this.profileManager.getProfileNames());
-
-            const profiles = flattenedSteps.map(step => {
-                const groups = profileCache.get(step.profileName);
-                const isMissing = !existingProfileNames.has(step.profileName);
-                let filterCount = 0;
-                if (groups) {
-                    filterCount = groups.reduce((acc, g) => acc + g.filters.length, 0);
-                }
-
-                const stepNode = stepMap.get(step.id);
-                const hasChildren = stepNode && stepNode.children.length > 0;
-                let nodeType: 'seq-complex' | 'seq-simple' | 'cumulative' = 'seq-simple';
-
-                if (step.depth === 1) {
-                    nodeType = hasChildren ? 'seq-complex' : 'seq-simple';
-                } else {
-                    nodeType = 'cumulative';
-                }
-
-                return {
-                    id: step.id,
-                    name: step.profileName,
-                    filterCount: filterCount,
-                    groups: groups ? groups : [],
-                    isMissing: isMissing,
-                    parentId: step.parentId,
-                    executionMode: step.executionMode,
-                    depth: step.depth,
-                    isLastChild: step.isLastChild,
-                    connectionType: step.connectionType,
-                    hasChildren: hasChildren,
-                    nodeType: nodeType
-                };
-            });
             const lastRunResult = this.lastRunResults.get(workflow.id);
             return {
-
                 id: workflow.id,
                 name: workflow.name,
                 isExpanded: this._expandedWorkflowIds.has(workflow.id),
@@ -271,6 +187,83 @@ export class WorkflowManager implements vscode.Disposable {
                 profiles: profiles
             };
         }));
+    }
+
+    private buildStepHierarchy(steps: WorkflowStep[]) {
+        const stepMap = new Map<string, WorkflowStep & { children: string[] }>();
+        const roots: string[] = [];
+
+        steps.forEach(step => {
+            stepMap.set(step.id, { ...step, children: [] });
+        });
+
+        steps.forEach(step => {
+            if (step.parentId && stepMap.has(step.parentId)) {
+                stepMap.get(step.parentId)!.children.push(step.id);
+            } else {
+                roots.push(step.id);
+            }
+        });
+
+        const flattenedSteps: (WorkflowStep & { depth: number; isLastChild: boolean; connectionType: 'branch' | 'continuous' })[] = [];
+
+        const traverse = (stepId: string, depth: number, isLast: boolean, type: 'branch' | 'continuous') => {
+            const step = stepMap.get(stepId);
+            if (!step) { return; }
+
+            flattenedSteps.push({ ...step, depth, isLastChild: isLast, connectionType: type });
+
+            step.children.forEach((childId: string, index: number) => {
+                const childStep = stepMap.get(childId);
+                if (childStep) {
+                    const childType = childStep.executionMode === 'sequential' ? 'branch' : 'continuous';
+                    traverse(childId, depth + 1, index === step.children.length - 1, childType);
+                }
+            });
+        };
+
+        roots.forEach((rootId, index) => {
+            traverse(rootId, 1, index === roots.length - 1, 'branch');
+        });
+
+        return { stepMap, flattenedSteps };
+    }
+
+    private async resolveStepProfiles(
+        flattenedSteps: (WorkflowStep & { depth: number; isLastChild: boolean; connectionType: 'branch' | 'continuous' })[],
+        stepMap: Map<string, WorkflowStep & { children: string[] }>
+    ) {
+        const uniqueProfileNames = [...new Set(flattenedSteps.map(s => s.profileName))];
+        const profileCache = new Map<string, FilterGroup[] | undefined>(
+            await Promise.all(uniqueProfileNames.map(async n => [n, await this.profileManager.getProfileGroups(n)] as const))
+        );
+        const existingProfileNames = new Set(this.profileManager.getProfileNames());
+
+        return flattenedSteps.map(step => {
+            const groups = profileCache.get(step.profileName);
+            const isMissing = !existingProfileNames.has(step.profileName);
+            const filterCount = groups ? groups.reduce((acc, g) => acc + g.filters.length, 0) : 0;
+
+            const stepNode = stepMap.get(step.id);
+            const hasChildren = stepNode && stepNode.children.length > 0;
+            const nodeType: 'seq-complex' | 'seq-simple' | 'cumulative' =
+                step.depth === 1 ? (hasChildren ? 'seq-complex' : 'seq-simple') : 'cumulative';
+
+            return {
+                id: step.id,
+                name: step.profileName,
+                filterCount,
+                groups: groups ?? [],
+                isMissing,
+                parentId: step.parentId,
+                executionMode: step.executionMode,
+                depth: step.depth,
+                isLastChild: step.isLastChild,
+                connectionType: step.connectionType,
+                hasChildren,
+                nodeType
+            };
+        });
     }
 
     private getUniqueName(baseName: string, existingNames: string[]): string {
@@ -658,7 +651,7 @@ export class WorkflowManager implements vscode.Disposable {
             const tempInputPath = path.join(tmpDir, `${scanPrefix}_source_${randomSuffix}.log`);
 
             try {
-                fs.writeFileSync(tempInputPath, documentContent, 'utf8');
+                await fsp.writeFile(tempInputPath, documentContent, 'utf8');
                 currentFilePath = tempInputPath;
                 this.sessionFiles.add(currentFilePath);
                 this.logger.info(`Created temp source file for simulation (dirty/untitled): ${currentFilePath}`);
@@ -839,7 +832,7 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public async openStepResult(step: SimulationStepResult) {
-        if (!fs.existsSync(step.outputFilePath)) {
+        if (!await fsp.access(step.outputFilePath).then(() => true, () => false)) {
             vscode.window.showErrorMessage("File not found (might be deleted): " + step.outputFilePath);
             return;
         }

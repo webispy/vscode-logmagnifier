@@ -551,8 +551,10 @@ export class AdbDeviceService {
         let l = 0, t = 0, r = 0, b = 0;
         let found = false;
 
-        const regexSquare = new RegExp(`${key}=\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]`);
-        const regexRect = new RegExp(`${key}=Rect\\((\\d+),\\s*(\\d+)\\s*-\\s*(\\d+),\\s*(\\d+)\\)`);
+        // key is a property name from dumpsys output; escape for consistency with getPropValue()
+        const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regexSquare = new RegExp(`${escapedKey}=\\[(\\d+),(\\d+)\\]\\[(\\d+),(\\d+)\\]`);
+        const regexRect = new RegExp(`${escapedKey}=Rect\\((\\d+),\\s*(\\d+)\\s*-\\s*(\\d+),\\s*(\\d+)\\)`);
 
         let match = output.match(regexSquare);
         if (match) {

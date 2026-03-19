@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
 import { Logger } from './Logger';
@@ -15,13 +16,18 @@ export class RunbookService {
     private _items: RunbookItem[] = [];
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
+    readonly ready: Promise<void>;
 
     constructor(private context: vscode.ExtensionContext) {
+        this.ready = this.initialize();
+    }
+
+    private async initialize(): Promise<void> {
         if (!fs.existsSync(this.storagePath)) {
-            fs.mkdirSync(this.storagePath, { recursive: true });
-            this.createDefaultConfig();
+            await fsp.mkdir(this.storagePath, { recursive: true });
+            await this.createDefaultConfig();
         }
-        this.loadConfig();
+        await this.loadConfig();
     }
 
     private get storagePath(): string {
@@ -37,10 +43,10 @@ export class RunbookService {
         this._onDidChangeTreeData.fire();
     }
 
-    private createDefaultConfig() {
+    private async createDefaultConfig(): Promise<void> {
         const defaultGroupPath = path.join(this.storagePath, 'System Check');
         if (!fs.existsSync(defaultGroupPath)) {
-            fs.mkdirSync(defaultGroupPath, { recursive: true });
+            await fsp.mkdir(defaultGroupPath, { recursive: true });
         }
         const defaultPath = path.join(defaultGroupPath, 'health-check.md');
         const defaultContent = `# System Health Check
@@ -86,7 +92,7 @@ uptime
 \`\`\`
 `;
         try {
-            fs.writeFileSync(defaultPath, defaultContent, 'utf-8');
+            await fsp.writeFile(defaultPath, defaultContent, 'utf-8');
         } catch (e) {
             Logger.getInstance().error(`Failed to create default runbook markdown: ${e}`);
         }
@@ -141,7 +147,7 @@ uptime
         const targetPath = path.join(this.storagePath, safeName);
         if (!this.isWithinBase(this.storagePath, targetPath)) { return; }
         if (!fs.existsSync(targetPath)) {
-            fs.mkdirSync(targetPath, { recursive: true });
+            await fsp.mkdir(targetPath, { recursive: true });
             await this.refresh();
         }
     }
@@ -152,7 +158,7 @@ uptime
         const targetPath = path.join(parentPath, fileName);
         if (!this.isWithinBase(this.storagePath, targetPath)) { return; }
         if (!fs.existsSync(targetPath)) {
-            fs.writeFileSync(targetPath, '# New Runbook\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
+            await fsp.writeFile(targetPath, '# New Runbook\n\n```sh\necho "Hello World"\n```\n', 'utf-8');
             await this.refresh();
         }
     }
@@ -164,21 +170,21 @@ uptime
         if (!this.isWithinBase(this.storagePath, newPath)) { return; }
 
         if (oldPath !== newPath) {
-            fs.renameSync(oldPath, newPath);
+            await fsp.rename(oldPath, newPath);
             await this.refresh();
         }
     }
 
     public async deletePath(targetPath: string): Promise<void> {
         if (fs.existsSync(targetPath)) {
-            fs.rmSync(targetPath, { recursive: true, force: true });
+            await fsp.rm(targetPath, { recursive: true, force: true });
             await this.refresh();
         }
     }
 
     public async exportRunbook(targetUri: vscode.Uri): Promise<void> {
         try {
-            const exportedItems = this.serializeItems(this._items);
+            const exportedItems = await this.serializeItems(this._items);
             const exportData = {
                 version: this.context.extension.packageJSON.version,
                 runbooks: exportedItems
@@ -192,22 +198,24 @@ uptime
         }
     }
 
-    private serializeItems(items: RunbookItem[]): ExportedRunbookItem[] {
-        return items.map(item => {
+    private async serializeItems(items: RunbookItem[]): Promise<ExportedRunbookItem[]> {
+        const result: ExportedRunbookItem[] = [];
+        for (const item of items) {
             if (item.kind === 'group') {
-                return {
+                result.push({
                     type: 'group',
                     name: item.label,
-                    children: this.serializeItems((item as RunbookGroup).children)
-                };
+                    children: await this.serializeItems((item as RunbookGroup).children)
+                });
             } else {
-                return {
+                result.push({
                     type: 'markdown',
                     name: item.label,
-                    content: fs.readFileSync((item as RunbookMarkdown).filePath, 'utf-8')
-                };
+                    content: await fsp.readFile((item as RunbookMarkdown).filePath, 'utf-8')
+                });
             }
-        });
+        }
+        return result;
     }
 
     public async importRunbook(sourceUri: vscode.Uri): Promise<void> {
@@ -268,7 +276,7 @@ uptime
                     continue;
                 }
                 if (!fs.existsSync(groupPath)) {
-                    fs.mkdirSync(groupPath, { recursive: true });
+                    await fsp.mkdir(groupPath, { recursive: true });
                 }
                 if (item.children) {
                     await this.deserializeItems(item.children, groupPath, depth + 1);
@@ -281,7 +289,7 @@ uptime
                     continue;
                 }
                 const content = item.content || '';
-                fs.writeFileSync(filePath, content, 'utf-8');
+                await fsp.writeFile(filePath, content, 'utf-8');
             }
         }
     }

@@ -213,9 +213,15 @@ export class AdbLogcatService {
         }
     }
 
+    private static readonly MAX_BUFFER_LINES = 10_000;
+
     private bufferLogs(sessionId: string, lines: string[]) {
         const buffer = this.buffers.get(sessionId) || [];
         buffer.push(...lines.filter(l => l.length > 0));
+        // Evict oldest lines if buffer grows beyond cap (e.g. repeated flush failures)
+        if (buffer.length > AdbLogcatService.MAX_BUFFER_LINES) {
+            buffer.splice(0, buffer.length - AdbLogcatService.MAX_BUFFER_LINES);
+        }
         this.buffers.set(sessionId, buffer);
 
         if (!this.flushTimers.has(sessionId)) {

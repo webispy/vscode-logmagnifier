@@ -82,11 +82,17 @@ export class EditorUtils {
     public static async resolveActiveDocument(): Promise<vscode.TextDocument | undefined> {
         let document = vscode.window.activeTextEditor?.document;
 
+        // Reject virtual/output documents (e.g. tasks:, output:) — only file/untitled are processable
+        if (document && document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled') {
+            document = undefined;
+        }
+
         // Check visible editors if no active editor
         if (!document) {
             const visible = vscode.window.visibleTextEditors;
-            if (visible.length > 0) {
-                document = visible[0].document;
+            const supportedEditor = visible.find(e => e.document.uri.scheme === 'file' || e.document.uri.scheme === 'untitled');
+            if (supportedEditor) {
+                document = supportedEditor.document;
             }
         }
 
@@ -94,10 +100,13 @@ export class EditorUtils {
         if (!document) {
             const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
             if (activeTab && activeTab.input instanceof vscode.TabInputText) {
-                try {
-                    document = await vscode.workspace.openTextDocument(activeTab.input.uri);
-                } catch (e) {
-                    console.error('Failed to resolve document from tab:', e);
+                const uri = activeTab.input.uri;
+                if (uri.scheme === 'file' || uri.scheme === 'untitled') {
+                    try {
+                        document = await vscode.workspace.openTextDocument(uri);
+                    } catch (e) {
+                        console.error('Failed to resolve document from tab:', e);
+                    }
                 }
             }
         }

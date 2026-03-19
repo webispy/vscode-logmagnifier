@@ -238,52 +238,7 @@ export class AdbDeviceService {
     }
 
     private async findPid(deviceId: string, search: string): Promise<string | undefined> {
-        // Helper local to this service for now, or could make public if needed
-        try {
-            const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'pidof', '-s', search]);
-            if (stdout.trim()) {
-                return stdout.trim();
-            }
-        } catch (_e: unknown) {
-            // Ignore error
-        }
-
-        // Fallback ps -A
-        try {
-            const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ps', '-A']);
-            const pid = this.parsePsForPid(stdout, search);
-            if (pid) {
-                return pid;
-            }
-        } catch (_e: unknown) {
-            // Ignore error
-        }
-
-        // Fallback ps
-        try {
-            const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ps']);
-            return this.parsePsForPid(stdout, search);
-        } catch (_e: unknown) {
-            // Ignore error
-        }
-
-        return undefined;
-    }
-
-    private parsePsForPid(output: string, search: string): string | undefined {
-        const lines = output.split('\n');
-        for (const line of lines) {
-            const parts = line.trim().split(/\s+/);
-            if (parts.length < 9) {
-                continue;
-            }
-            const pid = parts[1];
-            const name = parts.slice(8).join(' ');
-            if (name === search || name.endsWith(`/${search}`)) {
-                return pid;
-            }
-        }
-        return undefined;
+        return this.client.findPid(deviceId, search);
     }
 
     public async getShowTouchesState(deviceId: string): Promise<boolean> {

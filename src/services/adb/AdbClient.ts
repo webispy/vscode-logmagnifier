@@ -27,4 +27,50 @@ export class AdbClient {
         const adbPath = this.getAdbPath();
         return cp.spawn(adbPath, args, options || {});
     }
+
+    public async findPid(deviceId: string, search: string): Promise<string | undefined> {
+        try {
+            const stdout = await this.execAdb(['-s', deviceId, 'shell', 'pidof', '-s', search]);
+            if (stdout.trim()) {
+                return stdout.trim();
+            }
+        } catch {
+            // Ignore error, try fallback
+        }
+
+        try {
+            const stdout = await this.execAdb(['-s', deviceId, 'shell', 'ps', '-A']);
+            if (stdout) {
+                const pid = this.parsePsForPid(stdout, search);
+                if (pid) { return pid; }
+            }
+        } catch {
+            // Ignore error, try fallback
+        }
+
+        try {
+            const stdout = await this.execAdb(['-s', deviceId, 'shell', 'ps']);
+            if (stdout) {
+                return this.parsePsForPid(stdout, search);
+            }
+        } catch {
+            // Ignore error
+        }
+
+        return undefined;
+    }
+
+    public parsePsForPid(output: string, search: string): string | undefined {
+        const lines = output.split('\n');
+        for (const line of lines) {
+            const parts = line.trim().split(/\s+/);
+            if (parts.length < 9) { continue; }
+            const pid = parts[1];
+            const name = parts.slice(8).join(' ');
+            if (name === search || name.endsWith(`/${search}`)) {
+                return pid;
+            }
+        }
+        return undefined;
+    }
 }

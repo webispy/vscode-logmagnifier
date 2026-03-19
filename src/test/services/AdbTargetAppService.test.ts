@@ -19,7 +19,8 @@ suite('AdbTargetAppService Test Suite', () => {
 
         client = {
             getAdbPath: () => 'adb',
-            execAdb: async () => ''
+            execAdb: async () => '',
+            findPid: async () => undefined
         } as unknown as AdbClient;
 
         service = new AdbTargetAppService(logger, client);
@@ -60,12 +61,7 @@ root 1 0 1000 100 0 0 init`;
     });
 
     test('getAppPid handles pidof', async () => {
-        client.execAdb = async (args) => {
-            if (args.includes('pidof')) {
-                return '12345\n';
-            }
-            return '';
-        };
+        client.findPid = async () => '12345';
 
         const pid = await service.getAppPid('device1', 'com.example.app');
         assert.strictEqual(pid, '12345');

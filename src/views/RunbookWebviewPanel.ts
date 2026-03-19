@@ -33,7 +33,10 @@ export class RunbookWebviewPanel {
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [vscode.Uri.file(path.join(context.extensionPath, 'resources'))]
+                localResourceRoots: [
+                    vscode.Uri.file(path.join(context.extensionPath, 'resources')),
+                    vscode.Uri.joinPath(context.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist')
+                ]
             }
         );
 

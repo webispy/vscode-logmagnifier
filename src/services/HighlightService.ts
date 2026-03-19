@@ -142,9 +142,8 @@ export class HighlightService implements vscode.Disposable {
         }
 
         const lineCount = editor.document.lineCount;
-        // Use chunked processing for files larger than 5000 lines
-        // This threshold balances responsiveness and overhead
-        if (lineCount > 5000) {
+        // Use chunked processing for large files to maintain responsiveness
+        if (lineCount > Constants.Defaults.ChunkedProcessingThreshold) {
             return this.updateHighlightsChunked(editor, token);
         } else {
             return this.updateHighlightsSync(editor);
@@ -502,7 +501,7 @@ export class HighlightService implements vscode.Disposable {
                 this.activeFlashDecoration = undefined;
             }
             this.activeFlashTimeout = undefined;
-        }, 500);
+        }, Constants.Defaults.FlashDurationMs);
     }
 
     public dispose() {

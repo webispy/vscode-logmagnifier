@@ -730,8 +730,9 @@ export class WorkflowManager implements vscode.Disposable {
                 // For now, assume tree structure created by UI is valid.
                 // Fallback: add remaining steps to end (linear)
                 if (processingOrder.length < totalSteps) {
+                    const ordered = new Set(processingOrder);
                     for (let i = 0; i < totalSteps; i++) {
-                        if (!processingOrder.includes(i)) {
+                        if (!ordered.has(i)) {
                             processingOrder.push(i);
                         }
                     }
@@ -859,7 +860,7 @@ export class WorkflowManager implements vscode.Disposable {
             // Check file size before opening
             const stats = await vscode.workspace.fs.stat(uri);
             const fileSizeMB = stats.size / (1024 * 1024);
-            if (fileSizeMB > 50) {
+            if (fileSizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
                 const open = 'Open Anyway';
                 const choice = await vscode.window.showWarningMessage(
                     `Result file is large (${fileSizeMB.toFixed(2)}MB). VS Code may not display it correctly.`,

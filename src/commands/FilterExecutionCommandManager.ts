@@ -120,7 +120,7 @@ export class FilterExecutionCommandManager {
                     if (document && document.isUntitled) {
                         const tmpDir = os.tmpdir();
                         const randomSuffix = crypto.randomBytes(4).toString('hex');
-                        tempInputPath = path.join(tmpDir, `vscode_loglens_untitled_${randomSuffix}.log`);
+                        tempInputPath = path.join(tmpDir, `${Constants.Defaults.TempFilePrefix}untitled_${randomSuffix}.log`);
 
                         try {
                             await fs.promises.writeFile(tempInputPath, document.getText(), 'utf8');

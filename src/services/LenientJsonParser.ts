@@ -21,6 +21,7 @@ export interface ParsedProperty {
 
 export class LenientJsonParser {
     private static readonly MAX_DEPTH = 100;
+    private static readonly MAX_INPUT_LENGTH = 5 * 1024 * 1024; // 5MB
     private index = 0;
     private text = '';
     private depth = 0;
@@ -53,6 +54,10 @@ export class LenientJsonParser {
     }
 
     public parse(text: string): ParsedNode {
+        if (text.length > LenientJsonParser.MAX_INPUT_LENGTH) {
+            return { type: 'string', value: '[input too large]', isError: true };
+        }
+
         this.text = text;
         this.index = 0;
         this.depth = 0;

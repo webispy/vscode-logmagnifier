@@ -107,7 +107,8 @@ export class RunbookHtmlGenerator {
         html = html.replace(/{{ NONCE }}/g, nonce);
         html = html.replace(/{{ CODICON_CSS_URI }}/g, codiconCssUri);
         html = html.replace(/{{ HTML_CONTENT }}/g, htmlContent);
-        html = html.replace(/{{ SCRIPT_MAP }}/g, scriptMapJson);
+        const safeScriptMapJson = scriptMapJson.replace(/<\//g, '<\\/');
+        html = html.replace(/{{ SCRIPT_MAP }}/g, safeScriptMapJson);
 
         return html;
     }

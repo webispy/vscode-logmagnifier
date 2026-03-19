@@ -230,6 +230,11 @@ uptime
         }
     }
 
+    private isWithinBase(base: string, candidate: string): boolean {
+        const rel = path.relative(base, path.resolve(candidate));
+        return !rel.startsWith('..') && !path.isAbsolute(rel);
+    }
+
     private async deserializeItems(items: ExportedRunbookItem[], currentPath: string): Promise<void> {
         if (!Array.isArray(items)) { return; }
 
@@ -238,6 +243,10 @@ uptime
 
             if (item.type === 'group') {
                 const groupPath = path.join(currentPath, item.name);
+                if (!this.isWithinBase(this.storagePath, groupPath)) {
+                    Logger.getInstance().error(`Path traversal blocked during import: ${item.name}`);
+                    continue;
+                }
                 if (!fs.existsSync(groupPath)) {
                     fs.mkdirSync(groupPath, { recursive: true });
                 }
@@ -247,6 +256,10 @@ uptime
             } else if (item.type === 'markdown') {
                 const fileName = item.name.endsWith('.md') ? item.name : item.name + '.md';
                 const filePath = path.join(currentPath, fileName);
+                if (!this.isWithinBase(this.storagePath, filePath)) {
+                    Logger.getInstance().error(`Path traversal blocked during import: ${item.name}`);
+                    continue;
+                }
                 const content = item.content || '';
                 fs.writeFileSync(filePath, content, 'utf-8');
             }

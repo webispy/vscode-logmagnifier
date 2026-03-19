@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as readline from 'readline';
 import * as os from 'os';
 import * as path from 'path';
+import * as crypto from 'crypto';
 import { FilterGroup, FilterItem } from '../models/Filter';
 import { FileHierarchyService } from './FileHierarchyService';
 import { RegexUtils } from '../utils/RegexUtils';
@@ -88,7 +89,7 @@ export class LogProcessor {
         const tmpDir = os.tmpdir();
         const prefix = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.TempFilePrefix) || Constants.Defaults.TempFilePrefix;
         const now = new Date();
-        const uniqueSuffix = Math.random().toString(36).substring(7);
+        const uniqueSuffix = crypto.randomBytes(4).toString('hex');
         const outputFilename = `${prefix}${now.getFullYear().toString().slice(-2)}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}_${now.getMilliseconds().toString().padStart(3, '0')}_${uniqueSuffix}.log`;
         const outputPath = path.join(tmpDir, outputFilename);
         const outputStream = fs.createWriteStream(outputPath);

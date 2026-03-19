@@ -23,7 +23,7 @@ export class WorkflowManager implements vscode.Disposable {
     private workflows: Workflow[] = [];
     private lastRunResults: Map<string, SimulationResult> = new Map();
     private lastExecutionId: string | undefined;
-    private sessionFiles: Set<string> = new Set(); // Track files created in session for cleanup on exit
+    private sessionFiles: Set<string> = new Set(); // Temp files created during runs; deleted on dispose()
     private _activeStepId: string | undefined;
     private _expandedWorkflowIds: Set<string> = new Set();
     public stepDelay: number = 200;
@@ -235,12 +235,10 @@ export class WorkflowManager implements vscode.Disposable {
         }));
     }
 
-    private getUniqueProfileName(baseName: string): string {
-        const existingNames = this.profileManager.getProfileNames();
+    private getUniqueName(baseName: string, existingNames: string[]): string {
         if (!existingNames.includes(baseName)) {
             return baseName;
         }
-
         let counter = 1;
         let newName = `${baseName} (${counter})`;
         while (existingNames.includes(newName)) {
@@ -250,19 +248,12 @@ export class WorkflowManager implements vscode.Disposable {
         return newName;
     }
 
-    private getUniqueWorkflowName(baseName: string): string {
-        const existingNames = this.workflows.map(w => w.name);
-        if (!existingNames.includes(baseName)) {
-            return baseName;
-        }
+    private getUniqueProfileName(baseName: string): string {
+        return this.getUniqueName(baseName, this.profileManager.getProfileNames());
+    }
 
-        let counter = 1;
-        let newName = `${baseName} (${counter})`;
-        while (existingNames.includes(newName)) {
-            counter++;
-            newName = `${baseName} (${counter})`;
-        }
-        return newName;
+    private getUniqueWorkflowName(baseName: string): string {
+        return this.getUniqueName(baseName, this.workflows.map(w => w.name));
     }
 
     public getProfileNames(): string[] {
@@ -826,6 +817,17 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public dispose() {
+        for (const filePath of this.sessionFiles) {
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch (e) {
+                this.logger.info(`[Workflow] Failed to delete session file on dispose: ${filePath}: ${e}`);
+            }
+        }
+        this.sessionFiles.clear();
+
         this._disposables.forEach(d => d.dispose());
         this._disposables = [];
         this._onDidChangeWorkflow.dispose();

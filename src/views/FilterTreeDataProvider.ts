@@ -21,8 +21,14 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));
     }
 
+    private static readonly MAX_ICON_CACHE_SIZE = 200;
+
     private getCachedIcon(key: string, generator: () => string): vscode.Uri {
         if (!this.iconCache.has(key)) {
+            if (this.iconCache.size >= FilterTreeDataProvider.MAX_ICON_CACHE_SIZE) {
+                const oldestKey = this.iconCache.keys().next().value;
+                if (oldestKey) { this.iconCache.delete(oldestKey); }
+            }
             const svg = generator();
             this.iconCache.set(key, vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`));
         }

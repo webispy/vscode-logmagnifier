@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Constants } from '../Constants';
-import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
+import { FilterGroup, FilterItem, FilterType, HighlightMode } from '../models/Filter';
 import { Logger } from './Logger';
 import { ColorService, ColorPreset } from './ColorService';
 import { ProfileManager } from './ProfileManager';
@@ -308,8 +308,8 @@ export class FilterManager implements vscode.Disposable {
         const found = this._findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
-            // Cycle: 0 (Word) -> 1 (Line) -> 2 (Whole Line) -> 0
-            filter.highlightMode = ((filter.highlightMode ?? 0) + 1) % 3;
+            // Cycle: Word -> Line -> FullLine -> Word
+            filter.highlightMode = ((filter.highlightMode ?? HighlightMode.Word) + 1) % 3;
             this.debouncedSaveToState();
             this.invalidateCache();
             this._onDidChangeFilters.fire();
@@ -486,7 +486,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    public setFilterHighlightMode(groupId: string, filterId: string, mode: number): void {
+    public setFilterHighlightMode(groupId: string, filterId: string, mode: HighlightMode): void {
         const found = this._findFilter(groupId, filterId);
         if (found) {
             if (found.filter.highlightMode !== mode) {

@@ -66,7 +66,8 @@ export class LogBookmarkCommandManager {
         const allLines: string[] = [];
         const sortedUris = Array.from(bookmarksMap.keys()).sort();
         for (const uri of sortedUris) {
-            const items = bookmarksMap.get(uri)!;
+            const items = bookmarksMap.get(uri);
+            if (!items) { continue; }
             items.forEach(b => allLines.push(`Line ${b.line + 1}: ${b.content}`));
         }
         return allLines.join('\n');

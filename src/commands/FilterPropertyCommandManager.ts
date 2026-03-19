@@ -1,7 +1,7 @@
 import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
-import { FilterItem, FilterType } from '../models/Filter';
+import { FilterItem, FilterType, HighlightMode } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
 
 export class FilterPropertyCommandManager {
@@ -56,15 +56,15 @@ export class FilterPropertyCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
 
-        const setHighlightModeHandler = (mode: number) => (item: FilterItem) => {
+        const setHighlightModeHandler = (mode: HighlightMode) => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterHighlightMode(targetGroup.id, item.id, mode);
             }
         };
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Word, setHighlightModeHandler(0)));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Line, setHighlightModeHandler(1)));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(2)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Word, setHighlightModeHandler(HighlightMode.Word)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Line, setHighlightModeHandler(HighlightMode.Line)));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterHighlightMode.Full, setHighlightModeHandler(HighlightMode.FullLine)));
 
         const toggleCaseSensitivityHandler = (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);

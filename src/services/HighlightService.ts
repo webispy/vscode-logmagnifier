@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
 import { FilterManager } from './FilterManager';
-import { FilterItem } from '../models/Filter';
+import { FilterItem, HighlightMode } from '../models/Filter';
 import { Logger } from './Logger';
 import { RegexUtils } from '../utils/RegexUtils';
 
@@ -295,13 +295,13 @@ export class HighlightService implements vscode.Disposable {
                 });
             }
         } else {
-            const mode = filter.highlightMode ?? 0;
+            const mode = filter.highlightMode ?? HighlightMode.Word;
             decoRequests.push({
                 color: filter.color || defaultColor,
-                isFullLine: mode === 2,
+                isFullLine: mode === HighlightMode.FullLine,
                 textDecoration: undefined,
                 fontWeight: 'bold',
-                useLineRange: (mode === 1 || mode === 2)
+                useLineRange: (mode === HighlightMode.Line || mode === HighlightMode.FullLine)
             });
         }
 

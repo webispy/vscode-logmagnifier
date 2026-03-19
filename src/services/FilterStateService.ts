@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Constants } from '../Constants';
-import { FilterGroup, FilterItem } from '../models/Filter';
+import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 
 export class FilterStateService {
     constructor(private context: vscode.ExtensionContext) { }
@@ -35,7 +35,7 @@ export class FilterStateService {
                 enableFullLineHighlight?: boolean;
             }
             const legacy = filter as unknown as LegacyFilterItem;
-            filter.highlightMode = legacy.enableFullLineHighlight ? 1 : 0;
+            filter.highlightMode = legacy.enableFullLineHighlight ? HighlightMode.Line : HighlightMode.Word;
             delete legacy.enableFullLineHighlight;
         }
     }

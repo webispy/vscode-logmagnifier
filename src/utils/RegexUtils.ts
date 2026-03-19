@@ -1,3 +1,6 @@
+import * as vscode from 'vscode';
+import { Constants } from '../Constants';
+
 export class RegexUtils {
     // Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex.
     private static cache: Map<string, RegExp> = new Map();
@@ -16,7 +19,7 @@ export class RegexUtils {
      * @returns A RegExp object. Returns a match-nothing regex on error.
      */
     public static create(keyword: string, isRegex: boolean, caseSensitive: boolean): RegExp {
-        const key = `${keyword}_${isRegex}_${caseSensitive}`;
+        const key = `${keyword}\x00${isRegex}\x00${caseSensitive}`;
         if (RegexUtils.cache.has(key)) {
             // LRU: Refresh by deleting and re-inserting
             const proto = RegexUtils.cache.get(key)!;
@@ -73,16 +76,10 @@ export class RegexUtils {
                     }
                 }
                 RegexUtils.reportedErrors.add(errorKey);
-                // We dynamically import vscode to avoid hard dependency if this util is used outside extension context context
-                // effectively we will just assume it is available in this environment
-                Promise.all([import('vscode'), import('../Constants.js')]).then(([vscode, { Constants }]) => {
-                    const message = Constants.Messages.Error.InvalidRegexPatternDetailed
-                        .replace('{0}', keyword)
-                        .replace('{1}', errorMessage);
-                    vscode.window.showErrorMessage(message);
-                }).catch((importErr) => {
-                    console.warn('[RegexUtils] Failed to show error notification:', importErr);
-                });
+                const message = Constants.Messages.Error.InvalidRegexPatternDetailed
+                    .replace('{0}', keyword)
+                    .replace('{1}', errorMessage);
+                vscode.window.showErrorMessage(message);
             }
 
             // Return a regex that matches nothing

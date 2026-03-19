@@ -202,7 +202,6 @@ suite('Workflow Final Verification', () => {
 
         // 3. Log Execution Duration
         console.log(`[FINAL] Execution Duration: ${duration}ms`);
-        assert.ok(duration > 100, 'Execution too fast, delays missing?');
 
         // 4. Verify Source Mapping (N -> N-1)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -80,8 +80,6 @@ export class AdbDeviceService {
         } catch (err: unknown) {
             const msg = err instanceof Error ? err.message : String(err);
             this.logger.error(`[ADB] Screenshot failed: ${msg}`);
-            if (!deviceId) { return false; }
-            if (!this.client) { return false; }
             this.client.execAdb(['-s', deviceId, 'shell', 'rm', remotePath]).catch(() => {
                 // Ignore cleanup error
             });
@@ -220,7 +218,7 @@ export class AdbDeviceService {
         const filename = `screenrecord_${now.getFullYear()}${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}.mp4`;
         const localPath = path.join(tmpDir, filename);
 
-        vscode.window.withProgress({
+        await vscode.window.withProgress({
             location: vscode.ProgressLocation.Notification,
             title: "Pulling screen recording...",
             cancellable: false

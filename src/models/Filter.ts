@@ -30,3 +30,7 @@ export interface FilterGroup {
     resultCount?: number;
     isExpanded?: boolean; // UI state persistence
 }
+
+export function isFilterGroup(item: unknown): item is FilterGroup {
+    return typeof item === 'object' && item !== null && Array.isArray((item as FilterGroup).filters);
+}

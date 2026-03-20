@@ -176,10 +176,10 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             });
 
             this.updateContent();
-        } catch (e) {
-            this.logger.error(`Error resolving webview view: ${e}`);
+        } catch (e: unknown) {
+            this.logger.error(`Error resolving webview view: ${e instanceof Error ? e.message : String(e)}`);
             webviewView.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
-                Critical Error resolving view: ${escapeHtml(String(e))}
+                Critical Error resolving view: ${escapeHtml(e instanceof Error ? e.message : String(e))}
             </div></body></html>`;
         }
     }
@@ -246,8 +246,8 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 // If not found, open in active editor
                 await vscode.window.showTextDocument(doc, { preview: true });
             }
-        } catch (e) {
-            this.logger.error(`Error focusing file: ${e}`);
+        } catch (e: unknown) {
+            this.logger.error(`Error focusing file: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 
@@ -285,9 +285,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                     this.foldedUris
                 );
                 this.view.webview.html = html;
-            } catch (e) {
+            } catch (e: unknown) {
                 this.view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
-                    Error loading bookmarks: ${escapeHtml(String(e))}<br/>
+                    Error loading bookmarks: ${escapeHtml(e instanceof Error ? e.message : String(e))}<br/>
                 </div></body></html>`;
             }
         }, 100);

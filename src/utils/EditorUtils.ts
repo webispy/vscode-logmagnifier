@@ -69,9 +69,9 @@ export class EditorUtils {
                     }
                 }
             }
-        } catch (error) {
+        } catch (e: unknown) {
             if (onError) {
-                onError(error);
+                onError(e);
             }
         }
         return undefined;

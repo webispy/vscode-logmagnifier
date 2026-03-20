@@ -58,8 +58,8 @@ export class AdbDeviceService {
                 }
             }
             return devices;
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const errorMessage = e instanceof Error ? e.message : String(e);
             this.logger.error(`[ADB] Error running adb devices: ${errorMessage}`);
             return [];
         }
@@ -80,8 +80,8 @@ export class AdbDeviceService {
                 // Ignore cleanup error
             });
             return true;
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
             this.logger.error(`[ADB] Screenshot failed: ${msg}`);
             this.client.execAdb(['-s', deviceId, 'shell', 'rm', remotePath]).catch(() => {
                 // Ignore cleanup error

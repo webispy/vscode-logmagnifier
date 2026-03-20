@@ -14,7 +14,7 @@ import * as path from 'path';
 import { EditorUtils } from '../utils/EditorUtils';
 
 export class FilterExecutionCommandManager {
-    private _prependLineNumbersEnabled: boolean = false;
+    private prependLineNumbersEnabled: boolean = false;
     private isProcessing = false;
 
     constructor(
@@ -36,7 +36,7 @@ export class FilterExecutionCommandManager {
     }
 
     private setPrependLineNumbersEnabled(value: boolean) {
-        this._prependLineNumbersEnabled = value;
+        this.prependLineNumbersEnabled = value;
         vscode.commands.executeCommand('setContext', Constants.ContextKeys.PrependLineNumbersEnabled, value);
     }
 
@@ -93,7 +93,7 @@ export class FilterExecutionCommandManager {
                             // Try to open validation doc if possible
                             const doc = await vscode.workspace.openTextDocument(uri);
                             document = doc;
-                        } catch (e) { this.logger.error(String(e)); }
+                        } catch (e: unknown) { this.logger.error(e instanceof Error ? e.message : String(e)); }
                     }
                 }
             }
@@ -125,8 +125,8 @@ export class FilterExecutionCommandManager {
                         try {
                             await fs.promises.writeFile(tempInputPath, document.getText(), 'utf8');
                             targetPath = tempInputPath;
-                        } catch (e) {
-                            this.logger.error(`Failed to create temp file for untitled document: ${e}`);
+                        } catch (e: unknown) {
+                            this.logger.error(`Failed to create temp file for untitled document: ${e instanceof Error ? e.message : String(e)}`);
                             throw new Error("Failed to process untitled file");
                         }
                     }
@@ -143,7 +143,7 @@ export class FilterExecutionCommandManager {
 
                     try {
                         const result = await this.logProcessor.processFile(targetPath, activeGroups, {
-                            prependLineNumbers: this._prependLineNumbersEnabled,
+                            prependLineNumbers: this.prependLineNumbersEnabled,
                             totalLineCount: totalLineCount
                         });
                         outputPath = result.outputPath;
@@ -181,8 +181,8 @@ export class FilterExecutionCommandManager {
                             } catch (_e) { /* ignore cleanup error */ }
                         }
                     }
-                } catch (error) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', error instanceof Error ? error.message : String(error)));
+                } catch (e: unknown) {
+                    vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', e instanceof Error ? e.message : String(e)));
                     return;
                 }
             });
@@ -206,8 +206,8 @@ export class FilterExecutionCommandManager {
                             await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
                         } catch (_e) { /* ignore */ }
                     }
-                } catch (e) {
-                    this.logger.info(Constants.Messages.Info.FallbackToOpen.replace('{0}', String(e)));
+                } catch (e: unknown) {
+                    this.logger.info(Constants.Messages.Info.FallbackToOpen.replace('{0}', e instanceof Error ? e.message : String(e)));
                     await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
                 }
             }
@@ -328,8 +328,8 @@ export class FilterExecutionCommandManager {
             this.filterManager.setGroupExpanded(group.id, true);
             try {
                 await treeView.reveal(group, { expand: true, focus: false, select: false });
-            } catch (e) {
-                this.logger.warn(`Failed to expand group ${group.name}: ${e}`);
+            } catch (e: unknown) {
+                this.logger.warn(`Failed to expand group ${group.name}: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
     }
@@ -351,8 +351,8 @@ export class FilterExecutionCommandManager {
                 await treeView.reveal(groups[0], { select: false, focus: true, expand: undefined });
                 // Call the view-specific collapse command
                 await vscode.commands.executeCommand(`workbench.actions.treeView.${viewId}.collapseAll`);
-            } catch (e) {
-                this.logger.warn(`Failed to execute native collapse: ${e}`);
+            } catch (e: unknown) {
+                this.logger.warn(`Failed to execute native collapse: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
     }
@@ -379,7 +379,7 @@ export class FilterExecutionCommandManager {
 
                 // Flash line
                 this.highlightService.flashLine(sourceEditor, range.start.line);
-            } catch (e) {
+            } catch (e: unknown) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.JumpToSourceFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         } else {

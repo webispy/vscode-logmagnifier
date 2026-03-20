@@ -20,13 +20,13 @@ export class RegexUtils {
      */
     public static create(keyword: string, isRegex: boolean, caseSensitive: boolean): RegExp {
         const key = `${keyword}\x00${isRegex}\x00${caseSensitive}`;
-        if (RegexUtils.cache.has(key)) {
+        const cached = RegexUtils.cache.get(key);
+        if (cached) {
             // LRU: Refresh by deleting and re-inserting
-            const proto = RegexUtils.cache.get(key)!;
             RegexUtils.cache.delete(key);
-            RegexUtils.cache.set(key, proto);
+            RegexUtils.cache.set(key, cached);
             // Clone: new RegExp(regex) creates a copy with lastIndex = 0
-            return new RegExp(proto);
+            return new RegExp(cached);
         }
 
         try {

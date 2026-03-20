@@ -99,8 +99,8 @@ export class FileHierarchyService {
             });
         }
 
-        const parentNode = this.nodes.get(parentKey)!;
-        parentNode.children.add(childKey);
+        const parentNode = this.nodes.get(parentKey);
+        parentNode?.children.add(childKey);
 
         // Register child
         this.nodes.set(childKey, {

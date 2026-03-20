@@ -198,8 +198,9 @@ export class WorkflowManager implements vscode.Disposable {
         });
 
         steps.forEach(step => {
-            if (step.parentId && stepMap.has(step.parentId)) {
-                stepMap.get(step.parentId)!.children.push(step.id);
+            const parent = step.parentId ? stepMap.get(step.parentId) : undefined;
+            if (parent) {
+                parent.children.push(step.id);
             } else {
                 roots.push(step.id);
             }

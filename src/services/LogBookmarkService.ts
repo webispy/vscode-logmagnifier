@@ -543,7 +543,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
         this.saveDebounceTimer = setTimeout(() => {
             this.saveDebounceTimer = undefined;
-            this.saveToState().catch(e => this.logger.error(`[LogBookmarkService] Failed to save bookmarks: ${e}`));
+            this.saveToState().catch(e => this.logger.error(`[LogBookmarkService] Failed to save bookmarks: ${e instanceof Error ? e.message : String(e)}`));
         }, 150);
     }
 

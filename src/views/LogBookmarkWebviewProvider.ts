@@ -41,7 +41,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             setTimeout(() => {
                 this.lastAddedUri = undefined;
                 this.updateContent().catch(e =>
-                    this.logger.error(`[BookmarkWebview] Failed to update after flash: ${e}`)
+                    this.logger.error(`[BookmarkWebview] Failed to update after flash: ${e instanceof Error ? e.message : String(e)}`)
                 );
             }, 1000);
         }));

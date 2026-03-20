@@ -13,7 +13,7 @@ jobs:
     
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0  # Necessary to check for recent commits
 
@@ -54,7 +54,7 @@ jobs:
 
       - name: Upload Review Report
         if: steps.check_commits.outputs.skip != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: code-review-report
           path: review_results/review-report.md

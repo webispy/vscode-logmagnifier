@@ -169,7 +169,7 @@ export class AdbDeviceService {
         // 1. Send SIGINT to remote
         const pid = info.pid || await this.findPid(deviceId, 'screenrecord');
         if (pid) {
-            this.client.execAdb(['-s', deviceId, 'shell', 'kill', '-2', pid]).catch(e => this.logger.warn(`Failed to kill -2: ${e}`));
+            this.client.execAdb(['-s', deviceId, 'shell', 'kill', '-2', pid]).catch(e => this.logger.warn(`[AdbDeviceService] Failed to kill -2: ${e instanceof Error ? e.message : String(e)}`));
         } else {
             this.logger.warn(`[ADB] Could not determine remote PID. Stopping local process only.`);
         }
@@ -203,7 +203,9 @@ export class AdbDeviceService {
                 const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ls', '-l', remotePath]);
                 const parts = stdout.trim().split(/\s+/);
                 if (parts.length >= 5) { size = parseInt(parts[4], 10); }
-            } catch { /* ignore */ }
+            } catch {
+                // Expected when file is not yet finalized on device
+            }
 
             this.logger.info(`[ADB] File size check (${attempts}/${maxAttempts}): ${size} bytes`);
 
@@ -254,7 +256,10 @@ export class AdbDeviceService {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'get', 'system', 'show_touches']);
             return stdout.trim() === '1';
-        } catch { return false; }
+        } catch {
+            // Device may not support this setting — default to off
+            return false;
+        }
     }
 
     /** Enables or disables the show-touches overlay on the device. */
@@ -544,6 +549,7 @@ export class AdbDeviceService {
         try {
             return await this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_policy']);
         } catch {
+            // media.audio_policy not available — fall back to generic audio dumpsys
             return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'audio']);
         }
     }

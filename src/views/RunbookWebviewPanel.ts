@@ -17,6 +17,7 @@ export class RunbookWebviewPanel {
     private disposables: vscode.Disposable[] = [];
     private currentItem: RunbookMarkdown;
     private readonly htmlGenerator: RunbookHtmlGenerator;
+    private logger: Logger;
     private runningProcesses: Map<string, cp.ChildProcess> = new Map();
     private scriptExecutionAllowed: boolean = false;
     private allowedContentHash: string | undefined;
@@ -54,6 +55,7 @@ export class RunbookWebviewPanel {
     private constructor(webviewPanel: vscode.WebviewPanel, context: vscode.ExtensionContext, item: RunbookMarkdown, logger: Logger) {
         this.webviewPanel = webviewPanel;
         this.currentItem = item;
+        this.logger = logger;
         this.htmlGenerator = new RunbookHtmlGenerator(context, logger);
 
         this.update(item);
@@ -136,6 +138,7 @@ export class RunbookWebviewPanel {
             this.runningProcesses.delete(blockId);
         }
 
+        this.logger.info(`[RunbookWebview] Executing script from ${path.basename(this.currentItem.filePath)} (${blockId}, ${script.length} chars)`);
         this.webviewPanel.webview.postMessage({ command: 'command-running', blockId });
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
@@ -219,6 +222,7 @@ export class RunbookWebviewPanel {
             const content = await fsp.readFile(filePath, 'utf-8');
             return crypto.createHash('sha256').update(content).digest('hex');
         } catch {
+            // File may not exist or be inaccessible — treat as hash mismatch
             return undefined;
         }
     }

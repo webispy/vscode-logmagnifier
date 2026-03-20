@@ -210,7 +210,7 @@ export function activate(context: vscode.ExtensionContext) {
         const fileName = editor.document.fileName;
         logger.info(`Initial active editor: ${fileName} (Scheme: ${scheme})`);
 
-        refreshHighlightsForEditor(editor).catch(e => logger.error(`Initial highlight failed: ${e}`));
+        refreshHighlightsForEditor(editor).catch(e => logger.error(`Initial highlight failed: ${e instanceof Error ? e.message : String(e)}`));
         lastProcessedDoc = editor.document;
     }
 

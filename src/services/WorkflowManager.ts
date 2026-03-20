@@ -72,12 +72,14 @@ export class WorkflowManager implements vscode.Disposable {
                         await fsp.unlink(filePath);
                         this.logger.info(`[Workflow] Cleaned up stale temp file: ${file}`);
                     }
-                } catch {
-                    // Ignore per-file errors
+                } catch (e: unknown) {
+                    // Non-critical — best-effort cleanup of individual temp files
+                    this.logger.info(`[Workflow] Could not clean up ${file}: ${e instanceof Error ? e.message : String(e)}`);
                 }
             }
-        } catch {
-            // Non-critical — don't block startup
+        } catch (e: unknown) {
+            // Non-critical — don't block startup if temp dir scan fails
+            this.logger.info(`[Workflow] Stale temp cleanup skipped: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

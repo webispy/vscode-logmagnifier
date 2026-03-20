@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -25,7 +25,9 @@ export class FileHierarchyService {
     private constructor(storage: vscode.Memento) {
         this.storage = storage;
         this.restore();
-        this.pruneStaleNodes();
+        this.pruneStaleNodes().catch(() => {
+            // Non-critical — stale nodes will be pruned on next activation
+        });
     }
 
     /** Creates and returns the singleton instance, storing hierarchy in workspace state. */
@@ -234,15 +236,13 @@ export class FileHierarchyService {
      * Only prunes files under the OS temp directory to avoid removing
      * legitimate entries for files on removable/network drives.
      */
-    private pruneStaleNodes() {
+    private async pruneStaleNodes() {
         const tmpDir = os.tmpdir();
         const staleKeys: string[] = [];
         for (const [key, node] of this.nodes) {
             if (node.uri.scheme === 'file' && node.uri.fsPath.startsWith(tmpDir)) {
                 try {
-                    if (!fs.existsSync(node.uri.fsPath)) {
-                        staleKeys.push(key);
-                    }
+                    await fsp.access(node.uri.fsPath);
                 } catch {
                     staleKeys.push(key);
                 }

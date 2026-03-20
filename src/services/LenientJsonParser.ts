@@ -69,7 +69,7 @@ export class LenientJsonParser {
 
         try {
             return this.parseValue();
-        } catch (_e) {
+        } catch {
             return { type: 'string', value: text, isError: true }; // Fallback
         }
     }

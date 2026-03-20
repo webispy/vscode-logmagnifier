@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+
+import { AdbDevice } from '../../models/AdbModels';
+
 import { Logger } from '../Logger';
 import { AdbClient } from './AdbClient';
-import { AdbDevice } from '../../models/AdbModels';
 
 export class AdbTargetAppService {
     private static readonly SCAN_CONCURRENCY = 8;

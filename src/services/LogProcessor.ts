@@ -1,14 +1,17 @@
-import * as vscode from 'vscode';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
-import * as readline from 'readline';
 import * as os from 'os';
 import * as path from 'path';
-import * as crypto from 'crypto';
-import { FilterGroup, FilterItem } from '../models/Filter';
-import { FileHierarchyService } from './FileHierarchyService';
-import { RegexUtils } from '../utils/RegexUtils';
-import { CircularBuffer } from '../utils/CircularBuffer';
+import * as readline from 'readline';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
+import { FilterGroup, FilterItem } from '../models/Filter';
+
+import { CircularBuffer } from '../utils/CircularBuffer';
+import { RegexUtils } from '../utils/RegexUtils';
+import { FileHierarchyService } from './FileHierarchyService';
 
 export interface CompiledGroup {
     includes: { regex: RegExp, contextLine: number }[];
@@ -19,7 +22,6 @@ const DEFAULT_MAX_BEFORE_LINES = 20; // Maximum supported context lines (9) + sa
 const DEFAULT_MAX_LINE_COUNT = 999999;
 
 export class LogProcessor {
-
     /**
      * Pre-compiles filter groups into regex arrays for efficient line matching.
      *

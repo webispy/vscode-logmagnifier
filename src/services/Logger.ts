@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
 
 export class Logger implements vscode.Disposable {
@@ -28,13 +29,13 @@ export class Logger implements vscode.Disposable {
         this.log('ERROR', message);
     }
 
+    public show(): void {
+        this.outputChannel.show(true);
+    }
+
     private log(level: string, message: string): void {
         const timestamp = new Date().toISOString();
         this.outputChannel.appendLine(`[${timestamp}] [${level}] ${message}`);
-    }
-
-    public show(): void {
-        this.outputChannel.show(true);
     }
 
     public dispose() {

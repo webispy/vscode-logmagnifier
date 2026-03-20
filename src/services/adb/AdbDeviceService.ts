@@ -1,10 +1,13 @@
-import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
-import { AdbDevice } from '../../models/AdbModels';
-import { Logger } from '../Logger';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../../Constants';
+import { AdbDevice } from '../../models/AdbModels';
+
+import { Logger } from '../Logger';
 import { AdbClient } from './AdbClient';
 
 export class AdbDeviceService {
@@ -227,7 +230,7 @@ export class AdbDeviceService {
                 await this.client.execAdb(['-s', deviceId, 'pull', remotePath, localPath]);
                 const uri = vscode.Uri.file(localPath);
                 await vscode.commands.executeCommand('vscode.open', uri);
-            } catch (_e: unknown) {
+            } catch {
                 vscode.window.showErrorMessage(Constants.Messages.Error.RetrieveRecordingFailed);
             }
             // Cleanup
@@ -243,7 +246,7 @@ export class AdbDeviceService {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'get', 'system', 'show_touches']);
             return stdout.trim() === '1';
-        } catch (_e: unknown) { return false; }
+        } catch { return false; }
     }
 
     public async setShowTouchesState(deviceId: string, enable: boolean): Promise<void> {
@@ -299,8 +302,8 @@ export class AdbDeviceService {
                 if (ipData.public) {
                     publicIpString = `\n  Public IP: ${ipData.public}`;
                 }
-            } catch (error) {
-                this.logger.warn(`Failed to process IP info: ${error}`);
+            } catch (e: unknown) {
+                this.logger.warn(`[AdbDeviceService] Failed to process IP info: ${e instanceof Error ? e.message : String(e)}`);
             }
 
             // Parsing Device Info
@@ -355,8 +358,8 @@ export class AdbDeviceService {
                 const diskUsage = await this.getDiskUsage(deviceId);
                 storageTotal = diskUsage.total;
                 storageFree = diskUsage.free;
-            } catch (error) {
-                this.logger.warn(`Failed to get disk usage: ${error}`);
+            } catch (e: unknown) {
+                this.logger.warn(`[AdbDeviceService] Failed to get disk usage: ${e instanceof Error ? e.message : String(e)}`);
             }
 
             return `System Info for ${model}
@@ -383,10 +386,9 @@ export class AdbDeviceService {
   RAM: Total ${memTotal} MB / Available ${memAvail} MB
   Internal Storage (/data): Total ${storageTotal} / Free ${storageFree}`;
 
-        } catch (error) {
-            this.logger.error(`Error fetching system info: ${error}`);
-            // Do not re-throw, simpler message
-            return `Error fetching system info: ${error instanceof Error ? error.message : String(error)}`;
+        } catch (e: unknown) {
+            this.logger.error(`[AdbDeviceService] Error fetching system info: ${e instanceof Error ? e.message : String(e)}`);
+            return `Error fetching system info: ${e instanceof Error ? e.message : String(e)}`;
         }
     }
 
@@ -435,19 +437,18 @@ export class AdbDeviceService {
                     }
                 }
             }
-        } catch (error) {
-            this.logger.warn(`[ADB] Failed to get internal IP info: ${error}`);
+        } catch (e: unknown) {
+            this.logger.warn(`[ADB] Failed to get internal IP info: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         // 2. Public IP via curl
         try {
-            // Use a short timeout to avoid hanging if no internet
             const output = await this.client.execAdb(['-s', deviceId, 'shell', 'curl', '-s', '--connect-timeout', '5', 'https://api.ipify.org']);
             if (output && output.trim().match(/^[\d.]+$/)) {
                 publicIp = `${output.trim()} (via https://api.ipify.org)`;
             }
-        } catch (error) {
-            this.logger.warn(`[ADB] Failed to get public IP: ${error}`);
+        } catch (e: unknown) {
+            this.logger.warn(`[ADB] Failed to get public IP: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         return { internal: ips, public: publicIp };
@@ -503,8 +504,8 @@ export class AdbDeviceService {
                     }
                 }
             }
-        } catch (error) {
-            this.logger.warn(`Failed to parse disk usage: ${error}`);
+        } catch (e: unknown) {
+            this.logger.warn(`[AdbDeviceService] Failed to parse disk usage: ${e instanceof Error ? e.message : String(e)}`);
         }
         return result;
     }
@@ -535,6 +536,7 @@ export class AdbDeviceService {
     public async runDumpsysAudioFlinger(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_flinger']);
     }
+
     private getPropValue(props: string, key: string): string {
         // Escape special regex characters to prevent CodeQL security issue
         const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

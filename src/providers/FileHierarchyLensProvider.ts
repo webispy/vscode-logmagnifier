@@ -1,17 +1,20 @@
-
 import * as vscode from 'vscode';
-import { FileHierarchyService } from '../services/FileHierarchyService';
+
 import { Constants } from '../Constants';
 
+import { FileHierarchyService } from '../services/FileHierarchyService';
+
 export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
+    public onDidChangeCodeLenses?: vscode.Event<void> | undefined;
+
+    constructor(private hierarchyService: FileHierarchyService) {
+        this.onDidChangeCodeLenses = this.hierarchyService.onDidChangeHierarchy;
+    }
 
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
         const lenses: vscode.CodeLens[] = [];
         const uri = document.uri;
 
-        // Only show if the file is tracked in hierarchy or has a parent
-        // or check if it is part of the system at all?
-        // Let's check if it has a parent or children.
         const parent = this.hierarchyService.getParent(uri);
         const children = this.hierarchyService.getChildren(uri);
         const root = this.hierarchyService.getRoot(uri);
@@ -22,7 +25,7 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
 
         const range = new vscode.Range(0, 0, 0, 0);
 
-        // 1. Full Tree (Always first)
+        // Full Tree (Always first)
         lenses.push(new vscode.CodeLens(range, {
             title: `$(list-tree) Full Tree`,
             tooltip: 'Show Full Hierarchy Tree',
@@ -30,15 +33,13 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
             arguments: [uri, 'tree']
         }));
 
-        // 2. Original & Parent
-        // Design: Origin | Parent
-        // Special Case: Origin (Parent) if same
+        // Original & Parent
+        // Design: Origin | Parent — combined if same
         if (root && root.toString() !== uri.toString()) {
-            const rootName = this.hierarchyService.getNode(root)?.label || 'Original';
+            const rootName = this.hierarchyService.getNode(root)?.label ?? 'Original';
             const isParentOriginal = parent && parent.toString() === root.toString();
 
             if (isParentOriginal) {
-                // Combined: Origin (Parent): Name
                 lenses.push(new vscode.CodeLens(range, {
                     title: `$(home) Original (Parent): ${rootName}`,
                     tooltip: `Go to Original: ${rootName}`,
@@ -46,7 +47,6 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
                     arguments: [root]
                 }));
             } else {
-                // Separate: Origin: Name
                 lenses.push(new vscode.CodeLens(range, {
                     title: `$(home) Original: ${rootName}`,
                     tooltip: `Go to Original: ${rootName}`,
@@ -54,9 +54,8 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
                     arguments: [root]
                 }));
 
-                // Parent (if exists and distinct)
                 if (parent) {
-                    const parentName = this.hierarchyService.getNode(parent)?.label || 'Parent';
+                    const parentName = this.hierarchyService.getNode(parent)?.label ?? 'Parent';
                     lenses.push(new vscode.CodeLens(range, {
                         title: `$(arrow-small-up) Parent: ${parentName}`,
                         tooltip: 'Go to Parent File',
@@ -66,8 +65,7 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
                 }
             }
         } else if (parent) {
-            // Check if parent is root? (Already handled above indirectly, but if root logic fails)
-            const parentName = this.hierarchyService.getNode(parent)?.label || 'Parent';
+            const parentName = this.hierarchyService.getNode(parent)?.label ?? 'Parent';
             lenses.push(new vscode.CodeLens(range, {
                 title: `$(arrow-small-up) Parent: ${parentName}`,
                 tooltip: 'Go to Parent File',
@@ -77,11 +75,5 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
         }
 
         return lenses;
-    }
-
-    public onDidChangeCodeLenses?: vscode.Event<void> | undefined;
-
-    constructor(private hierarchyService: FileHierarchyService) {
-        this.onDidChangeCodeLenses = this.hierarchyService.onDidChangeHierarchy;
     }
 }

@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
 
 interface SourceMapping {
@@ -7,9 +8,12 @@ interface SourceMapping {
 }
 
 export class SourceMapService {
-    private static instance: SourceMapService;
     private static readonly MAX_MAPPINGS = 500;
+
+    private static instance: SourceMapService;
+
     private mappings: Map<string, SourceMapping> = new Map();
+    private pendingNavigation: { uri: vscode.Uri, line: number, timestamp: number } | undefined;
 
     private constructor() { }
 
@@ -81,9 +85,6 @@ export class SourceMapService {
         const isFiltered = editor ? this.hasMapping(editor.document.uri) : false;
         vscode.commands.executeCommand('setContext', 'logmagnifier.isFilteredLog', isFiltered);
     }
-
-    // Pending Navigation for Animation
-    private pendingNavigation: { uri: vscode.Uri, line: number, timestamp: number } | undefined;
 
     public setPendingNavigation(uri: vscode.Uri, line: number): void {
         // Optimization: Avoid object churn if the target hasn't changed.

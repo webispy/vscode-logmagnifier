@@ -88,4 +88,16 @@ export interface MessageItem {
     message: string;
 }
 
-export type AdbTreeItem = AdbDevice | LogcatSession | LogcatTag | TargetAppItem | LaunchInstalledAppItem | SessionGroupItem | ControlActionItem | DumpsysGroupItem | ControlDeviceItem | ControlDeviceActionItem | ChromeInspectItem | MessageItem;
+export type AdbTreeItem =
+    | AdbDevice
+    | LogcatSession
+    | LogcatTag
+    | TargetAppItem
+    | LaunchInstalledAppItem
+    | SessionGroupItem
+    | ControlActionItem
+    | DumpsysGroupItem
+    | ControlDeviceItem
+    | ControlDeviceActionItem
+    | ChromeInspectItem
+    | MessageItem;

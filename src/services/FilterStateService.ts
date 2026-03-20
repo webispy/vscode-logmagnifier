@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
 import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 
@@ -24,7 +25,7 @@ export class FilterStateService {
     public deepCopy<T>(obj: T): T {
         try {
             return structuredClone(obj);
-        } catch (_e) {
+        } catch {
             return JSON.parse(JSON.stringify(obj));
         }
     }

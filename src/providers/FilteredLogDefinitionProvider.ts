@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+
 import { SourceMapService } from '../services/SourceMapService';
 
 export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider {

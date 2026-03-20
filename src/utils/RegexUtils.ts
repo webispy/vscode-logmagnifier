@@ -2,12 +2,12 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
 export class RegexUtils {
-    // Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex.
-    private static cache: Map<string, RegExp> = new Map();
     private static readonly MAX_CACHE_SIZE = Constants.Defaults.RegexCacheSize;
     private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
-
     private static readonly MAX_REPORTED_ERRORS = 200;
+
+    /** Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex. */
+    private static cache: Map<string, RegExp> = new Map();
     private static reportedErrors: Set<string> = new Set();
 
     /**
@@ -65,9 +65,9 @@ export class RegexUtils {
             RegexUtils.cache.set(key, regex);
             return new RegExp(regex);
 
-        } catch (error) {
+        } catch (e: unknown) {
             // Report error to user (once per invalid pattern to avoid spam)
-            const errorMessage = error instanceof Error ? error.message : String(error);
+            const errorMessage = e instanceof Error ? e.message : String(e);
             const errorKey = `${keyword}_${errorMessage}`;
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {

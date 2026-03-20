@@ -1,6 +1,9 @@
-import * as vscode from 'vscode';
 import * as cp from 'child_process';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../../Constants';
+
 import { Logger } from '../Logger';
 
 export type AdbErrorKind = 'not-found' | 'device-offline' | 'command-failed' | 'timeout';
@@ -13,13 +16,13 @@ export class AdbCommandError extends Error {
 }
 
 export class AdbClient {
+    private static readonly DEFAULT_TIMEOUT_MS = 30_000;
+
     constructor(private logger: Logger) { }
 
     public getAdbPath(): string {
-        return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) || Constants.Defaults.AdbPath;
+        return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) ?? Constants.Defaults.AdbPath;
     }
-
-    private static readonly DEFAULT_TIMEOUT_MS = 30_000;
 
     public async execAdb(args: string[], options?: cp.ExecFileOptions): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -55,8 +58,8 @@ export class AdbClient {
             if (stdout.trim()) {
                 return stdout.trim();
             }
-        } catch (e) {
-            this.logger.info(`[ADB] pidof not available for ${search}: ${e}`);
+        } catch (e: unknown) {
+            this.logger.info(`[ADB] pidof not available for ${search}: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         try {
@@ -65,8 +68,8 @@ export class AdbClient {
                 const pid = this.parsePsForPid(stdout, search);
                 if (pid) { return pid; }
             }
-        } catch (e) {
-            this.logger.info(`[ADB] ps -A not available for ${search}: ${e}`);
+        } catch (e: unknown) {
+            this.logger.info(`[ADB] ps -A not available for ${search}: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         try {
@@ -74,8 +77,8 @@ export class AdbClient {
             if (stdout) {
                 return this.parsePsForPid(stdout, search);
             }
-        } catch (e) {
-            this.logger.info(`[ADB] ps not available for ${search}: ${e}`);
+        } catch (e: unknown) {
+            this.logger.info(`[ADB] ps not available for ${search}: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         return undefined;

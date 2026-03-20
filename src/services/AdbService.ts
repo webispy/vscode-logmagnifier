@@ -1,17 +1,19 @@
 import * as vscode from 'vscode';
+
 import { AdbDevice, LogcatSession, LogcatTag } from '../models/AdbModels';
+
 import { Logger } from './Logger';
 import { AdbClient } from './adb/AdbClient';
 import { AdbDeviceService } from './adb/AdbDeviceService';
-import { AdbTargetAppService } from './adb/AdbTargetAppService';
 import { AdbLogcatService } from './adb/AdbLogcatService';
+import { AdbTargetAppService } from './adb/AdbTargetAppService';
 
 export class AdbService implements vscode.Disposable {
     private client: AdbClient;
     private deviceService: AdbDeviceService;
     private targetAppService: AdbTargetAppService;
     private logcatService: AdbLogcatService;
-    private _disposables: vscode.Disposable[] = [];
+    private disposables: vscode.Disposable[] = [];
 
     // Events need to be aggregated or exposed from sub-services
     private _onDidChangeSessions = new vscode.EventEmitter<void>();
@@ -24,7 +26,7 @@ export class AdbService implements vscode.Disposable {
         this.logcatService = new AdbLogcatService(logger, this.client, this.targetAppService);
 
         // Forward events
-        this._disposables.push(
+        this.disposables.push(
             this.logcatService.onDidChangeSessions(() => this._onDidChangeSessions.fire()),
             this.targetAppService.onDidChangeTargetApp(() => this._onDidChangeSessions.fire()),
             this.deviceService.onDidChangeRecordingStatus(() => this._onDidChangeSessions.fire())
@@ -208,8 +210,8 @@ export class AdbService implements vscode.Disposable {
     }
 
     public dispose() {
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
         this.logcatService.dispose();
         // deviceService doesn't have disposable resources (process cleanup handles itself or on demand)
         // targetAppService doesn't have disposable resources

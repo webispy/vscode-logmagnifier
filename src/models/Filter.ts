@@ -32,5 +32,5 @@ export interface FilterGroup {
 }
 
 export function isFilterGroup(item: unknown): item is FilterGroup {
-    return typeof item === 'object' && item !== null && Array.isArray((item as FilterGroup).filters);
+    return typeof item === 'object' && item !== null && 'filters' in item && Array.isArray(item.filters);
 }

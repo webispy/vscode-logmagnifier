@@ -1,20 +1,26 @@
-import * as vscode from 'vscode';
 import * as cp from 'child_process';
 import * as crypto from 'crypto';
-import { Logger } from '../Logger';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../../Constants';
+import { AdbDevice, LogcatSession, LogcatTag } from '../../models/AdbModels';
+
+import { Logger } from '../Logger';
 import { AdbClient } from './AdbClient';
-import { LogcatSession, LogcatTag, AdbDevice } from '../../models/AdbModels';
 import { AdbTargetAppService } from './AdbTargetAppService';
 
 export class AdbLogcatService {
+    private static readonly MAX_BUFFER_LINES = 10_000;
+    private static readonly FLUSH_INTERVAL_MS = 500;
+
+    private _onDidChangeSessions = new vscode.EventEmitter<void>();
+    public readonly onDidChangeSessions = this._onDidChangeSessions.event;
+
     private sessions: Map<string, LogcatSession> = new Map();
     private processes: Map<string, cp.ChildProcess> = new Map();
     private buffers: Map<string, string[]> = new Map();
     private flushTimers: Map<string, NodeJS.Timeout> = new Map();
-
-    private _onDidChangeSessions = new vscode.EventEmitter<void>();
-    public readonly onDidChangeSessions = this._onDidChangeSessions.event;
 
     constructor(
         private logger: Logger,
@@ -224,9 +230,6 @@ export class AdbLogcatService {
         }
     }
 
-    private static readonly MAX_BUFFER_LINES = 10_000;
-    private static readonly FLUSH_INTERVAL_MS = 500;
-
     private bufferLogs(sessionId: string, lines: string[]) {
         const buffer = this.buffers.get(sessionId) || [];
         buffer.push(...lines.filter(l => l.length > 0));
@@ -276,9 +279,9 @@ export class AdbLogcatService {
             } else {
                 this.stopSession(sessionId);
             }
-        } catch (e) {
-            this.logger.error(`Flush logs failed: ${e}`);
-            vscode.window.showWarningMessage(`Log flush failed for session — some log data may be lost.`);
+        } catch (e: unknown) {
+            this.logger.error(`[AdbLogcatService] Flush logs failed: ${e instanceof Error ? e.message : String(e)}`);
+            vscode.window.showWarningMessage('Log flush failed for session — some log data may be lost.');
         }
     }
 

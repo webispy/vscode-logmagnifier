@@ -101,7 +101,8 @@ suite('AdbDeviceService Test Suite', () => {
 
         // Network
         assert.ok(info.includes('192.168.1.10 (wlan0)'));
-        assert.ok(info.includes('8.8.8.8 (via https://api.ipify.org)'));
+        // Public IP lookup is opt-in (adbEnablePublicIpLookup), disabled by default
+        assert.ok(!info.includes('8.8.8.8'));
 
         // Mem and Disk
         assert.ok(info.includes('Total 3906 MB'));

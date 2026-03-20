@@ -509,6 +509,14 @@ export class HighlightService implements vscode.Disposable {
     }
 
     public dispose() {
+        if (this.activeFlashTimeout) {
+            clearTimeout(this.activeFlashTimeout);
+            this.activeFlashTimeout = undefined;
+        }
+        if (this.activeFlashDecoration) {
+            this.activeFlashDecoration.dispose();
+            this.activeFlashDecoration = undefined;
+        }
         this.decorationTypes.forEach(val => val.decoration.dispose());
         this.decorationTypes.clear();
     }

@@ -48,13 +48,17 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
 
             // Listen for changes
             this.workflowManager.onDidChangeWorkflow(() => {
-                this.refresh();
+                this.refresh().catch(e =>
+                    Logger.getInstance().error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+                );
             }, null, this.disposables);
 
             // Visibility changes
             webviewView.onDidChangeVisibility(() => {
                 if (webviewView.visible) {
-                    this.refresh();
+                    this.refresh().catch(e =>
+                        Logger.getInstance().error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+                    );
                 }
             }, null, this.disposables);
 

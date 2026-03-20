@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as path from 'path';
 
 import * as marked from 'marked';
@@ -35,7 +35,7 @@ export class RunbookHtmlGenerator {
     public async generate(webview: vscode.Webview, item: RunbookMarkdown): Promise<string> {
         let content = '';
         try {
-            content = fs.readFileSync(item.filePath, 'utf-8');
+            content = await fsp.readFile(item.filePath, 'utf-8');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             Logger.getInstance().error(`[RunbookHtmlGenerator] Failed to read markdown file: ${msg}`);
@@ -107,7 +107,7 @@ export class RunbookHtmlGenerator {
         const codiconCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'node_modules', '@vscode', 'codicons', 'dist', 'codicon.css')).toString();
 
         html = applyWebviewTemplate(html, webview);
-        html = html.replace(/{{ TITLE }}/g, item.label);
+        html = html.replace(/{{ TITLE }}/g, escapeHtml(item.label));
         html = html.replace(/{{ CODICON_CSS_URI }}/g, codiconCssUri);
         html = html.replace(/{{ HTML_CONTENT }}/g, htmlContent);
         const safeScriptMapJson = scriptMapJson.replace(/<\//g, '<\\/');

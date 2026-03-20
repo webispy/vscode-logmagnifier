@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -170,7 +170,9 @@ export class WorkflowCommandManager {
 
         const downloadsPath = path.join(os.homedir(), 'Downloads');
         let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
-        if (!fs.existsSync(downloadsPath)) {
+        try {
+            await fsp.access(downloadsPath);
+        } catch {
             defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
         }
 
@@ -182,7 +184,7 @@ export class WorkflowCommandManager {
 
         if (uri) {
             try {
-                fs.writeFileSync(uri.fsPath, json, 'utf8');
+                await fsp.writeFile(uri.fsPath, json, 'utf8');
                 vscode.window.showInformationMessage(`Workflow exported to ${uri.fsPath}`);
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : String(e);
@@ -200,7 +202,7 @@ export class WorkflowCommandManager {
 
         if (uris && uris.length > 0) {
             try {
-                const json = fs.readFileSync(uris[0].fsPath, 'utf8');
+                const json = await fsp.readFile(uris[0].fsPath, 'utf8');
 
                 const success = await this.workflowManager.importWorkflow(json, async (profileName: string) => {
                     const choice = await vscode.window.showQuickPick(

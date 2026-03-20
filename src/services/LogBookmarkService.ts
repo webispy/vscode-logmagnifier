@@ -611,7 +611,9 @@ export class LogBookmarkService implements vscode.Disposable {
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
         this._onDidChangeBookmarks.fire();
 
-        this.checkFilesExistence();
+        this.checkFilesExistence().catch(e =>
+            this.logger.error(`[LogBookmarkService] File existence check failed: ${e instanceof Error ? e.message : String(e)}`)
+        );
         this.updateWatcher();
 
         this.logger.info(`[LogBookmarkService] Loaded bookmarks from state. Files with bookmarks: ${this.bookmarkMap.size}`);

@@ -116,9 +116,12 @@ export class RunbookWebviewPanel {
         }
 
         if (!this.scriptExecutionAllowed) {
+            const detail = script.length > 500
+                ? script.substring(0, 500) + `\n\n... (${script.length - 500} more characters — full script will be executed)`
+                : script;
             const confirmed = await vscode.window.showWarningMessage(
                 'Execute shell command?',
-                { modal: true, detail: script.substring(0, 500) },
+                { modal: true, detail },
                 'Execute',
                 'Allow All for this Runbook'
             );

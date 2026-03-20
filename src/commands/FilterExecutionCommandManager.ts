@@ -9,6 +9,7 @@ import { FilterGroup, FilterItem } from '../models/Filter';
 import { RegexUtils } from '../utils/RegexUtils';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 import { EditorUtils } from '../utils/EditorUtils';
@@ -175,9 +176,9 @@ export class FilterExecutionCommandManager {
 
                     } finally {
                         // Cleanup temp input file if we created one
-                        if (tempInputPath && fs.existsSync(tempInputPath)) {
+                        if (tempInputPath) {
                             try {
-                                fs.unlinkSync(tempInputPath);
+                                await fsp.unlink(tempInputPath);
                             } catch (_e) { /* ignore cleanup error */ }
                         }
                     }

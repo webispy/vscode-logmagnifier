@@ -443,14 +443,19 @@ export class AdbDeviceService {
             this.logger.warn(`[ADB] Failed to get internal IP info: ${e instanceof Error ? e.message : String(e)}`);
         }
 
-        // 2. Public IP via curl
-        try {
-            const output = await this.client.execAdb(['-s', deviceId, 'shell', 'curl', '-s', '--connect-timeout', '5', 'https://api.ipify.org']);
-            if (output && output.trim().match(/^[\d.]+$/)) {
-                publicIp = `${output.trim()} (via https://api.ipify.org)`;
+        // 2. Public IP via curl (requires user opt-in since it contacts an external service)
+        const enablePublicIp = vscode.workspace
+            .getConfiguration(Constants.Configuration.Section)
+            .get<boolean>(Constants.Configuration.Adb.EnablePublicIpLookup, false);
+        if (enablePublicIp) {
+            try {
+                const output = await this.client.execAdb(['-s', deviceId, 'shell', 'curl', '-s', '--connect-timeout', '5', 'https://api.ipify.org']);
+                if (output && output.trim().match(/^[\d.]+$/)) {
+                    publicIp = `${output.trim()} (via https://api.ipify.org)`;
+                }
+            } catch (e: unknown) {
+                this.logger.warn(`[ADB] Failed to get public IP: ${e instanceof Error ? e.message : String(e)}`);
             }
-        } catch (e: unknown) {
-            this.logger.warn(`[ADB] Failed to get public IP: ${e instanceof Error ? e.message : String(e)}`);
         }
 
         return { internal: ips, public: publicIp };

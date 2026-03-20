@@ -1,9 +1,16 @@
 import { ThemeUtils } from './ThemeUtils';
 
 export class IconUtils {
+    /** Strips characters that could break SVG attribute values. */
+    private static sanitizeColor(color: string): string {
+        return color.replace(/[<>"'&]/g, '');
+    }
+
     public static generateGroupSvg(folderColor: string, overlayColor?: string): string {
+        folderColor = IconUtils.sanitizeColor(folderColor);
         const folderPath = `<path d="M7.5 2.5 L9.5 4.5 H14.5 V13.5 H1.5 V2.5 H7.5 Z" fill="none" stroke="${folderColor}" stroke-width="1" stroke-linejoin="round" />`;
 
+        overlayColor = overlayColor ? IconUtils.sanitizeColor(overlayColor) : undefined;
         if (!overlayColor) {
             return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">${folderPath}</svg>`;
         }
@@ -34,6 +41,7 @@ export class IconUtils {
     }
 
     public static generateOffSvg(textColor: string): string {
+        textColor = IconUtils.sanitizeColor(textColor);
         // Text "OFF" centered, no border
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
             <text x="50%" y="11.5" font-family="Arial, sans-serif" font-size="7" font-weight="bold" fill="${textColor}" text-anchor="middle">OFF</text>
@@ -41,6 +49,8 @@ export class IconUtils {
     }
 
     public static generateExcludeSvg(fillColor: string, strokeColor: string, style: string): string {
+        fillColor = IconUtils.sanitizeColor(fillColor);
+        strokeColor = IconUtils.sanitizeColor(strokeColor);
         if (style === 'hidden') {
             // Dotted box to represent hidden text (ghost text)
             return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
@@ -56,7 +66,8 @@ export class IconUtils {
     }
 
     public static generateIncludeSvg(fillColor: string, mode: number, elementId: string): string {
-        const isTransparent = fillColor === 'rgba(0,0,0,0)' || fillColor === 'rgba(0, 0, 0, 0)' || fillColor === 'transparent';
+        fillColor = IconUtils.sanitizeColor(fillColor);
+        const isTransparent = /^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)$/.test(fillColor) || fillColor === 'transparent';
         const strokeColor = ThemeUtils.strokeColor;
         const strokeAttr = `stroke="${strokeColor}" stroke-width="1.0" fill="none"`;
         const fillAttr = `fill="${fillColor}"`;
@@ -80,6 +91,7 @@ export class IconUtils {
     }
 
     public static generateSimpleCircleSvg(color: string): string {
+        color = IconUtils.sanitizeColor(color);
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${color}"/></svg>`;
     }
 }

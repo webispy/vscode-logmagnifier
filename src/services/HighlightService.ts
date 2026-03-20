@@ -31,10 +31,12 @@ export class HighlightService implements vscode.Disposable {
         private logger: Logger
     ) { }
 
+    /** Registers document-specific filters that override global filters for the given URI. */
     public registerDocumentFilters(uri: vscode.Uri, filters: { filter: FilterItem, groupId: string }[]) {
         this.documentFilters.set(uri.toString(), filters);
     }
 
+    /** Removes document-specific filters for the given URI. */
     public unregisterDocumentFilters(uri: vscode.Uri) {
         this.documentFilters.delete(uri.toString());
     }
@@ -357,28 +359,21 @@ export class HighlightService implements vscode.Disposable {
             const msg = e instanceof Error ? e.message : String(e);
             this.logger.warn(`[HighlightService] Failed to apply filter '${filter.keyword}': ${msg}`);
 
-            // Only show error message once per session/filter to avoid spam, or finding a better way.
-            // But original code showed it. To match original behavior (which was "show error"), I'll keep it.
-            // But with chunked processing, this might spam if it fails every chunk?
-            // Actually RegexUtils.create caches result. usage is same.
-            // If it throws, it throws.
-            // Logic to show error message (debounce needed?)
-            // I'll keep it simple for now as requested.
-
+            // Show error message once per filter to avoid spam during chunked processing
             if (filter.isRegex && !this.shownErrorFilterIds.has(filter.id)) {
                 this.shownErrorFilterIds.add(filter.id);
-                vscode.window.showErrorMessage(
-                    Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.keyword),
-                    'Edit Filter',
-                    'Disable Filter'
-                ).then(selection => {
-                    this.shownErrorFilterIds.delete(filter.id);
+                (async () => {
+                    const selection = await vscode.window.showErrorMessage(
+                        Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.keyword),
+                        'Edit Filter',
+                        'Disable Filter'
+                    );
                     if (selection === 'Edit Filter') {
                         vscode.commands.executeCommand('logmagnifier.editFilter', filter);
                     } else if (selection === 'Disable Filter') {
                         this.filterManager.toggleFilter(groupId, filter.id);
                     }
-                }, () => {
+                })().catch(() => { /* error already logged above */ }).finally(() => {
                     this.shownErrorFilterIds.delete(filter.id);
                 });
             }
@@ -445,6 +440,7 @@ export class HighlightService implements vscode.Disposable {
         return undefined;
     }
 
+    /** Briefly highlights a line with a flash animation to draw user attention. */
     public flashLine(editor: vscode.TextEditor, line: number, forceColor?: string | { light: string, dark: string }) {
         if (!editor || line < 0) {
             return;

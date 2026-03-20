@@ -32,6 +32,7 @@ export class RunbookHtmlGenerator {
         });
     }
 
+    /** Generates the runbook webview HTML by parsing the markdown file and injecting play buttons for shell blocks. */
     public async generate(webview: vscode.Webview, item: RunbookMarkdown): Promise<string> {
         let content = '';
         try {

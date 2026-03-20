@@ -16,10 +16,12 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         this.disposables.push(this.runbookService.onDidChangeTreeData(() => this.refresh()));
     }
 
+    /** Fires a tree data change event to refresh the view. */
     refresh(): void {
         this._onDidChangeTreeData.fire();
     }
 
+    /** Converts a runbook item into a VS Code tree item based on its kind. */
     getTreeItem(element: RunbookItem): vscode.TreeItem {
         if (element.kind === 'markdown') {
             return this.getMarkdownTreeItem(element as RunbookMarkdown);
@@ -29,6 +31,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         return new vscode.TreeItem("Unknown");
     }
 
+    /** Returns top-level runbook items, or children of a group element. */
     getChildren(element?: RunbookItem): vscode.ProviderResult<RunbookItem[]> {
         if (!element) {
             return this.runbookService.items;
@@ -70,6 +73,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         return item;
     }
 
+    /** Returns the parent group for a markdown item, or undefined for top-level items. */
     getParent(element: RunbookItem): vscode.ProviderResult<RunbookItem> {
         if (element.kind === 'markdown') {
             return this.runbookService.items.find(
@@ -79,6 +83,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
         return undefined;
     }
 
+    /** Disposes all subscriptions and the change event emitter. */
     public dispose() {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];

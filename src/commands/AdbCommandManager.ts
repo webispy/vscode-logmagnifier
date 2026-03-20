@@ -22,6 +22,7 @@ export class AdbCommandManager {
         this.registerSelectionListener();
     }
 
+    /** Listens for tree view selection changes and updates the Chrome Inspect context key. */
     private registerSelectionListener() {
         this.context.subscriptions.push(this.adbTreeView.onDidChangeSelection(e => {
             if (e.selection.length > 0) {
@@ -39,6 +40,7 @@ export class AdbCommandManager {
         }));
     }
 
+    /** Registers all ADB-related VS Code commands. */
     private registerCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RefreshDevices, async () => {
             await this.adbDeviceTreeProvider.refreshDevices();
@@ -426,6 +428,12 @@ export class AdbCommandManager {
             }
         }));
     }
+    /**
+     * Runs a dumpsys command and displays the output in a new untitled document.
+     * @param item The control action item containing device and target app info.
+     * @param commandFn The ADB service method to execute.
+     * @param titlePrefix Short label used in the document title (e.g. "pkg", "mem").
+     */
     private async executeDumpsysCommand(
         item: ControlActionItem,
         commandFn: (deviceId: string, pkg: string) => Promise<string>,
@@ -460,6 +468,10 @@ export class AdbCommandManager {
         }
     }
 
+    /**
+     * Parses a "Tag:Priority" string into a LogcatTag, defaulting to Verbose priority.
+     * @returns The parsed tag, or undefined if the input is invalid.
+     */
     private parseTagInput(input: string): LogcatTag | undefined {
         const parts = input.split(':');
         const name = parts[0].trim();
@@ -485,6 +497,7 @@ export class AdbCommandManager {
         };
     }
 
+    /** Shows a quick pick menu with app-level control actions (clear storage, dumpsys, etc.). */
     private async showAppControlQuickPick(item: ControlActionItem) {
         if (!item || !item.device || !item.device.targetApp) {
             return;
@@ -524,6 +537,7 @@ export class AdbCommandManager {
         }
     }
 
+    /** Shows a quick pick menu with device-level control actions (install APK, system info, etc.). */
     private async showDeviceControlQuickPick(item: ControlDeviceActionItem) {
         if (!item || !item.device) {
             return;
@@ -607,6 +621,7 @@ export class AdbCommandManager {
         }
     }
 
+    /** Opens a new untitled document with the given title and content. */
     private async simpleShowTextDocument(title: string, content: string) {
         const timestamp = new Date().toLocaleTimeString('en-GB', { hour12: false });
         const uri = vscode.Uri.from({ scheme: Constants.Schemes.Untitled, path: `${title} (${timestamp})` });

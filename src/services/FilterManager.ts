@@ -85,6 +85,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Persists all filter groups to extension state and the active profile. */
     public async saveFilters(): Promise<void> {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
@@ -157,10 +158,12 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Returns all filter groups. */
     public getGroups(): FilterGroup[] {
         return this.groups;
     }
 
+    /** Returns all enabled filters from enabled groups, using a cached result when available. */
     public getActiveFilters(): { filter: FilterItem, groupId: string }[] {
         if (this.activeFiltersCache === null) {
             this.activeFiltersCache = [];
@@ -187,14 +190,17 @@ export class FilterManager implements vscode.Disposable {
         this._onDidChangeFilters.fire();
     }
 
+    /** Returns the list of available highlight color identifiers. */
     public getAvailableColors(): string[] {
         return this.colorService.getAvailableColors();
     }
 
+    /** Returns all configured color presets. */
     public getColorPresets(): ColorPreset[] {
         return this.colorService.getColorPresets();
     }
 
+    /** Returns a color preset by its identifier, or undefined if not found. */
     public getPresetById(id: string): ColorPreset | undefined {
         return this.colorService.getPresetById(id);
     }
@@ -210,10 +216,12 @@ export class FilterManager implements vscode.Disposable {
         return undefined;
     }
 
+    /** Finds the group that contains the filter with the given ID. */
     public findGroupByFilterId(filterId: string): FilterGroup | undefined {
         return this.groups.find(g => g.filters.some(f => f.id === filterId));
     }
 
+    /** Creates a new filter group, returning undefined if a group with the same name and mode already exists. */
     public addGroup(name: string, isRegex: boolean = false): FilterGroup | undefined {
         const exists = this.groups.some(g => g.name.toLowerCase() === name.toLowerCase() && !!g.isRegex === !!isRegex);
         if (exists) {
@@ -234,6 +242,7 @@ export class FilterManager implements vscode.Disposable {
         return newGroup;
     }
 
+    /** Sets the expanded/collapsed UI state of a group without triggering a filter change event. */
     public setGroupExpanded(groupId: string, expanded: boolean): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group && group.isExpanded !== expanded) {
@@ -245,6 +254,16 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /**
+     * Adds a new filter to the specified group, returning undefined if a duplicate exists.
+     *
+     * @param groupId - Target group identifier
+     * @param keyword - Filter pattern (plain text or regex)
+     * @param type - Whether this filter includes or excludes matching lines
+     * @param isRegex - Whether the keyword is a regular expression
+     * @param nickname - Optional display name for the filter
+     * @returns The created filter item, or undefined if the group was not found or a duplicate exists
+     */
     public addFilter(groupId: string, keyword: string, type: FilterType, isRegex: boolean = false, nickname?: string): FilterItem | undefined {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -289,6 +308,7 @@ export class FilterManager implements vscode.Disposable {
         return this.colorService.assignColor(group);
     }
 
+    /** Updates the highlight color of a filter. */
     public updateFilterColor(groupId: string, filterId: string, color: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -297,6 +317,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Renames a filter group. */
     public renameGroup(groupId: string, newName: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -306,6 +327,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Updates a filter's keyword and/or nickname. */
     public updateFilter(groupId: string, filterId: string, updates: { keyword?: string, nickname?: string }): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -321,6 +343,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Cycles the filter's highlight mode through Word, Line, and FullLine. */
     public toggleFilterHighlightMode(groupId: string, filterId: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -336,6 +359,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Toggles case-sensitive matching for a filter. */
     public toggleFilterCaseSensitivity(groupId: string, filterId: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -344,6 +368,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Cycles the filter's context line count through the predefined levels. */
     public toggleFilterContextLine(groupId: string, filterId: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -356,6 +381,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Removes a filter from the specified group. */
     public removeFilter(groupId: string, filterId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -365,6 +391,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Removes a filter group, restoring default regex presets if all regex groups are removed. */
     public removeGroup(groupId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -380,6 +407,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Toggles the enabled state of a filter group. */
     public toggleGroup(groupId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -389,6 +417,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Enables all filters within a group. */
     public enableAllFiltersInGroup(groupId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -406,6 +435,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Disables all filters within a group. */
     public disableAllFiltersInGroup(groupId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
@@ -423,10 +453,12 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Fires the filter change event to trigger a UI refresh without modifying state. */
     public refresh(): void {
         this._onDidChangeFilters.fire();
     }
 
+    /** Toggles the enabled state of an individual filter. */
     public toggleFilter(groupId: string, filterId: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -437,6 +469,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Toggles a filter's type between include and exclude. */
     public toggleFilterType(groupId: string, filterId: string): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -446,6 +479,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Sets a filter's type to include or exclude, assigning a color if switching to include. */
     public setFilterType(groupId: string, filterId: string, type: FilterType): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -464,6 +498,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Sets whether a filter uses case-sensitive matching. */
     public setFilterCaseSensitivity(groupId: string, filterId: string, enable: boolean): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -474,6 +509,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Sets the visual style for excluded lines (strikethrough or hidden). */
     public setFilterExcludeStyle(groupId: string, filterId: string, style: 'line-through' | 'hidden'): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -484,6 +520,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Sets the highlight mode (Word, Line, or FullLine) for a filter. */
     public setFilterHighlightMode(groupId: string, filterId: string, mode: HighlightMode): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -494,6 +531,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Sets the number of context lines shown around matched lines for a filter. */
     public setFilterContextLine(groupId: string, filterId: string, lines: number): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
@@ -650,6 +688,7 @@ export class FilterManager implements vscode.Disposable {
         return JSON.stringify(exportData, null, 4);
     }
 
+    /** Serializes a single filter group to a JSON string for file export. */
     public exportGroup(groupId: string): string | undefined {
         const group = this.groups.find(g => g.id === groupId);
         if (!group) {
@@ -776,6 +815,7 @@ export class FilterManager implements vscode.Disposable {
         };
     }
 
+    /** Updates match counts for filters and groups, firing change events for each modified filter. */
     public updateResultCounts(counts: { filterId: string, count: number }[], groupCounts: { groupId: string, count: number }[]): void {
         const filterCountMap = new Map(counts.map(c => [c.filterId, c.count]));
         const groupCountMap = new Map(groupCounts.map(c => [c.groupId, c.count]));
@@ -809,18 +849,22 @@ export class FilterManager implements vscode.Disposable {
 
     // Profile Management
 
+    /** Returns the name of the currently active profile. */
     public getActiveProfile(): string {
         return this.profileManager.getActiveProfile();
     }
 
+    /** Returns all available profile names. */
     public getProfileNames(): string[] {
         return this.profileManager.getProfileNames();
     }
 
+    /** Returns metadata for all profiles including word and regex filter group counts. */
     public getProfilesMetadata(): { name: string, wordCount: number, regexCount: number }[] {
         return this.profileManager.getProfilesMetadata();
     }
 
+    /** Deletes a profile by name, reloading the default profile if it was active. */
     public async deleteProfile(name: string): Promise<boolean> {
         const success = await this.profileManager.deleteProfile(name);
         if (success) {
@@ -831,10 +875,12 @@ export class FilterManager implements vscode.Disposable {
         return success;
     }
 
+    /** Saves the current filter groups to the specified profile. */
     public async saveProfile(name: string): Promise<void> {
         await this.profileManager.updateProfileData(name, this.groups);
     }
 
+    /** Creates a new profile with default filters and switches to it. */
     public async createProfile(name: string): Promise<boolean> {
         // Build default filters into a separate array without mutating live state
         const tempGroups: FilterGroup[] = [];
@@ -854,6 +900,7 @@ export class FilterManager implements vscode.Disposable {
         return false;
     }
 
+    /** Duplicates the current filter state into a new profile, returning false if the name already exists. */
     public async duplicateProfile(name: string): Promise<boolean> {
         // Just save detailed current groups to the new profile name
         // This effectively duplicates the current state
@@ -879,6 +926,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Loads a profile by name, flushing any pending saves before switching. */
     public async loadProfile(name: string): Promise<boolean> {
         // Flush any pending debounced save before switching
         if (this.dirty && this.saveDebounceTimer) {

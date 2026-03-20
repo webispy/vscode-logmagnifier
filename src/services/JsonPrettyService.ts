@@ -84,6 +84,7 @@ export class JsonPrettyService implements vscode.Disposable {
         }));
     }
 
+    /** Extracts and previews JSON from the current selection or line in the editor. */
     public async execute(silent: boolean = false, targetEditor?: vscode.TextEditor) {
         try {
             let editor = targetEditor || vscode.window.activeTextEditor;

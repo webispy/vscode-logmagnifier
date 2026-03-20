@@ -8,6 +8,16 @@ import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtil
 export class JsonTreeHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) { }
 
+    /**
+     * Generates the JSON tree preview webview HTML from the template.
+     * @param webview The webview instance for resolving resource URIs.
+     * @param data The JSON data to embed in the page.
+     * @param status Validation status of the JSON content.
+     * @param tabSize Indentation width for formatting.
+     * @param sourceUri URI of the source document for back-navigation.
+     * @param sourceLine Line number in the source document.
+     * @param expansionDepth Initial tree expansion depth.
+     */
     public async generate(
         webview: vscode.Webview,
         data: unknown,

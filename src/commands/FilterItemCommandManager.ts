@@ -14,6 +14,7 @@ export class FilterItemCommandManager {
         this.registerCommands();
     }
 
+    /** Enables, disables, or toggles a filter item within its parent group. */
     private handleFilterToggle(item: FilterItem, action: 'enable' | 'disable' | 'toggle') {
         const group = this.filterManager.findGroupByFilterId(item.id);
         if (group) {
@@ -30,6 +31,7 @@ export class FilterItemCommandManager {
         }
     }
 
+    /** Returns the group ID, prompting the user to pick one if not provided. */
     private async ensureGroupId(group: FilterGroup | undefined, isRegex: boolean): Promise<string | undefined> {
         if (group?.id) {
             return group.id;
@@ -81,7 +83,7 @@ export class FilterItemCommandManager {
                         try {
                             new RegExp(value);
                             return null;
-                        } catch (_e) {
+                        } catch (_e: unknown) {
                             return Constants.Messages.Error.InvalidRegularExpression;
                         }
                     }
@@ -164,7 +166,7 @@ export class FilterItemCommandManager {
                     try {
                         new RegExp(value);
                         return null;
-                    } catch (_e) {
+                    } catch (_e: unknown) {
                         return Constants.Messages.Error.InvalidRegularExpression;
                     }
                 }

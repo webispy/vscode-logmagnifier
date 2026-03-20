@@ -6,6 +6,7 @@ export class IconUtils {
         return color.replace(/[<>"'&]/g, '');
     }
 
+    /** Generates a folder SVG icon with an optional ban-circle overlay in the bottom-right corner. */
     public static generateGroupSvg(folderColor: string, overlayColor?: string): string {
         folderColor = IconUtils.sanitizeColor(folderColor);
         const folderPath = `<path d="M7.5 2.5 L9.5 4.5 H14.5 V13.5 H1.5 V2.5 H7.5 Z" fill="none" stroke="${folderColor}" stroke-width="1" stroke-linejoin="round" />`;
@@ -40,6 +41,7 @@ export class IconUtils {
         </svg>`;
     }
 
+    /** Generates an SVG icon displaying the text "OFF". */
     public static generateOffSvg(textColor: string): string {
         textColor = IconUtils.sanitizeColor(textColor);
         // Text "OFF" centered, no border
@@ -48,6 +50,12 @@ export class IconUtils {
         </svg>`;
     }
 
+    /**
+     * Generates an SVG icon representing an exclude filter.
+     * @param fillColor - text fill color for the strike-through variant
+     * @param strokeColor - stroke color used for both the dotted-box and strike-through variants
+     * @param style - when `'hidden'`, renders a dotted box; otherwise renders strike-through text
+     */
     public static generateExcludeSvg(fillColor: string, strokeColor: string, style: string): string {
         fillColor = IconUtils.sanitizeColor(fillColor);
         strokeColor = IconUtils.sanitizeColor(strokeColor);
@@ -65,6 +73,12 @@ export class IconUtils {
         </svg>`;
     }
 
+    /**
+     * Generates an SVG icon representing an include filter.
+     * @param fillColor - fill color for the shape; transparent values use a stroke outline instead
+     * @param mode - shape variant: 0 = circle (word), 1 = pill (line text), 2 = wide rectangle (full line)
+     * @param elementId - unique identifier used to namespace the SVG gradient definition
+     */
     public static generateIncludeSvg(fillColor: string, mode: number, elementId: string): string {
         fillColor = IconUtils.sanitizeColor(fillColor);
         const isTransparent = /^rgba\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)$/.test(fillColor) || fillColor === 'transparent';
@@ -90,6 +104,7 @@ export class IconUtils {
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" ${attr}/></svg>`;
     }
 
+    /** Generates a simple filled-circle SVG icon. */
     public static generateSimpleCircleSvg(color: string): string {
         color = IconUtils.sanitizeColor(color);
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${color}"/></svg>`;

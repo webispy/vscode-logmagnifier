@@ -36,6 +36,7 @@ export class FilterExportImportCommandManager {
         this.registerProfileCommands();
     }
 
+    /** Shows a multi-select QuickPick for the user to choose groups, then exports them. */
     private async handleExport(mode: 'word' | 'regex') {
         // Get all groups for the mode
         const allGroups = this.filterManager.getGroups().filter(g => mode === 'regex' ? g.isRegex : !g.isRegex);
@@ -131,6 +132,7 @@ export class FilterExportImportCommandManager {
         quickPick.show();
     }
 
+    /** Serializes selected filter groups to JSON and prompts the user to save the file. */
     private async performExport(mode: 'word' | 'regex', groupIds: string[]) {
         const filtersJson = this.filterManager.exportFilters(mode, groupIds);
         const fileName = `logmagnifier_${mode}_filters.json`;
@@ -159,6 +161,7 @@ export class FilterExportImportCommandManager {
         }
     }
 
+    /** Exports a single filter group to a JSON file via save dialog. */
     private async handleExportGroup(group: FilterGroup) {
         if (!group) {
             return;
@@ -197,6 +200,7 @@ export class FilterExportImportCommandManager {
         }
     }
 
+    /** Prompts the user to select a JSON file and imports filter groups in merge or overwrite mode. */
     private async handleImport(mode: 'word' | 'regex') {
         const uris = await vscode.window.showOpenDialog({
             canSelectMany: false,
@@ -240,6 +244,7 @@ export class FilterExportImportCommandManager {
         }
     }
 
+    /** Registers commands for creating, switching, duplicating, and deleting filter profiles. */
     private registerProfileCommands() {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ManageProfiles, async () => {
             const activeProfile = this.filterManager.getActiveProfile();

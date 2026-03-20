@@ -22,6 +22,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         this.htmlGenerator = new WorkflowHtmlGenerator(context, logger);
     }
 
+    /** Initializes the workflow webview with HTML content and registers message handlers. */
     public async resolveWebviewView(
         webviewView: vscode.WebviewView,
         _context: vscode.WebviewViewResolveContext,
@@ -77,6 +78,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         }
     }
 
+    /** Sends updated workflow data to the webview via postMessage. */
     public async refresh() {
         if (this.view) {
             const workflows = await this.workflowManager.getWorkflowViewModels();
@@ -302,6 +304,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         this.refresh();
     }
 
+    /** Disposes all subscriptions. */
     public dispose(): void {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];

@@ -59,6 +59,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }, null, context.subscriptions);
     }
 
+    /** Returns whether the bookmarked file at the given URI string is missing from disk. */
     public isFileMissing(uriStr: string): boolean {
         return this.missingFiles.has(uriStr);
     }
@@ -157,6 +158,7 @@ export class LogBookmarkService implements vscode.Disposable {
         await Promise.all(checkPromises);
     }
 
+    /** Returns the bookmark at the given URI and line, optionally filtered by match text. */
     public getBookmarkAt(uri: vscode.Uri, line: number, matchText?: string): BookmarkItem | undefined {
         const key = uri.toString();
         const bookmarks = this.bookmarkMap.get(key);
@@ -170,6 +172,7 @@ export class LogBookmarkService implements vscode.Disposable {
         return bookmarks.find(b => b.line === line);
     }
 
+    /** Adds a bookmark at the given line if none exists, or removes it if one does. */
     public toggleBookmark(editor: vscode.TextEditor, line: number): BookmarkResult {
         const bookmark = this.getBookmarkAt(editor.document.uri, line);
         if (bookmark) {
@@ -191,6 +194,13 @@ export class LogBookmarkService implements vscode.Disposable {
         return crypto.randomUUID();
     }
 
+    /**
+     * Adds a single bookmark at the specified line in the editor.
+     * @param editor - The text editor containing the document to bookmark.
+     * @param line - Zero-based line number to bookmark.
+     * @param options - Optional match text for keyword bookmarks and group ID for batch association.
+     * @returns A result indicating success or a failure message.
+     */
     public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string, groupId?: string }): BookmarkResult {
         try {
             const matchText = options?.matchText;
@@ -266,6 +276,10 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    /**
+     * Adds bookmarks at multiple lines in a single batch, skipping duplicates.
+     * @returns The number of bookmarks actually added.
+     */
     public addBookmarks(editor: vscode.TextEditor, lines: number[], options?: { matchText?: string, groupId?: string }) {
         const matchText = options?.matchText;
         const uri = editor.document.uri;
@@ -317,6 +331,7 @@ export class LogBookmarkService implements vscode.Disposable {
         return addedCount;
     }
 
+    /** Removes a single bookmark by its identity. */
     public removeBookmark(item: BookmarkItem) {
         const key = item.uri.toString();
         const bookmarks = this.bookmarkMap.get(key);
@@ -335,6 +350,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    /** Removes all bookmarks associated with the given document URI. */
     public removeBookmarksForUri(uri: vscode.Uri) {
         const key = uri.toString();
 
@@ -353,6 +369,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    /** Clears all bookmarks across every file. */
     public removeAllBookmarks() {
         this.bookmarkMap.clear();
         this.fileOrder = [];
@@ -363,6 +380,7 @@ export class LogBookmarkService implements vscode.Disposable {
         this.saveToState();
     }
 
+    /** Removes all bookmarks that share the given group ID across all files. */
     public removeBookmarkGroup(groupId: string) {
         let anyRemoved = false;
         let keysRemoved = false;
@@ -396,6 +414,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    /** Returns the total number of bookmarked lines across all files. */
     public getActiveLinesCount(): number {
         // Legacy/Global count: sum of all files
         let total = 0;
@@ -405,25 +424,30 @@ export class LogBookmarkService implements vscode.Disposable {
         return total;
     }
 
+    /** Returns the number of bookmarked lines for a specific file URI key. */
     public getFileActiveLinesCount(uriKey: string): number {
         const bookmarks = this.bookmarkMap.get(uriKey);
         return bookmarks ? bookmarks.length : 0;
     }
 
+    /** Returns whether word wrap is enabled in the bookmarks view. */
     public isWordWrapEnabled(): boolean {
         return this.wordWrapEnabled;
     }
 
+    /** Toggles word wrap for the bookmarks view and persists the setting. */
     public toggleWordWrap() {
         this.wordWrapEnabled = !this.wordWrapEnabled;
         this._onDidChangeBookmarks.fire();
         this.saveToState();
     }
 
+    /** Returns whether line numbers are shown for bookmarks in the given file. */
     public isIncludeLineNumbersEnabled(uriKey: string): boolean {
         return this.includeLineNumbers.get(uriKey) ?? false;
     }
 
+    /** Toggles line number display for bookmarks in the given file and persists the setting. */
     public toggleIncludeLineNumbers(uriKey: string) {
         const current = this.isIncludeLineNumbersEnabled(uriKey);
         this.includeLineNumbers.set(uriKey, !current);
@@ -431,6 +455,7 @@ export class LogBookmarkService implements vscode.Disposable {
         this.saveToState();
     }
 
+    /** Returns the total number of distinct bookmark groups across all files. */
     public getHistoryGroupsCount(): number {
         // Legacy/Global count
         let total = 0;
@@ -440,6 +465,7 @@ export class LogBookmarkService implements vscode.Disposable {
         return total;
     }
 
+    /** Returns the number of distinct bookmark groups for a specific file URI key. */
     public getFileHistoryGroupsCount(uriKey: string): number {
         const bookmarks = this.bookmarkMap.get(uriKey) || [];
         const uniqueGroupIds = new Set<string>();
@@ -455,9 +481,8 @@ export class LogBookmarkService implements vscode.Disposable {
         vscode.window.visibleTextEditors.forEach(editor => this.updateDecorations(editor));
     }
 
+    /** Returns a defensive copy of the bookmark map, preventing external mutation. */
     public getBookmarks(): Map<string, BookmarkItem[]> {
-        // Return a defensive copy: new Map with new Arrays for values
-        // This prevents consumers from mutating the internal arrays (e.g. push/pop)
         const copy = new Map<string, BookmarkItem[]>();
         for (const [key, value] of this.bookmarkMap) {
             copy.set(key, [...value]);
@@ -465,9 +490,7 @@ export class LogBookmarkService implements vscode.Disposable {
         return copy;
     }
 
-    /*
-     * Returns file keys sorted by insertion order (LIFO).
-     */
+    /** Returns file URI keys sorted by insertion order (most recent first). */
     public getFileKeys(): string[] {
         // Filter out any keys that might have been deleted from _bookmarks but lingering in _fileOrder (safety check)
         // And append any new keys that might be in _bookmarks but not in _fileOrder (migration/safety)
@@ -494,6 +517,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
     }
 
+    /** Disposes all timers, decorations, event emitters, and file watchers. */
     public dispose() {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);

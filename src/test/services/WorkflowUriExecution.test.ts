@@ -95,7 +95,7 @@ suite('Workflow URI Execution Tests', () => {
         try {
             await workflowManager.run(workflowId, largeFileUri);
             assert.ok(true, 'run() should succeed with Uri');
-        } catch (e) {
+        } catch (e: unknown) {
             assert.fail(`run() failed with Uri: ${e}`);
         }
     });

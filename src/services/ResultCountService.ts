@@ -4,10 +4,12 @@ export class ResultCountService {
 
     constructor(private filterManager: FilterManager) { }
 
+    /** Updates per-filter and per-group match counts from the provided filter-id-to-count map. */
     public updateCounts(knownCounts: Map<string, number>) {
         this.applyKnownCounts(knownCounts);
     }
 
+    /** Resets all filter and group match counts to zero. */
     public clearCounts() {
         const groups = this.filterManager.getGroups();
         const filterCounts = groups.flatMap(g => g.filters.map(f => ({ filterId: f.id, count: 0 })));

@@ -124,6 +124,12 @@ export class FilterGroupCommandManager {
         }));
     }
 
+    /**
+     * Copies enabled include-type filters from a group to the clipboard using the given formatter.
+     * @param group Filter group to copy from.
+     * @param formatter Function that formats the enabled filter items into a clipboard string.
+     * @param logMessage Message template shown to the user after copying.
+     */
     private async copyToClipboard(group: FilterGroup, formatter: (items: FilterItem[]) => string, logMessage: string) {
         if (!group) {
             return;

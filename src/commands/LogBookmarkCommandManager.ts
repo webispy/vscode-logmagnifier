@@ -59,6 +59,7 @@ export class LogBookmarkCommandManager {
         this.bookmarkService.removeBookmarkGroup(groupId);
     }
 
+    /** Returns all bookmark entries across all files as a single newline-delimited string, or null if empty. */
     private getAllBookmarksContent(): string | null {
         const bookmarksMap = this.bookmarkService.getBookmarks();
         if (bookmarksMap.size === 0) { return null; }
@@ -73,6 +74,7 @@ export class LogBookmarkCommandManager {
         return allLines.join('\n');
     }
 
+    /** Returns bookmark content for a specific file URI, optionally prefixed with line numbers. */
     private getBookmarksContentForUri(uri: vscode.Uri, withLineNumber: boolean): string | null {
         const bookmarksMap = this.bookmarkService.getBookmarks();
         const bookmarks = bookmarksMap.get(uri.toString());
@@ -131,6 +133,13 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /**
+     * Scans document lines and invokes the callback for each line matching the regex.
+     * @param document Document to search.
+     * @param regex Pattern to test each line against.
+     * @param maxMatches Maximum number of matches before stopping.
+     * @param callback Called with the zero-based line number of each match.
+     */
     private findMatchingLines(document: vscode.TextDocument, regex: RegExp, maxMatches: number, callback: (line: number) => void) {
         const lineCount = document.lineCount;
         let matchCount = 0;
@@ -148,6 +157,13 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /**
+     * Adds bookmarks for matched lines, truncating at the limit and warning the user if exceeded.
+     * @param editor Active text editor containing the document.
+     * @param matchedLines Zero-based line numbers where matches were found.
+     * @param matchText The search text associated with these bookmarks.
+     * @param maxMatches Maximum number of bookmarks to add.
+     */
     private processBookmarkMatches(editor: vscode.TextEditor, matchedLines: number[], matchText: string, maxMatches: number) {
         if (matchedLines.length === 0) {
             vscode.window.showInformationMessage(Constants.Messages.Info.NoMatchesFound);
@@ -166,6 +182,7 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /** Toggles a bookmark on the current line, or bulk-toggles all lines matching the selection. */
     private async toggleBookmark() {
         const editor = await this.getActiveEditor();
         if (!editor) { return; }
@@ -220,6 +237,7 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /** Bookmarks all lines in the active editor that match the current text selection. */
     private async addSelectionMatchesToBookmark() {
         const editor = await this.getActiveEditor();
         if (!editor) { return; }
@@ -246,6 +264,7 @@ export class LogBookmarkCommandManager {
         this.processBookmarkMatches(editor, matchedLines, selectedText, MAX_MATCHES);
     }
 
+    /** Bookmarks all lines matching a filter item's keyword in the active editor. */
     private async addMatchListToBookmark(filter: FilterItem) {
         if (!filter) {
             return;
@@ -275,6 +294,7 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /** Opens the bookmarked file, scrolls to the bookmarked line, and flashes it. */
     private async jumpToBookmark(item: BookmarkItem) {
         if (!item) {
             return;
@@ -312,6 +332,7 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /** Copies all bookmarks for a file to the clipboard, optionally with line numbers. */
     private async copyBookmarkFile(uri: vscode.Uri, withLineNumber: boolean = true) {
         if (!uri) {
             return;
@@ -324,6 +345,7 @@ export class LogBookmarkCommandManager {
         }
     }
 
+    /** Opens bookmarks for a file in a new untitled editor tab. */
     private async openBookmarkFile(uri: vscode.Uri, withLineNumber: boolean = true) {
         if (!uri) {
             return;

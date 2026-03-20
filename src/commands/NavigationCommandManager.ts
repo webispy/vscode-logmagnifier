@@ -50,6 +50,7 @@ export class NavigationCommandManager {
         }
     }
 
+    /** Displays an interactive QuickPick showing the file hierarchy tree rooted at the given URI. */
     private async showQuickPick(currentUri: vscode.Uri, _mode: 'siblings' | 'children' | 'tree') {
         const picker = vscode.window.createQuickPick<HierarchyQuickPickItem>();
         picker.placeholder = 'Navigate File Hierarchy';

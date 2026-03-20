@@ -20,6 +20,7 @@ export class RunbookCommandManager {
         this.registerCommands();
     }
 
+    /** Registers all runbook-related VS Code commands. */
     protected registerCommands() {
         this.context.subscriptions.push(
             vscode.commands.registerCommand(Constants.Commands.RunbookOpenWebview, this.openWebview, this),
@@ -36,6 +37,7 @@ export class RunbookCommandManager {
         );
     }
 
+    /** Opens the interactive webview panel for a runbook markdown item. */
     private async openWebview(item: RunbookMarkdown) {
         if (!item || item.kind !== 'markdown') {
             return;
@@ -50,6 +52,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Opens the raw markdown file in a text editor. */
     private async editMarkdown(item: RunbookMarkdown) {
         if (!item || item.kind !== 'markdown') {
             return;
@@ -65,6 +68,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Prompts the user for a name and creates a new runbook group. */
     private async addGroup() {
         const name = await vscode.window.showInputBox({ prompt: 'Enter new group name' });
         if (name) {
@@ -72,6 +76,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Prompts the user for a name and creates a new markdown file within the given group. */
     private async addItem(item: RunbookGroup) {
         if (!item || item.kind !== 'group') { return; }
         const name = await vscode.window.showInputBox({ prompt: 'Enter new markdown file name' });
@@ -80,6 +85,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Deletes a runbook group or markdown item after user confirmation. */
     private async deleteItem(item: RunbookItem) {
         if (!item) { return; }
         const targetPath = item.kind === 'group' ? (item as RunbookGroup).dirPath : (item as RunbookMarkdown).filePath;
@@ -89,6 +95,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Prompts for a new name and renames a runbook group or markdown item. */
     private async renameItem(item: RunbookItem) {
         if (!item) { return; }
         const targetPath = item.kind === 'group' ? (item as RunbookGroup).dirPath : (item as RunbookMarkdown).filePath;
@@ -98,10 +105,12 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Refreshes the runbook tree view by reloading data from disk. */
     private async refreshRunbookView() {
         await this.runbookService.refresh();
     }
 
+    /** Prompts for a save location and exports the runbook as a JSON file. */
     private async exportRunbook() {
         const fileName = 'logmagnifier_runbook.json';
         const downloadsPath = path.join(os.homedir(), 'Downloads');
@@ -125,6 +134,7 @@ export class RunbookCommandManager {
         }
     }
 
+    /** Prompts the user to select a JSON file and imports it as a runbook. */
     private async importRunbook() {
         const downloadsPath = path.join(os.homedir(), 'Downloads');
         let defaultUri = vscode.Uri.file(downloadsPath);

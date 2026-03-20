@@ -18,6 +18,7 @@ export class AdbDeviceService {
 
     constructor(private logger: Logger, private client: AdbClient) { }
 
+    /** Queries ADB for connected devices and parses their properties. */
     public async getDevices(): Promise<AdbDevice[]> {
         const adbPath = this.client.getAdbPath(); // Still need path for logging consistency? Or use client wrapper fully?
         // Using client wrapper for execution
@@ -65,6 +66,7 @@ export class AdbDeviceService {
         }
     }
 
+    /** Captures a screenshot from the device and pulls it to the local output path. */
     public async captureScreenshot(deviceId: string, localOutputPath: string): Promise<boolean> {
         const remotePath = `/data/local/tmp/vscode_screenshot_${Date.now()}.png`;
         this.logger.info(`[ADB] Capturing screenshot on ${deviceId} to ${remotePath}`);
@@ -90,15 +92,17 @@ export class AdbDeviceService {
         }
     }
 
-    // Recording Logic
+    /** Returns whether the device is currently recording its screen. */
     public isDeviceRecording(deviceId: string): boolean {
         return this.recordingProcesses.has(deviceId);
     }
 
+    /** Returns whether the device is in the process of stopping a recording. */
     public isDeviceStopping(deviceId: string): boolean {
         return this.stoppingDevices.has(deviceId);
     }
 
+    /** Starts screen recording on the device via screenrecord. */
     public async startRecording(deviceId: string): Promise<boolean> {
         if (this.isDeviceRecording(deviceId) || this.isDeviceStopping(deviceId)) {
             return false;
@@ -152,6 +156,7 @@ export class AdbDeviceService {
         return true;
     }
 
+    /** Stops screen recording by sending SIGINT to the remote process. */
     public async stopRecording(deviceId: string): Promise<void> {
         const info = this.recordingProcesses.get(deviceId);
         if (!info) {
@@ -244,6 +249,7 @@ export class AdbDeviceService {
         return this.client.findPid(deviceId, search);
     }
 
+    /** Returns whether the show-touches overlay is enabled on the device. */
     public async getShowTouchesState(deviceId: string): Promise<boolean> {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'get', 'system', 'show_touches']);
@@ -251,6 +257,7 @@ export class AdbDeviceService {
         } catch { return false; }
     }
 
+    /** Enables or disables the show-touches overlay on the device. */
     public async setShowTouchesState(deviceId: string, enable: boolean): Promise<void> {
         const value = enable ? '1' : '0';
         try {
@@ -261,11 +268,13 @@ export class AdbDeviceService {
         }
     }
 
+    /** Toggles the show-touches overlay on the device. */
     public async toggleShowTouches(deviceId: string): Promise<void> {
         const current = await this.getShowTouchesState(deviceId);
         await this.setShowTouchesState(deviceId, !current);
     }
 
+    /** Returns a formatted summary of device, display, environment, memory, and storage info. */
     public async getSystemInfo(deviceId: string): Promise<string> {
         try {
             const [
@@ -394,6 +403,7 @@ export class AdbDeviceService {
         }
     }
 
+    /** Returns raw `getprop` output for the device. */
     public async getSystemProperties(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'getprop']);
     }
@@ -517,6 +527,7 @@ export class AdbDeviceService {
         return result;
     }
 
+    /** Installs an APK file on the device, replacing any existing version. */
     public async installApk(deviceId: string, filePath: string): Promise<boolean> {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'install', '-r', filePath]);
@@ -528,6 +539,7 @@ export class AdbDeviceService {
         }
     }
 
+    /** Runs `dumpsys media.audio_policy` on the device, falling back to `dumpsys audio`. */
     public async runDumpsysAudioPolicy(deviceId: string): Promise<string> {
         try {
             return await this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_policy']);
@@ -536,10 +548,12 @@ export class AdbDeviceService {
         }
     }
 
+    /** Runs `dumpsys media_session` on the device. */
     public async runDumpsysMediaSession(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media_session']);
     }
 
+    /** Runs `dumpsys media.audio_flinger` on the device. */
     public async runDumpsysAudioFlinger(deviceId: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_flinger']);
     }

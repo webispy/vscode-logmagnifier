@@ -20,10 +20,12 @@ export class AdbClient {
 
     constructor(private logger: Logger) { }
 
+    /** Returns the configured ADB executable path. */
     public getAdbPath(): string {
         return vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string>(Constants.Configuration.Adb.Path) ?? Constants.Defaults.AdbPath;
     }
 
+    /** Executes an ADB command and returns its stdout, throwing AdbCommandError on failure. */
     public async execAdb(args: string[], options?: cp.ExecFileOptions): Promise<string> {
         return new Promise((resolve, reject) => {
             const adbPath = this.getAdbPath();
@@ -47,11 +49,13 @@ export class AdbClient {
         });
     }
 
+    /** Spawns a long-running ADB process and returns the child process handle. */
     public spawnAdb(args: string[], options?: cp.SpawnOptions): cp.ChildProcess {
         const adbPath = this.getAdbPath();
         return cp.spawn(adbPath, args, options || {});
     }
 
+    /** Finds the PID of a process by name on the device, trying pidof then ps fallbacks. */
     public async findPid(deviceId: string, search: string): Promise<string | undefined> {
         try {
             const stdout = await this.execAdb(['-s', deviceId, 'shell', 'pidof', '-s', search]);
@@ -84,6 +88,7 @@ export class AdbClient {
         return undefined;
     }
 
+    /** Parses `ps` command output to find the PID of the given process name. */
     public parsePsForPid(output: string, search: string): string | undefined {
         const lines = output.split('\n');
         for (const line of lines) {

@@ -15,10 +15,12 @@ export class ProfileManager implements vscode.Disposable {
 
     constructor(private context: vscode.ExtensionContext) { }
 
+    /** Returns the name of the currently active filter profile. */
     public getActiveProfile(): string {
         return this.context.globalState.get<string>(Constants.GlobalState.ActiveProfile) || Constants.Labels.DefaultProfile;
     }
 
+    /** Returns a sorted list of all profile names, always including the default profile. */
     public getProfileNames(): string[] {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const names = profiles.map(p => p.name);
@@ -36,6 +38,7 @@ export class ProfileManager implements vscode.Disposable {
         });
     }
 
+    /** Returns metadata for all profiles, including word and regex filter counts. */
     public getProfilesMetadata(): { name: string, wordCount: number, regexCount: number }[] {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
 
@@ -72,6 +75,7 @@ export class ProfileManager implements vscode.Disposable {
         });
     }
 
+    /** Persists the given filter groups under the specified profile name. */
     public async updateProfileData(name: string, groups: FilterGroup[]) {
         // We allow saving Default Profile so it persists when switching away.
 
@@ -86,6 +90,7 @@ export class ProfileManager implements vscode.Disposable {
         await this.context.globalState.update(Constants.GlobalState.FilterProfiles, profiles);
     }
 
+    /** Deletes a profile by name, switching to default if the active profile was deleted. */
     public async deleteProfile(name: string): Promise<boolean> {
         if (name === Constants.Labels.DefaultProfile) {
             return false;
@@ -110,6 +115,7 @@ export class ProfileManager implements vscode.Disposable {
         return false;
     }
 
+    /** Renames a profile, returning false if the default profile is involved or the new name already exists. */
     public async renameProfile(oldName: string, newName: string): Promise<boolean> {
         if (oldName === Constants.Labels.DefaultProfile || newName === Constants.Labels.DefaultProfile) {
             return false;
@@ -139,6 +145,7 @@ export class ProfileManager implements vscode.Disposable {
         return false;
     }
 
+    /** Creates a new profile with the given name and filter groups, returning false if the name is taken. */
     public async createProfile(name: string, groupsCopy: FilterGroup[]): Promise<boolean> {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         if (profiles.some(p => p.name === name) || name === Constants.Labels.DefaultProfile) {
@@ -155,6 +162,7 @@ export class ProfileManager implements vscode.Disposable {
         return true;
     }
 
+    /** Loads a profile by name, sets it as active, and returns its filter groups. */
     public async loadProfile(name: string): Promise<FilterGroup[] | undefined> {
         // Update active profile immediately if found.
 
@@ -177,6 +185,7 @@ export class ProfileManager implements vscode.Disposable {
         return undefined;
     }
 
+    /** Returns the filter groups for a profile without changing the active profile. */
     public async getProfileGroups(name: string): Promise<FilterGroup[] | undefined> {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
 
@@ -196,6 +205,7 @@ export class ProfileManager implements vscode.Disposable {
         return undefined;
     }
 
+    /** Imports a profile, optionally overwriting an existing one with the same name. */
     public async importProfile(name: string, groups: FilterGroup[], overwrite: boolean = false): Promise<boolean> {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
         const exists = profiles.some(p => p.name === name);

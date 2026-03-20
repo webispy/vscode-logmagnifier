@@ -13,6 +13,7 @@ export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider 
 
     constructor(private sourceMapService: SourceMapService) { }
 
+    /** Resolves go-to-definition for filtered log lines by mapping them back to their original source location. */
     public async provideDefinition(
         document: vscode.TextDocument,
         position: vscode.Position,

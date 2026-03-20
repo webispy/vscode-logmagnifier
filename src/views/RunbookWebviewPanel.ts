@@ -21,6 +21,7 @@ export class RunbookWebviewPanel {
     private scriptExecutionAllowed: boolean = false;
     private allowedContentHash: string | undefined;
 
+    /** Creates a new runbook panel or reveals an existing one for the given markdown file. */
     public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown, logger: Logger) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
@@ -78,6 +79,7 @@ export class RunbookWebviewPanel {
         );
     }
 
+    /** Updates the panel content with a new or modified runbook item, resetting script permissions if the file changed. */
     public async update(item: RunbookMarkdown) {
         if (item.filePath !== this.currentItem.filePath) {
             this.scriptExecutionAllowed = false;
@@ -221,6 +223,7 @@ export class RunbookWebviewPanel {
         }
     }
 
+    /** Kills running processes, removes the panel from the registry, and disposes all resources. */
     public dispose() {
         RunbookWebviewPanel.currentPanels.delete(this.currentItem.filePath);
 

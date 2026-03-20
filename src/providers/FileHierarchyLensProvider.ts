@@ -11,6 +11,7 @@ export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
         this.onDidChangeCodeLenses = this.hierarchyService.onDidChangeHierarchy;
     }
 
+    /** Provides code lenses showing file hierarchy navigation links at the top of the document. */
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
         const lenses: vscode.CodeLens[] = [];
         const uri = document.uri;

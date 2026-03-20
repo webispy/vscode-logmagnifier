@@ -24,15 +24,18 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         );
     }
 
+    /** Fires a tree data change event to refresh the view. */
     refresh(): void {
         this.logger.info('QuickAccessProvider.refresh() called');
         this._onDidChangeTreeData.fire();
     }
 
+    /** Returns the tree item as-is since items are pre-built. */
     getTreeItem(element: vscode.TreeItem): vscode.TreeItem {
         return element;
     }
 
+    /** Returns the list of quick-access toggle and status items for the root level. */
     async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
         if (element) {
             return Promise.resolve([]);
@@ -92,6 +95,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return item;
     }
 
+    /** Cycles the file size display unit between bytes, KB, and MB. */
     public async toggleFileSizeUnit(): Promise<void> {
         const size = await this.getFileSize();
         // Treat undefined size (error/no file) as 0.
@@ -246,6 +250,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
         return item;
     }
+    /** Disposes all subscriptions and the change event emitter. */
     public dispose() {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];

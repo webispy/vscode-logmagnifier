@@ -39,11 +39,17 @@ export class FilterExecutionCommandManager {
         this.setPrependLineNumbersEnabled(false);
     }
 
+    /** Updates the prepend-line-numbers flag and syncs the VS Code context key. */
     private setPrependLineNumbersEnabled(value: boolean) {
         this.prependLineNumbersEnabled = value;
         vscode.commands.executeCommand('setContext', Constants.ContextKeys.PrependLineNumbersEnabled, value);
     }
 
+    /**
+     * Applies enabled filters to the active document, writing matched lines to a new output file.
+     * @param filterType Limits execution to word or regex groups; omit to apply both.
+     * @param targetGroup When provided, runs only that group regardless of its enabled state.
+     */
     private async applyFilter(filterType?: 'word' | 'regex', targetGroup?: FilterGroup) {
         if (this.isProcessing) {
             vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyProcessing);
@@ -224,6 +230,11 @@ export class FilterExecutionCommandManager {
         }
     }
 
+    /**
+     * Navigates to the next or previous match of a filter keyword in the active editor.
+     * @param item The filter item whose keyword to search for; falls back to tree view selection.
+     * @param direction Whether to search forward or backward, wrapping at document boundaries.
+     */
     private async findMatch(item: FilterItem | undefined, direction: 'next' | 'previous') {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -327,6 +338,7 @@ export class FilterExecutionCommandManager {
         }
     }
 
+    /** Expands all filter groups of the given type in the corresponding tree view. */
     private async expandAllGroups(isRegex: boolean) {
         this.logger.info(`[FilterExecutionCommandManager] CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
@@ -342,6 +354,7 @@ export class FilterExecutionCommandManager {
         }
     }
 
+    /** Collapses all filter groups of the given type using the native tree collapse command. */
     private async collapseAllGroups(isRegex: boolean) {
         this.logger.info(`[FilterExecutionCommandManager] CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
@@ -365,6 +378,7 @@ export class FilterExecutionCommandManager {
         }
     }
 
+    /** Navigates from a filtered output line back to its original location in the source file. */
     private async jumpToSource() {
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -395,6 +409,7 @@ export class FilterExecutionCommandManager {
         }
     }
 
+    /** Registers all filter execution, navigation, and view toggle commands. */
     private registerCommands() {
         // Prepend line numbers toggle
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Enable, () => {

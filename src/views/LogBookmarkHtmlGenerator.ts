@@ -17,6 +17,13 @@ export class LogBookmarkHtmlGenerator {
         private readonly logger: Logger
     ) { }
 
+    /**
+     * Generates the full bookmark webview HTML from the current bookmark state.
+     * @param webview The webview instance for resolving resource URIs.
+     * @param activeUriStr URI of the currently active editor file.
+     * @param lastAddedUri URI of the most recently bookmarked file (triggers flash animation).
+     * @param foldedUris Set of file URIs whose sections are collapsed.
+     */
     public async generateHtml(webview: vscode.Webview, activeUriStr?: string, lastAddedUri?: string, foldedUris: Set<string> = new Set()): Promise<string> {
         const bookmarksMap = this.bookmarkService.getBookmarks();
         const sortedUris = this.bookmarkService.getFileKeys();

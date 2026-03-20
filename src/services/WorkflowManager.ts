@@ -102,6 +102,7 @@ export class WorkflowManager implements vscode.Disposable {
         this._onDidChangeWorkflow.fire();
     }
 
+    /** Returns the last run result for the given workflow, the active workflow, or the most recent execution. */
     public getLastRunResult(workflowId?: string): SimulationResult | undefined {
         const id = workflowId || this.getActiveWorkflow() || this.lastExecutionId;
         if (id) {
@@ -112,6 +113,7 @@ export class WorkflowManager implements vscode.Disposable {
 
     // --- Workflow Interaction ---
 
+    /** Handles a workflow click by toggling activation and expansion state. */
     public async handleWorkflowClick(id: string): Promise<void> {
         const activeId = this.getActiveWorkflow();
         const activeStepId = this.getActiveStep();
@@ -141,11 +143,13 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Expands the workflow tree node in the UI. */
     public expandWorkflow(id: string) {
         this.expandedWorkflowIds.add(id);
         this._onDidChangeWorkflow.fire();
     }
 
+    /** Collapses the workflow tree node in the UI. */
     public collapseWorkflow(id: string) {
         this.expandedWorkflowIds.delete(id);
         this._onDidChangeWorkflow.fire();
@@ -169,13 +173,14 @@ export class WorkflowManager implements vscode.Disposable {
         return this.activeStepId;
     }
 
+    /** Sets the active workflow and resets the active step selection. */
     public async setActiveWorkflow(id: string | undefined): Promise<void> {
         await this.context.globalState.update(Constants.GlobalState.ActiveWorkflow, id);
         this.activeStepId = undefined; // Reset step when workflow is explicitly selected
         this._onDidChangeWorkflow.fire();
     }
 
-    // ViewModel for UI
+    /** Builds view models for all workflows, resolving profile data and step hierarchy for the UI. */
     public async getWorkflowViewModels(): Promise<WorkflowViewModel[]> {
         return Promise.all(this.workflows.map(async workflow => {
             const { stepMap, flattenedSteps } = this.buildStepHierarchy(workflow.steps);
@@ -302,6 +307,7 @@ export class WorkflowManager implements vscode.Disposable {
         return await this.profileManager.createProfile(name, []);
     }
 
+    /** Renames a profile and updates all workflow steps that reference it. */
     public async renameProfile(oldName: string, newName: string): Promise<boolean> {
         const success = await this.profileManager.renameProfile(oldName, newName);
         if (success) {
@@ -326,6 +332,7 @@ export class WorkflowManager implements vscode.Disposable {
         return await this.profileManager.deleteProfile(name);
     }
 
+    /** Creates a new empty workflow with the given name and persists it. */
     public async createWorkflow(name: string): Promise<Workflow> {
         const newSim: Workflow = {
             id: crypto.randomUUID(),
@@ -338,6 +345,7 @@ export class WorkflowManager implements vscode.Disposable {
         return newSim;
     }
 
+    /** Deletes a workflow by ID and clears it as active if necessary. */
     public async deleteWorkflow(id: string): Promise<void> {
         this.workflows = this.workflows.filter(s => s.id !== id);
         await this.saveToState();
@@ -348,6 +356,7 @@ export class WorkflowManager implements vscode.Disposable {
         this.logger.info(`[WorkflowManager] Workflow deleted: ${id}`);
     }
 
+    /** Persists an updated workflow to global state. */
     public async saveWorkflow(workflow: Workflow): Promise<void> {
         const index = this.workflows.findIndex(s => s.id === workflow.id);
         if (index !== -1) {
@@ -357,6 +366,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Renames a workflow and persists the change. */
     public async renameWorkflow(id: string, newName: string): Promise<void> {
         const workflow = this.getWorkflow(id);
         if (workflow) {
@@ -381,6 +391,7 @@ export class WorkflowManager implements vscode.Disposable {
         return false;
     }
 
+    /** Adds a profile as a new step to a workflow, optionally as a child of an existing step. */
     public async addProfileToWorkflow(workflowId: string, profileName: string, parentId?: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
@@ -400,6 +411,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Removes a step from a workflow by step ID. */
     public async removeStepFromWorkflow(workflowId: string, stepId: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
@@ -408,6 +420,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Moves a step one position earlier in the workflow's step list. */
     public async moveStepUp(workflowId: string, stepId: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
@@ -421,6 +434,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Moves a step one position later in the workflow's step list. */
     public async moveStepDown(workflowId: string, stepId: string): Promise<void> {
         const workflow = this.getWorkflow(workflowId);
         if (workflow) {
@@ -434,6 +448,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Creates a deep copy of a workflow with new IDs and a "(Copy)" name suffix. */
     public async duplicateWorkflow(id: string): Promise<Workflow | undefined> {
         const original = this.getWorkflow(id);
         if (!original) { return undefined; }
@@ -464,6 +479,7 @@ export class WorkflowManager implements vscode.Disposable {
         return newSim;
     }
 
+    /** Serializes a workflow and its referenced profiles to a JSON package string. */
     public async exportWorkflow(id: string): Promise<string | undefined> {
         const sim = this.getWorkflow(id);
         if (!sim) { return undefined; }
@@ -498,6 +514,12 @@ export class WorkflowManager implements vscode.Disposable {
         return JSON.stringify(pkg, null, 4);
     }
 
+    /**
+     * Imports a workflow from a JSON package string, resolving profile name conflicts.
+     * @param json Serialized WorkflowPackage JSON string.
+     * @param conflictResolver Optional callback invoked when an imported profile name already exists.
+     * @returns Whether the import completed successfully.
+     */
     public async importWorkflow(
         json: string,
         conflictResolver?: (name: string) => Promise<'overwrite' | 'copy' | 'cancel'>
@@ -615,6 +637,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Executes all steps of a workflow against the given source document or file URI. */
     public async run(workflowId: string, source: vscode.TextDocument | vscode.Uri): Promise<void> {
         const sim = this.getWorkflow(workflowId);
         if (!sim) {
@@ -843,6 +866,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Opens the output file for a step result in the editor with highlight decorations applied. */
     public async openStepResult(step: SimulationStepResult) {
         try {
             await fsp.access(step.outputFilePath);
@@ -888,6 +912,7 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
+    /** Activates a step within a workflow, loading its profile and opening its last run result if available. */
     public async activateStep(workflowId: string, stepId: string) {
         const workflow = this.getWorkflow(workflowId);
         if (!workflow) { return; }
@@ -917,6 +942,7 @@ export class WorkflowManager implements vscode.Disposable {
         vscode.window.setStatusBarMessage(`Loaded profile '${profileName}'`, 3000);
     }
 
+    /** Opens all step result files from the last run of a workflow. */
     public async openAllResults(workflowId: string) {
         const lastRunResult = this.lastRunResults.get(workflowId);
         if (!lastRunResult || lastRunResult.workflowId !== workflowId) {
@@ -930,6 +956,7 @@ export class WorkflowManager implements vscode.Disposable {
         vscode.window.setStatusBarMessage(`Opened all results.`, 3000);
     }
 
+    /** Closes all editor tabs associated with the last run results of a workflow. */
     public async closeAllResults(workflowId: string) {
         const lastRunResult = this.lastRunResults.get(workflowId);
         if (!lastRunResult || lastRunResult.workflowId !== workflowId) {
@@ -979,6 +1006,7 @@ export class WorkflowManager implements vscode.Disposable {
         });
     }
 
+    /** Deletes all session temp files and disposes event emitters and subscriptions. */
     public dispose() {
         for (const filePath of this.sessionFiles) {
             try {

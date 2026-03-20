@@ -126,6 +126,7 @@ export class HighlightService implements vscode.Disposable {
         }
     }
 
+    /** Clears all active decorations from visible editors and resets the decoration cache. */
     public refreshDecorationType() {
         // Explicitly clear decorations from all visible editors first
         vscode.window.visibleTextEditors.forEach(editor => {
@@ -139,6 +140,7 @@ export class HighlightService implements vscode.Disposable {
         this.decorationTypes.clear();
     }
 
+    /** Applies highlight decorations to the editor based on active filters, returning per-filter match counts. */
     public async updateHighlights(editor: vscode.TextEditor, token?: vscode.CancellationToken): Promise<Map<string, number>> {
         if (!editor) {
             return new Map();

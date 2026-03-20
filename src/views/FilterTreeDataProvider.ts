@@ -40,10 +40,12 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         return this.iconCache.get(key) as vscode.Uri;
     }
 
+    /** Fires a tree data change event to refresh the view. */
     refresh(element?: TreeItem): void {
         this._onDidChangeTreeData.fire(element);
     }
 
+    /** Converts a filter group or item into a VS Code tree item with icon and context. */
     getTreeItem(element: TreeItem): vscode.TreeItem {
         try {
             if (this.isGroup(element)) {
@@ -130,6 +132,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         }
     }
 
+    /** Returns top-level groups or the filters within a group, filtered by mode. */
     getChildren(element?: TreeItem): vscode.ProviderResult<TreeItem[]> {
         try {
             if (!element) {
@@ -147,6 +150,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         }
     }
 
+    /** Returns the parent group for a filter item, or null for top-level groups. */
     getParent(element: TreeItem): vscode.ProviderResult<TreeItem> {
         if (this.isGroup(element)) {
             return null;
@@ -159,6 +163,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     dropMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
     dragMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
 
+    /** Serializes the dragged tree item into the data transfer for reordering. */
     public handleDrag(source: readonly TreeItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
         if (token.isCancellationRequested) {
             return;
@@ -168,6 +173,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         dataTransfer.set('application/vnd.code.tree.logmagnifier-filters', new vscode.DataTransferItem(item));
     }
 
+    /** Handles dropping a group or filter item onto a new position in the tree. */
     public handleDrop(target: TreeItem | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
         if (token.isCancellationRequested) {
             return;
@@ -241,6 +247,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         return (item as FilterGroup).filters !== undefined;
     }
 
+    /** Clears the icon cache and disposes all subscriptions. */
     public dispose() {
         this.iconCache.clear();
         this.disposables.forEach(d => d.dispose());

@@ -154,8 +154,6 @@ suite('Workflow Final Verification', () => {
         const tempSourceFile = path.join(tempDir, `final_source_${Math.random().toString(36).substring(7)}.log`);
         fs.writeFileSync(tempSourceFile, inputContent);
 
-        console.log(`[FINAL] Created temp source file: ${tempSourceFile}`);
-
         // Create a dummy document object
         const document = {
             uri: vscode.Uri.file(tempSourceFile),
@@ -165,13 +163,10 @@ suite('Workflow Final Verification', () => {
         } as vscode.TextDocument;
 
         // Verify document path before run
-        console.log(`[FINAL] Document URI fsPath: ${document.uri.fsPath}`);
         assert.strictEqual(document.uri.fsPath, tempSourceFile, 'Document path mismatch before run');
 
         // --- EXECUTE ---
-        const startTime = Date.now();
         await workflowManager.run('sim_final', document);
-        const duration = Date.now() - startTime;
 
         // --- VERIFY RESULT ---
         const result = workflowManager.getLastRunResult();
@@ -200,20 +195,14 @@ suite('Workflow Final Verification', () => {
         assert.ok(content3.includes('moon'), 'Step 3 should have moon');
 
         // 2. Verify File Opening
-        console.log('[FINAL] Opened files:', openedFiles);
         assert.strictEqual(openedFiles.length, 3, 'Should open 3 files');
         assert.strictEqual(openedFiles[0], step1.outputFilePath);
         assert.strictEqual(openedFiles[1], step2.outputFilePath);
         assert.strictEqual(openedFiles[2], step3.outputFilePath);
 
-        // 3. Log Execution Duration
-        console.log(`[FINAL] Execution Duration: ${duration}ms`);
-
-        // 4. Verify Source Mapping (N -> N-1)
+        // 3. Verify Source Mapping (N -> N-1)
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const mappings = (workflowManager as any)._test_registeredMappings;
-        console.log('[FINAL] Mappings:', JSON.stringify(mappings, null, 2));
-
         assert.strictEqual(mappings.length, 3, 'Should have 3 mappings');
 
         // Step 1: Output -> Original

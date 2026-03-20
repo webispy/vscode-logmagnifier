@@ -83,6 +83,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         }
     }
 
+    /** Initializes the webview with bookmark HTML and registers message handlers. */
     public resolveWebviewView(
         webviewView: vscode.WebviewView,
         _context: vscode.WebviewViewResolveContext,
@@ -285,6 +286,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         }, 100);
     }
 
+    /** Cancels pending updates and disposes all subscriptions. */
     public dispose() {
         if (this.updateTimeout) {
             clearTimeout(this.updateTimeout);

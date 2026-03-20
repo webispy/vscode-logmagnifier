@@ -22,6 +22,7 @@ export class ColorService {
         this.loadColorPresets();
     }
 
+    /** Reloads color presets from workspace configuration, falling back to built-in defaults. */
     public loadColorPresets() {
         const config = vscode.workspace.getConfiguration(Constants.Configuration.HighlightColors.Section);
         const presets: ColorPreset[] = [];
@@ -54,18 +55,22 @@ export class ColorService {
         }
     }
 
+    /** Returns the list of available color preset IDs. */
     public getAvailableColors(): string[] {
         return this.colorPresets.map(p => p.id);
     }
 
+    /** Returns all loaded color presets. */
     public getColorPresets(): ColorPreset[] {
         return this.colorPresets;
     }
 
+    /** Looks up a color preset by its ID, returning `undefined` if not found. */
     public getPresetById(id: string): ColorPreset | undefined {
         return this.colorPresetsMap.get(id);
     }
 
+    /** Deterministically assigns a color preset ID to a filter group based on its name hash. */
     public assignColor(group: FilterGroup): string {
         // Deterministically assign a color based on the group name's hash
         const available = this.colorPresets.filter(p => p.id !== 'color00');

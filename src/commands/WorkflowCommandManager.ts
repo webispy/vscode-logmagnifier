@@ -145,6 +145,7 @@ export class WorkflowCommandManager {
         }));
     }
 
+    /** Prompts the user to select a workflow, serializes it to JSON, and saves to a file. */
     private async handleExportWorkflow() {
         const workflows = this.workflowManager.getWorkflows();
         if (workflows.length === 0) {
@@ -193,6 +194,7 @@ export class WorkflowCommandManager {
         }
     }
 
+    /** Prompts the user to select a JSON file and imports the workflow, handling profile conflicts. */
     private async handleImportWorkflow() {
         const uris = await vscode.window.showOpenDialog({
             canSelectMany: false,

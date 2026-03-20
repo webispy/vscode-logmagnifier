@@ -17,6 +17,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         );
     }
 
+    /** Triggers an initial device refresh if not already initialized. */
     public initialize() {
         // Kept for backward compatibility or manual refresh if needed,
         // but getChildren handles lazy load now.
@@ -27,16 +28,19 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         }
     }
 
+    /** Fires a tree data change event to refresh the view. */
     refresh(): void {
         this._onDidChangeTreeData.fire(undefined);
     }
 
+    /** Re-queries connected ADB devices and refreshes the tree. */
     async refreshDevices(): Promise<void> {
         this.devices = await this.adbService.getDevices();
         this.initialized = true;
         this.refresh();
     }
 
+    /** Converts an ADB tree item into a VS Code tree item with appropriate icon and command. */
     getTreeItem(element: AdbTreeItem): vscode.TreeItem {
         if (this.isDevice(element)) {
             const item = new vscode.TreeItem(`${element.model ?? 'Unknown'} (${element.id})`, vscode.TreeItemCollapsibleState.Expanded);
@@ -262,6 +266,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         return new vscode.TreeItem('Unknown');
     }
 
+    /** Returns child items for a device node, or root-level devices if no element is given. */
     getChildren(element?: AdbTreeItem): vscode.ProviderResult<AdbTreeItem[]> {
         if (!element) {
             const chromeInspectItem: ChromeInspectItem = { type: 'chromeInspect' };
@@ -334,6 +339,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         return [];
     }
 
+    /** Disposes all subscriptions and the change event emitter. */
     public dispose() {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];

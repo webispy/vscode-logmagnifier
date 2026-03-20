@@ -14,6 +14,16 @@ export class JsonTreeWebview {
         this.htmlGenerator = new JsonTreeHtmlGenerator(this.context, logger);
     }
 
+    /**
+     * Opens or updates the JSON tree preview panel.
+     * @param data The JSON data to display.
+     * @param title Panel title shown in the tab.
+     * @param status Validation status of the JSON content.
+     * @param tabSize Indentation width for formatting.
+     * @param sourceUri URI of the source document for back-navigation.
+     * @param sourceLine Line number in the source document.
+     * @param preserveFocus Whether to keep focus on the current editor.
+     */
     public async show(data: unknown, title: string = 'JSON Preview', status: 'valid' | 'invalid' | 'no-json' = 'valid', tabSize: number = 2, sourceUri?: string, sourceLine?: number, preserveFocus: boolean = false) {
         if (this.panel) {
             const expansionDepth = this.context.globalState.get<number>('jsonPreview.expansionDepth', 1);
@@ -56,6 +66,7 @@ export class JsonTreeWebview {
         }
     }
 
+    /** Disposes the webview panel and the reveal-line event emitter. */
     public dispose() {
         if (this.panel) {
             this.panel.dispose();

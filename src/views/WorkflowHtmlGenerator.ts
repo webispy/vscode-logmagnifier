@@ -9,6 +9,13 @@ import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtil
 export class WorkflowHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) { }
 
+    /**
+     * Generates the workflow tree webview HTML from the template.
+     * @param webview The webview instance for resolving resource URIs.
+     * @param workflows View models for all workflows to render.
+     * @param activeId ID of the currently active workflow.
+     * @param activeStepId ID of the currently active step within the workflow.
+     */
     public async generate(
         webview: vscode.Webview,
         workflows: WorkflowViewModel[],

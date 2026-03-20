@@ -135,6 +135,7 @@ export class CommandManager {
         }));
     }
 
+    /** Debounces JSON preview updates when the cursor moves to a new line or document. */
     private triggerJsonPreviewUpdate(editor: vscode.TextEditor, currentLine: number, currentUriStr: string) {
         // Cancel previous pending update
         if (this.debounceTimer) {

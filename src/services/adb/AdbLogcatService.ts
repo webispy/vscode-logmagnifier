@@ -28,14 +28,17 @@ export class AdbLogcatService {
         private targetAppService: AdbTargetAppService
     ) { }
 
+    /** Returns all logcat sessions. */
     public getSessions(): LogcatSession[] {
         return Array.from(this.sessions.values());
     }
 
+    /** Returns a logcat session by ID, or undefined if not found. */
     public getSession(id: string): LogcatSession | undefined {
         return this.sessions.get(id);
     }
 
+    /** Creates a new logcat session for the given device. */
     public createSession(name: string, device: AdbDevice): LogcatSession {
         const session: LogcatSession = {
             id: crypto.randomUUID(),
@@ -51,6 +54,7 @@ export class AdbLogcatService {
         return session;
     }
 
+    /** Stops and removes a logcat session by ID. */
     public removeSession(id: string) {
         this.stopSession(id);
         this.sessions.delete(id);
@@ -58,6 +62,7 @@ export class AdbLogcatService {
         this.logger.info(`[Session] Removed session ${id}`);
     }
 
+    /** Starts the logcat process for a session, creating an output document if needed. */
     public async startSession(sessionId: string) {
         const session = this.sessions.get(sessionId);
         if (!session || session.isRunning) {
@@ -82,7 +87,8 @@ export class AdbLogcatService {
 
             // Parse default options (allowlist to prevent argument injection)
             const ALLOWED_LOGCAT_FLAGS = new Set(['-v', '-b', '-T', '-t', '-d', '-e', '-s', '--regex', '--pid', '-c']);
-            const SAFE_VALUE_PATTERN = /^[a-zA-Z0-9_.,:/*=\-+@ ]+$/;
+            // Space is intentionally excluded: values are passed as array elements to execFile (no shell expansion)
+            const SAFE_VALUE_PATTERN = /^[a-zA-Z0-9_.,:/*=\-+@]+$/;
             if (defaultOptions.trim().length > 0) {
                 const parts = defaultOptions.split(/\s+/);
                 for (let i = 0; i < parts.length; i++) {

@@ -8,10 +8,12 @@ import { Logger } from './Logger';
 export class FilterStateService {
     constructor(private context: vscode.ExtensionContext, private logger: Logger) { }
 
+    /** Persists filter groups to VS Code global state. */
     public saveToState(groups: FilterGroup[]) {
         this.context.globalState.update(Constants.GlobalState.FilterGroups, groups);
     }
 
+    /** Loads filter groups from global state, applying any necessary schema migrations. */
     public loadFromState(): FilterGroup[] {
         const saved = this.context.globalState.get<FilterGroup[]>(Constants.GlobalState.FilterGroups);
         if (saved) {
@@ -24,6 +26,7 @@ export class FilterStateService {
         return [];
     }
 
+    /** Creates a deep copy of the given object using structuredClone with a JSON fallback. */
     public deepCopy<T>(obj: T): T {
         try {
             return structuredClone(obj);

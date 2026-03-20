@@ -189,6 +189,7 @@ export class AdbLogcatService {
         session.outputDocumentUri = doc.uri.toString();
     }
 
+    /** Stops the logcat process for a session and clears its flush timer. */
     public stopSession(sessionId: string) {
         const child = this.processes.get(sessionId);
         if (child) {
@@ -207,6 +208,7 @@ export class AdbLogcatService {
         }
     }
 
+    /** Adds a tag filter to a stopped session. */
     public addTag(sessionId: string, tag: LogcatTag) {
         const session = this.sessions.get(sessionId);
         if (session && !session.isRunning) {
@@ -215,6 +217,7 @@ export class AdbLogcatService {
         }
     }
 
+    /** Removes a tag filter from a stopped session. */
     public removeTag(sessionId: string, tagId: string) {
         const session = this.sessions.get(sessionId);
         if (session && !session.isRunning) {
@@ -223,6 +226,7 @@ export class AdbLogcatService {
         }
     }
 
+    /** Replaces an existing tag filter on a stopped session. */
     public updateTag(sessionId: string, tag: LogcatTag) {
         const session = this.sessions.get(sessionId);
         if (session && !session.isRunning) {
@@ -234,6 +238,7 @@ export class AdbLogcatService {
         }
     }
 
+    /** Toggles whether a stopped session starts from the current time or from the beginning. */
     public toggleSessionTimeFilter(sessionId: string) {
         const session = this.sessions.get(sessionId);
         if (session && !session.isRunning) {

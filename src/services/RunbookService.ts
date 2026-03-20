@@ -301,4 +301,8 @@ uptime
             }
         }
     }
+
+    public dispose(): void {
+        this._onDidChangeTreeData.dispose();
+    }
 }

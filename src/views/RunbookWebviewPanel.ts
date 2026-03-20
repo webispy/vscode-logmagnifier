@@ -1,4 +1,5 @@
 import * as cp from 'child_process';
+import * as crypto from 'crypto';
 import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
@@ -18,6 +19,7 @@ export class RunbookWebviewPanel {
     private readonly htmlGenerator: RunbookHtmlGenerator;
     private runningProcesses: Map<string, cp.ChildProcess> = new Map();
     private scriptExecutionAllowed: boolean = false;
+    private allowedContentHash: string | undefined;
 
     public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown, logger: Logger) {
         const column = vscode.window.activeTextEditor
@@ -79,6 +81,14 @@ export class RunbookWebviewPanel {
     public async update(item: RunbookMarkdown) {
         if (item.filePath !== this.currentItem.filePath) {
             this.scriptExecutionAllowed = false;
+            this.allowedContentHash = undefined;
+        } else if (this.scriptExecutionAllowed) {
+            // Reset permission if file content changed since "Allow All" was granted
+            const currentHash = await this.computeFileHash(item.filePath);
+            if (currentHash !== this.allowedContentHash) {
+                this.scriptExecutionAllowed = false;
+                this.allowedContentHash = undefined;
+            }
         }
         this.currentItem = item;
         this.webviewPanel.title = `Runbook: ${item.label}`;
@@ -111,6 +121,7 @@ export class RunbookWebviewPanel {
             );
             if (confirmed === 'Allow All for this Runbook') {
                 this.scriptExecutionAllowed = true;
+                this.allowedContentHash = await this.computeFileHash(this.currentItem.filePath);
             } else if (confirmed !== 'Execute') {
                 return;
             }
@@ -198,6 +209,15 @@ export class RunbookWebviewPanel {
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             vscode.window.showErrorMessage(`Failed to update script: ${msg}`);
+        }
+    }
+
+    private async computeFileHash(filePath: string): Promise<string | undefined> {
+        try {
+            const content = await fsp.readFile(filePath, 'utf-8');
+            return crypto.createHash('sha256').update(content).digest('hex');
+        } catch {
+            return undefined;
         }
     }
 

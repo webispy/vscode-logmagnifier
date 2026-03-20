@@ -209,6 +209,26 @@ export class LenientJsonParser {
         }
         this.index++;
 
+        // Fast path: scan for closing quote without escape sequences
+        const start = this.index;
+        while (this.index < this.text.length) {
+            const char = this.text[this.index];
+            if (char === '\\') {
+                // Escape found: collect prefix via substring, then fall back to char-by-char
+                return this.text.substring(start, this.index) + this.parseStringEscaped(quoteType);
+            }
+            if (char === quoteType) {
+                const result = this.text.substring(start, this.index);
+                this.index++;
+                return result;
+            }
+            this.index++;
+        }
+        return this.text.substring(start); // Unclosed string
+    }
+
+    /** Continues parsing a string after the first escape character is encountered. */
+    private parseStringEscaped(quoteType: string): string {
         let result = '';
         let escaped = false;
 
@@ -230,16 +250,15 @@ export class LenientJsonParser {
 
     private parseUnquotedString(): string | undefined {
         this.skipWhitespace();
-        let result = '';
+        const start = this.index;
         while (this.index < this.text.length) {
             const char = this.text[this.index];
             if ([':', ',', '{', '}', '[', ']', ' ', '\n', '\r', '\t', '"', "'"].includes(char)) {
                 break;
             }
-            result += char;
             this.index++;
         }
-        return result.length > 0 ? result : undefined;
+        return this.index > start ? this.text.substring(start, this.index) : undefined;
     }
 
     private parseNumber(): number {

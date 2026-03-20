@@ -28,11 +28,13 @@ export class FileHierarchyService {
         this.pruneStaleNodes();
     }
 
+    /** Creates and returns the singleton instance, storing hierarchy in workspace state. */
     public static createInstance(context: vscode.ExtensionContext): FileHierarchyService {
         FileHierarchyService.instance = new FileHierarchyService(context.workspaceState);
         return FileHierarchyService.instance;
     }
 
+    /** Returns the singleton instance, throwing if not yet initialized. */
     public static getInstance(): FileHierarchyService {
         if (!FileHierarchyService.instance) {
             throw new Error('FileHierarchyService not initialized. Call createInstance(context) first.');
@@ -40,6 +42,7 @@ export class FileHierarchyService {
         return FileHierarchyService.instance;
     }
 
+    /** Registers a child file (filter or bookmark) under a parent, creating the parent node if needed. */
     public registerChild(parentUri: vscode.Uri, childUri: vscode.Uri, type: 'filter' | 'bookmark', label?: string) {
         const parentKey = parentUri.toString();
         const childKey = childUri.toString();
@@ -69,6 +72,7 @@ export class FileHierarchyService {
         this._onDidChangeHierarchy.fire();
     }
 
+    /** Removes a node from the hierarchy, optionally removing all its descendants. */
     public unregister(uri: vscode.Uri, recursive: boolean = false) {
         if (recursive) {
             this.removeGroup(uri);
@@ -91,6 +95,7 @@ export class FileHierarchyService {
         }
     }
 
+    /** Returns the parent URI of the given node, or undefined if it has no parent. */
     public getParent(uri: vscode.Uri): vscode.Uri | undefined {
         const node = this.nodes.get(uri.toString());
         if (node && node.parentId) {

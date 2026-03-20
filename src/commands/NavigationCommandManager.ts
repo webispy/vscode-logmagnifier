@@ -1,7 +1,7 @@
-
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
+
 import { FileHierarchyService } from '../services/FileHierarchyService';
 import { Logger } from '../services/Logger';
 
@@ -11,10 +11,10 @@ interface HierarchyQuickPickItem extends vscode.QuickPickItem {
 }
 
 export class NavigationCommandManager {
-
     constructor(
         private context: vscode.ExtensionContext,
-        private hierarchyService: FileHierarchyService
+        private hierarchyService: FileHierarchyService,
+        private logger: Logger
     ) {
         this.registerCommands();
     }
@@ -45,7 +45,7 @@ export class NavigationCommandManager {
             await vscode.window.showTextDocument(doc, { preview: false });
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[NavigationCommandManager] Failed to open file ${uri.toString()}: ${msg}`);
+            this.logger.error(`[NavigationCommandManager] Failed to open file ${uri.toString()}: ${msg}`);
             vscode.window.showErrorMessage(Constants.Messages.Error.OpenFileFailed.replace('{0}', msg));
         }
     }

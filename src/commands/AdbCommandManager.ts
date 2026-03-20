@@ -1,12 +1,15 @@
-import * as vscode from 'vscode';
-import { AdbService } from '../services/AdbService';
-import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
-import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem } from '../models/AdbModels';
+import * as cp from 'child_process';
 import * as crypto from 'crypto';
-import { Constants } from '../Constants';
 import * as os from 'os';
 import * as path from 'path';
-import * as cp from 'child_process';
+
+import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem } from '../models/AdbModels';
+
+import { AdbService } from '../services/AdbService';
+import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 
 export class AdbCommandManager {
     constructor(

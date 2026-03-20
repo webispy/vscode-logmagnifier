@@ -1,7 +1,9 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
 import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
@@ -40,7 +42,6 @@ export class CommandManager {
 
     private readonly filterManager: FilterManager;
     private readonly highlightService: HighlightService;
-    private readonly resultCountService: ResultCountService;
     private readonly logProcessor: LogProcessor;
     private readonly quickAccessProvider: QuickAccessProvider;
     private readonly logger: Logger;
@@ -55,7 +56,6 @@ export class CommandManager {
     ) {
         this.filterManager = services.filterManager;
         this.highlightService = services.highlightService;
-        this.resultCountService = services.resultCountService;
         this.logProcessor = services.logProcessor;
         this.quickAccessProvider = services.quickAccessProvider;
         this.logger = services.logger;

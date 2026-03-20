@@ -1,4 +1,6 @@
 import * as vscode from 'vscode';
+
+import { Logger } from '../services/Logger';
 import { JsonTreeHtmlGenerator } from './JsonTreeHtmlGenerator';
 
 export class JsonTreeWebview {
@@ -8,8 +10,8 @@ export class JsonTreeWebview {
     private readonly _onDidRevealLine = new vscode.EventEmitter<{ uri: string, line: number }>();
     public readonly onDidRevealLine = this._onDidRevealLine.event;
 
-    constructor(private readonly context: vscode.ExtensionContext) {
-        this.htmlGenerator = new JsonTreeHtmlGenerator(this.context);
+    constructor(private readonly context: vscode.ExtensionContext, logger: Logger) {
+        this.htmlGenerator = new JsonTreeHtmlGenerator(this.context, logger);
     }
 
     public async show(data: unknown, title: string = 'JSON Preview', status: 'valid' | 'invalid' | 'no-json' = 'valid', tabSize: number = 2, sourceUri?: string, sourceLine?: number, preserveFocus: boolean = false) {

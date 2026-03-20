@@ -11,10 +11,12 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private disposables: vscode.Disposable[] = [];
+    private fileSizeUnit: 'bytes' | 'kb' | 'mb' = 'bytes';
 
     constructor(
         private filterManager: FilterManager,
-        private workflowManager: WorkflowManager
+        private workflowManager: WorkflowManager,
+        private logger: Logger
     ) {
         this.disposables.push(
             this.filterManager.onDidChangeProfile(() => this.refresh()),
@@ -23,7 +25,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
     }
 
     refresh(): void {
-        Logger.getInstance().info('QuickAccessProvider.refresh() called');
+        this.logger.info('QuickAccessProvider.refresh() called');
         this._onDidChangeTreeData.fire();
     }
 
@@ -90,8 +92,6 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return item;
     }
 
-    private fileSizeUnit: 'bytes' | 'kb' | 'mb' = 'bytes';
-
     public async toggleFileSizeUnit(): Promise<void> {
         const size = await this.getFileSize();
         // Treat undefined size (error/no file) as 0.
@@ -135,7 +135,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         if (editor) {
             if (editor.document.uri.scheme === 'file') {
                 return EditorUtils.getFileSizeAsync(editor.document.uri, (e) => {
-                    Logger.getInstance().error(`Error getting file size: ${e}`);
+                    this.logger.error(`Error getting file size: ${e}`);
                 });
             } else if (editor.document.uri.scheme === 'untitled') {
                 return editor.document.getText().length;
@@ -147,7 +147,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         if (activeTab && activeTab.input instanceof vscode.TabInputText) {
             const uri = activeTab.input.uri;
             return EditorUtils.getFileSizeAsync(uri, (e) => {
-                Logger.getInstance().error(`Error getting file size from tab: ${e}`);
+                this.logger.error(`Error getting file size from tab: ${e}`);
             });
         }
 

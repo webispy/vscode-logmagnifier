@@ -1,18 +1,21 @@
-import * as vscode from 'vscode';
-import { Constants } from '../Constants';
-import { FilterManager } from '../services/FilterManager';
-import { HighlightService } from '../services/HighlightService';
-import { LogProcessor } from '../services/LogProcessor';
-import { Logger } from '../services/Logger';
-import { SourceMapService } from '../services/SourceMapService';
-import { FilterGroup, FilterItem } from '../models/Filter';
-import { RegexUtils } from '../utils/RegexUtils';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
+
+import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+import { FilterGroup, FilterItem } from '../models/Filter';
+
+import { FilterManager } from '../services/FilterManager';
+import { HighlightService } from '../services/HighlightService';
+import { LogProcessor } from '../services/LogProcessor';
+import { Logger } from '../services/Logger';
+import { SourceMapService } from '../services/SourceMapService';
 import { EditorUtils } from '../utils/EditorUtils';
+import { RegexUtils } from '../utils/RegexUtils';
 
 export class FilterExecutionCommandManager {
     private prependLineNumbersEnabled: boolean = false;
@@ -427,7 +430,7 @@ export class FilterExecutionCommandManager {
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyWordFilter, () => this.applyFilter('word')));
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.runFilterGroup', (group: FilterGroup) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RunFilterGroup, (group: FilterGroup) => {
             const type = group.isRegex ? 'regex' : 'word';
             this.applyFilter(type, group);
         }));

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import { WorkflowWebviewProvider } from '../../views/WorkflowWebviewProvider';
 import { WorkflowManager } from '../../services/WorkflowManager';
 import { WorkflowHtmlGenerator } from '../../views/WorkflowHtmlGenerator';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 
 suite('WorkflowWebviewProvider Test Suite', () => {
@@ -23,7 +24,8 @@ suite('WorkflowWebviewProvider Test Suite', () => {
 
         provider = new WorkflowWebviewProvider(
             mockContext as unknown as vscode.ExtensionContext,
-            mockWorkflowManager
+            mockWorkflowManager,
+            Logger.getInstance()
         );
 
         originalGenerate = WorkflowHtmlGenerator.prototype.generate;

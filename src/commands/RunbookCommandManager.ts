@@ -14,7 +14,8 @@ import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
 export class RunbookCommandManager {
     constructor(
         private context: vscode.ExtensionContext,
-        private runbookService: RunbookService
+        private runbookService: RunbookService,
+        private logger: Logger
     ) {
         this.registerCommands();
     }
@@ -41,10 +42,10 @@ export class RunbookCommandManager {
         }
 
         try {
-            await RunbookWebviewPanel.createOrShow(this.context, item);
+            await RunbookWebviewPanel.createOrShow(this.context, item, this.logger);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookCommandManager] Failed to open Runbook Webview: ${msg}`);
+            this.logger.error(`[RunbookCommandManager] Failed to open Runbook Webview: ${msg}`);
             vscode.window.showErrorMessage(`Failed to open interactive view: ${msg}`);
         }
     }
@@ -59,7 +60,7 @@ export class RunbookCommandManager {
             await vscode.window.showTextDocument(document);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookCommandManager] Failed to open Markdown editor: ${msg}`);
+            this.logger.error(`[RunbookCommandManager] Failed to open Markdown editor: ${msg}`);
             vscode.window.showErrorMessage(`Failed to open editor: ${msg}`);
         }
     }

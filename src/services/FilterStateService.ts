@@ -3,8 +3,10 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 
+import { Logger } from './Logger';
+
 export class FilterStateService {
-    constructor(private context: vscode.ExtensionContext) { }
+    constructor(private context: vscode.ExtensionContext, private logger: Logger) { }
 
     public saveToState(groups: FilterGroup[]) {
         this.context.globalState.update(Constants.GlobalState.FilterGroups, groups);
@@ -25,7 +27,8 @@ export class FilterStateService {
     public deepCopy<T>(obj: T): T {
         try {
             return structuredClone(obj);
-        } catch {
+        } catch (e: unknown) {
+            this.logger.warn(`[FilterStateService] structuredClone failed, falling back to JSON: ${e instanceof Error ? e.message : String(e)}`);
             return JSON.parse(JSON.stringify(obj));
         }
     }

@@ -29,7 +29,7 @@ export class WorkflowCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.runActive', async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowRunActive, async () => {
             await this.filterManager.saveFilters();
             const activeId = this.workflowManager.getActiveWorkflow();
             if (activeId) {
@@ -56,7 +56,7 @@ export class WorkflowCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.run', async (item: vscode.TreeItem | string) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowRun, async (item: vscode.TreeItem | string) => {
             await this.filterManager.saveFilters();
             let simId: string | undefined;
             if (typeof item === 'string') {
@@ -91,15 +91,15 @@ export class WorkflowCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.setActive', async (id: string) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowSetActive, async (id: string) => {
             await this.workflowManager.setActiveWorkflow(id);
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.export', async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowExport, async () => {
             await this.handleExportWorkflow();
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.create', async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowCreate, async () => {
             const name = await vscode.window.showInputBox({
                 placeHolder: "Enter Workflow Name",
                 prompt: "Create a new Workflow"
@@ -110,25 +110,25 @@ export class WorkflowCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.import', async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowImport, async () => {
             await this.handleImportWorkflow();
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.openAllResults', async (args?: { id: string } | string) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowOpenAllResults, async (args?: { id: string } | string) => {
             const workflowId = typeof args === 'string' ? args : args?.id;
             if (workflowId) {
                 await this.workflowManager.openAllResults(workflowId);
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.closeAllResults', async (args?: { id: string } | string) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowCloseAllResults, async (args?: { id: string } | string) => {
             const workflowId = typeof args === 'string' ? args : args?.id;
             if (workflowId) {
                 await this.workflowManager.closeAllResults(workflowId);
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand('logmagnifier.workflow.rename', async (args?: { id: string } | string) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowRename, async (args?: { id: string } | string) => {
             const workflowId = typeof args === 'string' ? args : args?.id;
             if (workflowId) {
                 const workflow = this.workflowManager.getWorkflow(workflowId);

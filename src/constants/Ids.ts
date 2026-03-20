@@ -148,6 +148,15 @@ export const Ids = {
         WorkflowImport: 'logmagnifier.workflow.import',
         WorkflowExport: 'logmagnifier.workflow.export',
         WorkflowRun: 'logmagnifier.workflow.run',
+        WorkflowRunActive: 'logmagnifier.workflow.runActive',
+        WorkflowSetActive: 'logmagnifier.workflow.setActive',
+        WorkflowCreate: 'logmagnifier.workflow.create',
+        WorkflowRename: 'logmagnifier.workflow.rename',
+        WorkflowOpenAllResults: 'logmagnifier.workflow.openAllResults',
+        WorkflowCloseAllResults: 'logmagnifier.workflow.closeAllResults',
+
+        // Filter execution
+        RunFilterGroup: 'logmagnifier.runFilterGroup',
 
         // Bookmark
         AddBookmark: 'logmagnifier.addBookmark',

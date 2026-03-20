@@ -24,7 +24,7 @@ export class RunbookService {
     private runbookItems: RunbookItem[] = [];
     readonly ready: Promise<void>;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(private context: vscode.ExtensionContext, private logger: Logger) {
         this.ready = this.initialize();
     }
 
@@ -101,7 +101,7 @@ uptime
             await fsp.writeFile(defaultPath, defaultContent, 'utf-8');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookService] Failed to create default runbook markdown: ${msg}`);
+            this.logger.error(`[RunbookService] Failed to create default runbook markdown: ${msg}`);
         }
     }
 
@@ -114,7 +114,7 @@ uptime
             this.runbookItems = this.scanDir(this.storagePath);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookService] Error loading runbook configurations: ${msg}`);
+            this.logger.error(`[RunbookService] Error loading runbook configurations: ${msg}`);
         }
     }
 
@@ -202,7 +202,7 @@ uptime
             vscode.window.showInformationMessage('Runbook exported successfully!');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookService] Failed to export runbook: ${msg}`);
+            this.logger.error(`[RunbookService] Failed to export runbook: ${msg}`);
             vscode.window.showErrorMessage(`Failed to export runbook: ${msg}`);
         }
     }
@@ -238,7 +238,7 @@ uptime
             if (typeof parsedData === 'object' && parsedData !== null && Array.isArray(parsedData.runbooks)) {
                 // New format with version wrapper
                 importedItems = parsedData.runbooks;
-                Logger.getInstance().info(`Importing runbook from JSON (File Version: ${parsedData.version || 'unknown'}).`);
+                this.logger.info(`Importing runbook from JSON (File Version: ${parsedData.version || 'unknown'}).`);
             } else {
                 throw new Error("Invalid runbook file format.");
             }
@@ -248,7 +248,7 @@ uptime
             vscode.window.showInformationMessage('Runbook imported successfully!');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[RunbookService] Failed to import runbook: ${msg}`);
+            this.logger.error(`[RunbookService] Failed to import runbook: ${msg}`);
             vscode.window.showErrorMessage(`Failed to import runbook: ${msg}`);
         }
     }
@@ -270,7 +270,7 @@ uptime
     private async deserializeItems(items: ExportedRunbookItem[], currentPath: string, depth: number = 0): Promise<void> {
         if (!Array.isArray(items)) { return; }
         if (depth > RunbookService.MAX_IMPORT_DEPTH) {
-            Logger.getInstance().warn(`Runbook import: max nesting depth (${RunbookService.MAX_IMPORT_DEPTH}) exceeded, skipping deeper items`);
+            this.logger.warn(`Runbook import: max nesting depth (${RunbookService.MAX_IMPORT_DEPTH}) exceeded, skipping deeper items`);
             return;
         }
 
@@ -280,7 +280,7 @@ uptime
             if (item.type === 'group') {
                 const groupPath = path.join(currentPath, item.name);
                 if (!this.isWithinBase(this.storagePath, groupPath)) {
-                    Logger.getInstance().error(`Path traversal blocked during import: ${item.name}`);
+                    this.logger.error(`Path traversal blocked during import: ${item.name}`);
                     continue;
                 }
                 if (!fs.existsSync(groupPath)) {
@@ -293,7 +293,7 @@ uptime
                 const fileName = item.name.endsWith('.md') ? item.name : item.name + '.md';
                 const filePath = path.join(currentPath, fileName);
                 if (!this.isWithinBase(this.storagePath, filePath)) {
-                    Logger.getInstance().error(`Path traversal blocked during import: ${item.name}`);
+                    this.logger.error(`Path traversal blocked during import: ${item.name}`);
                     continue;
                 }
                 const content = item.content || '';

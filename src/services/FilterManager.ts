@@ -107,7 +107,9 @@ export class FilterManager implements vscode.Disposable {
             clearTimeout(this.saveDebounceTimer);
         }
         this.saveDebounceTimer = setTimeout(() => {
-            this.saveFilters();
+            this.saveFilters().catch(e =>
+                this.logger.error(`[FilterManager] Debounced save failed: ${e instanceof Error ? e.message : String(e)}`)
+            );
         }, FilterManager.SAVE_DEBOUNCE_MS);
     }
 

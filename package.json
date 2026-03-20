@@ -413,6 +413,11 @@
             "type": "string",
             "default": "-v threadtime",
             "description": "Default options for adb logcat command."
+          },
+          "logmagnifier.adbEnablePublicIpLookup": {
+            "type": "boolean",
+            "default": false,
+            "description": "When enabled, System Info queries the device's public IP via https://api.ipify.org. Disabled by default for privacy."
           }
         }
       }

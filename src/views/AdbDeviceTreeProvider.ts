@@ -21,7 +21,9 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
         // Kept for backward compatibility or manual refresh if needed,
         // but getChildren handles lazy load now.
         if (!this.initialized) {
-            this.refreshDevices();
+            this.refreshDevices().catch(() => {
+                // Error already surfaced via empty device list
+            });
         }
     }
 

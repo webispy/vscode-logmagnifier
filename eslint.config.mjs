@@ -32,11 +32,11 @@ export default typescriptEslint.config(
             "@typescript-eslint/no-explicit-any": "warn",
 
             // Disallow console.log/warn/error — use Logger service instead
-            "no-console": "warn",
+            "no-console": "error",
 
-            "curly": "warn",
-            "eqeqeq": "warn",
-            "no-throw-literal": "warn",
+            "curly": "error",
+            "eqeqeq": "error",
+            "no-throw-literal": "error",
             "semi": "warn",
         },
     },

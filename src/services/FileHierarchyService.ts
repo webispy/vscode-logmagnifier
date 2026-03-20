@@ -157,7 +157,9 @@ export class FileHierarchyService {
                 children: Array.from(node.children)
             }];
         });
-        this.storage.update(this.storageKey, entries);
+        Promise.resolve(this.storage.update(this.storageKey, entries)).catch(() => {
+            // Storage write failures are non-fatal; hierarchy will be rebuilt on next activation
+        });
     }
 
     private restore() {

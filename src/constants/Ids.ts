@@ -258,6 +258,7 @@ export const Ids = {
         Adb: {
             Path: 'adbPath',
             DefaultOptions: 'adbLogcatDefaultOptions',
+            EnablePublicIpLookup: 'adbEnablePublicIpLookup',
         },
     },
 

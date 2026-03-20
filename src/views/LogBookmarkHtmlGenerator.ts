@@ -8,6 +8,7 @@ import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
 
 export class LogBookmarkHtmlGenerator {
+    private static readonly MAX_REGEX_CACHE = 100;
     private regexCache = new Map<string, RegExp>();
 
     constructor(
@@ -119,6 +120,12 @@ export class LogBookmarkHtmlGenerator {
                         let regex = this.regexCache.get(combinedPattern);
                         if (!regex) {
                             regex = new RegExp(combinedPattern, 'gi');
+                            if (this.regexCache.size >= LogBookmarkHtmlGenerator.MAX_REGEX_CACHE) {
+                                const oldest = this.regexCache.keys().next().value;
+                                if (oldest) {
+                                    this.regexCache.delete(oldest);
+                                }
+                            }
                             this.regexCache.set(combinedPattern, regex);
                         }
                         regex.lastIndex = 0;

@@ -576,7 +576,7 @@ export class AdbCommandManager {
 
                     if (uris && uris.length > 0) {
                         const filePath = uris[0].fsPath;
-                        vscode.window.withProgress({
+                        await vscode.window.withProgress({
                             location: vscode.ProgressLocation.Notification,
                             title: `Installing ${path.basename(filePath)}...`,
                             cancellable: false

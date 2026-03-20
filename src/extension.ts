@@ -45,7 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
   try {
     const logger = Logger.getInstance();
     context.subscriptions.push(logger);
-    logger.info('LogMagnifier activated');
+    logger.info('[extension] LogMagnifier activated');
 
     let debounceTimer: NodeJS.Timeout | undefined;
     context.subscriptions.push({

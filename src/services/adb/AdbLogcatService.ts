@@ -240,12 +240,30 @@ export class AdbLogcatService {
         this.buffers.set(sessionId, buffer);
 
         if (!this.flushTimers.has(sessionId)) {
-            const timer = setInterval(() => this.flushLogs(sessionId), AdbLogcatService.FLUSH_INTERVAL_MS);
+            const timer = setInterval(() => {
+                this.flushLogs(sessionId).catch(e =>
+                    this.logger.error(`[AdbLogcatService] Flush failed: ${e instanceof Error ? e.message : String(e)}`)
+                );
+            }, AdbLogcatService.FLUSH_INTERVAL_MS);
             this.flushTimers.set(sessionId, timer);
         }
     }
 
+    private flushing = new Set<string>();
+
     private async flushLogs(sessionId: string) {
+        if (this.flushing.has(sessionId)) {
+            return;
+        }
+        this.flushing.add(sessionId);
+        try {
+            await this.flushLogsInternal(sessionId);
+        } finally {
+            this.flushing.delete(sessionId);
+        }
+    }
+
+    private async flushLogsInternal(sessionId: string) {
         const buffer = this.buffers.get(sessionId);
         if (!buffer || buffer.length === 0) {
             return;

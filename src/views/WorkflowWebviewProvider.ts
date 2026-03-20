@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
-import { WorkflowManager } from '../services/WorkflowManager';
-import { escapeHtml } from '../utils/WebviewUtils';
+
 import { Constants } from '../Constants';
+import { WorkflowManager } from '../services/WorkflowManager';
+import { Logger } from '../services/Logger';
+import { escapeHtml } from '../utils/WebviewUtils';
 import { WorkflowHtmlGenerator } from './WorkflowHtmlGenerator';
 
 export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
@@ -63,7 +65,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             });
 
         } catch (e) {
-            console.error('Error resolving workflow webview:', e);
+            Logger.getInstance().error(`[WorkflowWebviewProvider] Error resolving webview: ${e}`);
             webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view: ${escapeHtml(String(e))}</div></body></html>`;
         }
     }

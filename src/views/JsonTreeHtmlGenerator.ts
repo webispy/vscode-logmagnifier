@@ -1,6 +1,8 @@
+import * as path from 'path';
+
 import * as vscode from 'vscode';
 
-import * as path from 'path';
+import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class JsonTreeHtmlGenerator {
@@ -24,7 +26,7 @@ export class JsonTreeHtmlGenerator {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             html = new TextDecoder('utf-8').decode(templateBytes);
         } catch (err) {
-            console.error('Failed to read JSON Tree template:', err);
+            Logger.getInstance().error(`[JsonTreeHtmlGenerator] Failed to read template: ${err}`);
             return `<html><body>Failed to load template. Error: ${escapeHtml(String(err))}</body></html>`;
         }
 

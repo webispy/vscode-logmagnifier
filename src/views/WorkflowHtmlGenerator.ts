@@ -1,6 +1,9 @@
-import * as vscode from 'vscode';
 import * as path from 'path';
+
+import * as vscode from 'vscode';
+
 import { WorkflowViewModel } from '../services/WorkflowManager';
+import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class WorkflowHtmlGenerator {
@@ -21,7 +24,7 @@ export class WorkflowHtmlGenerator {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             html = new TextDecoder('utf-8').decode(templateBytes);
         } catch (err) {
-            console.error('Failed to read Workflow Tree template:', err);
+            Logger.getInstance().error(`[WorkflowHtmlGenerator] Failed to read template: ${err}`);
             return `<html><body><div style="padding: 10px;">Error loading workflow view template: ${escapeHtml(String(err))}</div></body></html>`;
         }
 

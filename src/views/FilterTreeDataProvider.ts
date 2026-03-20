@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { ThemeUtils } from '../utils/ThemeUtils';
-import { FilterManager } from '../services/FilterManager';
-import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 
+import { FilterManager } from '../services/FilterManager';
+import { Logger } from '../services/Logger';
+import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
+import { ThemeUtils } from '../utils/ThemeUtils';
 
 type TreeItem = FilterGroup | FilterItem;
 
@@ -118,7 +119,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 return item;
             }
         } catch (e) {
-            console.error(`FilterTreeView: getTreeItem failed: ${e}`);
+            Logger.getInstance().error(`[FilterTreeView] getTreeItem failed: ${e}`);
             const errorItem = new vscode.TreeItem('Error loading item', vscode.TreeItemCollapsibleState.None);
             errorItem.tooltip = String(e);
             return errorItem;
@@ -136,7 +137,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             }
             return [];
         } catch (e) {
-            console.error(`FilterTreeView: getChildren failed: ${e}`);
+            Logger.getInstance().error(`[FilterTreeView] getChildren failed: ${e}`);
             return [];
         }
     }

@@ -1,20 +1,21 @@
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
-import { WorkflowManager } from '../services/WorkflowManager';
+
 import { Logger } from '../services/Logger';
+import { WorkflowManager } from '../services/WorkflowManager';
 import { escapeHtml } from '../utils/WebviewUtils';
 import { WorkflowHtmlGenerator } from './WorkflowHtmlGenerator';
 
 export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     public static readonly viewType = Constants.Views.Workflow;
-    private _view?: vscode.WebviewView;
-    private _disposables: vscode.Disposable[] = [];
+    private view?: vscode.WebviewView;
+    private disposables: vscode.Disposable[] = [];
     private readonly htmlGenerator: WorkflowHtmlGenerator;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly _workflowManager: WorkflowManager
+        private readonly workflowManager: WorkflowManager
     ) {
         this.htmlGenerator = new WorkflowHtmlGenerator(context);
     }
@@ -24,7 +25,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
         _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken,
     ) {
-        this._view = webviewView;
+        this.view = webviewView;
 
         try {
             webviewView.webview.options = {
@@ -34,33 +35,33 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                 ]
             };
 
-            const workflows = await this._workflowManager.getWorkflowViewModels();
-            const activeId = this._workflowManager.getActiveWorkflow();
-            const activeStepId = this._workflowManager.getActiveStep();
+            const workflows = await this.workflowManager.getWorkflowViewModels();
+            const activeId = this.workflowManager.getActiveWorkflow();
+            const activeStepId = this.workflowManager.getActiveStep();
 
             webviewView.webview.html = await this.htmlGenerator.generate(webviewView.webview, workflows, activeId, activeStepId);
 
             webviewView.webview.onDidReceiveMessage(
                 (data) => this.handleMessage(data),
-                null, this._disposables
+                null, this.disposables
             );
 
             // Listen for changes
-            this._workflowManager.onDidChangeWorkflow(() => {
+            this.workflowManager.onDidChangeWorkflow(() => {
                 this.refresh();
-            }, null, this._disposables);
+            }, null, this.disposables);
 
             // Visibility changes
             webviewView.onDidChangeVisibility(() => {
                 if (webviewView.visible) {
                     this.refresh();
                 }
-            }, null, this._disposables);
+            }, null, this.disposables);
 
             // Cleanup when view is disposed
             const disposeSubscription = webviewView.onDidDispose(() => {
-                this._disposables.forEach(d => d.dispose());
-                this._disposables = [];
+                this.disposables.forEach(d => d.dispose());
+                this.disposables = [];
                 disposeSubscription.dispose();
             });
 
@@ -71,15 +72,15 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     }
 
     public async refresh() {
-        if (this._view) {
-            const workflows = await this._workflowManager.getWorkflowViewModels();
-            const activeId = this._workflowManager.getActiveWorkflow();
+        if (this.view) {
+            const workflows = await this.workflowManager.getWorkflowViewModels();
+            const activeId = this.workflowManager.getActiveWorkflow();
 
-            this._view.webview.postMessage({
+            this.view.webview.postMessage({
                 type: 'update',
                 workflows: workflows,
                 activeId: activeId,
-                activeStepId: this._workflowManager.getActiveStep()
+                activeStepId: this.workflowManager.getActiveStep()
             });
         }
     }
@@ -129,7 +130,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                 'Delete'
             );
             if (confirm === 'Delete') {
-                await this._workflowManager.deleteWorkflow(data.id);
+                await this.workflowManager.deleteWorkflow(data.id);
             }
         }
     }
@@ -137,14 +138,14 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleSetActive(data: any): Promise<void> {
         if (data.id) {
-            await this._workflowManager.setActiveWorkflow(data.id);
+            await this.workflowManager.setActiveWorkflow(data.id);
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleClickWorkflow(data: any): Promise<void> {
         if (data.id) {
-            await this._workflowManager.handleWorkflowClick(data.id);
+            await this.workflowManager.handleWorkflowClick(data.id);
         }
     }
 
@@ -156,7 +157,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                 value: data.currentName
             });
             if (newName && newName.trim()) {
-                await this._workflowManager.renameWorkflow(data.id, newName.trim());
+                await this.workflowManager.renameWorkflow(data.id, newName.trim());
             }
         }
     }
@@ -175,14 +176,14 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleOpenAllResults(data: any): Promise<void> {
         if (data.id) {
-            await this._workflowManager.openAllResults(data.id);
+            await this.workflowManager.openAllResults(data.id);
         }
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleCloseAllResults(data: any): Promise<void> {
         if (data.id) {
-            await this._workflowManager.closeAllResults(data.id);
+            await this.workflowManager.closeAllResults(data.id);
         }
     }
 
@@ -196,7 +197,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
         quickPick.matchOnDetail = true;
 
         const refreshQuickPick = () => {
-            const currentProfiles = this._workflowManager.getProfileNames();
+            const currentProfiles = this.workflowManager.getProfileNames();
             const createProfileItem: vscode.QuickPickItem = {
                 label: `$(plus) Create New Profile...`,
                 alwaysShow: true
@@ -224,7 +225,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
 
             let profileNameToAdd = selection.label;
             if (selection.label === `$(plus) Create New Profile...`) {
-                const profiles = this._workflowManager.getProfileNames();
+                const profiles = this.workflowManager.getProfileNames();
                 const newName = await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterNewProfileName,
                     validateInput: (value) => {
@@ -234,7 +235,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                     }
                 });
                 if (newName) {
-                    const success = await this._workflowManager.createEmptyProfile(newName.trim());
+                    const success = await this.workflowManager.createEmptyProfile(newName.trim());
                     if (success) {
                         profileNameToAdd = newName.trim();
                         vscode.window.showInformationMessage(Constants.Messages.Info.ProfileCreated.replace('{0}', profileNameToAdd));
@@ -249,14 +250,14 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             }
 
             quickPick.hide();
-            await this._workflowManager.addProfileToWorkflow(data.id, profileNameToAdd, data.parentId);
+            await this.workflowManager.addProfileToWorkflow(data.id, profileNameToAdd, data.parentId);
             this.refresh();
         });
 
         quickPick.onDidTriggerItemButton(async (e) => {
             const profileName = e.item.label;
             if (e.button.tooltip === 'Rename Profile') {
-                const profiles = this._workflowManager.getProfileNames();
+                const profiles = this.workflowManager.getProfileNames();
                 const newName = await vscode.window.showInputBox({
                     prompt: `Enter new name for profile '${profileName}'`,
                     value: profileName,
@@ -267,7 +268,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                     }
                 });
                 if (newName && newName.trim() !== profileName) {
-                    const success = await this._workflowManager.renameProfile(profileName, newName.trim());
+                    const success = await this.workflowManager.renameProfile(profileName, newName.trim());
                     if (success) {
                         vscode.window.showInformationMessage(`Profile renamed to '${newName.trim()}'`);
                         refreshQuickPick();
@@ -282,7 +283,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                     'Delete'
                 );
                 if (confirm === 'Delete') {
-                    const success = await this._workflowManager.deleteProfile(profileName);
+                    const success = await this.workflowManager.deleteProfile(profileName);
                     if (success) {
                         vscode.window.showInformationMessage(Constants.Messages.Info.ProfileDeleted.replace('{0}', profileName));
                         refreshQuickPick();
@@ -306,7 +307,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                 'Remove'
             );
             if (confirm === 'Remove') {
-                await this._workflowManager.removeStepFromWorkflow(data.id, data.stepId);
+                await this.workflowManager.removeStepFromWorkflow(data.id, data.stepId);
                 this.refresh();
             }
         }
@@ -315,7 +316,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     private async handleOpenProfile(data: any): Promise<void> {
         if (data.id && data.stepId) {
-            await this._workflowManager.activateStep(data.id, data.stepId);
+            await this.workflowManager.activateStep(data.id, data.stepId);
         }
     }
 
@@ -323,9 +324,9 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
     private async handleMoveStep(data: any, direction: 'up' | 'down'): Promise<void> {
         if (data.id && data.stepId) {
             if (direction === 'up') {
-                await this._workflowManager.moveStepUp(data.id, data.stepId);
+                await this.workflowManager.moveStepUp(data.id, data.stepId);
             } else {
-                await this._workflowManager.moveStepDown(data.id, data.stepId);
+                await this.workflowManager.moveStepDown(data.id, data.stepId);
             }
             this.refresh();
         }

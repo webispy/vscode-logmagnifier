@@ -1,12 +1,15 @@
-import * as vscode from 'vscode';
-import { RunbookService } from '../services/RunbookService';
-import { Constants } from '../Constants';
-import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
-import { Logger } from '../services/Logger';
-import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
+import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import * as fs from 'fs';
+
+import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+import { RunbookGroup, RunbookItem, RunbookMarkdown } from '../models/Runbook';
+
+import { Logger } from '../services/Logger';
+import { RunbookService } from '../services/RunbookService';
+import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
 
 export class RunbookCommandManager {
     constructor(
@@ -39,9 +42,10 @@ export class RunbookCommandManager {
 
         try {
             await RunbookWebviewPanel.createOrShow(this.context, item);
-        } catch (e) {
-            Logger.getInstance().error(`Failed to open Runbook Webview: ${e}`);
-            vscode.window.showErrorMessage(`Failed to open interactive view: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookCommandManager] Failed to open Runbook Webview: ${msg}`);
+            vscode.window.showErrorMessage(`Failed to open interactive view: ${msg}`);
         }
     }
 

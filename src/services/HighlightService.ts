@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
+import { FilterItem, HighlightMode } from '../models/Filter';
 
 import { FilterManager } from './FilterManager';
-import { FilterItem, HighlightMode } from '../models/Filter';
 import { Logger } from './Logger';
 import { RegexUtils } from '../utils/RegexUtils';
 
@@ -17,11 +18,9 @@ export interface DecorationConfig {
 }
 
 export class HighlightService implements vscode.Disposable {
-    // Map of URI string -> specific filters for that file
-    private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
-
-    // Map of color string -> DecorationType
     private static readonly MAX_DECORATION_CACHE = Constants.Defaults.DecorationCacheSize;
+
+    private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;
@@ -163,7 +162,7 @@ export class HighlightService implements vscode.Disposable {
             activeFilters = this.filterManager.getActiveFilters();
         }
 
-        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
+        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) ?? false;
 
         const filtersToRun = activeFilters.filter(item => {
             return item.filter.isRegex ? enableRegexHighlight : true;
@@ -180,7 +179,7 @@ export class HighlightService implements vscode.Disposable {
         const rangesByDeco: Map<string, vscode.Range[]> = new Map();
         this.decorationTypes.forEach((_, key) => rangesByDeco.set(key, []));
 
-        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
+        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) ?? Constants.Configuration.Regex.DefaultHighlightColor;
 
         filtersToRun.forEach(({ filter, groupId }) => {
             this.processFilter(editor, text, filter, groupId, defaultColor, rangesByDeco, matchCounts, 0);
@@ -207,7 +206,7 @@ export class HighlightService implements vscode.Disposable {
             activeFilters = this.filterManager.getActiveFilters();
         }
 
-        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
+        const enableRegexHighlight = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<boolean>(Constants.Configuration.Regex.EnableHighlight) ?? false;
 
         const filtersToRun = activeFilters.filter(item => {
             return item.filter.isRegex ? enableRegexHighlight : true;
@@ -224,7 +223,7 @@ export class HighlightService implements vscode.Disposable {
         const rangesByDeco: Map<string, vscode.Range[]> = new Map();
         this.decorationTypes.forEach((_, key) => rangesByDeco.set(key, []));
 
-        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
+        const defaultColor = vscode.workspace.getConfiguration(Constants.Configuration.Section).get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) ?? Constants.Configuration.Regex.DefaultHighlightColor;
 
         let lastYield = Date.now();
 
@@ -351,11 +350,12 @@ export class HighlightService implements vscode.Disposable {
             }
 
             // Accumulate counts (important for chunked processing)
-            const currentCount = matchCounts.get(filter.id) || 0;
+            const currentCount = matchCounts.get(filter.id) ?? 0;
             matchCounts.set(filter.id, currentCount + count);
 
-        } catch (e) {
-            this.logger.warn(`Failed to apply filter '${filter.keyword}': ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.warn(`[HighlightService] Failed to apply filter '${filter.keyword}': ${msg}`);
 
             // Only show error message once per session/filter to avoid spam, or finding a better way.
             // But original code showed it. To match original behavior (which was "show error"), I'll keep it.
@@ -421,8 +421,8 @@ export class HighlightService implements vscode.Disposable {
     private getEffectiveLineColor(text: string): string | undefined {
         const activeGroups = this.filterManager.getGroups().filter(g => g.isEnabled);
         const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
-        const enableRegexHighlight = config.get<boolean>(Constants.Configuration.Regex.EnableHighlight) || false;
-        const defaultColor = config.get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) || Constants.Configuration.Regex.DefaultHighlightColor;
+        const enableRegexHighlight = config.get<boolean>(Constants.Configuration.Regex.EnableHighlight) ?? false;
+        const defaultColor = config.get<string | { light: string, dark: string }>(Constants.Configuration.Regex.HighlightColor) ?? Constants.Configuration.Regex.DefaultHighlightColor;
 
         // Check all filters to find a match
         for (const group of activeGroups) {
@@ -439,7 +439,7 @@ export class HighlightService implements vscode.Disposable {
                     if (regex.test(text)) {
                         return filter.color || (typeof defaultColor === 'string' ? defaultColor : undefined);
                     }
-                } catch (_e) { /* ignore invalid regex */ }
+                } catch { /* ignore invalid regex */ }
             }
         }
         return undefined;

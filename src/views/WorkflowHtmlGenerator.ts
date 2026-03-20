@@ -23,9 +23,10 @@ export class WorkflowHtmlGenerator {
         try {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             html = new TextDecoder('utf-8').decode(templateBytes);
-        } catch (err) {
-            Logger.getInstance().error(`[WorkflowHtmlGenerator] Failed to read template: ${err}`);
-            return `<html><body><div style="padding: 10px;">Error loading workflow view template: ${escapeHtml(String(err))}</div></body></html>`;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[WorkflowHtmlGenerator] Failed to read template: ${msg}`);
+            return `<html><body><div style="padding: 10px;">Error loading workflow view template: ${escapeHtml(msg)}</div></body></html>`;
         }
 
         // Colors for the graph lines (Git Graph style)

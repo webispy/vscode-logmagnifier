@@ -25,9 +25,10 @@ export class JsonTreeHtmlGenerator {
         try {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             html = new TextDecoder('utf-8').decode(templateBytes);
-        } catch (err) {
-            Logger.getInstance().error(`[JsonTreeHtmlGenerator] Failed to read template: ${err}`);
-            return `<html><body>Failed to load template. Error: ${escapeHtml(String(err))}</body></html>`;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[JsonTreeHtmlGenerator] Failed to read template: ${msg}`);
+            return `<html><body>Failed to load template. Error: ${escapeHtml(msg)}</body></html>`;
         }
 
         html = applyWebviewTemplate(html, webview);

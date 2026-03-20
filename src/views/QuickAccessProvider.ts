@@ -1,22 +1,22 @@
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
-import { Logger } from '../services/Logger';
-import { FilterManager } from '../services/FilterManager';
-import { EditorUtils } from '../utils/EditorUtils';
 
+import { EditorUtils } from '../utils/EditorUtils';
+import { FilterManager } from '../services/FilterManager';
+import { Logger } from '../services/Logger';
 import { WorkflowManager } from '../services/WorkflowManager';
 
 export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
-    private _disposables: vscode.Disposable[] = [];
+    private disposables: vscode.Disposable[] = [];
 
     constructor(
         private filterManager: FilterManager,
         private workflowManager: WorkflowManager
     ) {
-        this._disposables.push(
+        this.disposables.push(
             this.filterManager.onDidChangeProfile(() => this.refresh()),
             this.workflowManager.onDidChangeWorkflow(() => this.refresh())
         );
@@ -247,8 +247,8 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
         return item;
     }
     public dispose() {
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
         this._onDidChangeTreeData.dispose();
     }
 }

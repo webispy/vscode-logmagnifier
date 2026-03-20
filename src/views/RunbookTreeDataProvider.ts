@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
-import { RunbookService } from '../services/RunbookService';
-import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
+
 import { Constants } from '../Constants';
-import { ThemeUtils } from '../utils/ThemeUtils';
+import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
+
+import { RunbookService } from '../services/RunbookService';
 import { IconUtils } from '../utils/IconUtils';
+import { ThemeUtils } from '../utils/ThemeUtils';
 
 export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();

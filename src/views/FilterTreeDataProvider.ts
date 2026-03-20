@@ -1,16 +1,20 @@
 import * as vscode from 'vscode';
 
+import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
+
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
-import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 import { IconUtils } from '../utils/IconUtils';
 import { ThemeUtils } from '../utils/ThemeUtils';
 
 type TreeItem = FilterGroup | FilterItem;
 
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>, vscode.TreeDragAndDropController<TreeItem>, vscode.Disposable {
+    private static readonly MAX_ICON_CACHE_SIZE = 200;
+
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
+
     private disposables: vscode.Disposable[] = [];
     private iconCache: Map<string, vscode.Uri> = new Map();
 
@@ -21,8 +25,6 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         this.disposables.push(this.filterManager.onDidChangeFilters(() => this.refresh()));
         this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));
     }
-
-    private static readonly MAX_ICON_CACHE_SIZE = 200;
 
     private getCachedIcon(key: string, generator: () => string): vscode.Uri {
         if (!this.iconCache.has(key)) {
@@ -62,7 +64,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 let label = element.keyword;
 
                 if (element.isRegex) {
-                    label = element.nickname || element.keyword;
+                    label = element.nickname ?? element.keyword;
                 } else {
                     // Apply tilde prefix for exclude items (both enabled and disabled)
                     if (element.type === 'exclude') {
@@ -90,7 +92,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                     if (element.type === 'exclude') {
                         const fillColor = ThemeUtils.neutralColor;
                         const strokeColor = ThemeUtils.strokeColor;
-                        const style = element.excludeStyle || 'line-through';
+                        const style = element.excludeStyle ?? 'line-through';
 
                         item.iconPath = this.getCachedIcon(`exclude_${fillColor}_${strokeColor}_${style}`, () => IconUtils.generateExcludeSvg(fillColor, strokeColor, style));
                     } else if (element.color) {
@@ -118,10 +120,11 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
                 return item;
             }
-        } catch (e) {
-            Logger.getInstance().error(`[FilterTreeView] getTreeItem failed: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[FilterTreeView] getTreeItem failed: ${msg}`);
             const errorItem = new vscode.TreeItem('Error loading item', vscode.TreeItemCollapsibleState.None);
-            errorItem.tooltip = String(e);
+            errorItem.tooltip = msg;
             return errorItem;
         }
     }
@@ -136,8 +139,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 return element.filters.filter(f => this.mode === 'regex' ? f.isRegex : !f.isRegex);
             }
             return [];
-        } catch (e) {
-            Logger.getInstance().error(`[FilterTreeView] getChildren failed: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[FilterTreeView] getChildren failed: ${msg}`);
             return [];
         }
     }

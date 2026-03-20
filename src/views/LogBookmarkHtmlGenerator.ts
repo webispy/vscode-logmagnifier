@@ -1,39 +1,40 @@
 import * as vscode from 'vscode';
 
-import { LogBookmarkService } from '../services/LogBookmarkService';
 import { BookmarkItem } from '../models/Bookmark';
 import { SerializedBookmarkItem } from '../models/WebviewModels';
-import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
+
+import { LogBookmarkService } from '../services/LogBookmarkService';
 import { Logger } from '../services/Logger';
+import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
 
 export class LogBookmarkHtmlGenerator {
     private regexCache = new Map<string, RegExp>();
 
     constructor(
-        private readonly _extensionUri: vscode.Uri,
-        private readonly _bookmarkService: LogBookmarkService,
-        private readonly _logger: Logger
+        private readonly extensionUri: vscode.Uri,
+        private readonly bookmarkService: LogBookmarkService,
+        private readonly logger: Logger
     ) { }
 
     public async generateHtml(webview: vscode.Webview, activeUriStr?: string, lastAddedUri?: string, foldedUris: Set<string> = new Set()): Promise<string> {
-        const bookmarksMap = this._bookmarkService.getBookmarks();
-        const sortedUris = this._bookmarkService.getFileKeys();
-        const wordWrapEnabled = this._bookmarkService.isWordWrapEnabled();
+        const bookmarksMap = this.bookmarkService.getBookmarks();
+        const sortedUris = this.bookmarkService.getFileKeys();
+        const wordWrapEnabled = this.bookmarkService.isWordWrapEnabled();
 
         const itemsMap: Record<string, SerializedBookmarkItem> = {};
         let filesHtml = '';
         let headerButtonsHtml = '';
 
-        const toggleLnIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'list-ordered.svg'));
-        const toggleWordWrapIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'word-wrap.svg'));
-        const removeFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'trash.svg'));
-        const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'copy.svg'));
-        const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'resources', 'link-external.svg'));
+        const toggleLnIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'resources', 'list-ordered.svg'));
+        const toggleWordWrapIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'resources', 'word-wrap.svg'));
+        const removeFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'resources', 'trash.svg'));
+        const copyFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'resources', 'copy.svg'));
+        const openFileIconUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'resources', 'link-external.svg'));
 
         // nonce is injected via applyWebviewTemplate below
 
         for (const uriStr of sortedUris) {
-            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
+            const withLn = this.bookmarkService.isIncludeLineNumbersEnabled(uriStr);
             const items = bookmarksMap.get(uriStr) ?? [];
             const filename = uriStr.split('/').pop() || 'Unknown File';
             const isFolded = foldedUris.has(uriStr);
@@ -76,7 +77,7 @@ export class LogBookmarkHtmlGenerator {
                 </span>
             `).join('');
 
-            const lineCount = this._bookmarkService.getFileActiveLinesCount(uriStr);
+            const lineCount = this.bookmarkService.getFileActiveLinesCount(uriStr);
 
             // --- Lines Generation ---
             const lineItemsMap = new Map<number, typeof items>();
@@ -138,7 +139,7 @@ export class LogBookmarkHtmlGenerator {
                         const remaining = content.substring(lastIndex);
                         parts.push(escapeHtml(remaining));
                         safeContent = parts.join('');
-                    } catch (_e) {
+                    } catch {
                         safeContent = escapeHtml(content);
                     }
                 } else {
@@ -167,7 +168,7 @@ export class LogBookmarkHtmlGenerator {
                     </div>`;
             }
 
-            const isDeleted = this._bookmarkService.isFileMissing(uriStr);
+            const isDeleted = this.bookmarkService.isFileMissing(uriStr);
 
             filesHtml += `
                 <div class="file-section ${isFolded ? 'folded' : ''} ${isActive ? 'active-file' : ''} ${isDeleted ? 'deleted' : ''}" id="section-${escapeHtml(uriStr)}">
@@ -211,7 +212,7 @@ export class LogBookmarkHtmlGenerator {
             finalHtml = '<div class="empty-state">No bookmarks. Right-click a line in the editor to add one, or use "Add Filter Matches to Bookmark" from the filter panel.</div>';
         }
 
-        const templatePath = vscode.Uri.joinPath(this._extensionUri, 'resources', 'webview', 'log-bookmark-template.html');
+        const templatePath = vscode.Uri.joinPath(this.extensionUri, 'resources', 'webview', 'log-bookmark-template.html');
         try {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             let template = new TextDecoder('utf-8').decode(templateBytes);
@@ -224,9 +225,10 @@ export class LogBookmarkHtmlGenerator {
             template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, safeItemsMap);
 
             return template;
-        } catch (e) {
-            this._logger.error(`Error reading template: ${e}`);
-            return `<html><body>Error reading template: ${escapeHtml(String(e))}</body></html>`;
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[LogBookmarkHtmlGenerator] Error reading template: ${msg}`);
+            return `<html><body>Error reading template: ${escapeHtml(msg)}</body></html>`;
         }
     }
 }

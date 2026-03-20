@@ -1,12 +1,15 @@
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
+
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
-import { WorkflowManager } from '../services/WorkflowManager';
 import { SimulationStepResult } from '../models/Workflow';
+
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
-import * as path from 'path';
-import * as os from 'os';
-import * as fs from 'fs';
+import { WorkflowManager } from '../services/WorkflowManager';
 import { EditorUtils } from '../utils/EditorUtils';
 
 export class WorkflowCommandManager {
@@ -181,8 +184,9 @@ export class WorkflowCommandManager {
             try {
                 fs.writeFileSync(uri.fsPath, json, 'utf8');
                 vscode.window.showInformationMessage(`Workflow exported to ${uri.fsPath}`);
-            } catch (err) {
-                vscode.window.showErrorMessage(`Export failed: ${err}`);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                vscode.window.showErrorMessage(`Export failed: ${msg}`);
             }
         }
     }
@@ -224,8 +228,9 @@ export class WorkflowCommandManager {
                     // Failures or cancellations
                     this.logger.info("Import aborted or failed.");
                 }
-            } catch (err) {
-                vscode.window.showErrorMessage(`Import failed: ${err}`);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                vscode.window.showErrorMessage(`Import failed: ${msg}`);
             }
         }
     }

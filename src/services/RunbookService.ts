@@ -1,8 +1,11 @@
-import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as path from 'path';
+
+import * as vscode from 'vscode';
+
 import { RunbookItem, RunbookMarkdown, RunbookGroup } from '../models/Runbook';
+
 import { Logger } from './Logger';
 
 interface ExportedRunbookItem {
@@ -13,9 +16,12 @@ interface ExportedRunbookItem {
 }
 
 export class RunbookService {
-    private _items: RunbookItem[] = [];
+    private static readonly MAX_IMPORT_DEPTH = 10;
+
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
+
+    private runbookItems: RunbookItem[] = [];
     readonly ready: Promise<void>;
 
     constructor(private context: vscode.ExtensionContext) {
@@ -35,7 +41,7 @@ export class RunbookService {
     }
 
     get items(): RunbookItem[] {
-        return this._items;
+        return this.runbookItems;
     }
 
     public async refresh(): Promise<void> {
@@ -93,20 +99,22 @@ uptime
 `;
         try {
             await fsp.writeFile(defaultPath, defaultContent, 'utf-8');
-        } catch (e) {
-            Logger.getInstance().error(`Failed to create default runbook markdown: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookService] Failed to create default runbook markdown: ${msg}`);
         }
     }
 
     public async loadConfig(): Promise<void> {
-        this._items = [];
+        this.runbookItems = [];
         try {
             if (!fs.existsSync(this.storagePath)) {
                 return;
             }
-            this._items = this.scanDir(this.storagePath);
-        } catch (e) {
-            Logger.getInstance().error(`Error loading runbook configurations: ${e}`);
+            this.runbookItems = this.scanDir(this.storagePath);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookService] Error loading runbook configurations: ${msg}`);
         }
     }
 
@@ -184,7 +192,7 @@ uptime
 
     public async exportRunbook(targetUri: vscode.Uri): Promise<void> {
         try {
-            const exportedItems = await this.serializeItems(this._items);
+            const exportedItems = await this.serializeItems(this.runbookItems);
             const exportData = {
                 version: this.context.extension.packageJSON.version,
                 runbooks: exportedItems
@@ -192,9 +200,10 @@ uptime
             const jsonString = JSON.stringify(exportData, null, 2);
             await vscode.workspace.fs.writeFile(targetUri, Buffer.from(jsonString, 'utf-8'));
             vscode.window.showInformationMessage('Runbook exported successfully!');
-        } catch (e) {
-            Logger.getInstance().error(`Failed to export runbook: ${e}`);
-            vscode.window.showErrorMessage(`Failed to export runbook: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookService] Failed to export runbook: ${msg}`);
+            vscode.window.showErrorMessage(`Failed to export runbook: ${msg}`);
         }
     }
 
@@ -237,9 +246,10 @@ uptime
             await this.deserializeItems(importedItems, this.storagePath);
             await this.refresh();
             vscode.window.showInformationMessage('Runbook imported successfully!');
-        } catch (e) {
-            Logger.getInstance().error(`Failed to import runbook: ${e}`);
-            vscode.window.showErrorMessage(`Failed to import runbook: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookService] Failed to import runbook: ${msg}`);
+            vscode.window.showErrorMessage(`Failed to import runbook: ${msg}`);
         }
     }
 
@@ -256,8 +266,6 @@ uptime
             return false;
         }
     }
-
-    private static readonly MAX_IMPORT_DEPTH = 10;
 
     private async deserializeItems(items: ExportedRunbookItem[], currentPath: string, depth: number = 0): Promise<void> {
         if (!Array.isArray(items)) { return; }

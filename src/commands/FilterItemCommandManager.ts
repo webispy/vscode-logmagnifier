@@ -19,13 +19,13 @@ export class FilterItemCommandManager {
         if (group) {
             if (action === 'enable' && !item.isEnabled) {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`Filter enabled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter enabled: ${item.keyword}`);
             } else if (action === 'disable' && item.isEnabled) {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`Filter disabled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter disabled: ${item.keyword}`);
             } else if (action === 'toggle') {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`Filter toggled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter toggled: ${item.keyword}`);
             }
         }
     }

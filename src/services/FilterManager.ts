@@ -71,7 +71,7 @@ export class FilterManager implements vscode.Disposable {
             this.groups = [];
             this.initDefaultFilters();
         } else {
-            this.logger.warn(`Failed to load groups for profile: ${activeProfileName}`);
+            this.logger.warn(`[FilterManager] Failed to load groups for profile: ${activeProfileName}`);
         }
 
         this.notifyChange();
@@ -97,7 +97,7 @@ export class FilterManager implements vscode.Disposable {
             await this.profileManager.updateProfileData(activeWrapper, this.groups);
             this.dirty = false;
         } catch (e: unknown) {
-            this.logger.error(`Failed to save state: ${e instanceof Error ? e.message : String(e)}`);
+            this.logger.error(`[FilterManager] Failed to save state: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 
@@ -210,7 +210,7 @@ export class FilterManager implements vscode.Disposable {
             isExpanded: true
         };
         this.groups.push(newGroup);
-        this.logger.info(`Filter group added: ${name} (Regex: ${isRegex})`);
+        this.logger.info(`[FilterManager] Filter group added: ${name} (Regex: ${isRegex})`);
         this.notifyChange();
         return newGroup;
     }
@@ -251,7 +251,7 @@ export class FilterManager implements vscode.Disposable {
                 contextLine: 0
             };
             group.filters.push(newFilter);
-            this.logger.info(`Filter added to group '${group.name}': ${keyword} (Type: ${type}, Regex: ${isRegex})`);
+            this.logger.info(`[FilterManager] Filter added to group '${group.name}': ${keyword} (Type: ${type}, Regex: ${isRegex})`);
             this.notifyChange();
             return newFilter;
         }
@@ -282,7 +282,7 @@ export class FilterManager implements vscode.Disposable {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             group.name = newName;
-            this.logger.info(`Filter group renamed to: ${newName}`);
+            this.logger.info(`[FilterManager] Filter group renamed to: ${newName}`);
             this.notifyChange();
         }
     }
@@ -297,7 +297,7 @@ export class FilterManager implements vscode.Disposable {
             if (updates.nickname !== undefined) {
                 filter.nickname = updates.nickname;
             }
-            this.logger.info(`Filter '${filter.id}' updated`);
+            this.logger.info(`[FilterManager] Filter '${filter.id}' updated`);
             this.notifyChange();
         }
     }
@@ -341,7 +341,7 @@ export class FilterManager implements vscode.Disposable {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             group.filters = group.filters.filter(f => f.id !== filterId);
-            this.logger.info(`Filter removed from group '${group.name}': ${filterId}`);
+            this.logger.info(`[FilterManager] Filter removed from group '${group.name}': ${filterId}`);
             this.notifyChange();
         }
     }
@@ -350,7 +350,7 @@ export class FilterManager implements vscode.Disposable {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             this.groups = this.groups.filter(g => g.id !== groupId);
-            this.logger.info(`Filter group removed: ${group.name}`);
+            this.logger.info(`[FilterManager] Filter group removed: ${group.name}`);
 
             // If all regex groups are gone, restore defaults
             if (group.isRegex) {
@@ -365,7 +365,7 @@ export class FilterManager implements vscode.Disposable {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             group.isEnabled = !group.isEnabled;
-            this.logger.info(`Filter group '${group.name}' ${group.isEnabled ? 'enabled' : 'disabled'}`);
+            this.logger.info(`[FilterManager] Filter group '${group.name}' ${group.isEnabled ? 'enabled' : 'disabled'}`);
             this.notifyChange();
         }
     }
@@ -381,7 +381,7 @@ export class FilterManager implements vscode.Disposable {
                 }
             }
             if (changed) {
-                this.logger.info(`All filters enabled in group '${group.name}'`);
+                this.logger.info(`[FilterManager] All filters enabled in group '${group.name}'`);
                 this.notifyChange();
             }
         }
@@ -398,7 +398,7 @@ export class FilterManager implements vscode.Disposable {
                 }
             }
             if (changed) {
-                this.logger.info(`All filters disabled in group '${group.name}'`);
+                this.logger.info(`[FilterManager] All filters disabled in group '${group.name}'`);
                 this.notifyChange();
             }
         }
@@ -413,7 +413,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             const { group, filter } = found;
             filter.isEnabled = !filter.isEnabled;
-            this.logger.info(`Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
+            this.logger.info(`[FilterManager] Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
             this.notifyChange();
         }
     }
@@ -439,7 +439,7 @@ export class FilterManager implements vscode.Disposable {
                     filter.color = this.assignColor(group);
                 }
 
-                this.logger.info(`Filter '${filter.keyword}' type set to: ${filter.type}`);
+                this.logger.info(`[FilterManager] Filter '${filter.keyword}' type set to: ${filter.type}`);
                 this.notifyChange();
             }
         }
@@ -496,7 +496,7 @@ export class FilterManager implements vscode.Disposable {
         // Cross-mode prevention (Word <-> Regex)
         // Groups must either both be regex or both be non-regex
         if (!!sourceGroup.isRegex !== !!targetGroup.isRegex) {
-            this.logger.warn(`Cannot move filter between different modes (Source: ${sourceGroup.isRegex}, Target: ${targetGroup.isRegex})`);
+            this.logger.warn(`[FilterManager] Cannot move filter between different modes (Source: ${sourceGroup.isRegex}, Target: ${targetGroup.isRegex})`);
             return;
         }
 
@@ -518,7 +518,7 @@ export class FilterManager implements vscode.Disposable {
             });
 
             if (exists) {
-                this.logger.warn(`Cannot move filter: Duplicate exists in target group '${targetGroup.name}'`);
+                this.logger.warn(`[FilterManager] Cannot move filter: Duplicate exists in target group '${targetGroup.name}'`);
                 vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', activeFilter.keyword).replace('{1}', targetGroup.name));
                 return;
             }
@@ -571,7 +571,7 @@ export class FilterManager implements vscode.Disposable {
 
         // Validation: mode match
         if (targetGroup && !!activeGroup.isRegex !== !!targetGroup.isRegex) {
-            this.logger.warn(`Cannot move group between different modes.`);
+            this.logger.warn(`[FilterManager] Cannot move group between different modes.`);
             return;
         }
 
@@ -624,7 +624,7 @@ export class FilterManager implements vscode.Disposable {
             groups: groupsToExport
         };
 
-        this.logger.info(`Exporting ${groupsToExport.length} ${mode} filter groups (v${exportData.version}).`);
+        this.logger.info(`[FilterManager] Exporting ${groupsToExport.length} ${mode} filter groups (v${exportData.version}).`);
         return JSON.stringify(exportData, null, 4);
     }
 
@@ -648,12 +648,12 @@ export class FilterManager implements vscode.Disposable {
             groups: [exportedGroup]
         };
 
-        this.logger.info(`Exporting filter group '${group.name}' (v${exportData.version}).`);
+        this.logger.info(`[FilterManager] Exporting filter group '${group.name}' (v${exportData.version}).`);
         return JSON.stringify(exportData, null, 4);
     }
 
     public importFilters(json: string, mode: 'word' | 'regex', overwrite: boolean): { count: number, error?: string } {
-        this.logger.info(`Starting ${mode} filters import (Overwrite: ${overwrite})...`);
+        this.logger.info(`[FilterManager] Starting ${mode} filters import (Overwrite: ${overwrite})...`);
         try {
             const parsedData = JSON.parse(json);
 
@@ -664,11 +664,11 @@ export class FilterManager implements vscode.Disposable {
                 // New format: Root is object with version and groups
                 importedGroups = parsedData.groups;
                 importedVersion = parsedData.version;
-                this.logger.info(`Importing ${importedGroups.length} groups from JSON (File Version: ${importedVersion || 'unknown'}).`);
+                this.logger.info(`[FilterManager] Importing ${importedGroups.length} groups from JSON (File Version: ${importedVersion || 'unknown'}).`);
             } else if (Array.isArray(parsedData)) {
                 // Old format: Root is an array of groups
                 importedGroups = parsedData;
-                this.logger.info(`Importing ${importedGroups.length} groups from JSON (Array format).`);
+                this.logger.info(`[FilterManager] Importing ${importedGroups.length} groups from JSON (Array format).`);
             } else {
                 throw new Error(Constants.Messages.Error.ImportInvalidFormat);
             }
@@ -676,7 +676,7 @@ export class FilterManager implements vscode.Disposable {
             if (overwrite) {
                 // Remove existing groups of the same mode
                 this.groups = this.groups.filter(g => mode === 'regex' ? !g.isRegex : !!g.isRegex);
-                this.logger.info(`Existing ${mode} filters cleared for overwrite.`);
+                this.logger.info(`[FilterManager] Existing ${mode} filters cleared for overwrite.`);
             }
 
             let addedCount = 0;
@@ -710,11 +710,11 @@ export class FilterManager implements vscode.Disposable {
                 this.notifyChange();
             }
 
-            this.logger.info(`Import completed: ${addedCount} ${mode} filter groups added.`);
+            this.logger.info(`[FilterManager] Import completed: ${addedCount} ${mode} filter groups added.`);
             return { count: addedCount };
         } catch (e: unknown) {
             const errorMessage = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Import failed: ${errorMessage}`);
+            this.logger.error(`[FilterManager] Import failed: ${errorMessage}`);
             return { count: 0, error: errorMessage };
         }
     }
@@ -733,7 +733,7 @@ export class FilterManager implements vscode.Disposable {
             try {
                 new RegExp(keyword);
             } catch {
-                this.logger.warn(`Imported filter has invalid regex, disabling: ${keyword}`);
+                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${keyword}`);
                 isEnabled = false;
             }
         }
@@ -829,7 +829,7 @@ export class FilterManager implements vscode.Disposable {
             await this.profileManager.loadProfile(name);
             this.invalidateCache();
             this._onDidChangeFilters.fire();
-            this.logger.info(`Created and switched to new profile: ${name}`);
+            this.logger.info(`[FilterManager] Created and switched to new profile: ${name}`);
             return true;
         }
         return false;
@@ -851,7 +851,7 @@ export class FilterManager implements vscode.Disposable {
             }
 
             await this.profileManager.updateProfileData(name, this.groups);
-            this.logger.info(`Duplicated current profile to: ${name}`);
+            this.logger.info(`[FilterManager] Duplicated current profile to: ${name}`);
             return true;
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
@@ -873,7 +873,7 @@ export class FilterManager implements vscode.Disposable {
             this.resetCounts();
             this.stateService.saveToState(this.groups);
             this._onDidChangeFilters.fire();
-            this.logger.info(`Switched to profile: ${name}`);
+            this.logger.info(`[FilterManager] Switched to profile: ${name}`);
             return true;
         } else if (name === Constants.Labels.DefaultProfile) {
             // Default profile explicit switch

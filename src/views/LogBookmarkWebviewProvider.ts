@@ -177,7 +177,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
 
             this.updateContent();
         } catch (e: unknown) {
-            this.logger.error(`Error resolving webview view: ${e instanceof Error ? e.message : String(e)}`);
+            this.logger.error(`[LogBookmarkWebviewProvider] Error resolving webview view: ${e instanceof Error ? e.message : String(e)}`);
             webviewView.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                 Critical Error resolving view: ${escapeHtml(e instanceof Error ? e.message : String(e))}
             </div></body></html>`;
@@ -247,7 +247,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 await vscode.window.showTextDocument(doc, { preview: true });
             }
         } catch (e: unknown) {
-            this.logger.error(`Error focusing file: ${e instanceof Error ? e.message : String(e)}`);
+            this.logger.error(`[LogBookmarkWebviewProvider] Error focusing file: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

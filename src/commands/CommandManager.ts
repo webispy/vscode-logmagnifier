@@ -163,7 +163,7 @@ export class CommandManager {
                 if (answer === 'Yes') {
                     const keys = this.context.globalState.keys();
                     for (const key of keys) {
-                        this.logger.info(`Clearing globalState key: ${key}`);
+                        this.logger.info(`[CommandManager] Clearing globalState key: ${key}`);
                         await this.context.globalState.update(key, undefined);
                     }
                     await this.deleteRunbookStorage();
@@ -239,7 +239,7 @@ export class CommandManager {
 
     private async clearGlobalStateKeys(keys: string[]) {
         for (const key of keys) {
-            this.logger.info(`Clearing globalState key: ${key}`);
+            this.logger.info(`[CommandManager] Clearing globalState key: ${key}`);
             await this.context.globalState.update(key, undefined);
         }
     }
@@ -248,7 +248,7 @@ export class CommandManager {
         const runbookPath = path.join(this.context.globalStorageUri.fsPath, 'runbooks');
         if (fs.existsSync(runbookPath)) {
             await fsp.rm(runbookPath, { recursive: true, force: true });
-            this.logger.info(`Cleared runbook storage: ${runbookPath}`);
+            this.logger.info(`[CommandManager] Cleared runbook storage: ${runbookPath}`);
         }
     }
 

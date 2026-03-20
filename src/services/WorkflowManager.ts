@@ -1,16 +1,19 @@
-import * as vscode from 'vscode';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
-import * as path from 'path';
 import * as os from 'os';
+import * as path from 'path';
+
+import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
+import { FilterGroup, FilterItem } from '../models/Filter';
 import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult, WorkflowViewModel } from '../models/Workflow';
+
+import { HighlightService } from './HighlightService';
+import { Logger } from './Logger';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
-import { Logger } from './Logger';
-import { FilterGroup, FilterItem } from '../models/Filter';
-import { HighlightService } from './HighlightService';
 import { SourceMapService } from './SourceMapService';
 
 export class WorkflowManager implements vscode.Disposable {
@@ -331,7 +334,7 @@ export class WorkflowManager implements vscode.Disposable {
         };
         this.workflows.push(newSim);
         await this.saveToState();
-        this.logger.info(`Workflow created: ${name}`);
+        this.logger.info(`[WorkflowManager] Workflow created: ${name}`);
         return newSim;
     }
 
@@ -342,7 +345,7 @@ export class WorkflowManager implements vscode.Disposable {
         if (this.getActiveWorkflow() === id) {
             await this.setActiveWorkflow(undefined);
         }
-        this.logger.info(`Workflow deleted: ${id}`);
+        this.logger.info(`[WorkflowManager] Workflow deleted: ${id}`);
     }
 
     public async saveWorkflow(workflow: Workflow): Promise<void> {
@@ -350,7 +353,7 @@ export class WorkflowManager implements vscode.Disposable {
         if (index !== -1) {
             this.workflows[index] = workflow;
             await this.saveToState();
-            this.logger.info(`Workflow updated: ${workflow.name}`);
+            this.logger.info(`[WorkflowManager] Workflow updated: ${workflow.name}`);
         }
     }
 
@@ -457,7 +460,7 @@ export class WorkflowManager implements vscode.Disposable {
         this.workflows.push(newSim);
         await this.saveToState();
         await this.expandWorkflow(newSim.id);
-        this.logger.info(`Workflow duplicated: ${original.name} -> ${newSim.name}`);
+        this.logger.info(`[WorkflowManager] Workflow duplicated: ${original.name} -> ${newSim.name}`);
         return newSim;
     }
 
@@ -544,7 +547,7 @@ export class WorkflowManager implements vscode.Disposable {
                     if (conflictResolver) {
                         const resolution = await conflictResolver(pData.name);
                         if (resolution === 'cancel') {
-                            this.logger.info(`Import cancelled by user during profile conflict resolution: ${pData.name}`);
+                            this.logger.info(`[WorkflowManager] Import cancelled by user during profile conflict resolution: ${pData.name}`);
                             return false;
                         } else if (resolution === 'overwrite') {
                             profileNameMapping.set(pData.name, pData.name);
@@ -602,7 +605,7 @@ export class WorkflowManager implements vscode.Disposable {
 
             await this.saveToState();
             await this.expandWorkflow(pkg.workflow.id);
-            this.logger.info(`Workflow imported: ${pkg.workflow.name}`);
+            this.logger.info(`[WorkflowManager] Workflow imported: ${pkg.workflow.name}`);
             return true;
 
         } catch (e: unknown) {
@@ -656,7 +659,7 @@ export class WorkflowManager implements vscode.Disposable {
                 await fsp.writeFile(tempInputPath, documentContent, 'utf8');
                 currentFilePath = tempInputPath;
                 this.sessionFiles.add(currentFilePath);
-                this.logger.info(`Created temp source file for simulation (dirty/untitled): ${currentFilePath}`);
+                this.logger.info(`[WorkflowManager] Created temp source file for simulation (dirty/untitled): ${currentFilePath}`);
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : String(e);
                 this.logger.error(`[WorkflowManager] Failed to create temp file for document: ${msg}`);
@@ -665,7 +668,7 @@ export class WorkflowManager implements vscode.Disposable {
                 }
             }
         } else {
-            this.logger.info(`Using existing source file for simulation: ${currentFilePath}`);
+            this.logger.info(`[WorkflowManager] Using existing source file for simulation: ${currentFilePath}`);
         }
 
         // Persistent Last Run File
@@ -841,7 +844,9 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public async openStepResult(step: SimulationStepResult) {
-        if (!await fsp.access(step.outputFilePath).then(() => true, () => false)) {
+        try {
+            await fsp.access(step.outputFilePath);
+        } catch {
             vscode.window.showErrorMessage("File not found (might be deleted): " + step.outputFilePath);
             return;
         }

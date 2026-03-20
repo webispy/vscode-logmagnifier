@@ -63,21 +63,21 @@ export class FilterGroupCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleGroup, (group: FilterGroup) => {
             if (group) {
                 this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group toggled: ${group.name}`);
+                this.logger.info(`[FilterGroupCommandManager] Group toggled: ${group.name}`);
             }
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.EnableGroup, (group: FilterGroup) => {
             if (group && !group.isEnabled) {
                 this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group enabled: ${group.name}`);
+                this.logger.info(`[FilterGroupCommandManager] Group enabled: ${group.name}`);
             }
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DisableGroup, (group: FilterGroup) => {
             if (group && group.isEnabled) {
                 this.filterManager.toggleGroup(group.id);
-                this.logger.info(`Group disabled: ${group.name}`);
+                this.logger.info(`[FilterGroupCommandManager] Group disabled: ${group.name}`);
             }
         }));
 

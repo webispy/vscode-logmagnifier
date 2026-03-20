@@ -44,6 +44,7 @@ export class RunbookService {
         return this.runbookItems;
     }
 
+    /** Reloads runbook items from disk and notifies listeners of the change. */
     public async refresh(): Promise<void> {
         await this.loadConfig();
         this._onDidChangeTreeData.fire();
@@ -105,6 +106,7 @@ uptime
         }
     }
 
+    /** Scans the storage directory and rebuilds the runbook item tree. */
     public async loadConfig(): Promise<void> {
         this.runbookItems = [];
         try {
@@ -150,6 +152,7 @@ uptime
         return items;
     }
 
+    /** Creates a new runbook group directory. */
     public async createGroup(groupName: string): Promise<void> {
         const safeName = path.basename(groupName);
         const targetPath = path.join(this.storagePath, safeName);
@@ -160,6 +163,7 @@ uptime
         }
     }
 
+    /** Creates a new markdown runbook file inside the given group directory. */
     public async createItem(parentPath: string, fileName: string): Promise<void> {
         const safeName = path.basename(fileName);
         if (!safeName.endsWith('.md')) { fileName = safeName + '.md'; } else { fileName = safeName; }
@@ -171,6 +175,7 @@ uptime
         }
     }
 
+    /** Renames a runbook group directory or markdown file. */
     public async renamePath(oldPath: string, newLabel: string, isGroup: boolean): Promise<void> {
         const parentDir = path.dirname(oldPath);
         const safeName = path.basename(isGroup ? newLabel : (newLabel.endsWith('.md') ? newLabel : newLabel + '.md'));
@@ -183,6 +188,7 @@ uptime
         }
     }
 
+    /** Deletes a runbook group or markdown file from disk. */
     public async deletePath(targetPath: string): Promise<void> {
         if (fs.existsSync(targetPath)) {
             await fsp.rm(targetPath, { recursive: true, force: true });
@@ -190,6 +196,7 @@ uptime
         }
     }
 
+    /** Exports all runbook items to a JSON file at the given URI. */
     public async exportRunbook(targetUri: vscode.Uri): Promise<void> {
         try {
             const exportedItems = await this.serializeItems(this.runbookItems);
@@ -227,6 +234,7 @@ uptime
         return result;
     }
 
+    /** Imports runbook items from a JSON file, merging them into the storage directory. */
     public async importRunbook(sourceUri: vscode.Uri): Promise<void> {
         try {
             const fileData = await vscode.workspace.fs.readFile(sourceUri);

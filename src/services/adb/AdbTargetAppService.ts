@@ -16,21 +16,25 @@ export class AdbTargetAppService {
 
     constructor(private logger: Logger, private client: AdbClient) { }
 
+    /** Sets the target app for logcat filtering on the given device. */
     public setTargetApp(device: AdbDevice, packageName: string) {
         this.deviceTargetApps.set(device.id, packageName);
         device.targetApp = packageName;
         this._onDidChangeTargetApp.fire();
     }
 
+    /** Returns the current target app package name for the device, or undefined if none set. */
     public getTargetApp(deviceId: string): string | undefined {
         return this.deviceTargetApps.get(deviceId);
     }
 
+    /** Returns all installed package names on the device, sorted alphabetically. */
     public async getInstalledPackages(deviceId: string): Promise<string[]> {
         const packages = await this.fetchPackages(deviceId);
         return Array.from(packages).sort();
     }
 
+    /** Returns apps with launcher activities, waiting for any in-progress scan to complete. */
     public async getLaunchableApps(deviceId: string): Promise<{ packageName: string, componentName: string }[]> {
         const pendingScan = this.launchableAppScanPromises.get(deviceId);
         if (pendingScan) {
@@ -46,6 +50,7 @@ export class AdbTargetAppService {
         return this.launchableAppsCache.get(deviceId) || [];
     }
 
+    /** Starts background scans for newly connected devices and cleans up stale caches. */
     public syncLaunchableAppScans(devices: AdbDevice[]): void {
         const currentConnected = new Set(
             devices
@@ -69,6 +74,7 @@ export class AdbTargetAppService {
         }
     }
 
+    /** Returns the set of third-party (non-system) packages on the device. */
     public async getThirdPartyPackages(deviceId: string): Promise<Set<string>> {
         return this.fetchPackages(deviceId, '-3');
     }
@@ -90,6 +96,7 @@ export class AdbTargetAppService {
         }
     }
 
+    /** Returns the set of currently running app package names on the device. */
     public async getRunningApps(deviceId: string): Promise<Set<string>> {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ps', '-A']);
@@ -128,6 +135,7 @@ export class AdbTargetAppService {
         return running;
     }
 
+    /** Returns the PID of a running app, or undefined if not found. */
     public async getAppPid(deviceId: string, packageName: string): Promise<string | undefined> {
         return this.findPid(deviceId, packageName);
     }
@@ -136,6 +144,7 @@ export class AdbTargetAppService {
         return this.client.findPid(deviceId, search);
     }
 
+    /** Uninstalls an app from the device. */
     public async uninstallApp(deviceId: string, packageName: string): Promise<boolean> {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'uninstall', packageName]);
@@ -147,6 +156,7 @@ export class AdbTargetAppService {
         }
     }
 
+    /** Clears all data for an app via `pm clear`. */
     public async clearAppStorage(deviceId: string, packageName: string): Promise<boolean> {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'pm', 'clear', packageName]);
@@ -158,6 +168,7 @@ export class AdbTargetAppService {
         }
     }
 
+    /** Clears the cache and code_cache directories for an app via `run-as`. */
     public async clearAppCache(deviceId: string, packageName: string): Promise<boolean> {
         try {
             await this.client.execAdb(['-s', deviceId, 'shell', 'run-as', packageName, 'rm', '-rf', 'cache', 'code_cache']);
@@ -169,18 +180,22 @@ export class AdbTargetAppService {
         }
     }
 
+    /** Runs `dumpsys package` for the specified app. */
     public async runDumpsysPackage(deviceId: string, packageName: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'package', packageName], { maxBuffer: 1024 * 1024 * 10 });
     }
 
+    /** Runs `dumpsys meminfo` for the specified app. */
     public async runDumpsysMeminfo(deviceId: string, packageName: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'meminfo', packageName], { maxBuffer: 1024 * 1024 * 10 });
     }
 
+    /** Runs `dumpsys activity` for the specified app. */
     public async runDumpsysActivity(deviceId: string, packageName: string): Promise<string> {
         return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'activity', packageName], { maxBuffer: 1024 * 1024 * 10 });
     }
 
+    /** Launches an app on the device, falling back to monkey if am start fails. */
     public async launchApp(deviceId: string, packageName: string, componentName?: string): Promise<boolean> {
         const component = componentName || await this.resolveLauncherActivity(deviceId, packageName);
         if (component) {

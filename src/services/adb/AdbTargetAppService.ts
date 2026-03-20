@@ -365,4 +365,11 @@ export class AdbTargetAppService {
             return undefined;
         }
     }
+
+    public dispose(): void {
+        this._onDidChangeTargetApp.dispose();
+        this.deviceTargetApps.clear();
+        this.launchableAppsCache.clear();
+        this.connectedDeviceIds.clear();
+    }
 }

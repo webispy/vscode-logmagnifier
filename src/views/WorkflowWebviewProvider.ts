@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
+import { WorkflowWebviewMessage } from '../models/WebviewModels';
 
 import { Logger } from '../services/Logger';
 import { WorkflowManager } from '../services/WorkflowManager';
 import { escapeHtml } from '../utils/WebviewUtils';
 import { WorkflowHtmlGenerator } from './WorkflowHtmlGenerator';
 
-export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
+export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
     public static readonly viewType = Constants.Views.Workflow;
     private view?: vscode.WebviewView;
     private disposables: vscode.Disposable[] = [];
@@ -90,8 +91,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleMessage(data: any): Promise<void> {
+    private async handleMessage(data: WorkflowWebviewMessage): Promise<void> {
         switch (data.type) {
             case 'import': return this.handleImport();
             case 'export': return this.handleExport();
@@ -119,82 +119,56 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
         await vscode.commands.executeCommand(Constants.Commands.WorkflowExport);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleRun(data: any): Promise<void> {
-        if (data.id) {
-            await vscode.commands.executeCommand(Constants.Commands.WorkflowRun, data.id);
+    private async handleRun(data: Extract<WorkflowWebviewMessage, { type: 'run' }>): Promise<void> {
+        await vscode.commands.executeCommand(Constants.Commands.WorkflowRun, data.id);
+    }
+
+    private async handleDelete(data: Extract<WorkflowWebviewMessage, { type: 'delete' }>): Promise<void> {
+        const confirm = await vscode.window.showWarningMessage(
+            Constants.Messages.Warn.DeleteWorkflowConfirm.replace('{0}', data.name),
+            { modal: true },
+            'Delete'
+        );
+        if (confirm === 'Delete') {
+            await this.workflowManager.deleteWorkflow(data.id);
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleDelete(data: any): Promise<void> {
-        if (data.id) {
-            const confirm = await vscode.window.showWarningMessage(
-                Constants.Messages.Warn.DeleteWorkflowConfirm.replace('{0}', data.name),
-                { modal: true },
-                'Delete'
-            );
-            if (confirm === 'Delete') {
-                await this.workflowManager.deleteWorkflow(data.id);
-            }
+    private async handleSetActive(data: Extract<WorkflowWebviewMessage, { type: 'setActive' }>): Promise<void> {
+        await this.workflowManager.setActiveWorkflow(data.id);
+    }
+
+    private async handleClickWorkflow(data: Extract<WorkflowWebviewMessage, { type: 'clickWorkflow' }>): Promise<void> {
+        await this.workflowManager.handleWorkflowClick(data.id);
+    }
+
+    private async handleRenameWorkflow(data: Extract<WorkflowWebviewMessage, { type: 'renameWorkflow' }>): Promise<void> {
+        const newName = await vscode.window.showInputBox({
+            prompt: Constants.Messages.Info.WorkflowInputName,
+            value: data.currentName
+        });
+        if (newName && newName.trim()) {
+            await this.workflowManager.renameWorkflow(data.id, newName.trim());
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleSetActive(data: any): Promise<void> {
-        if (data.id) {
-            await this.workflowManager.setActiveWorkflow(data.id);
+    private async handleOpenFile(data: Extract<WorkflowWebviewMessage, { type: 'openFile' }>): Promise<void> {
+        try {
+            await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(data.path));
+        } catch {
+            vscode.window.showErrorMessage(`Failed to open file: ${data.path}`);
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleClickWorkflow(data: any): Promise<void> {
-        if (data.id) {
-            await this.workflowManager.handleWorkflowClick(data.id);
-        }
+    private async handleOpenAllResults(data: Extract<WorkflowWebviewMessage, { type: 'openAllResults' }>): Promise<void> {
+        await this.workflowManager.openAllResults(data.id);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleRenameWorkflow(data: any): Promise<void> {
-        if (data.id) {
-            const newName = await vscode.window.showInputBox({
-                prompt: Constants.Messages.Info.WorkflowInputName,
-                value: data.currentName
-            });
-            if (newName && newName.trim()) {
-                await this.workflowManager.renameWorkflow(data.id, newName.trim());
-            }
-        }
+    private async handleCloseAllResults(data: Extract<WorkflowWebviewMessage, { type: 'closeAllResults' }>): Promise<void> {
+        await this.workflowManager.closeAllResults(data.id);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleOpenFile(data: any): Promise<void> {
-        if (data.path) {
-            try {
-                await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(data.path));
-            } catch {
-                vscode.window.showErrorMessage(`Failed to open file: ${data.path}`);
-            }
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleOpenAllResults(data: any): Promise<void> {
-        if (data.id) {
-            await this.workflowManager.openAllResults(data.id);
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleCloseAllResults(data: any): Promise<void> {
-        if (data.id) {
-            await this.workflowManager.closeAllResults(data.id);
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleAddStep(data: any): Promise<void> {
-        if (!data.id) { return; }
+    private async handleAddStep(data: Extract<WorkflowWebviewMessage, { type: 'addStep' }>): Promise<void> {
 
         const quickPick = vscode.window.createQuickPick();
         quickPick.placeholder = Constants.Messages.Info.SelectProfileToAdd;
@@ -303,37 +277,33 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
         quickPick.show();
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleRemoveStep(data: any): Promise<void> {
-        if (data.id && data.stepId) {
-            const confirm = await vscode.window.showWarningMessage(
-                Constants.Messages.Warn.RemoveProfileConfirm.replace('{0}', data.name),
-                { modal: true },
-                'Remove'
-            );
-            if (confirm === 'Remove') {
-                await this.workflowManager.removeStepFromWorkflow(data.id, data.stepId);
-                this.refresh();
-            }
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleOpenProfile(data: any): Promise<void> {
-        if (data.id && data.stepId) {
-            await this.workflowManager.activateStep(data.id, data.stepId);
-        }
-    }
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    private async handleMoveStep(data: any, direction: 'up' | 'down'): Promise<void> {
-        if (data.id && data.stepId) {
-            if (direction === 'up') {
-                await this.workflowManager.moveStepUp(data.id, data.stepId);
-            } else {
-                await this.workflowManager.moveStepDown(data.id, data.stepId);
-            }
+    private async handleRemoveStep(data: Extract<WorkflowWebviewMessage, { type: 'removeStep' }>): Promise<void> {
+        const confirm = await vscode.window.showWarningMessage(
+            Constants.Messages.Warn.RemoveProfileConfirm.replace('{0}', data.name),
+            { modal: true },
+            'Remove'
+        );
+        if (confirm === 'Remove') {
+            await this.workflowManager.removeStepFromWorkflow(data.id, data.stepId);
             this.refresh();
         }
+    }
+
+    private async handleOpenProfile(data: Extract<WorkflowWebviewMessage, { type: 'openProfile' }>): Promise<void> {
+        await this.workflowManager.activateStep(data.id, data.stepId);
+    }
+
+    private async handleMoveStep(data: Extract<WorkflowWebviewMessage, { type: 'moveStepUp' | 'moveStepDown' }>, direction: 'up' | 'down'): Promise<void> {
+        if (direction === 'up') {
+            await this.workflowManager.moveStepUp(data.id, data.stepId);
+        } else {
+            await this.workflowManager.moveStepDown(data.id, data.stepId);
+        }
+        this.refresh();
+    }
+
+    public dispose(): void {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
     }
 }

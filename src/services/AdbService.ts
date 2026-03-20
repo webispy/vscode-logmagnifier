@@ -213,8 +213,8 @@ export class AdbService implements vscode.Disposable {
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];
         this.logcatService.dispose();
-        // deviceService doesn't have disposable resources (process cleanup handles itself or on demand)
-        // targetAppService doesn't have disposable resources
+        this.deviceService.dispose();
+        this.targetAppService.dispose();
         this._onDidChangeSessions.dispose();
     }
 }

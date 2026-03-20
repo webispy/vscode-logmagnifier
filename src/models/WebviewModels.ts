@@ -20,3 +20,20 @@ export interface SerializedBookmarkItem {
     matchText?: string;
     timestamp?: number;
 }
+
+export type WorkflowWebviewMessage =
+    | { type: 'import' }
+    | { type: 'export' }
+    | { type: 'run'; id: string }
+    | { type: 'delete'; id: string; name: string }
+    | { type: 'setActive'; id: string }
+    | { type: 'clickWorkflow'; id: string }
+    | { type: 'renameWorkflow'; id: string; currentName: string }
+    | { type: 'openFile'; path: string }
+    | { type: 'openAllResults'; id: string }
+    | { type: 'closeAllResults'; id: string }
+    | { type: 'addStep'; id: string; parentId?: string }
+    | { type: 'removeStep'; id: string; stepId: string; name: string }
+    | { type: 'openProfile'; id: string; stepId: string }
+    | { type: 'moveStepUp'; id: string; stepId: string }
+    | { type: 'moveStepDown'; id: string; stepId: string };

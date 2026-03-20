@@ -1,34 +1,35 @@
 import * as vscode from 'vscode';
 
-import { FilterManager } from './services/FilterManager';
-import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
-import { QuickAccessProvider } from './views/QuickAccessProvider';
-import { LogProcessor } from './services/LogProcessor';
-import { HighlightService } from './services/HighlightService';
-import { ResultCountService } from './services/ResultCountService';
-import { Logger } from './services/Logger';
-import { CommandManager } from './commands/CommandManager';
-import { AdbService } from './services/AdbService';
-import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
-import { AdbCommandManager } from './commands/AdbCommandManager';
-import { LogBookmarkService } from './services/LogBookmarkService';
-import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
-import { LogBookmarkCommandManager } from './commands/LogBookmarkCommandManager';
-import { JsonPrettyService } from './services/JsonPrettyService';
-import { JsonTreeWebview } from './views/JsonTreeWebview';
-import { SourceMapService } from './services/SourceMapService';
-import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
-import { RunbookService } from './services/RunbookService';
-import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
-import { RunbookCommandManager } from './commands/RunbookCommandManager';
 import { Constants } from './Constants';
 import { FilterGroup, FilterItem, isFilterGroup } from './models/Filter';
-import { FileHierarchyService } from './services/FileHierarchyService';
+
+import { AdbCommandManager } from './commands/AdbCommandManager';
+import { CommandManager } from './commands/CommandManager';
+import { LogBookmarkCommandManager } from './commands/LogBookmarkCommandManager';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
-import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
-import { WorkflowManager } from './services/WorkflowManager';
-import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
+import { RunbookCommandManager } from './commands/RunbookCommandManager';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
+import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
+import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
+import { AdbService } from './services/AdbService';
+import { FileHierarchyService } from './services/FileHierarchyService';
+import { FilterManager } from './services/FilterManager';
+import { HighlightService } from './services/HighlightService';
+import { JsonPrettyService } from './services/JsonPrettyService';
+import { LogBookmarkService } from './services/LogBookmarkService';
+import { Logger } from './services/Logger';
+import { LogProcessor } from './services/LogProcessor';
+import { ResultCountService } from './services/ResultCountService';
+import { RunbookService } from './services/RunbookService';
+import { SourceMapService } from './services/SourceMapService';
+import { WorkflowManager } from './services/WorkflowManager';
+import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
+import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
+import { JsonTreeWebview } from './views/JsonTreeWebview';
+import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
+import { QuickAccessProvider } from './views/QuickAccessProvider';
+import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
+import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
 
 // Cache frequently-read config values; invalidated in onDidChangeConfiguration
 let cachedLargeFileOptimizations: boolean | undefined = vscode.workspace
@@ -71,6 +72,7 @@ export function activate(context: vscode.ExtensionContext) {
     const resultCountService = new ResultCountService(filterManager);
 
     const workflowProvider = new WorkflowWebviewProvider(context, workflowManager, logger);
+    context.subscriptions.push(workflowProvider);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
     );

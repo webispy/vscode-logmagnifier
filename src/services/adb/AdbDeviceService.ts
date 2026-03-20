@@ -596,4 +596,11 @@ export class AdbDeviceService {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(0)) + sizes[i];
     }
+
+    public dispose(): void {
+        this._onDidChangeRecordingStatus.dispose();
+        this.recordingProcesses.forEach(({ process }) => process.kill());
+        this.recordingProcesses.clear();
+        this.stoppingDevices.clear();
+    }
 }

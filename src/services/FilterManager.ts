@@ -34,7 +34,7 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager;
     }
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(private readonly context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
         this.profileManager = new ProfileManager(context);

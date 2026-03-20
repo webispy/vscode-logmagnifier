@@ -578,7 +578,7 @@ export class LogBookmarkService implements vscode.Disposable {
         const bookmarksData = this.context.globalState.get<{ [key: string]: unknown[] }>(Constants.GlobalState.Bookmarks);
 
         if (bookmarksData) {
-            for (const key in bookmarksData) {
+            for (const key of Object.keys(bookmarksData)) {
                 const bookmarks = bookmarksData[key].map(item => {
                     const b = item as Record<string, unknown>; // Safe cast after check
                     try {
@@ -622,7 +622,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
 
         if (lnMapData) {
-            for (const key in lnMapData) {
+            for (const key of Object.keys(lnMapData)) {
                 this.includeLineNumbers.set(key, lnMapData[key]);
             }
         }

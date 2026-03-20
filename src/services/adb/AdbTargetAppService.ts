@@ -14,7 +14,7 @@ export class AdbTargetAppService {
     private _onDidChangeTargetApp = new vscode.EventEmitter<void>();
     public readonly onDidChangeTargetApp = this._onDidChangeTargetApp.event;
 
-    constructor(private logger: Logger, private client: AdbClient) { }
+    constructor(private readonly logger: Logger, private readonly client: AdbClient) { }
 
     /** Sets the target app for logcat filtering on the given device. */
     public setTargetApp(device: AdbDevice, packageName: string) {

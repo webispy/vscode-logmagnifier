@@ -11,7 +11,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
     private initialized = false;
     private disposables: vscode.Disposable[] = [];
 
-    constructor(private adbService: AdbService) {
+    constructor(private readonly adbService: AdbService) {
         this.disposables.push(
             this.adbService.onDidChangeSessions(() => this.refresh())
         );

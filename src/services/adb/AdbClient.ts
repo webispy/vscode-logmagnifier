@@ -18,7 +18,7 @@ export class AdbCommandError extends Error {
 export class AdbClient {
     private static readonly DEFAULT_TIMEOUT_MS = 30_000;
 
-    constructor(private logger: Logger) { }
+    constructor(private readonly logger: Logger) { }
 
     /** Returns the configured ADB executable path. */
     public getAdbPath(): string {

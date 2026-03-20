@@ -20,9 +20,9 @@ export class JsonPrettyService implements vscode.Disposable {
     private disposables: vscode.Disposable[] = [];
 
     constructor(
-        private logger: Logger,
-        private jsonTreeWebview: JsonTreeWebview,
-        private highlightService: HighlightService
+        private readonly logger: Logger,
+        private readonly jsonTreeWebview: JsonTreeWebview,
+        private readonly highlightService: HighlightService
     ) {
         // Track active editor
         this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {

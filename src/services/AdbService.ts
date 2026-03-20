@@ -19,7 +19,7 @@ export class AdbService implements vscode.Disposable {
     private _onDidChangeSessions = new vscode.EventEmitter<void>();
     public readonly onDidChangeSessions = this._onDidChangeSessions.event;
 
-    constructor(private logger: Logger) {
+    constructor(private readonly logger: Logger) {
         this.client = new AdbClient(logger);
         this.deviceService = new AdbDeviceService(logger, this.client);
         this.targetAppService = new AdbTargetAppService(logger, this.client);

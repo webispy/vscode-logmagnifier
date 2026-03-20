@@ -5,9 +5,9 @@ import { JsonPrettyService } from '../services/JsonPrettyService';
 
 export class EditorToggleCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private quickAccessProvider: QuickAccessProvider,
-        private jsonPrettyService: JsonPrettyService
+        private readonly context: vscode.ExtensionContext,
+        private readonly quickAccessProvider: QuickAccessProvider,
+        private readonly jsonPrettyService: JsonPrettyService
     ) {
         this.registerCommands();
     }

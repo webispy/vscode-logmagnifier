@@ -19,8 +19,8 @@ interface FilterGroupQuickPickItem extends vscode.QuickPickItem {
 
 export class FilterExportImportCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private filterManager: FilterManager
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterManager: FilterManager
     ) {
         this.registerCommands();
     }

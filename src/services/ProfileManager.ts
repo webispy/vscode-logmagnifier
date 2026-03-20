@@ -13,7 +13,7 @@ export class ProfileManager implements vscode.Disposable {
     private _onDidChangeProfile: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeProfile: vscode.Event<void> = this._onDidChangeProfile.event;
 
-    constructor(private context: vscode.ExtensionContext) { }
+    constructor(private readonly context: vscode.ExtensionContext) { }
 
     /** Returns the name of the currently active filter profile. */
     public getActiveProfile(): string {

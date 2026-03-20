@@ -22,6 +22,8 @@ export interface ParsedProperty {
 export class LenientJsonParser {
     private static readonly MAX_DEPTH = 100;
     private static readonly MAX_INPUT_LENGTH = 5 * 1024 * 1024; // 5MB
+    private static readonly NUM_CHARS = new Set('0123456789eE.+-');
+    private static readonly WS_CHARS = new Set(' \t\n\r');
     private index = 0;
     private text = '';
     private depth = 0;
@@ -263,13 +265,8 @@ export class LenientJsonParser {
 
     private parseNumber(): number {
         const start = this.index;
-        while (this.index < this.text.length) {
-            const char = this.text[this.index];
-            if (/[0-9eE\.\+\-]/.test(char)) {
-                this.index++;
-            } else {
-                break;
-            }
+        while (this.index < this.text.length && LenientJsonParser.NUM_CHARS.has(this.text[this.index])) {
+            this.index++;
         }
         const numStr = this.text.substring(start, this.index);
         const num = Number(numStr);
@@ -277,7 +274,7 @@ export class LenientJsonParser {
     }
 
     private skipWhitespace() {
-        while (this.index < this.text.length && /\s/.test(this.text[this.index])) {
+        while (this.index < this.text.length && LenientJsonParser.WS_CHARS.has(this.text[this.index])) {
             this.index++;
         }
     }

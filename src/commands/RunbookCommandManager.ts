@@ -13,9 +13,9 @@ import { RunbookWebviewPanel } from '../views/RunbookWebviewPanel';
 
 export class RunbookCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private runbookService: RunbookService,
-        private logger: Logger
+        private readonly context: vscode.ExtensionContext,
+        private readonly runbookService: RunbookService,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
     }

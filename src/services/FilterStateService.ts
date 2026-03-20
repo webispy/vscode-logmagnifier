@@ -6,7 +6,7 @@ import { FilterGroup, FilterItem, HighlightMode } from '../models/Filter';
 import { Logger } from './Logger';
 
 export class FilterStateService {
-    constructor(private context: vscode.ExtensionContext, private logger: Logger) { }
+    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) { }
 
     /** Persists filter groups to VS Code global state. */
     public saveToState(groups: FilterGroup[]) {

@@ -22,14 +22,14 @@ export class FilterExecutionCommandManager {
     private isProcessing = false;
 
     constructor(
-        private context: vscode.ExtensionContext,
-        private filterManager: FilterManager,
-        private highlightService: HighlightService,
-        private logProcessor: LogProcessor,
-        private logger: Logger,
-        private sourceMapService: SourceMapService,
-        private wordTreeView: vscode.TreeView<FilterGroup | FilterItem>,
-        private regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterManager: FilterManager,
+        private readonly highlightService: HighlightService,
+        private readonly logProcessor: LogProcessor,
+        private readonly logger: Logger,
+        private readonly sourceMapService: SourceMapService,
+        private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>,
+        private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
         registerCommands: boolean = true
     ) {
         if (registerCommands) {

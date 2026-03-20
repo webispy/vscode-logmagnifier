@@ -6,10 +6,10 @@ import { Logger } from '../services/Logger';
 
 export class FilterItemCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private filterManager: FilterManager,
-        private logger: Logger,
-        private wordTreeView: vscode.TreeView<FilterGroup | FilterItem>
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterManager: FilterManager,
+        private readonly logger: Logger,
+        private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>
     ) {
         this.registerCommands();
     }

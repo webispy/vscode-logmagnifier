@@ -19,9 +19,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     private iconCache: Map<string, vscode.Uri> = new Map();
 
     constructor(
-        private filterManager: FilterManager,
-        private mode: 'word' | 'regex',
-        private logger: Logger
+        private readonly filterManager: FilterManager,
+        private readonly mode: 'word' | 'regex',
+        private readonly logger: Logger
     ) {
         this.disposables.push(this.filterManager.onDidChangeFilters(() => this.refresh()));
         this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));

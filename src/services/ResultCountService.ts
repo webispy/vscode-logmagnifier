@@ -2,7 +2,7 @@ import { FilterManager } from './FilterManager';
 
 export class ResultCountService {
 
-    constructor(private filterManager: FilterManager) { }
+    constructor(private readonly filterManager: FilterManager) { }
 
     /** Updates per-filter and per-group match counts from the provided filter-id-to-count map. */
     public updateCounts(knownCounts: Map<string, number>) {

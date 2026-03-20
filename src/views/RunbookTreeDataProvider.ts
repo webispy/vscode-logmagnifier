@@ -12,7 +12,7 @@ export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookI
     readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private disposables: vscode.Disposable[] = [];
 
-    constructor(private runbookService: RunbookService) {
+    constructor(private readonly runbookService: RunbookService) {
         this.disposables.push(this.runbookService.onDidChangeTreeData(() => this.refresh()));
     }
 

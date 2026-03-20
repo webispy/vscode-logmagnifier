@@ -51,7 +51,7 @@ export class CommandManager {
     private readonly sourceMapService: SourceMapService;
 
     constructor(
-        private context: vscode.ExtensionContext,
+        private readonly context: vscode.ExtensionContext,
         services: CommandManagerServices
     ) {
         this.filterManager = services.filterManager;

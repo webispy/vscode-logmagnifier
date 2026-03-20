@@ -14,10 +14,10 @@ import { EditorUtils } from '../utils/EditorUtils';
 
 export class WorkflowCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private workflowManager: WorkflowManager,
-        private filterManager: FilterManager,
-        private logger: Logger
+        private readonly context: vscode.ExtensionContext,
+        private readonly workflowManager: WorkflowManager,
+        private readonly filterManager: FilterManager,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
     }

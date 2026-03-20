@@ -24,7 +24,7 @@ export class RunbookService {
     private runbookItems: RunbookItem[] = [];
     readonly ready: Promise<void>;
 
-    constructor(private context: vscode.ExtensionContext, private logger: Logger) {
+    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) {
         this.ready = this.initialize();
     }
 

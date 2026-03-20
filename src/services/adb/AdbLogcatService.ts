@@ -23,9 +23,9 @@ export class AdbLogcatService {
     private flushTimers: Map<string, NodeJS.Timeout> = new Map();
 
     constructor(
-        private logger: Logger,
-        private client: AdbClient,
-        private targetAppService: AdbTargetAppService
+        private readonly logger: Logger,
+        private readonly client: AdbClient,
+        private readonly targetAppService: AdbTargetAppService
     ) { }
 
     /** Returns all logcat sessions. */
@@ -87,6 +87,8 @@ export class AdbLogcatService {
 
             // Parse default options (allowlist to prevent argument injection)
             const ALLOWED_LOGCAT_FLAGS = new Set(['-v', '-b', '-T', '-t', '-d', '-e', '-s', '--regex', '--pid', '-c']);
+            // Flags that consume the next space-separated token as their value
+            const VALUE_FLAGS = new Set(['-v', '-b', '-T', '-t', '-e', '--regex', '--pid']);
             // Space is intentionally excluded: values are passed as array elements to execFile (no shell expansion)
             const SAFE_VALUE_PATTERN = /^[a-zA-Z0-9_.,:/*=\-+@]+$/;
             if (defaultOptions.trim().length > 0) {
@@ -103,13 +105,26 @@ export class AdbLogcatService {
                         this.logger.warn(`[ADB] Ignoring option with unsafe value: ${part}`);
                         continue;
                     }
-                    if (part === '-T' || part === '-t') {
+
+                    // Resolve the value: either inline (flag=value) or next token (flag value)
+                    let value = inlineValue;
+                    if (!value && VALUE_FLAGS.has(flag) && i + 1 < parts.length) {
+                        const nextPart = parts[i + 1];
+                        if (SAFE_VALUE_PATTERN.test(nextPart)) {
+                            value = nextPart;
+                            i++; // consume the value token
+                        }
+                    }
+
+                    if (flag === '-T' || flag === '-t') {
                         if (!startFromNow) {
-                            i++;
                             continue;
                         }
                     }
-                    args.push(part);
+                    args.push(flag);
+                    if (value) {
+                        args.push(value);
+                    }
                 }
             }
 

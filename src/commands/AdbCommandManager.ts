@@ -13,10 +13,10 @@ import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 
 export class AdbCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private adbService: AdbService,
-        private adbDeviceTreeProvider: AdbDeviceTreeProvider,
-        private adbTreeView: vscode.TreeView<AdbTreeItem>
+        private readonly context: vscode.ExtensionContext,
+        private readonly adbService: AdbService,
+        private readonly adbDeviceTreeProvider: AdbDeviceTreeProvider,
+        private readonly adbTreeView: vscode.TreeView<AdbTreeItem>
     ) {
         this.registerCommands();
         this.registerSelectionListener();

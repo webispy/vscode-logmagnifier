@@ -13,8 +13,8 @@ export class LogBookmarkCommandManager {
 
     constructor(
         context: vscode.ExtensionContext,
-        private bookmarkService: LogBookmarkService,
-        private highlightService: HighlightService
+        private readonly bookmarkService: LogBookmarkService,
+        private readonly highlightService: HighlightService
     ) {
         this.registerCommands(context);
         this.registerEventListeners(context);

@@ -16,7 +16,7 @@ export class AdbDeviceService {
     private _onDidChangeRecordingStatus = new vscode.EventEmitter<void>();
     public readonly onDidChangeRecordingStatus = this._onDidChangeRecordingStatus.event;
 
-    constructor(private logger: Logger, private client: AdbClient) { }
+    constructor(private readonly logger: Logger, private readonly client: AdbClient) { }
 
     /** Queries ADB for connected devices and parses their properties. */
     public async getDevices(): Promise<AdbDevice[]> {
@@ -174,7 +174,7 @@ export class AdbDeviceService {
             this.logger.warn(`[ADB] Could not determine remote PID. Stopping local process only.`);
         }
 
-        // 2. Wait
+        // 2. Wait for remote process to exit
         const maxWait = 5000;
         const start = Date.now();
         while (Date.now() - start < maxWait) {
@@ -183,6 +183,10 @@ export class AdbDeviceService {
                 break;
             }
             await new Promise(r => setTimeout(r, 500));
+        }
+        const elapsed = Date.now() - start;
+        if (elapsed >= maxWait) {
+            this.logger.warn(`[AdbDeviceService] screenrecord on ${deviceId} did not exit within ${maxWait}ms`);
         }
 
         // 3. Kill local

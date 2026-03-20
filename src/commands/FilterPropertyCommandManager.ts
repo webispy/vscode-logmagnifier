@@ -6,8 +6,8 @@ import { IconUtils } from '../utils/IconUtils';
 
 export class FilterPropertyCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private filterManager: FilterManager
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterManager: FilterManager
     ) {
         this.registerCommands();
     }

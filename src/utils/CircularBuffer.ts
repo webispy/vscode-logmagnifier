@@ -10,7 +10,7 @@ export class CircularBuffer<T> {
     private size: number = 0;
 
     /** @param capacity - Maximum number of items the buffer can hold. Zero disables storage. */
-    constructor(private capacity: number) {
+    constructor(private readonly capacity: number) {
         this.buffer = new Array(capacity);
     }
 

@@ -7,7 +7,7 @@ import { FileHierarchyService } from '../services/FileHierarchyService';
 export class FileHierarchyLensProvider implements vscode.CodeLensProvider {
     public onDidChangeCodeLenses?: vscode.Event<void> | undefined;
 
-    constructor(private hierarchyService: FileHierarchyService) {
+    constructor(private readonly hierarchyService: FileHierarchyService) {
         this.onDidChangeCodeLenses = this.hierarchyService.onDidChangeHierarchy;
     }
 

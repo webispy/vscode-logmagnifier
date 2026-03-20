@@ -33,12 +33,12 @@ export class WorkflowManager implements vscode.Disposable {
     public stepDelay: number = 200;
 
     constructor(
-        private context: vscode.ExtensionContext,
-        private profileManager: ProfileManager,
-        private logProcessor: LogProcessor,
-        private logger: Logger,
-        private highlightService: HighlightService,
-        private sourceMapService: SourceMapService
+        private readonly context: vscode.ExtensionContext,
+        private readonly profileManager: ProfileManager,
+        private readonly logProcessor: LogProcessor,
+        private readonly logger: Logger,
+        private readonly highlightService: HighlightService,
+        private readonly sourceMapService: SourceMapService
     ) {
         this.workflows = this.loadFromState();
         this.cleanupStaleTempFiles();

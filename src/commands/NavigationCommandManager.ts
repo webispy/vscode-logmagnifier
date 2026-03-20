@@ -12,9 +12,9 @@ interface HierarchyQuickPickItem extends vscode.QuickPickItem {
 
 export class NavigationCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private hierarchyService: FileHierarchyService,
-        private logger: Logger
+        private readonly context: vscode.ExtensionContext,
+        private readonly hierarchyService: FileHierarchyService,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
     }

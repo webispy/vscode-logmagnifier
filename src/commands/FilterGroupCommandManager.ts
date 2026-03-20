@@ -6,9 +6,9 @@ import { Logger } from '../services/Logger';
 
 export class FilterGroupCommandManager {
     constructor(
-        private context: vscode.ExtensionContext,
-        private filterManager: FilterManager,
-        private logger: Logger
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterManager: FilterManager,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
     }

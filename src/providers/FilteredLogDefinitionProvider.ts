@@ -11,7 +11,7 @@ export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider 
         result: vscode.DefinitionLink[] | undefined;
     } | undefined;
 
-    constructor(private sourceMapService: SourceMapService) { }
+    constructor(private readonly sourceMapService: SourceMapService) { }
 
     /** Resolves go-to-definition for filtered log lines by mapping them back to their original source location. */
     public async provideDefinition(

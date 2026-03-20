@@ -14,9 +14,9 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
     private fileSizeUnit: 'bytes' | 'kb' | 'mb' = 'bytes';
 
     constructor(
-        private filterManager: FilterManager,
-        private workflowManager: WorkflowManager,
-        private logger: Logger
+        private readonly filterManager: FilterManager,
+        private readonly workflowManager: WorkflowManager,
+        private readonly logger: Logger
     ) {
         this.disposables.push(
             this.filterManager.onDidChangeProfile(() => this.refresh()),

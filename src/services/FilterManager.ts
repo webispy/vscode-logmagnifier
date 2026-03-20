@@ -1,36 +1,39 @@
-import * as vscode from 'vscode';
-import { Constants } from '../Constants';
-import { FilterGroup, FilterItem, FilterType, HighlightMode } from '../models/Filter';
-import { Logger } from './Logger';
-import { ColorService, ColorPreset } from './ColorService';
-import { ProfileManager } from './ProfileManager';
-import { FilterStateService } from './FilterStateService';
 import * as crypto from 'crypto';
 
+import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+import { FilterGroup, FilterItem, FilterType, HighlightMode } from '../models/Filter';
+
+import { ColorService, ColorPreset } from './ColorService';
+import { FilterStateService } from './FilterStateService';
+import { Logger } from './Logger';
+import { ProfileManager } from './ProfileManager';
+
 export class FilterManager implements vscode.Disposable {
-    private groups: FilterGroup[] = [];
-    private colorPresets: ColorPreset[] = [];
-    private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
-    private _isDirty: boolean = false;
+    private static readonly SAVE_DEBOUNCE_MS = 300;
+
     private _onDidChangeFilters: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeFilters: vscode.Event<void> = this._onDidChangeFilters.event;
-
     private _onDidChangeResultCounts: vscode.EventEmitter<FilterItem | FilterGroup | undefined | void> = new vscode.EventEmitter<FilterItem | FilterGroup | undefined | void>();
     readonly onDidChangeResultCounts: vscode.Event<FilterItem | FilterGroup | undefined | void> = this._onDidChangeResultCounts.event;
-
     private _onDidChangeProfile: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeProfile: vscode.Event<void> = this._onDidChangeProfile.event;
 
+    private groups: FilterGroup[] = [];
+    private colorPresets: ColorPreset[] = [];
+    private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
+    private dirty: boolean = false;
     private logger: Logger;
     private colorService: ColorService;
     private profileManager: ProfileManager;
     private stateService: FilterStateService;
+    private configDisposable: vscode.Disposable;
+    private saveDebounceTimer: NodeJS.Timeout | undefined;
 
     public get profileManagerRef(): ProfileManager {
         return this.profileManager;
     }
-
-    private configDisposable: vscode.Disposable;
 
     constructor(private context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
@@ -83,9 +86,6 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    private static readonly SAVE_DEBOUNCE_MS = 300;
-    private saveDebounceTimer: NodeJS.Timeout | undefined;
-
     public async saveFilters(): Promise<void> {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
@@ -95,14 +95,14 @@ export class FilterManager implements vscode.Disposable {
             this.stateService.saveToState(this.groups);
             const activeWrapper = this.profileManager.getActiveProfile();
             await this.profileManager.updateProfileData(activeWrapper, this.groups);
-            this._isDirty = false;
+            this.dirty = false;
         } catch (e) {
             this.logger.error(`Failed to save state: ${e}`);
         }
     }
 
     private debouncedSaveToState() {
-        this._isDirty = true;
+        this.dirty = true;
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
         }
@@ -180,7 +180,7 @@ export class FilterManager implements vscode.Disposable {
         return this.colorService.getPresetById(id);
     }
 
-    private _findFilter(groupId: string, filterId: string): { group: FilterGroup, filter: FilterItem } | undefined {
+    private findFilter(groupId: string, filterId: string): { group: FilterGroup, filter: FilterItem } | undefined {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             const filter = group.filters.find(f => f.id === filterId);
@@ -271,7 +271,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public updateFilterColor(groupId: string, filterId: string, color: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             found.filter.color = color;
             this.notifyChange();
@@ -288,7 +288,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public updateFilter(groupId: string, filterId: string, updates: { keyword?: string, nickname?: string }): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
             if (updates.keyword !== undefined) {
@@ -303,7 +303,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilterHighlightMode(groupId: string, filterId: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
             // Cycle: Word -> Line -> FullLine -> Word
@@ -318,7 +318,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilterCaseSensitivity(groupId: string, filterId: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             found.filter.caseSensitive = !found.filter.caseSensitive;
             this.notifyChange();
@@ -326,7 +326,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilterContextLine(groupId: string, filterId: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
             const levels = Constants.Defaults.ContextLineLevels;
@@ -409,7 +409,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilter(groupId: string, filterId: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             const { group, filter } = found;
             filter.isEnabled = !filter.isEnabled;
@@ -419,7 +419,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public toggleFilterType(groupId: string, filterId: string): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             // Determine next type
             const nextType = found.filter.type === 'include' ? 'exclude' : 'include';
@@ -428,7 +428,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public setFilterType(groupId: string, filterId: string, type: FilterType): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             const { group, filter } = found;
             if (filter.type !== type) {
@@ -446,7 +446,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public setFilterCaseSensitivity(groupId: string, filterId: string, enable: boolean): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             if (found.filter.caseSensitive !== enable) {
                 found.filter.caseSensitive = enable;
@@ -456,7 +456,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public setFilterExcludeStyle(groupId: string, filterId: string, style: 'line-through' | 'hidden'): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             if (found.filter.excludeStyle !== style) {
                 found.filter.excludeStyle = style;
@@ -466,7 +466,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public setFilterHighlightMode(groupId: string, filterId: string, mode: HighlightMode): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             if (found.filter.highlightMode !== mode) {
                 found.filter.highlightMode = mode;
@@ -476,7 +476,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public setFilterContextLine(groupId: string, filterId: string, lines: number): void {
-        const found = this._findFilter(groupId, filterId);
+        const found = this.findFilter(groupId, filterId);
         if (found) {
             if (found.filter.contextLine !== lines) {
                 found.filter.contextLine = lines;
@@ -853,15 +853,16 @@ export class FilterManager implements vscode.Disposable {
             await this.profileManager.updateProfileData(name, this.groups);
             this.logger.info(`Duplicated current profile to: ${name}`);
             return true;
-        } catch (e) {
-            this.logger.error(`Failed to duplicate profile: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[FilterManager] Failed to duplicate profile: ${msg}`);
             return false;
         }
     }
 
     public async loadProfile(name: string): Promise<boolean> {
         // Flush any pending debounced save before switching
-        if (this._isDirty && this.saveDebounceTimer) {
+        if (this.dirty && this.saveDebounceTimer) {
             await this.saveFilters();
         }
 

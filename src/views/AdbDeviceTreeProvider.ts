@@ -9,10 +9,10 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     private devices: AdbDevice[] = [];
     private initialized = false;
-    private _disposables: vscode.Disposable[] = [];
+    private disposables: vscode.Disposable[] = [];
 
     constructor(private adbService: AdbService) {
-        this._disposables.push(
+        this.disposables.push(
             this.adbService.onDidChangeSessions(() => this.refresh())
         );
     }
@@ -37,13 +37,13 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
 
     getTreeItem(element: AdbTreeItem): vscode.TreeItem {
         if (this.isDevice(element)) {
-            const item = new vscode.TreeItem(`${element.model || 'Unknown'} (${element.id})`, vscode.TreeItemCollapsibleState.Expanded);
+            const item = new vscode.TreeItem(`${element.model ?? 'Unknown'} (${element.id})`, vscode.TreeItemCollapsibleState.Expanded);
             item.description = element.type;
             item.iconPath = new vscode.ThemeIcon('device-mobile');
             item.contextValue = 'device';
             return item;
         } else if (this.isTargetApp(element)) {
-            const app = element.device.targetApp || 'all';
+            const app = element.device.targetApp ?? 'all';
             const collapsibleState = (app !== 'all') ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.None;
             const item = new vscode.TreeItem(`Target app: ${app}`, collapsibleState);
             item.iconPath = new vscode.ThemeIcon('symbol-method');
@@ -333,8 +333,8 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
     }
 
     public dispose() {
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
         this._onDidChangeTreeData.dispose();
     }
 

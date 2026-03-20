@@ -1,50 +1,53 @@
 import * as vscode from 'vscode';
-import { LogBookmarkService } from '../services/LogBookmarkService';
+
+import { Constants } from '../Constants';
 import { BookmarkItem } from '../models/Bookmark';
 import { BookmarkWebviewMessage, SerializedBookmarkItem } from '../models/WebviewModels';
-import { Constants } from '../Constants';
+
+import { LogBookmarkService } from '../services/LogBookmarkService';
 import { Logger } from '../services/Logger';
-import { LogBookmarkHtmlGenerator } from './LogBookmarkHtmlGenerator';
 import { escapeHtml } from '../utils/WebviewUtils';
+import { LogBookmarkHtmlGenerator } from './LogBookmarkHtmlGenerator';
 
 export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-    private _view?: vscode.WebviewView;
-    private _lastAddedUri?: string;
-    private _foldedUris: Set<string> = new Set();
-    private _activeUriStr?: string;
-    private _htmlGenerator: LogBookmarkHtmlGenerator;
-    private _disposables: vscode.Disposable[] = [];
+    private view?: vscode.WebviewView;
+    private lastAddedUri?: string;
+    private foldedUris: Set<string> = new Set();
+    private activeUriStr?: string;
+    private htmlGenerator: LogBookmarkHtmlGenerator;
+    private disposables: vscode.Disposable[] = [];
+    private updateTimeout?: NodeJS.Timeout;
 
     constructor(
-        private readonly _extensionUri: vscode.Uri,
-        private readonly _bookmarkService: LogBookmarkService,
-        private readonly _logger: Logger
+        private readonly extensionUri: vscode.Uri,
+        private readonly bookmarkService: LogBookmarkService,
+        private readonly logger: Logger
     ) {
-        this._htmlGenerator = new LogBookmarkHtmlGenerator(this._extensionUri, this._bookmarkService, this._logger);
+        this.htmlGenerator = new LogBookmarkHtmlGenerator(this.extensionUri, this.bookmarkService, this.logger);
 
-        this._disposables.push(this._bookmarkService.onDidChangeBookmarks(() => {
+        this.disposables.push(this.bookmarkService.onDidChangeBookmarks(() => {
             this.updateContent();
         }));
 
-        this._disposables.push(this._bookmarkService.onDidAddBookmark((uri) => {
+        this.disposables.push(this.bookmarkService.onDidAddBookmark((uri) => {
             const addedKey = uri.toString();
-            this._lastAddedUri = addedKey;
+            this.lastAddedUri = addedKey;
 
             // Preserve state, no forced collapse on add
-            this._foldedUris.delete(addedKey);
+            this.foldedUris.delete(addedKey);
 
             this.updateContent();
             // Clear flash after 1 second
             setTimeout(() => {
-                this._lastAddedUri = undefined;
+                this.lastAddedUri = undefined;
                 this.updateContent().catch(e =>
-                    this._logger.error(`[BookmarkWebview] Failed to update after flash: ${e}`)
+                    this.logger.error(`[BookmarkWebview] Failed to update after flash: ${e}`)
                 );
             }, 1000);
         }));
 
         // Listen for active editor changes to auto-expand/collapse
-        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+        this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
             this.handleActiveEditorChange(editor);
         }));
     }
@@ -52,19 +55,19 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
     private handleActiveEditorChange(editor: vscode.TextEditor | undefined) {
         if (editor) {
             const newActiveUri = editor.document.uri.toString();
-            if (this._activeUriStr !== newActiveUri) {
-                this._activeUriStr = newActiveUri;
+            if (this.activeUriStr !== newActiveUri) {
+                this.activeUriStr = newActiveUri;
 
                 // Only act if the new active file is actually in our bookmarks
-                const bookmarks = this._bookmarkService.getBookmarks();
+                const bookmarks = this.bookmarkService.getBookmarks();
                 if (bookmarks.has(newActiveUri)) {
                     // Auto-expand active
-                    this._foldedUris.delete(newActiveUri);
+                    this.foldedUris.delete(newActiveUri);
                 }
 
                 // Use postMessage to update UI without reloading
-                if (this._view && this._view.visible) {
-                    this._view.webview.postMessage({
+                if (this.view && this.view.visible) {
+                    this.view.webview.postMessage({
                         type: 'setActive',
                         uriString: newActiveUri
                     });
@@ -73,9 +76,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 }
             }
         } else {
-            this._activeUriStr = undefined;
-            if (this._view && this._view.visible) {
-                this._view.webview.postMessage({ type: 'setActive', uriString: '' });
+            this.activeUriStr = undefined;
+            if (this.view && this.view.visible) {
+                this.view.webview.postMessage({ type: 'setActive', uriString: '' });
             }
         }
     }
@@ -85,13 +88,13 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         _context: vscode.WebviewViewResolveContext,
         _token: vscode.CancellationToken,
     ) {
-        this._view = webviewView;
+        this.view = webviewView;
 
         try {
             webviewView.webview.options = {
                 enableScripts: true,
                 localResourceRoots: [
-                    this._extensionUri
+                    this.extensionUri
                 ]
             };
 
@@ -109,7 +112,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         break;
                     case 'copyAll':
                         if (data.uriString) {
-                            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
+                            const withLn = this.bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
                             vscode.commands.executeCommand(Constants.Commands.CopyBookmarkFile, vscode.Uri.parse(data.uriString), withLn);
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.CopyAllBookmarks);
@@ -117,7 +120,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         break;
                     case 'openAll':
                         if (data.uriString) {
-                            const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
+                            const withLn = this.bookmarkService.isIncludeLineNumbersEnabled(data.uriString);
                             vscode.commands.executeCommand(Constants.Commands.OpenBookmarkFile, vscode.Uri.parse(data.uriString), withLn);
                         } else {
                             vscode.commands.executeCommand(Constants.Commands.OpenAllBookmarks);
@@ -146,7 +149,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         }
                         break;
                     case 'toggleWordWrap':
-                        this._bookmarkService.toggleWordWrap();
+                        this.bookmarkService.toggleWordWrap();
                         break;
                     case 'mouseEnter':
                         vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, true);
@@ -156,17 +159,17 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         break;
                     case 'toggleFold':
                         if (data.uriString) {
-                            if (this._foldedUris.has(data.uriString)) {
-                                this._foldedUris.delete(data.uriString);
+                            if (this.foldedUris.has(data.uriString)) {
+                                this.foldedUris.delete(data.uriString);
                             } else {
-                                this._foldedUris.add(data.uriString);
+                                this.foldedUris.add(data.uriString);
                             }
                             this.updateContent();
                         }
                         break;
                     case 'toggleLineNumbers':
                         if (data.uriString) {
-                            this._bookmarkService.toggleIncludeLineNumbers(data.uriString);
+                            this.bookmarkService.toggleIncludeLineNumbers(data.uriString);
                         }
                         break;
                 }
@@ -174,7 +177,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
 
             this.updateContent();
         } catch (e) {
-            this._logger.error(`Error resolving webview view: ${e}`);
+            this.logger.error(`Error resolving webview view: ${e}`);
             webviewView.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                 Critical Error resolving view: ${escapeHtml(String(e))}
             </div></body></html>`;
@@ -182,9 +185,9 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
     }
 
     private collapseAll() {
-        const bookmarksMap = this._bookmarkService.getBookmarks();
+        const bookmarksMap = this.bookmarkService.getBookmarks();
         for (const key of bookmarksMap.keys()) {
-            this._foldedUris.add(key);
+            this.foldedUris.add(key);
         }
         this.updateContent();
     }
@@ -199,7 +202,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             groupId: item.groupId || ''
         };
 
-        if (this._bookmarkService.isFileMissing(hydratedItem.uri.toString())) {
+        if (this.bookmarkService.isFileMissing(hydratedItem.uri.toString())) {
             vscode.window.showErrorMessage(`File not found: ${hydratedItem.uri.fsPath}`);
             return;
         }
@@ -222,7 +225,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             return;
         }
 
-        if (this._bookmarkService.isFileMissing(uriStr)) {
+        if (this.bookmarkService.isFileMissing(uriStr)) {
             return;
         }
 
@@ -244,7 +247,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 await vscode.window.showTextDocument(doc, { preview: true });
             }
         } catch (e) {
-            this._logger.error(`Error focusing file: ${e}`);
+            this.logger.error(`Error focusing file: ${e}`);
         }
     }
 
@@ -255,36 +258,35 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
     }
 
     public dispose() {
-        if (this._updateTimeout) {
-            clearTimeout(this._updateTimeout);
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
         }
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
     }
 
-    private _updateTimeout?: NodeJS.Timeout;
     private async updateContent() {
-        if (!this._view) {
+        if (!this.view) {
             return;
         }
 
         // Debounce updates to prevent UI flickering on mass changes
-        if (this._updateTimeout) {
-            clearTimeout(this._updateTimeout);
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
         }
 
-        this._updateTimeout = setTimeout(async () => {
-            if (!this._view) { return; }
+        this.updateTimeout = setTimeout(async () => {
+            if (!this.view) { return; }
             try {
-                const html = await this._htmlGenerator.generateHtml(
-                    this._view.webview,
-                    this._activeUriStr,
-                    this._lastAddedUri,
-                    this._foldedUris
+                const html = await this.htmlGenerator.generateHtml(
+                    this.view.webview,
+                    this.activeUriStr,
+                    this.lastAddedUri,
+                    this.foldedUris
                 );
-                this._view.webview.html = html;
+                this.view.webview.html = html;
             } catch (e) {
-                this._view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
+                this.view.webview.html = `<html><body><div style="padding: 20px; color: var(--vscode-errorForeground);">
                     Error loading bookmarks: ${escapeHtml(String(e))}<br/>
                 </div></body></html>`;
             }

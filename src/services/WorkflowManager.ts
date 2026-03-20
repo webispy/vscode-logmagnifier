@@ -9,7 +9,7 @@ import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationSt
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
 import { Logger } from './Logger';
-import { FilterGroup } from '../models/Filter';
+import { FilterGroup, FilterItem } from '../models/Filter';
 import { HighlightService } from './HighlightService';
 import { SourceMapService } from './SourceMapService';
 
@@ -19,14 +19,14 @@ export class WorkflowManager implements vscode.Disposable {
 
     private _onDidRunWorkflow: vscode.EventEmitter<SimulationResult> = new vscode.EventEmitter<SimulationResult>();
     readonly onDidRunWorkflow: vscode.Event<SimulationResult> = this._onDidRunWorkflow.event;
-    private _disposables: vscode.Disposable[] = [];
 
+    private disposables: vscode.Disposable[] = [];
     private workflows: Workflow[] = [];
     private lastRunResults: Map<string, SimulationResult> = new Map();
     private lastExecutionId: string | undefined;
-    private sessionFiles: Set<string> = new Set(); // Temp files created during runs; deleted on dispose()
-    private _activeStepId: string | undefined;
-    private _expandedWorkflowIds: Set<string> = new Set();
+    private sessionFiles: Set<string> = new Set();
+    private activeStepId: string | undefined;
+    private expandedWorkflowIds: Set<string> = new Set();
     public stepDelay: number = 200;
 
     constructor(
@@ -41,7 +41,7 @@ export class WorkflowManager implements vscode.Disposable {
         this.cleanupStaleTempFiles();
 
         // Subscribe to profile changes to update workflow UI when profiles are deleted
-        this._disposables.push(
+        this.disposables.push(
             this.profileManager.onDidChangeProfile(() => {
                 this._onDidChangeWorkflow.fire();
             })
@@ -79,7 +79,7 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     private loadFromState(): Workflow[] {
-        const workflows = this.context.globalState.get<Workflow[]>(Constants.GlobalState.Workflows) || [];
+        const workflows = this.context.globalState.get<Workflow[]>(Constants.GlobalState.Workflows) ?? [];
         // Migration: Ensure new fields exist
         workflows.forEach(w => {
             if (w.steps) {
@@ -117,8 +117,8 @@ export class WorkflowManager implements vscode.Disposable {
             // Activate if inactive (different workflow)
             await this.setActiveWorkflow(id);
             // Exclusive Expansion: Collapse others, expand this one
-            this._expandedWorkflowIds.clear();
-            this._expandedWorkflowIds.add(id);
+            this.expandedWorkflowIds.clear();
+            this.expandedWorkflowIds.add(id);
             this._onDidChangeWorkflow.fire();
         } else {
             // Same workflow clicked
@@ -128,10 +128,10 @@ export class WorkflowManager implements vscode.Disposable {
                 await this.setActiveWorkflow(id);
             } else {
                 // If workflow is already the distinct focus, toggle expansion
-                if (this._expandedWorkflowIds.has(id)) {
-                    this._expandedWorkflowIds.delete(id);
+                if (this.expandedWorkflowIds.has(id)) {
+                    this.expandedWorkflowIds.delete(id);
                 } else {
-                    this._expandedWorkflowIds.add(id);
+                    this.expandedWorkflowIds.add(id);
                 }
                 this._onDidChangeWorkflow.fire();
             }
@@ -139,12 +139,12 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public async expandWorkflow(id: string) {
-        this._expandedWorkflowIds.add(id);
+        this.expandedWorkflowIds.add(id);
         this._onDidChangeWorkflow.fire();
     }
 
     public async collapseWorkflow(id: string) {
-        this._expandedWorkflowIds.delete(id);
+        this.expandedWorkflowIds.delete(id);
         this._onDidChangeWorkflow.fire();
     }
 
@@ -163,12 +163,12 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     public getActiveStep(): string | undefined {
-        return this._activeStepId;
+        return this.activeStepId;
     }
 
     public async setActiveWorkflow(id: string | undefined): Promise<void> {
         await this.context.globalState.update(Constants.GlobalState.ActiveWorkflow, id);
-        this._activeStepId = undefined; // Reset step when workflow is explicitly selected
+        this.activeStepId = undefined; // Reset step when workflow is explicitly selected
         this._onDidChangeWorkflow.fire();
     }
 
@@ -182,7 +182,7 @@ export class WorkflowManager implements vscode.Disposable {
             return {
                 id: workflow.id,
                 name: workflow.name,
-                isExpanded: this._expandedWorkflowIds.has(workflow.id),
+                isExpanded: this.expandedWorkflowIds.has(workflow.id),
                 lastRunFile: lastRunResult ? workflow.lastRunFile : undefined,
                 profiles: profiles
             };
@@ -605,8 +605,9 @@ export class WorkflowManager implements vscode.Disposable {
             this.logger.info(`Workflow imported: ${pkg.workflow.name}`);
             return true;
 
-        } catch (e) {
-            this.logger.error(`Import Workflow failed: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[WorkflowManager] Import Workflow failed: ${msg}`);
             return false;
         }
     }
@@ -656,8 +657,9 @@ export class WorkflowManager implements vscode.Disposable {
                 currentFilePath = tempInputPath;
                 this.sessionFiles.add(currentFilePath);
                 this.logger.info(`Created temp source file for simulation (dirty/untitled): ${currentFilePath}`);
-            } catch (e) {
-                this.logger.error(`[WorkflowManager] Failed to create temp file for document: ${e}`);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                this.logger.error(`[WorkflowManager] Failed to create temp file for document: ${msg}`);
                 if (isUntitled) {
                     throw new Error("Failed to process untitled file");
                 }
@@ -708,7 +710,8 @@ export class WorkflowManager implements vscode.Disposable {
                 });
 
                 while (queue.length > 0) {
-                    const currentIdx = queue.shift()!;
+                    const currentIdx = queue.shift();
+                    if (currentIdx === undefined) { break; }
                     processingOrder.push(currentIdx);
 
                     // Find children
@@ -777,8 +780,9 @@ export class WorkflowManager implements vscode.Disposable {
                         for (const desc of descendants) {
                             // Find desc index
                             const descIndex = sim.steps.indexOf(desc);
-                            if (descIndex !== -1 && resolvedProfiles[descIndex].groups) {
-                                effectiveGroups.push(...this.cloneGroupsWithSuffix(resolvedProfiles[descIndex].groups!, `_s${descIndex}`));
+                            const descGroups = descIndex !== -1 ? resolvedProfiles[descIndex].groups : undefined;
+                    if (descGroups) {
+                                effectiveGroups.push(...this.cloneGroupsWithSuffix(descGroups, `_s${descIndex}`));
                             }
                         }
                     }
@@ -829,9 +833,10 @@ export class WorkflowManager implements vscode.Disposable {
             this._onDidRunWorkflow.fire(runResult);
             this._onDidChangeWorkflow.fire();
 
-        } catch (e) {
-            this.logger.error(`Workflow execution failed: ${e}`);
-            vscode.window.showErrorMessage(`Workflow failed: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[WorkflowManager] Workflow execution failed: ${msg}`);
+            vscode.window.showErrorMessage(`Workflow failed: ${msg}`);
         }
     }
 
@@ -847,8 +852,8 @@ export class WorkflowManager implements vscode.Disposable {
             g.filters
                 .filter(f => f.isEnabled)
                 .map(f => {
-                    const originalF = { ...f, id: (f as import('../models/Filter').FilterItem & { originalId?: string }).originalId || f.id };
-                    return { filter: originalF, groupId: (g as import('../models/Filter').FilterGroup & { originalId?: string }).originalId || g.id };
+                    const originalF = { ...f, id: (f as FilterItem & { originalId?: string }).originalId ?? f.id };
+                    return { filter: originalF, groupId: (g as FilterGroup & { originalId?: string }).originalId ?? g.id };
                 })
         );
         this.highlightService.registerDocumentFilters(uri, flatFilters);
@@ -871,8 +876,9 @@ export class WorkflowManager implements vscode.Disposable {
             const doc = await vscode.workspace.openTextDocument(uri);
             await vscode.window.showTextDocument(doc, { preview: false });
             vscode.languages.setTextDocumentLanguage(doc, 'log');
-        } catch (e) {
-            this.logger.error(`Failed to open result file: ${step.outputFilePath}. Error: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[WorkflowManager] Failed to open result file: ${step.outputFilePath}. Error: ${msg}`);
             vscode.window.showErrorMessage(`Failed to open result file: ${step.outputFilePath}. It might be too large.`);
         }
     }
@@ -882,7 +888,7 @@ export class WorkflowManager implements vscode.Disposable {
         if (!workflow) { return; }
 
         await this.setActiveWorkflow(workflowId);
-        this._activeStepId = stepId;
+        this.activeStepId = stepId;
         this._onDidChangeWorkflow.fire();
 
         const stepIndex = workflow.steps.findIndex(s => s.id === stepId);
@@ -906,23 +912,6 @@ export class WorkflowManager implements vscode.Disposable {
         vscode.window.setStatusBarMessage(`Loaded profile '${profileName}'`, 3000);
     }
 
-    public dispose() {
-        for (const filePath of this.sessionFiles) {
-            try {
-                if (fs.existsSync(filePath)) {
-                    fs.unlinkSync(filePath);
-                }
-            } catch (e) {
-                this.logger.info(`[Workflow] Failed to delete session file on dispose: ${filePath}: ${e}`);
-            }
-        }
-        this.sessionFiles.clear();
-
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
-        this._onDidChangeWorkflow.dispose();
-        this._onDidRunWorkflow.dispose();
-    }
     public async openAllResults(workflowId: string) {
         const lastRunResult = this.lastRunResults.get(workflowId);
         if (!lastRunResult || lastRunResult.workflowId !== workflowId) {
@@ -961,7 +950,8 @@ export class WorkflowManager implements vscode.Disposable {
             vscode.window.setStatusBarMessage(`Closed ${tabsToClose.length} result files.`, 3000);
         }
     }
-    private getDescendants(steps: import('../models/Workflow').WorkflowStep[], parentId: string): import('../models/Workflow').WorkflowStep[] {
+
+    private getDescendants(steps: WorkflowStep[], parentId: string): WorkflowStep[] {
         const children = steps.filter(s => s.parentId === parentId);
         let descendants = [...children];
         for (const child of children) {
@@ -982,6 +972,25 @@ export class WorkflowManager implements vscode.Disposable {
             }));
             return newGroup;
         });
+    }
+
+    public dispose() {
+        for (const filePath of this.sessionFiles) {
+            try {
+                if (fs.existsSync(filePath)) {
+                    fs.unlinkSync(filePath);
+                }
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                this.logger.info(`[WorkflowManager] Failed to delete session file on dispose: ${filePath}: ${msg}`);
+            }
+        }
+        this.sessionFiles.clear();
+
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
+        this._onDidChangeWorkflow.dispose();
+        this._onDidRunWorkflow.dispose();
     }
 }
 

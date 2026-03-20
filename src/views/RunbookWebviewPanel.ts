@@ -1,19 +1,22 @@
-import * as vscode from 'vscode';
-import { RunbookMarkdown } from '../models/Runbook';
-import * as path from 'path';
 import * as cp from 'child_process';
-import * as os from 'os';
 import * as fsp from 'fs/promises';
+import * as os from 'os';
+import * as path from 'path';
+
+import * as vscode from 'vscode';
+
+import { RunbookMarkdown } from '../models/Runbook';
+
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
     public static currentPanels: Map<string, RunbookWebviewPanel> = new Map();
-    private readonly _panel: vscode.WebviewPanel;
-    private _disposables: vscode.Disposable[] = [];
-    private _currentItem: RunbookMarkdown;
-    private readonly _htmlGenerator: RunbookHtmlGenerator;
-    private _runningProcesses: Map<string, cp.ChildProcess> = new Map();
-    private _scriptExecutionAllowed: boolean = false;
+    private readonly webviewPanel: vscode.WebviewPanel;
+    private disposables: vscode.Disposable[] = [];
+    private currentItem: RunbookMarkdown;
+    private readonly htmlGenerator: RunbookHtmlGenerator;
+    private runningProcesses: Map<string, cp.ChildProcess> = new Map();
+    private scriptExecutionAllowed: boolean = false;
 
     public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown) {
         const column = vscode.window.activeTextEditor
@@ -22,7 +25,7 @@ export class RunbookWebviewPanel {
 
         const existingPanel = RunbookWebviewPanel.currentPanels.get(item.filePath);
         if (existingPanel) {
-            existingPanel._panel.reveal(column);
+            existingPanel.webviewPanel.reveal(column);
             await existingPanel.update(item);
             return;
         }
@@ -30,7 +33,7 @@ export class RunbookWebviewPanel {
         const panel = vscode.window.createWebviewPanel(
             'runbookWebview',
             `Runbook: ${item.label}`,
-            column || vscode.ViewColumn.One,
+            column ?? vscode.ViewColumn.One,
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
@@ -44,16 +47,16 @@ export class RunbookWebviewPanel {
         RunbookWebviewPanel.currentPanels.set(item.filePath, new RunbookWebviewPanel(panel, context, item));
     }
 
-    private constructor(panel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: RunbookMarkdown) {
-        this._panel = panel;
-        this._currentItem = item;
-        this._htmlGenerator = new RunbookHtmlGenerator(context);
+    private constructor(webviewPanel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: RunbookMarkdown) {
+        this.webviewPanel = webviewPanel;
+        this.currentItem = item;
+        this.htmlGenerator = new RunbookHtmlGenerator(context);
 
         this.update(item);
 
-        this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+        this.webviewPanel.onDidDispose(() => this.dispose(), null, this.disposables);
 
-        this._panel.webview.onDidReceiveMessage(
+        this.webviewPanel.webview.onDidReceiveMessage(
             message => {
                 switch (message.command) {
                     case 'execute':
@@ -68,30 +71,30 @@ export class RunbookWebviewPanel {
                 }
             },
             null,
-            this._disposables
+            this.disposables
         );
     }
 
     public async update(item: RunbookMarkdown) {
-        if (item.filePath !== this._currentItem.filePath) {
-            this._scriptExecutionAllowed = false;
+        if (item.filePath !== this.currentItem.filePath) {
+            this.scriptExecutionAllowed = false;
         }
-        this._currentItem = item;
-        this._panel.title = `Runbook: ${item.label}`;
-        this._panel.webview.html = await this._htmlGenerator.generate(this._panel.webview, item);
+        this.currentItem = item;
+        this.webviewPanel.title = `Runbook: ${item.label}`;
+        this.webviewPanel.webview.html = await this.htmlGenerator.generate(this.webviewPanel.webview, item);
     }
 
     public dispose() {
-        RunbookWebviewPanel.currentPanels.delete(this._currentItem.filePath);
+        RunbookWebviewPanel.currentPanels.delete(this.currentItem.filePath);
 
         // Kill all running child processes to prevent orphaned processes
-        this._runningProcesses.forEach(p => p.kill());
-        this._runningProcesses.clear();
+        this.runningProcesses.forEach(p => p.kill());
+        this.runningProcesses.clear();
 
-        this._panel.dispose();
+        this.webviewPanel.dispose();
 
-        while (this._disposables.length) {
-            const x = this._disposables.pop();
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
             if (x) {
                 x.dispose();
             }
@@ -99,10 +102,10 @@ export class RunbookWebviewPanel {
     }
 
     private stopScript(blockId: string) {
-        const proc = this._runningProcesses.get(blockId);
+        const proc = this.runningProcesses.get(blockId);
         if (proc) {
             proc.kill();
-            this._runningProcesses.delete(blockId);
+            this.runningProcesses.delete(blockId);
         }
     }
 
@@ -112,7 +115,7 @@ export class RunbookWebviewPanel {
             return;
         }
 
-        if (!this._scriptExecutionAllowed) {
+        if (!this.scriptExecutionAllowed) {
             const confirmed = await vscode.window.showWarningMessage(
                 'Execute shell command?',
                 { modal: true, detail: script.substring(0, 500) },
@@ -120,20 +123,20 @@ export class RunbookWebviewPanel {
                 'Allow All for this Runbook'
             );
             if (confirmed === 'Allow All for this Runbook') {
-                this._scriptExecutionAllowed = true;
+                this.scriptExecutionAllowed = true;
             } else if (confirmed !== 'Execute') {
                 return;
             }
         }
 
         // Kill any existing process for this block before starting a new one
-        const existing = this._runningProcesses.get(blockId);
+        const existing = this.runningProcesses.get(blockId);
         if (existing) {
             existing.kill();
-            this._runningProcesses.delete(blockId);
+            this.runningProcesses.delete(blockId);
         }
 
-        this._panel.webview.postMessage({ command: 'command-running', blockId });
+        this.webviewPanel.webview.postMessage({ command: 'command-running', blockId });
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
         const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/sh';
@@ -145,10 +148,10 @@ export class RunbookWebviewPanel {
             maxBuffer: 5 * 1024 * 1024,
             env: { ...process.env, PATH: process.env.PATH }
         });
-        this._runningProcesses.set(blockId, child);
+        this.runningProcesses.set(blockId, child);
 
         child.stdout?.on('data', (data) => {
-            this._panel.webview.postMessage({
+            this.webviewPanel.webview.postMessage({
                 command: 'command-output',
                 blockId,
                 stdout: data.toString()
@@ -156,7 +159,7 @@ export class RunbookWebviewPanel {
         });
 
         child.stderr?.on('data', (data) => {
-            this._panel.webview.postMessage({
+            this.webviewPanel.webview.postMessage({
                 command: 'command-output',
                 blockId,
                 stderr: data.toString()
@@ -164,7 +167,7 @@ export class RunbookWebviewPanel {
         });
 
         child.on('error', (error) => {
-            this._panel.webview.postMessage({
+            this.webviewPanel.webview.postMessage({
                 command: 'command-output',
                 blockId,
                 error: error.message
@@ -172,8 +175,8 @@ export class RunbookWebviewPanel {
         });
 
         child.on('close', (code) => {
-            this._runningProcesses.delete(blockId);
-            this._panel.webview.postMessage({
+            this.runningProcesses.delete(blockId);
+            this.webviewPanel.webview.postMessage({
                 command: 'command-finished',
                 blockId,
                 code
@@ -187,7 +190,7 @@ export class RunbookWebviewPanel {
         const targetIndex = parseInt(indexMatch[1], 10);
 
         try {
-            const content = await fsp.readFile(this._currentItem.filePath, 'utf-8');
+            const content = await fsp.readFile(this.currentItem.filePath, 'utf-8');
             const codeBlockRegex = /```(sh|bash|shell)\s*\n([\s\S]*?)```/g;
 
             let match;
@@ -200,13 +203,14 @@ export class RunbookWebviewPanel {
                     const after = content.substring(match.index + match[0].length);
                     const normalizedScript = newScript.endsWith('\n') ? newScript : newScript + '\n';
                     const newContent = before + '```' + lang + '\n' + normalizedScript + '```' + after;
-                    await fsp.writeFile(this._currentItem.filePath, newContent, 'utf-8');
+                    await fsp.writeFile(this.currentItem.filePath, newContent, 'utf-8');
                     return;
                 }
                 currentIndex++;
             }
-        } catch (e) {
-            vscode.window.showErrorMessage(`Failed to update script: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            vscode.window.showErrorMessage(`Failed to update script: ${msg}`);
         }
     }
 }

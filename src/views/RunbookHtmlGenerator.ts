@@ -1,11 +1,14 @@
-import * as vscode from 'vscode';
-import { RunbookMarkdown } from '../models/Runbook';
-import { Logger } from '../services/Logger';
-import * as marked from 'marked';
 import * as fs from 'fs';
 import * as path from 'path';
-import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
+
+import * as marked from 'marked';
 import sanitizeHtmlLib from 'sanitize-html';
+import * as vscode from 'vscode';
+
+import { RunbookMarkdown } from '../models/Runbook';
+
+import { Logger } from '../services/Logger';
+import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
 
 export class RunbookHtmlGenerator {
     constructor(private readonly context: vscode.ExtensionContext) { }
@@ -33,8 +36,9 @@ export class RunbookHtmlGenerator {
         let content = '';
         try {
             content = fs.readFileSync(item.filePath, 'utf-8');
-        } catch (e) {
-            Logger.getInstance().error(`Failed to read markdown file: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookHtmlGenerator] Failed to read markdown file: ${msg}`);
             content = `# Error\nCould not read file: ${item.filePath}`;
         }
 
@@ -94,8 +98,9 @@ export class RunbookHtmlGenerator {
         try {
             const templateBytes = await vscode.workspace.fs.readFile(templatePath);
             html = new TextDecoder('utf-8').decode(templateBytes);
-        } catch (err) {
-            Logger.getInstance().error(`Failed to read Runbook template: ${err}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookHtmlGenerator] Failed to read template: ${msg}`);
             return `<html><body><div style="padding: 10px;">Error loading runbook view template</div></body></html>`;
         }
 

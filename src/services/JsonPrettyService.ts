@@ -1,11 +1,13 @@
 import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+
+import { EditorUtils } from '../utils/EditorUtils';
+import { HighlightService } from './HighlightService';
+import { LenientJsonParser } from './LenientJsonParser';
 import { Logger } from './Logger';
 import { SourceMapService } from './SourceMapService';
-import { Constants } from '../Constants';
-import { HighlightService } from './HighlightService';
 import { JsonTreeWebview } from '../views/JsonTreeWebview';
-import { LenientJsonParser } from './LenientJsonParser';
-import { EditorUtils } from '../utils/EditorUtils';
 
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';
@@ -15,8 +17,8 @@ interface ExtractedJson {
 }
 
 export class JsonPrettyService implements vscode.Disposable {
-    private _lastActiveEditor: vscode.TextEditor | undefined;
-    private _disposables: vscode.Disposable[] = [];
+    private lastActiveEditor: vscode.TextEditor | undefined;
+    private disposables: vscode.Disposable[] = [];
 
     constructor(
         private logger: Logger,
@@ -25,18 +27,18 @@ export class JsonPrettyService implements vscode.Disposable {
         private highlightService: HighlightService
     ) {
         // Track active editor
-        this._disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+        this.disposables.push(vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
-                this._lastActiveEditor = editor;
+                this.lastActiveEditor = editor;
             }
         }));
 
         // Initialize with current if available
         if (vscode.window.activeTextEditor) {
-            this._lastActiveEditor = vscode.window.activeTextEditor;
+            this.lastActiveEditor = vscode.window.activeTextEditor;
         }
 
-        this._disposables.push(this.jsonTreeWebview.onDidRevealLine(async event => {
+        this.disposables.push(this.jsonTreeWebview.onDidRevealLine(async event => {
             try {
                 const targetUriStr = event.uri;
                 let targetViewColumn: vscode.ViewColumn | undefined;
@@ -77,15 +79,11 @@ export class JsonPrettyService implements vscode.Disposable {
                 } else {
                     vscode.window.showWarningMessage(Constants.Messages.Warn.OriginalFileClosed);
                 }
-            } catch (e) {
-                this.logger.error('Failed to reveal line: ' + e);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
+                this.logger.error(`[JsonPrettyService] Failed to reveal line: ${msg}`);
             }
         }));
-    }
-
-    public dispose() {
-        this._disposables.forEach(d => d.dispose());
-        this._disposables = [];
     }
 
     public async execute(silent: boolean = false, targetEditor?: vscode.TextEditor) {
@@ -93,7 +91,7 @@ export class JsonPrettyService implements vscode.Disposable {
             let editor = targetEditor || vscode.window.activeTextEditor;
 
             if (!silent && !editor) {
-                editor = await EditorUtils.getActiveEditorAsync(this._lastActiveEditor, 'open JSON Preview');
+                editor = await EditorUtils.getActiveEditorAsync(this.lastActiveEditor, 'open JSON Preview');
 
                 if (!editor) {
                     return;
@@ -189,8 +187,9 @@ export class JsonPrettyService implements vscode.Disposable {
                 this.jsonTreeWebview.show(results, 'JSON Preview', 'valid', tabSize, sourceUri, sourceLine, silent);
             }
 
-        } catch (error) {
-            this.logger.error(`JsonPrettyService error: ${error}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[JsonPrettyService] Error: ${msg}`);
             if (!silent) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.JsonProcessError);
             }
@@ -239,12 +238,11 @@ export class JsonPrettyService implements vscode.Disposable {
                             parsed: parsed
                         });
                         startIndex = jsonCandidate.endIndex + 1;
-                    } catch (e) {
+                    } catch {
                         // Invalid syntax case (but bounded)
                         found.push({
                             type: 'invalid',
-                            text: jsonCandidate.text,
-                            error: String(e)
+                            text: jsonCandidate.text
                         });
                         startIndex = jsonCandidate.endIndex + 1;
                     }
@@ -379,5 +377,10 @@ export class JsonPrettyService implements vscode.Disposable {
             sourceLine,
             true
         );
+    }
+
+    public dispose() {
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
     }
 }

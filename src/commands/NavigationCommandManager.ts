@@ -6,8 +6,8 @@ import { FileHierarchyService } from '../services/FileHierarchyService';
 import { Logger } from '../services/Logger';
 
 interface HierarchyQuickPickItem extends vscode.QuickPickItem {
-    _uri: vscode.Uri;
-    _type: 'original' | 'filter' | 'bookmark';
+    uri: vscode.Uri;
+    type: 'original' | 'filter' | 'bookmark';
 }
 
 export class NavigationCommandManager {
@@ -43,9 +43,10 @@ export class NavigationCommandManager {
         try {
             const doc = await vscode.workspace.openTextDocument(uri);
             await vscode.window.showTextDocument(doc, { preview: false });
-        } catch (e) {
-            Logger.getInstance().error(`Failed to open file ${uri.toString()}: ${e}`);
-            vscode.window.showErrorMessage(Constants.Messages.Error.OpenFileFailed.replace('{0}', String(e)));
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[NavigationCommandManager] Failed to open file ${uri.toString()}: ${msg}`);
+            vscode.window.showErrorMessage(Constants.Messages.Error.OpenFileFailed.replace('{0}', msg));
         }
     }
 
@@ -87,8 +88,8 @@ export class NavigationCommandManager {
                             tooltip: node.type === 'original' ? 'Delete this and all children' : 'Delete this item'
                         }
                     ],
-                    _uri: uri,
-                    _type: node.type
+                    uri: uri,
+                    type: node.type
                 };
 
                 items.push(item);
@@ -122,8 +123,8 @@ export class NavigationCommandManager {
 
         picker.onDidTriggerItemButton(e => {
             const item = e.item;
-            const uri = item._uri;
-            const type = item._type;
+            const uri = item.uri;
+            const type = item.type;
 
             if (uri) {
                 const isRecursive = type === 'original';

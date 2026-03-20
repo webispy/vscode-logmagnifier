@@ -2289,7 +2289,8 @@
   "scripts": {
     "vscode:prepublish": "npm run package",
     "compile": "tsc -p ./",
-    "watch": "node esbuild.mjs --watch",
+    "watch": "tsc -watch -p ./",
+    "watch:esbuild": "node esbuild.mjs --watch",
     "package": "node esbuild.mjs --production",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",

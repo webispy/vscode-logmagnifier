@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as vscode from 'vscode';
+import { Logger } from '../../services/Logger';
 import { RunbookService } from '../../services/RunbookService';
 import { RunbookGroup, RunbookMarkdown } from '../../models/Runbook';
 
@@ -22,7 +23,7 @@ suite('RunbookService Test Suite', () => {
             subscriptions: [],
         } as unknown as vscode.ExtensionContext;
 
-        service = new RunbookService(context);
+        service = new RunbookService(context, Logger.getInstance());
         await service.ready;
     });
 
@@ -64,7 +65,7 @@ suite('RunbookService Test Suite', () => {
 
         test('Should not recreate default config if runbooks dir already exists', async () => {
             // Create a second service with same context - should not fail
-            const service2 = new RunbookService(context);
+            const service2 = new RunbookService(context, Logger.getInstance());
             await service2.ready;
             const items = service2.items;
             // Should still have the adb item from the first init

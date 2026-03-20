@@ -6,7 +6,7 @@ import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class JsonTreeHtmlGenerator {
-    constructor(private readonly context: vscode.ExtensionContext) { }
+    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) { }
 
     public async generate(
         webview: vscode.Webview,
@@ -27,7 +27,7 @@ export class JsonTreeHtmlGenerator {
             html = new TextDecoder('utf-8').decode(templateBytes);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[JsonTreeHtmlGenerator] Failed to read template: ${msg}`);
+            this.logger.error(`[JsonTreeHtmlGenerator] Failed to read template: ${msg}`);
             return `<html><body>Failed to load template. Error: ${escapeHtml(msg)}</body></html>`;
         }
 

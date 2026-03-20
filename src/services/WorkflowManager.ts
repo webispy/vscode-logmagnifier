@@ -141,12 +141,12 @@ export class WorkflowManager implements vscode.Disposable {
         }
     }
 
-    public async expandWorkflow(id: string) {
+    public expandWorkflow(id: string) {
         this.expandedWorkflowIds.add(id);
         this._onDidChangeWorkflow.fire();
     }
 
-    public async collapseWorkflow(id: string) {
+    public collapseWorkflow(id: string) {
         this.expandedWorkflowIds.delete(id);
         this._onDidChangeWorkflow.fire();
     }

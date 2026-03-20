@@ -7,7 +7,7 @@ import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class WorkflowHtmlGenerator {
-    constructor(private readonly context: vscode.ExtensionContext) { }
+    constructor(private readonly context: vscode.ExtensionContext, private readonly logger: Logger) { }
 
     public async generate(
         webview: vscode.Webview,
@@ -25,7 +25,7 @@ export class WorkflowHtmlGenerator {
             html = new TextDecoder('utf-8').decode(templateBytes);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[WorkflowHtmlGenerator] Failed to read template: ${msg}`);
+            this.logger.error(`[WorkflowHtmlGenerator] Failed to read template: ${msg}`);
             return `<html><body><div style="padding: 10px;">Error loading workflow view template: ${escapeHtml(msg)}</div></body></html>`;
         }
 

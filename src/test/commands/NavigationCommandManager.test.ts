@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { NavigationCommandManager } from '../../commands/NavigationCommandManager';
 import { FileHierarchyService } from '../../services/FileHierarchyService';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 import { Constants } from '../../Constants';
 
@@ -28,7 +29,7 @@ suite('NavigationCommandManager Test Suite', () => {
             unregister: () => { }
         } as unknown as FileHierarchyService;
 
-        new NavigationCommandManager(mockContext as unknown as vscode.ExtensionContext, mockHierarchyService);
+        new NavigationCommandManager(mockContext as unknown as vscode.ExtensionContext, mockHierarchyService, Logger.getInstance());
         vscode.commands.registerCommand = originalRegisterCommand;
     });
 

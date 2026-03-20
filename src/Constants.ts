@@ -11,7 +11,7 @@ import { Messages } from './constants/Messages';
 
 // Compile-time guard: if Ids and Messages share a top-level key, this becomes `never`
 type AssertNoOverlap = keyof typeof Ids & keyof typeof Messages extends never ? true : never;
-const _: AssertNoOverlap = true;
+void (true satisfies AssertNoOverlap);
 
 export const Constants = {
     ...Ids,

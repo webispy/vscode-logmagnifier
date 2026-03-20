@@ -257,14 +257,6 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         }
     }
 
-    public dispose() {
-        if (this.updateTimeout) {
-            clearTimeout(this.updateTimeout);
-        }
-        this.disposables.forEach(d => d.dispose());
-        this.disposables = [];
-    }
-
     private async updateContent() {
         if (!this.view) {
             return;
@@ -291,5 +283,13 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 </div></body></html>`;
             }
         }, 100);
+    }
+
+    public dispose() {
+        if (this.updateTimeout) {
+            clearTimeout(this.updateTimeout);
+        }
+        this.disposables.forEach(d => d.dispose());
+        this.disposables = [];
     }
 }

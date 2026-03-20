@@ -20,7 +20,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
     constructor(
         private filterManager: FilterManager,
-        private mode: 'word' | 'regex'
+        private mode: 'word' | 'regex',
+        private logger: Logger
     ) {
         this.disposables.push(this.filterManager.onDidChangeFilters(() => this.refresh()));
         this.disposables.push(this.filterManager.onDidChangeResultCounts(() => this.refresh()));
@@ -122,7 +123,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             }
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[FilterTreeView] getTreeItem failed: ${msg}`);
+            this.logger.error(`[FilterTreeView] getTreeItem failed: ${msg}`);
             const errorItem = new vscode.TreeItem('Error loading item', vscode.TreeItemCollapsibleState.None);
             errorItem.tooltip = msg;
             return errorItem;
@@ -141,7 +142,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
             return [];
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            Logger.getInstance().error(`[FilterTreeView] getChildren failed: ${msg}`);
+            this.logger.error(`[FilterTreeView] getChildren failed: ${msg}`);
             return [];
         }
     }

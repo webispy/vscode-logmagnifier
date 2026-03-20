@@ -6,7 +6,6 @@ import { EditorUtils } from '../utils/EditorUtils';
 import { HighlightService } from './HighlightService';
 import { LenientJsonParser } from './LenientJsonParser';
 import { Logger } from './Logger';
-import { SourceMapService } from './SourceMapService';
 import { JsonTreeWebview } from '../views/JsonTreeWebview';
 
 interface ExtractedJson {
@@ -22,7 +21,6 @@ export class JsonPrettyService implements vscode.Disposable {
 
     constructor(
         private logger: Logger,
-        private sourceMapService: SourceMapService,
         private jsonTreeWebview: JsonTreeWebview,
         private highlightService: HighlightService
     ) {

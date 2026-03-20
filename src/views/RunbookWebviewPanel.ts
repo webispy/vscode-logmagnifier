@@ -7,6 +7,7 @@ import * as vscode from 'vscode';
 
 import { RunbookMarkdown } from '../models/Runbook';
 
+import { Logger } from '../services/Logger';
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
@@ -18,7 +19,7 @@ export class RunbookWebviewPanel {
     private runningProcesses: Map<string, cp.ChildProcess> = new Map();
     private scriptExecutionAllowed: boolean = false;
 
-    public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown) {
+    public static async createOrShow(context: vscode.ExtensionContext, item: RunbookMarkdown, logger: Logger) {
         const column = vscode.window.activeTextEditor
             ? vscode.window.activeTextEditor.viewColumn
             : undefined;
@@ -44,13 +45,13 @@ export class RunbookWebviewPanel {
             }
         );
 
-        RunbookWebviewPanel.currentPanels.set(item.filePath, new RunbookWebviewPanel(panel, context, item));
+        RunbookWebviewPanel.currentPanels.set(item.filePath, new RunbookWebviewPanel(panel, context, item, logger));
     }
 
-    private constructor(webviewPanel: vscode.WebviewPanel, private context: vscode.ExtensionContext, item: RunbookMarkdown) {
+    private constructor(webviewPanel: vscode.WebviewPanel, context: vscode.ExtensionContext, item: RunbookMarkdown, logger: Logger) {
         this.webviewPanel = webviewPanel;
         this.currentItem = item;
-        this.htmlGenerator = new RunbookHtmlGenerator(context);
+        this.htmlGenerator = new RunbookHtmlGenerator(context, logger);
 
         this.update(item);
 
@@ -82,23 +83,6 @@ export class RunbookWebviewPanel {
         this.currentItem = item;
         this.webviewPanel.title = `Runbook: ${item.label}`;
         this.webviewPanel.webview.html = await this.htmlGenerator.generate(this.webviewPanel.webview, item);
-    }
-
-    public dispose() {
-        RunbookWebviewPanel.currentPanels.delete(this.currentItem.filePath);
-
-        // Kill all running child processes to prevent orphaned processes
-        this.runningProcesses.forEach(p => p.kill());
-        this.runningProcesses.clear();
-
-        this.webviewPanel.dispose();
-
-        while (this.disposables.length) {
-            const x = this.disposables.pop();
-            if (x) {
-                x.dispose();
-            }
-        }
     }
 
     private stopScript(blockId: string) {
@@ -214,6 +198,23 @@ export class RunbookWebviewPanel {
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             vscode.window.showErrorMessage(`Failed to update script: ${msg}`);
+        }
+    }
+
+    public dispose() {
+        RunbookWebviewPanel.currentPanels.delete(this.currentItem.filePath);
+
+        // Kill all running child processes to prevent orphaned processes
+        this.runningProcesses.forEach(p => p.kill());
+        this.runningProcesses.clear();
+
+        this.webviewPanel.dispose();
+
+        while (this.disposables.length) {
+            const x = this.disposables.pop();
+            if (x) {
+                x.dispose();
+            }
         }
     }
 }

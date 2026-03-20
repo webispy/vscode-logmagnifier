@@ -15,9 +15,10 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
 
     constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly workflowManager: WorkflowManager
+        private readonly workflowManager: WorkflowManager,
+        private readonly logger: Logger
     ) {
-        this.htmlGenerator = new WorkflowHtmlGenerator(context);
+        this.htmlGenerator = new WorkflowHtmlGenerator(context, logger);
     }
 
     public async resolveWebviewView(
@@ -49,7 +50,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             // Listen for changes
             this.workflowManager.onDidChangeWorkflow(() => {
                 this.refresh().catch(e =>
-                    Logger.getInstance().error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+                    this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
                 );
             }, null, this.disposables);
 
@@ -57,7 +58,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             webviewView.onDidChangeVisibility(() => {
                 if (webviewView.visible) {
                     this.refresh().catch(e =>
-                        Logger.getInstance().error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+                        this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
                     );
                 }
             }, null, this.disposables);
@@ -70,7 +71,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
             });
 
         } catch (e: unknown) {
-            Logger.getInstance().error(`[WorkflowWebviewProvider] Error resolving webview: ${e instanceof Error ? e.message : String(e)}`);
+            this.logger.error(`[WorkflowWebviewProvider] Error resolving webview: ${e instanceof Error ? e.message : String(e)}`);
             webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view: ${escapeHtml(e instanceof Error ? e.message : String(e))}</div></body></html>`;
         }
     }

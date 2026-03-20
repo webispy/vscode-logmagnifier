@@ -65,12 +65,12 @@ export function activate(context: vscode.ExtensionContext) {
     const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, sourceMapService);
     context.subscriptions.push(workflowManager);
 
-    const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager);
+    const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager, logger);
     context.subscriptions.push(quickAccessProvider);
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
 
-    const workflowProvider = new WorkflowWebviewProvider(context, workflowManager);
+    const workflowProvider = new WorkflowWebviewProvider(context, workflowManager, logger);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
     );
@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let lastProcessedDoc: vscode.TextDocument | undefined;
 
-    const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word');
+    const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word', logger);
     context.subscriptions.push(wordTreeDataProvider);
     const wordTreeView = vscode.window.createTreeView(Constants.Views.Filters, {
         treeDataProvider: wordTreeDataProvider,
@@ -97,7 +97,7 @@ export function activate(context: vscode.ExtensionContext) {
         showCollapseAll: false
     });
 
-    const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex');
+    const regexTreeDataProvider = new FilterTreeDataProvider(filterManager, 'regex', logger);
     context.subscriptions.push(regexTreeDataProvider);
     const regexTreeView = vscode.window.createTreeView(Constants.Views.RegexFilters, {
         treeDataProvider: regexTreeDataProvider,
@@ -136,10 +136,10 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     // Initialize Command Manager (Handles all command registrations)
-    const jsonTreeWebview = new JsonTreeWebview(context);
+    const jsonTreeWebview = new JsonTreeWebview(context, logger);
     context.subscriptions.push(jsonTreeWebview);
 
-    const jsonPrettyService = new JsonPrettyService(logger, sourceMapService, jsonTreeWebview, highlightService);
+    const jsonPrettyService = new JsonPrettyService(logger, jsonTreeWebview, highlightService);
     context.subscriptions.push(jsonPrettyService);
     new CommandManager(context, {
         filterManager, highlightService, resultCountService, logProcessor,
@@ -150,7 +150,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // File Hierarchy Service & Navigation
     const fileHierarchyService = FileHierarchyService.createInstance(context);
-    new NavigationCommandManager(context, fileHierarchyService);
+    new NavigationCommandManager(context, fileHierarchyService, logger);
     const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
     context.subscriptions.push(
         vscode.languages.registerCodeLensProvider(
@@ -171,14 +171,14 @@ export function activate(context: vscode.ExtensionContext) {
     new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView);
 
     // Runbook
-    const runbookService = new RunbookService(context);
+    const runbookService = new RunbookService(context, logger);
     const runbookTreeDataProvider = new RunbookTreeDataProvider(runbookService);
     context.subscriptions.push(runbookTreeDataProvider);
     vscode.window.createTreeView(Constants.Views.Runbook, {
         treeDataProvider: runbookTreeDataProvider,
         showCollapseAll: false
     });
-    new RunbookCommandManager(context, runbookService);
+    new RunbookCommandManager(context, runbookService, logger);
 
     // Log Bookmark
     const bookmarkService = new LogBookmarkService(context);

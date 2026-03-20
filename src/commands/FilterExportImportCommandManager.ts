@@ -1,13 +1,16 @@
-import * as vscode from 'vscode';
-import { Constants } from '../Constants';
-import { FilterManager } from '../services/FilterManager';
-import { FilterGroup } from '../models/Filter';
-import { IconUtils } from '../utils/IconUtils';
-import { ThemeUtils } from '../utils/ThemeUtils';
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
+
+import * as vscode from 'vscode';
+
+import { Constants } from '../Constants';
+import { FilterGroup } from '../models/Filter';
+
+import { FilterManager } from '../services/FilterManager';
+import { IconUtils } from '../utils/IconUtils';
+import { ThemeUtils } from '../utils/ThemeUtils';
 
 interface FilterGroupQuickPickItem extends vscode.QuickPickItem {
     groupId: string;

@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { JsonTreeWebview } from '../../views/JsonTreeWebview';
 import { JsonTreeHtmlGenerator } from '../../views/JsonTreeHtmlGenerator';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 
 suite('JsonTreeWebview Test Suite', () => {
@@ -12,7 +13,7 @@ suite('JsonTreeWebview Test Suite', () => {
 
     setup(() => {
         mockContext = new MockExtensionContext();
-        webview = new JsonTreeWebview(mockContext as unknown as vscode.ExtensionContext);
+        webview = new JsonTreeWebview(mockContext as unknown as vscode.ExtensionContext, Logger.getInstance());
 
         originalGenerate = JsonTreeHtmlGenerator.prototype.generate;
         JsonTreeHtmlGenerator.prototype.generate = async () => '<html></html>';

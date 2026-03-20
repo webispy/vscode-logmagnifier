@@ -21,7 +21,6 @@ export class FilterManager implements vscode.Disposable {
     readonly onDidChangeProfile: vscode.Event<void> = this._onDidChangeProfile.event;
 
     private groups: FilterGroup[] = [];
-    private colorPresets: ColorPreset[] = [];
     private activeFiltersCache: { filter: FilterItem, groupId: string }[] | null = null;
     private dirty: boolean = false;
     private logger: Logger;
@@ -39,7 +38,7 @@ export class FilterManager implements vscode.Disposable {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
         this.profileManager = new ProfileManager(context);
-        this.stateService = new FilterStateService(context);
+        this.stateService = new FilterStateService(context, this.logger);
 
         this.groups = this.stateService.loadFromState();
         this.resetCounts();

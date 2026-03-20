@@ -93,7 +93,7 @@ export class FilterExecutionCommandManager {
                             // Try to open validation doc if possible
                             const doc = await vscode.workspace.openTextDocument(uri);
                             document = doc;
-                        } catch (e: unknown) { this.logger.error(e instanceof Error ? e.message : String(e)); }
+                        } catch (e: unknown) { this.logger.error(`[FilterExecutionCommandManager] ${e instanceof Error ? e.message : String(e)}`); }
                     }
                 }
             }
@@ -126,7 +126,7 @@ export class FilterExecutionCommandManager {
                             await fs.promises.writeFile(tempInputPath, document.getText(), 'utf8');
                             targetPath = tempInputPath;
                         } catch (e: unknown) {
-                            this.logger.error(`Failed to create temp file for untitled document: ${e instanceof Error ? e.message : String(e)}`);
+                            this.logger.error(`[FilterExecutionCommandManager] Failed to create temp file for untitled document: ${e instanceof Error ? e.message : String(e)}`);
                             throw new Error("Failed to process untitled file");
                         }
                     }
@@ -207,7 +207,7 @@ export class FilterExecutionCommandManager {
                         } catch (_e) { /* ignore */ }
                     }
                 } catch (e: unknown) {
-                    this.logger.info(Constants.Messages.Info.FallbackToOpen.replace('{0}', e instanceof Error ? e.message : String(e)));
+                    this.logger.info(`[FilterExecutionCommandManager] ${Constants.Messages.Info.FallbackToOpen.replace('{0}', e instanceof Error ? e.message : String(e))}`);
                     await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(outputPath));
                 }
             }
@@ -320,7 +320,7 @@ export class FilterExecutionCommandManager {
     }
 
     private async expandAllGroups(isRegex: boolean) {
-        this.logger.info(`CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        this.logger.info(`[FilterExecutionCommandManager] CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
         const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
 
@@ -329,13 +329,13 @@ export class FilterExecutionCommandManager {
             try {
                 await treeView.reveal(group, { expand: true, focus: false, select: false });
             } catch (e: unknown) {
-                this.logger.warn(`Failed to expand group ${group.name}: ${e instanceof Error ? e.message : String(e)}`);
+                this.logger.warn(`[FilterExecutionCommandManager] Failed to expand group ${group.name}: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
     }
 
     private async collapseAllGroups(isRegex: boolean) {
-        this.logger.info(`CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        this.logger.info(`[FilterExecutionCommandManager] CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
         const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
         const viewId = isRegex ? Constants.Views.RegexFilters : Constants.Views.Filters;
@@ -352,7 +352,7 @@ export class FilterExecutionCommandManager {
                 // Call the view-specific collapse command
                 await vscode.commands.executeCommand(`workbench.actions.treeView.${viewId}.collapseAll`);
             } catch (e: unknown) {
-                this.logger.warn(`Failed to execute native collapse: ${e instanceof Error ? e.message : String(e)}`);
+                this.logger.warn(`[FilterExecutionCommandManager] Failed to execute native collapse: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
     }

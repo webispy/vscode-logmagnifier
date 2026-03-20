@@ -519,7 +519,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
         this.saveDebounceTimer = setTimeout(() => {
             this.saveDebounceTimer = undefined;
-            this.saveToState().catch(e => this.logger.error(`Failed to save bookmarks: ${e}`));
+            this.saveToState().catch(e => this.logger.error(`[LogBookmarkService] Failed to save bookmarks: ${e}`));
         }, 150);
     }
 
@@ -547,7 +547,7 @@ export class LogBookmarkService implements vscode.Disposable {
         // Save file order
         await this.context.globalState.update(Constants.GlobalState.BookmarkFileOrder, this.fileOrder);
 
-        this.logger.info(`Saved bookmarks to state. Files with bookmarks: ${this.bookmarkMap.size}`);
+        this.logger.info(`[LogBookmarkService] Saved bookmarks to state. Files with bookmarks: ${this.bookmarkMap.size}`);
     }
 
     private loadFromState() {
@@ -614,6 +614,6 @@ export class LogBookmarkService implements vscode.Disposable {
         this.checkFilesExistence();
         this.updateWatcher();
 
-        this.logger.info(`[Bookmark] Loaded bookmarks from state. Files with bookmarks: ${this.bookmarkMap.size}`);
+        this.logger.info(`[LogBookmarkService] Loaded bookmarks from state. Files with bookmarks: ${this.bookmarkMap.size}`);
     }
 }

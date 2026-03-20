@@ -226,7 +226,7 @@ export class WorkflowCommandManager {
                     vscode.window.showInformationMessage("Workflow imported successfully.");
                 } else {
                     // Failures or cancellations
-                    this.logger.info("Import aborted or failed.");
+                    this.logger.info("[WorkflowCommandManager] Import aborted or failed.");
                 }
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : String(e);

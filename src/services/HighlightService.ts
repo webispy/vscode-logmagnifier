@@ -173,7 +173,7 @@ export class HighlightService implements vscode.Disposable {
             return matchCounts;
         }
 
-        this.logger.info(`Highlighting started (Sync, Items: ${filtersToRun.length})`);
+        this.logger.info(`[HighlightService] Highlighting started (Sync, Items: ${filtersToRun.length})`);
         const startTime = Date.now();
         const text = editor.document.getText();
         const rangesByDeco: Map<string, vscode.Range[]> = new Map();
@@ -188,7 +188,7 @@ export class HighlightService implements vscode.Disposable {
         this.applyDecorations(editor, rangesByDeco);
 
         const duration = Date.now() - startTime;
-        this.logger.info(`Highlighting finished (Sync, ${duration}ms)`);
+        this.logger.info(`[HighlightService] Highlighting finished (Sync, ${duration}ms)`);
         return matchCounts;
     }
 
@@ -217,7 +217,7 @@ export class HighlightService implements vscode.Disposable {
             return matchCounts;
         }
 
-        this.logger.info(`Highlighting started (Chunked, Items: ${filtersToRun.length}, Lines: ${editor.document.lineCount})`);
+        this.logger.info(`[HighlightService] Highlighting started (Chunked, Items: ${filtersToRun.length}, Lines: ${editor.document.lineCount})`);
         const startTime = Date.now();
 
         const rangesByDeco: Map<string, vscode.Range[]> = new Map();
@@ -244,7 +244,7 @@ export class HighlightService implements vscode.Disposable {
             }
 
             if (token?.isCancellationRequested) {
-                this.logger.info('Highlighting cancelled');
+                this.logger.info('[HighlightService] Highlighting cancelled');
                 return matchCounts;
             }
         }
@@ -252,7 +252,7 @@ export class HighlightService implements vscode.Disposable {
         this.applyDecorations(editor, rangesByDeco);
 
         const elapsed = Date.now() - startTime;
-        this.logger.info(`Highlighting finished (Chunked, ${elapsed}ms)`);
+        this.logger.info(`[HighlightService] Highlighting finished (Chunked, ${elapsed}ms)`);
         return matchCounts;
     }
 

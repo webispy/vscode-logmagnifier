@@ -142,7 +142,7 @@ export class AdbTargetAppService {
             return stdout.includes('Success');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Uninstall failed: ${msg}`);
+            this.logger.error(`[AdbTargetAppService] Uninstall failed: ${msg}`);
             return false;
         }
     }
@@ -153,7 +153,7 @@ export class AdbTargetAppService {
             return stdout.includes('Success');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Clear storage failed: ${msg}`);
+            this.logger.error(`[AdbTargetAppService] Clear storage failed: ${msg}`);
             return false;
         }
     }
@@ -164,7 +164,7 @@ export class AdbTargetAppService {
             return true;
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.warn(`Clear cache failed: ${msg}`);
+            this.logger.warn(`[AdbTargetAppService] Clear cache failed: ${msg}`);
             return false;
         }
     }
@@ -202,7 +202,7 @@ export class AdbTargetAppService {
             return stdout.includes('Events injected');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Launch failed: ${msg}`);
+            this.logger.error(`[AdbTargetAppService] Launch failed: ${msg}`);
             return false;
         }
     }

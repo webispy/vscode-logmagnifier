@@ -145,6 +145,8 @@ export class AdbDeviceService {
             if (info && pid) {
                 info.pid = pid;
             }
+        }).catch(e => {
+            this.logger.error(`[AdbDeviceService] Failed to find screenrecord PID: ${e instanceof Error ? e.message : String(e)}`);
         });
 
         return true;
@@ -255,7 +257,7 @@ export class AdbDeviceService {
             await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'put', 'system', 'show_touches', value]);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Failed to set show touches: ${msg}`);
+            this.logger.error(`[AdbDeviceService] Failed to set show touches: ${msg}`);
         }
     }
 
@@ -516,7 +518,7 @@ export class AdbDeviceService {
             return stdout.includes('Success');
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`Install failed: ${msg}`);
+            this.logger.error(`[AdbDeviceService] Install failed: ${msg}`);
             return false;
         }
     }

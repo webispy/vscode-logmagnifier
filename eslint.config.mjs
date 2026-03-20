@@ -31,10 +31,20 @@ export default typescriptEslint.config(
 
             "@typescript-eslint/no-explicit-any": "warn",
 
+            // Disallow console.log/warn/error — use Logger service instead
+            "no-console": "warn",
+
             "curly": "warn",
             "eqeqeq": "warn",
             "no-throw-literal": "warn",
             "semi": "warn",
+        },
+    },
+    // Allow console in test files
+    {
+        files: ["**/test/**/*.ts"],
+        rules: {
+            "no-console": "off",
         },
     }
 );

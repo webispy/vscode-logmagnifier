@@ -82,13 +82,19 @@ export class AdbLogcatService {
 
             // Parse default options (allowlist to prevent argument injection)
             const ALLOWED_LOGCAT_FLAGS = new Set(['-v', '-b', '-T', '-t', '-d', '-e', '-s', '--regex', '--pid', '-c']);
+            const SAFE_VALUE_PATTERN = /^[a-zA-Z0-9_.,:/*=\-+@ ]+$/;
             if (defaultOptions.trim().length > 0) {
                 const parts = defaultOptions.split(/\s+/);
                 for (let i = 0; i < parts.length; i++) {
                     const part = parts[i];
-                    const flag = part.split('=')[0];
+                    const [flag, ...valueParts] = part.split('=');
                     if (!ALLOWED_LOGCAT_FLAGS.has(flag)) {
                         this.logger.warn(`[ADB] Ignoring unrecognised default option: ${part}`);
+                        continue;
+                    }
+                    const inlineValue = valueParts.join('=');
+                    if (inlineValue && !SAFE_VALUE_PATTERN.test(inlineValue)) {
+                        this.logger.warn(`[ADB] Ignoring option with unsafe value: ${part}`);
                         continue;
                     }
                     if (part === '-T' || part === '-t') {

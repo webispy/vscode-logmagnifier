@@ -182,7 +182,9 @@ export class FilterExecutionCommandManager {
                         if (tempInputPath) {
                             try {
                                 await fsp.unlink(tempInputPath);
-                            } catch (_e) { /* ignore cleanup error */ }
+                            } catch (e: unknown) {
+                                this.logger.info(`[FilterExecutionCommandManager] Cleanup temp file failed: ${e instanceof Error ? e.message : String(e)}`);
+                            }
                         }
                     }
                 } catch (e: unknown) {
@@ -208,7 +210,9 @@ export class FilterExecutionCommandManager {
                     if (newDoc.languageId !== 'log') {
                         try {
                             await vscode.languages.setTextDocumentLanguage(newDoc, 'log');
-                        } catch (_e) { /* ignore */ }
+                        } catch (e: unknown) {
+                            this.logger.info(`[FilterExecutionCommandManager] Set language failed: ${e instanceof Error ? e.message : String(e)}`);
+                        }
                     }
                 } catch (e: unknown) {
                     this.logger.info(`[FilterExecutionCommandManager] ${Constants.Messages.Info.FallbackToOpen.replace('{0}', e instanceof Error ? e.message : String(e))}`);

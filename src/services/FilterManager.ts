@@ -112,30 +112,48 @@ export class FilterManager implements vscode.Disposable {
         }, FilterManager.SAVE_DEBOUNCE_MS);
     }
 
-    private initDefaultFilters(): void {
-        const hasRegexGroups = this.groups.some(g => g.isRegex);
+    private initDefaultFilters(target?: FilterGroup[]): void {
+        const groups = target ?? this.groups;
+        const hasRegexGroups = groups.some(g => g.isRegex);
         if (!hasRegexGroups) {
-            const featuredGroup = this.addGroup('Presets', true);
-            if (!featuredGroup) {
-                return;
+            if (target) {
+                // Build directly into the target array without side effects
+                const featuredGroup: FilterGroup = {
+                    id: crypto.randomUUID(),
+                    name: 'Presets',
+                    filters: [],
+                    isEnabled: false,
+                    isRegex: true,
+                    isExpanded: true
+                };
+                featuredGroup.filters.push(
+                    { id: crypto.randomUUID(), keyword: '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}', type: 'include', isEnabled: true, isRegex: true, nickname: 'Logcat style', contextLine: 0 },
+                    { id: crypto.randomUUID(), keyword: '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+', type: 'include', isEnabled: true, isRegex: true, nickname: 'Process Info', contextLine: 0 }
+                );
+                target.push(featuredGroup);
+            } else {
+                const featuredGroup = this.addGroup('Presets', true);
+                if (!featuredGroup) {
+                    return;
+                }
+                featuredGroup.isEnabled = false;
+
+                this.addFilter(
+                    featuredGroup.id,
+                    '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}',
+                    'include',
+                    true,
+                    'Logcat style'
+                );
+
+                this.addFilter(
+                    featuredGroup.id,
+                    '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+',
+                    'include',
+                    true,
+                    'Process Info'
+                );
             }
-            featuredGroup.isEnabled = false;
-
-            this.addFilter(
-                featuredGroup.id,
-                '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}',
-                'include',
-                true,
-                'Logcat style'
-            );
-
-            this.addFilter(
-                featuredGroup.id,
-                '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+',
-                'include',
-                true,
-                'Process Info'
-            );
         }
     }
 
@@ -486,6 +504,7 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
+    /** Moves a filter between groups or reorders it within the same group. */
     public moveFilter(sourceGroupId: string, targetGroupId: string, activeFilterId: string, targetFilterId: string | undefined, position: 'before' | 'after' | 'append'): void {
         const sourceGroup = this.groups.find(g => g.id === sourceGroupId);
         const targetGroup = this.groups.find(g => g.id === targetGroupId);
@@ -561,6 +580,7 @@ export class FilterManager implements vscode.Disposable {
         this.notifyChange();
     }
 
+    /** Reorders a filter group relative to another group. */
     public moveGroup(activeGroupId: string, targetGroupId: string | undefined, position: 'before' | 'after' | 'append'): void {
         const activeIndex = this.groups.findIndex(g => g.id === activeGroupId);
         if (activeIndex === -1) {
@@ -599,6 +619,7 @@ export class FilterManager implements vscode.Disposable {
         this.notifyChange();
     }
 
+    /** Serializes filter groups to a JSON string for file export. */
     public exportFilters(mode: 'word' | 'regex', groupIds?: string[]): string {
         const groupsToExport = this.groups
             .filter(g => {
@@ -653,6 +674,7 @@ export class FilterManager implements vscode.Disposable {
         return JSON.stringify(exportData, null, 4);
     }
 
+    /** Imports filter groups from a JSON string, optionally overwriting existing groups. */
     public importFilters(json: string, mode: 'word' | 'regex', overwrite: boolean): { count: number, error?: string } {
         this.logger.info(`[FilterManager] Starting ${mode} filters import (Overwrite: ${overwrite})...`);
         try {
@@ -814,14 +836,10 @@ export class FilterManager implements vscode.Disposable {
     }
 
     public async createProfile(name: string): Promise<boolean> {
-        // Build default filters in a temporary variable to avoid mutating live state
-        const previousGroups = this.groups;
+        // Build default filters into a separate array without mutating live state
         const tempGroups: FilterGroup[] = [];
-        this.groups = tempGroups;
-        this.initDefaultFilters();
+        this.initDefaultFilters(tempGroups);
         const newProfileGroups = this.stateService.deepCopy(tempGroups);
-        // Restore live state immediately
-        this.groups = previousGroups;
 
         const success = await this.profileManager.createProfile(name, newProfileGroups);
         if (success) {

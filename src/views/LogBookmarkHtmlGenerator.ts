@@ -34,7 +34,7 @@ export class LogBookmarkHtmlGenerator {
 
         for (const uriStr of sortedUris) {
             const withLn = this._bookmarkService.isIncludeLineNumbersEnabled(uriStr);
-            const items = bookmarksMap.get(uriStr)!;
+            const items = bookmarksMap.get(uriStr) ?? [];
             const filename = uriStr.split('/').pop() || 'Unknown File';
             const isFolded = foldedUris.has(uriStr);
             const isActive = uriStr === activeUriStr;
@@ -85,14 +85,14 @@ export class LogBookmarkHtmlGenerator {
                 if (!lineItemsMap.has(line)) {
                     lineItemsMap.set(line, []);
                 }
-                lineItemsMap.get(line)!.push(item);
+                lineItemsMap.get(line)?.push(item);
             }
 
             const sortedLines = Array.from(lineItemsMap.keys()).sort((a, b) => a - b);
 
             let fileLines = '';
             for (const line of sortedLines) {
-                const lineItems = lineItemsMap.get(line)!;
+                const lineItems = lineItemsMap.get(line) ?? [];
                 if (lineItems.length === 0) {
                     continue;
                 }

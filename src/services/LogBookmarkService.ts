@@ -232,7 +232,7 @@ export class LogBookmarkService implements vscode.Disposable {
             }
             this._missingFiles.delete(key);
 
-            const list = this._bookmarks.get(key)!;
+            const list = this._bookmarks.get(key) ?? [];
 
             const isDuplicate = list.some(b =>
                 b.line === line &&
@@ -282,7 +282,7 @@ export class LogBookmarkService implements vscode.Disposable {
         }
         this._missingFiles.delete(key);
 
-        const list = this._bookmarks.get(key)!;
+        const list = this._bookmarks.get(key) ?? [];
 
         let addedCount = 0;
         const groupId = options?.groupId || Date.now().toString();

@@ -59,12 +59,12 @@ export class HighlightService implements vscode.Disposable {
     private getDecorationInfo(colorNameOrValue: HighlightColor | undefined, isFullLine: boolean = false, textDecoration?: string, fontWeight?: string, textColor?: string): { decoration: vscode.TextEditorDecorationType, config: DecorationConfig } {
         const key = this.getDecorationKey(colorNameOrValue, isFullLine, textDecoration, fontWeight, textColor);
 
-        if (this.decorationTypes.has(key)) {
+        const existing = this.decorationTypes.get(key);
+        if (existing) {
             // LRU: promote to most-recently-used by delete-and-reinsert
-            const entry = this.decorationTypes.get(key)!;
             this.decorationTypes.delete(key);
-            this.decorationTypes.set(key, entry);
-            return entry;
+            this.decorationTypes.set(key, existing);
+            return existing;
         } else {
             let decorationOptions: vscode.DecorationRenderOptions;
 
@@ -119,9 +119,10 @@ export class HighlightService implements vscode.Disposable {
             }
 
             const decoration = vscode.window.createTextEditorDecorationType(decorationOptions);
-            this.decorationTypes.set(key, { decoration, config });
+            const entry = { decoration, config };
+            this.decorationTypes.set(key, entry);
+            return entry;
         }
-        return this.decorationTypes.get(key)!;
     }
 
     public refreshDecorationType() {
@@ -339,12 +340,12 @@ export class HighlightService implements vscode.Disposable {
                     }
 
                     if (ctx.useLineRange) {
-                        rangesByDeco.get(ctx.key)!.push(editor.document.lineAt(startPos.line).range);
+                        rangesByDeco.get(ctx.key)?.push(editor.document.lineAt(startPos.line).range);
                     } else {
                         const endIndex = startIndex + match![0].length;
                         const absEndIndex = offset + endIndex;
                         const endPos = editor.document.positionAt(absEndIndex);
-                        rangesByDeco.get(ctx.key)!.push(new vscode.Range(startPos, endPos));
+                        rangesByDeco.get(ctx.key)?.push(new vscode.Range(startPos, endPos));
                     }
                 });
             }

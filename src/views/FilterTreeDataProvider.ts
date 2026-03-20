@@ -29,10 +29,11 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 const oldestKey = this.iconCache.keys().next().value;
                 if (oldestKey) { this.iconCache.delete(oldestKey); }
             }
-            const svg = generator();
-            this.iconCache.set(key, vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`));
+            const uri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(generator()).toString('base64')}`);
+            this.iconCache.set(key, uri);
+            return uri;
         }
-        return this.iconCache.get(key)!;
+        return this.iconCache.get(key) as vscode.Uri;
     }
 
     refresh(element?: TreeItem): void {

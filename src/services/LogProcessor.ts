@@ -20,6 +20,12 @@ const DEFAULT_MAX_LINE_COUNT = 999999;
 
 export class LogProcessor {
 
+    /**
+     * Pre-compiles filter groups into regex arrays for efficient line matching.
+     *
+     * @param activeGroups - Filter groups whose enabled filters should be compiled
+     * @returns Compiled groups with separate include/exclude regex arrays
+     */
     public compileGroups(activeGroups: FilterGroup[]): CompiledGroup[] {
         return activeGroups.map(group => {
             // Compile filters for this group.

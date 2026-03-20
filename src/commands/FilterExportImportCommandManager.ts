@@ -150,8 +150,8 @@ export class FilterExportImportCommandManager {
             try {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Word' : 'Regex').replace('{1}', uri.fsPath));
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            } catch (e: unknown) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
     }
@@ -188,8 +188,8 @@ export class FilterExportImportCommandManager {
             try {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportGroupSuccess.replace('{0}', group.name).replace('{1}', uri.fsPath));
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            } catch (e: unknown) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
     }
@@ -231,8 +231,8 @@ export class FilterExportImportCommandManager {
                 } else {
                     vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Word' : 'Regex'));
                 }
-            } catch (err) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', err instanceof Error ? err.message : String(err)));
+            } catch (e: unknown) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
     }

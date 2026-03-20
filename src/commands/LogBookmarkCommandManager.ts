@@ -9,7 +9,7 @@ import { RegexUtils } from '../utils/RegexUtils';
 import { EditorUtils } from '../utils/EditorUtils';
 
 export class LogBookmarkCommandManager {
-    private _lastActiveEditor: vscode.TextEditor | undefined;
+    private lastActiveEditor: vscode.TextEditor | undefined;
 
     constructor(
         context: vscode.ExtensionContext,
@@ -23,13 +23,13 @@ export class LogBookmarkCommandManager {
     private registerEventListeners(context: vscode.ExtensionContext) {
         context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
             if (editor) {
-                this._lastActiveEditor = editor;
+                this.lastActiveEditor = editor;
             }
         }));
 
         // Initialize with current active editor
         if (vscode.window.activeTextEditor) {
-            this._lastActiveEditor = vscode.window.activeTextEditor;
+            this.lastActiveEditor = vscode.window.activeTextEditor;
         }
     }
 
@@ -52,7 +52,7 @@ export class LogBookmarkCommandManager {
     }
 
     private async getActiveEditor(): Promise<vscode.TextEditor | undefined> {
-        return EditorUtils.getActiveEditorAsync(this._lastActiveEditor, 'add bookmark');
+        return EditorUtils.getActiveEditorAsync(this.lastActiveEditor, 'add bookmark');
     }
 
     private removeBookmarkGroup(groupId: string) {
@@ -103,8 +103,8 @@ export class LogBookmarkCommandManager {
                 const fullRange = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
                 editBuilder.replace(fullRange, content);
             });
-        } catch (e) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', String(e)));
+        } catch (e: unknown) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', e instanceof Error ? e.message : String(e)));
         }
     }
 
@@ -301,8 +301,8 @@ export class LogBookmarkCommandManager {
             editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
             editor.selection = new vscode.Selection(range.start, range.start);
             this.highlightService.flashLine(editor, item.line, Constants.Configuration.Bookmark.HighlightColor);
-        } catch (e) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', String(e)));
+        } catch (e: unknown) {
+            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
         }
     }
 
@@ -356,8 +356,8 @@ export class LogBookmarkCommandManager {
                 // 'doc.uri' is the new untitled document (Child)
                 FileHierarchyService.getInstance().registerChild(uri, doc.uri, 'bookmark', docName);
 
-            } catch (e) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', String(e)));
+            } catch (e: unknown) {
+                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
     }

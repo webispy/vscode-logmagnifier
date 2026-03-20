@@ -57,9 +57,10 @@ export class RunbookCommandManager {
         try {
             const document = await vscode.workspace.openTextDocument(item.filePath);
             await vscode.window.showTextDocument(document);
-        } catch (e) {
-            Logger.getInstance().error(`Failed to open Markdown editor: ${e}`);
-            vscode.window.showErrorMessage(`Failed to open editor: ${e}`);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            Logger.getInstance().error(`[RunbookCommandManager] Failed to open Markdown editor: ${msg}`);
+            vscode.window.showErrorMessage(`Failed to open editor: ${msg}`);
         }
     }
 

@@ -65,9 +65,9 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider {
                 disposeSubscription.dispose();
             });
 
-        } catch (e) {
-            Logger.getInstance().error(`[WorkflowWebviewProvider] Error resolving webview: ${e}`);
-            webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view: ${escapeHtml(String(e))}</div></body></html>`;
+        } catch (e: unknown) {
+            Logger.getInstance().error(`[WorkflowWebviewProvider] Error resolving webview: ${e instanceof Error ? e.message : String(e)}`);
+            webviewView.webview.html = `<html><body><div style="padding: 10px;">Error loading workflow view: ${escapeHtml(e instanceof Error ? e.message : String(e))}</div></body></html>`;
         }
     }
 

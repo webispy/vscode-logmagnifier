@@ -400,8 +400,8 @@ export class AdbCommandManager {
                 } else {
                     vscode.window.showErrorMessage('❌ No connected Android devices found. Please check USB connection and debugging authorization.');
                 }
-            } catch (e) {
-                vscode.window.showErrorMessage(`Error checking devices: ${e}`);
+            } catch (e: unknown) {
+                vscode.window.showErrorMessage(`Error checking devices: ${e instanceof Error ? e.message : String(e)}`);
             }
         }));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ControlAppMore, async (item: ControlActionItem) => {
@@ -450,7 +450,7 @@ export class AdbCommandManager {
                 } else {
                     vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysNoOutput);
                 }
-            } catch (e) {
+            } catch (e: unknown) {
                 const errorMessage = e instanceof Error ? e.message : String(e);
                 vscode.window.showErrorMessage(Constants.Messages.Error.DumpsysFailed.replace('{0}', errorMessage));
             }
@@ -597,7 +597,7 @@ export class AdbCommandManager {
                     }
                 }
 
-            } catch (e) {
+            } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : String(e);
                 vscode.window.showErrorMessage(`Failed to run ${selection.label}: ${msg}`);
             }

@@ -96,8 +96,8 @@ export class FilterManager implements vscode.Disposable {
             const activeWrapper = this.profileManager.getActiveProfile();
             await this.profileManager.updateProfileData(activeWrapper, this.groups);
             this.dirty = false;
-        } catch (e) {
-            this.logger.error(`Failed to save state: ${e}`);
+        } catch (e: unknown) {
+            this.logger.error(`Failed to save state: ${e instanceof Error ? e.message : String(e)}`);
         }
     }
 

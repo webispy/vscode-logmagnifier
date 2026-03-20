@@ -235,11 +235,11 @@ export function activate(context: vscode.ExtensionContext) {
         sourceMapService,
         adbService
     };
-  } catch (err) {
+  } catch (e: unknown) {
     vscode.window.showErrorMessage(
-        `LogMagnifier failed to activate: ${err instanceof Error ? err.message : err}`
+        `LogMagnifier failed to activate: ${e instanceof Error ? e.message : String(e)}`
     );
-    throw err;
+    throw e;
   }
 }
 
@@ -280,8 +280,8 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                     highlightService.flashLine(editor, line);
                 }
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeTextEditorSelection: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeTextEditorSelection: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -333,13 +333,13 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                                 vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to ${Constants.Defaults.LargeFileSizeLimitMB}MB.`, 5000);
                             }
                         }
-                    } catch (e) {
-                        logger.error(`Error checking file size: ${e}`);
+                    } catch (e: unknown) {
+                        logger.error(`Error checking file size: ${e instanceof Error ? e.message : String(e)}`);
                     }
                 }
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeActiveTextEditor: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeActiveTextEditor: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -364,8 +364,8 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                         try {
                             await refreshHighlightsForEditor(editor);
                             setLastProcessedDoc(editor.document);
-                        } catch (innerError) {
-                            logger.error(`Error in onDidChangeTextEditor debounce: ${innerError}`);
+                        } catch (e: unknown) {
+                            logger.error(`Error in onDidChangeTextEditor debounce: ${e instanceof Error ? e.message : String(e)}`);
                         }
                     }
                     setDebounceTimer(undefined);
@@ -376,8 +376,8 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                     quickAccessProvider.refresh();
                 }
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeTextDocument: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeTextDocument: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -387,8 +387,8 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
             if (vscode.window.activeTextEditor && doc === vscode.window.activeTextEditor.document) {
                 quickAccessProvider.refresh();
             }
-        } catch (error) {
-            logger.error(`Error in onDidSaveTextDocument: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidSaveTextDocument: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -402,8 +402,8 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
             }
             sourceMapService.unregister(doc.uri);
             highlightService.unregisterDocumentFilters(doc.uri);
-        } catch (error) {
-            logger.error(`Error in onDidCloseTextDocument: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidCloseTextDocument: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 }
@@ -435,8 +435,8 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
                     setLastProcessedDoc(vscode.window.activeTextEditor.document);
                 }
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeFilters: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeFilters: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -466,8 +466,8 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
                 e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
                 quickAccessProvider.refresh();
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeConfiguration: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeConfiguration: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 
@@ -483,8 +483,8 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
                     await refreshHighlightsForEditor(vscode.window.activeTextEditor);
                 }
             }
-        } catch (error) {
-            logger.error(`Error in onDidChangeActiveColorTheme: ${error}`);
+        } catch (e: unknown) {
+            logger.error(`Error in onDidChangeActiveColorTheme: ${e instanceof Error ? e.message : String(e)}`);
         }
     }));
 }

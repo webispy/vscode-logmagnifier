@@ -83,8 +83,8 @@ export class AdbTargetAppService {
                 .filter(line => line.startsWith('package:'))
                 .map(line => line.replace('package:', '').trim());
             return new Set(packages);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
             this.logger.error(`[ADB] Error getting packages: ${msg}`);
             return new Set();
         }
@@ -94,14 +94,14 @@ export class AdbTargetAppService {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ps', '-A']);
             return this.parsePsOutput(stdout);
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
             this.logger.warn(`[ADB] ps -A failed, trying ps: ${msg}`);
             try {
                 const stdout2 = await this.client.execAdb(['-s', deviceId, 'shell', 'ps']);
                 return this.parsePsOutput(stdout2);
-            } catch (err2: unknown) {
-                const msg2 = err2 instanceof Error ? err2.message : String(err2);
+            } catch (e2: unknown) {
+                const msg2 = e2 instanceof Error ? e2.message : String(e2);
                 this.logger.error(`[ADB] Error getting running apps: ${msg2}`);
                 return new Set();
             }
@@ -249,8 +249,8 @@ export class AdbTargetAppService {
             try {
                 const output = await this.client.execAdb(args, { maxBuffer: 1024 * 1024 * 10 });
                 return output.split('\n').map(line => line.trim()).filter(Boolean);
-            } catch (err: unknown) {
-                const msg = err instanceof Error ? err.message : String(err);
+            } catch (e: unknown) {
+                const msg = e instanceof Error ? e.message : String(e);
                 this.logger.warn(`[ADB] launcher query failed: ${msg}`);
                 return [];
             }
@@ -316,8 +316,8 @@ export class AdbTargetAppService {
                 }
             }
             return Array.from(pkgSet).sort();
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
             this.logger.warn(`[ADB] dumpsys package packages failed: ${msg}`);
             return [];
         }
@@ -359,8 +359,8 @@ export class AdbTargetAppService {
 
             const lines = output.split('\n').map(line => line.trim()).filter(Boolean);
             return lines.find(line => line.includes('/') && line.startsWith(packageName));
-        } catch (err: unknown) {
-            const msg = err instanceof Error ? err.message : String(err);
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
             this.logger.warn(`[ADB] resolve-activity failed for ${packageName}: ${msg}`);
             return undefined;
         }

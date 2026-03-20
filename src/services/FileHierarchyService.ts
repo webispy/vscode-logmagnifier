@@ -105,6 +105,7 @@ export class FileHierarchyService {
         return undefined;
     }
 
+    /** Walks up the hierarchy and returns the root ancestor URI. */
     public getRoot(uri: vscode.Uri): vscode.Uri | undefined {
         let current = this.nodes.get(uri.toString());
         if (!current) { return undefined; }
@@ -118,6 +119,7 @@ export class FileHierarchyService {
         return current.uri;
     }
 
+    /** Returns sibling URIs that share the same parent, excluding the given URI itself. */
     public getSiblings(uri: vscode.Uri): vscode.Uri[] {
         const node = this.nodes.get(uri.toString());
         if (!node || !node.parentId) { return []; }
@@ -137,6 +139,7 @@ export class FileHierarchyService {
         return siblings;
     }
 
+    /** Returns the child URIs of the given node. */
     public getChildren(uri: vscode.Uri): vscode.Uri[] {
         const node = this.nodes.get(uri.toString());
         if (!node) { return []; }
@@ -151,6 +154,7 @@ export class FileHierarchyService {
         return children;
     }
 
+    /** Returns the hierarchy node for the given URI, or undefined if not registered. */
     public getNode(uri: vscode.Uri): HierarchyNode | undefined {
         return this.nodes.get(uri.toString());
     }

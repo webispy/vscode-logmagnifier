@@ -21,7 +21,7 @@ export function applyWebviewTemplate(html: string, webview: vscode.Webview): str
 export function safeJson(val: unknown): string {
     try {
         return JSON.stringify(val).replace(/</g, '\\u003c');
-    } catch (e: unknown) {
+    } catch (_e: unknown) {
         return 'null';
     }
 }

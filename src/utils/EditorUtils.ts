@@ -62,7 +62,7 @@ export class EditorUtils {
                 try {
                     const stat = await vscode.workspace.fs.stat(uri);
                     return stat.size;
-                } catch (e: unknown) {
+                } catch (_e: unknown) {
                     // Fallback to node fs if workspace fs fails (though workspace.fs is preferred)
                     if (fs.existsSync(uri.fsPath)) {
                         return fs.statSync(uri.fsPath).size;

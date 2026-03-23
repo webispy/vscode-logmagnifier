@@ -17,7 +17,8 @@ suite('JsonPrettyService Test Suite', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         extractJsons = (proto as any).extractJsons.bind({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            findBoundedJson: (proto as any).findBoundedJson
+            findBoundedJson: (proto as any).findBoundedJson,
+            logger: { info() {}, warn() {}, error() {} }
         });
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         bestEffortFormat = (proto as any).bestEffortFormat;

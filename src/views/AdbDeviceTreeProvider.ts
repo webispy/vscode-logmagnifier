@@ -322,7 +322,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 let showTouchesState = false;
                 try {
                     showTouchesState = await this.adbService.getShowTouchesState(element.device.id);
-                } catch {
+                } catch (e: unknown) {
                     // Fall back to false on error
                 }
                 return [

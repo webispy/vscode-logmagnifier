@@ -173,7 +173,8 @@ export class WorkflowCommandManager {
         let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
         try {
             await fsp.access(downloadsPath);
-        } catch {
+        } catch (e: unknown) {
+            this.logger.info(`[WorkflowCommandManager] Downloads folder not accessible, using home: ${e instanceof Error ? e.message : String(e)}`);
             defaultUri = vscode.Uri.file(path.join(os.homedir(), fileName));
         }
 

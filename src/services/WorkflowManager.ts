@@ -872,7 +872,8 @@ export class WorkflowManager implements vscode.Disposable {
     public async openStepResult(step: SimulationStepResult) {
         try {
             await fsp.access(step.outputFilePath);
-        } catch {
+        } catch (e: unknown) {
+            this.logger.warn(`[WorkflowManager] Step result file not found: ${e instanceof Error ? e.message : String(e)}`);
             vscode.window.showErrorMessage("File not found (might be deleted): " + step.outputFilePath);
             return;
         }

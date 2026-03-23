@@ -85,8 +85,9 @@ export class LogBookmarkService implements vscode.Disposable {
                     const dir = vscode.Uri.joinPath(uri, '..').fsPath;
                     directories.add(dir);
                 }
-            } catch {
+            } catch (e: unknown) {
                 // Ignore non-file URIs or errors
+                this.logger.info(`[LogBookmarkService] Skipping URI parse: ${e instanceof Error ? e.message : String(e)}`);
             }
         }
 
@@ -145,7 +146,8 @@ export class LogBookmarkService implements vscode.Disposable {
                     try {
                         await fs.promises.access(uri.fsPath);
                         this.missingFiles.delete(key);
-                    } catch {
+                    } catch (e: unknown) {
+                        // File not accessible — mark as missing
                         this.missingFiles.add(key);
                     }
                 }

@@ -25,8 +25,8 @@ export class FileHierarchyService {
     private constructor(storage: vscode.Memento) {
         this.storage = storage;
         this.restore();
-        this.pruneStaleNodes().catch(() => {
-            // Non-critical — stale nodes will be pruned on next activation
+        this.pruneStaleNodes().catch((e: unknown) => {
+            void e; // Non-critical — stale nodes will be pruned on next activation
         });
     }
 
@@ -168,8 +168,8 @@ export class FileHierarchyService {
                 children: Array.from(node.children)
             }];
         });
-        Promise.resolve(this.storage.update(this.storageKey, entries)).catch(() => {
-            // Storage write failures are non-fatal; hierarchy will be rebuilt on next activation
+        Promise.resolve(this.storage.update(this.storageKey, entries)).catch((e: unknown) => {
+            void e; // Storage write failures are non-fatal; hierarchy will be rebuilt on next activation
         });
     }
 
@@ -243,7 +243,7 @@ export class FileHierarchyService {
             if (node.uri.scheme === 'file' && node.uri.fsPath.startsWith(tmpDir)) {
                 try {
                     await fsp.access(node.uri.fsPath);
-                } catch {
+                } catch (e: unknown) {
                     staleKeys.push(key);
                 }
             }

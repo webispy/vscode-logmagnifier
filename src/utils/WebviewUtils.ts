@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 
+/** Generates a cryptographically random nonce for CSP-compliant webview scripts. */
 export function getNonce(): string {
     return crypto.randomBytes(16).toString('base64');
 }
@@ -16,6 +17,7 @@ export function applyWebviewTemplate(html: string, webview: vscode.Webview): str
         .replace(/{{\s*NONCE\s*}}/g, nonce);
 }
 
+/** Serializes a value to JSON, escaping `<` to prevent script injection in HTML. */
 export function safeJson(val: unknown): string {
     try {
         return JSON.stringify(val).replace(/</g, '\\u003c');
@@ -24,6 +26,7 @@ export function safeJson(val: unknown): string {
     }
 }
 
+/** Replaces HTML special characters with their entity equivalents. */
 export function escapeHtml(unsafe: string | undefined | null): string {
     if (!unsafe) { return ''; }
     return unsafe

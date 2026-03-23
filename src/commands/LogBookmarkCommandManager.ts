@@ -1,12 +1,14 @@
 import * as vscode from 'vscode';
-import { LogBookmarkService } from '../services/LogBookmarkService';
-import { FileHierarchyService } from '../services/FileHierarchyService';
+
+import { Constants } from '../Constants';
 import { BookmarkItem } from '../models/Bookmark';
 import { FilterItem } from '../models/Filter';
+
+import { FileHierarchyService } from '../services/FileHierarchyService';
 import { HighlightService } from '../services/HighlightService';
-import { Constants } from '../Constants';
-import { RegexUtils } from '../utils/RegexUtils';
+import { LogBookmarkService } from '../services/LogBookmarkService';
 import { EditorUtils } from '../utils/EditorUtils';
+import { RegexUtils } from '../utils/RegexUtils';
 
 export class LogBookmarkCommandManager {
     private lastActiveEditor: vscode.TextEditor | undefined;

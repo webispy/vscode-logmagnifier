@@ -4,11 +4,11 @@ import { Logger } from '../services/Logger';
 import { JsonTreeHtmlGenerator } from './JsonTreeHtmlGenerator';
 
 export class JsonTreeWebview {
-    private panel: vscode.WebviewPanel | undefined;
-    private readonly htmlGenerator: JsonTreeHtmlGenerator;
-
     private readonly _onDidRevealLine = new vscode.EventEmitter<{ uri: string, line: number }>();
     public readonly onDidRevealLine = this._onDidRevealLine.event;
+
+    private panel: vscode.WebviewPanel | undefined;
+    private readonly htmlGenerator: JsonTreeHtmlGenerator;
 
     constructor(private readonly context: vscode.ExtensionContext, logger: Logger) {
         this.htmlGenerator = new JsonTreeHtmlGenerator(this.context, logger);

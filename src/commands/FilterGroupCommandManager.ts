@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
-import { FilterManager } from '../services/FilterManager';
 import { FilterGroup, FilterItem } from '../models/Filter';
+
+import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
 
 export class FilterGroupCommandManager {

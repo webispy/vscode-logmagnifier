@@ -102,4 +102,11 @@ export class AdbClient {
         }
         return undefined;
     }
+
+    /** No-op — AdbClient holds no persistent resources. Callers manage spawned processes. */
+    public dispose(): void {
+        // Intentionally empty: AdbClient does not own spawned child processes.
+        // Callers (AdbDeviceService, AdbLogcatService) are responsible for
+        // killing processes they create via spawnAdb().
+    }
 }

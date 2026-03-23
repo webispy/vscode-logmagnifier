@@ -1,3 +1,4 @@
+/** A connected Android device as reported by `adb devices -l`. */
 export interface AdbDevice {
     id: string;      // Serial number
     type: string;    // device, offline, unauthorized
@@ -8,6 +9,7 @@ export interface AdbDevice {
     targetApp?: string; // Package name or 'all'
 }
 
+/** A logcat tag filter with configurable priority level. */
 export interface LogcatTag {
     id: string;
     name: string;
@@ -25,6 +27,7 @@ export enum LogPriority {
     Silent = 'S'
 }
 
+/** An active or configured logcat capture session for a device. */
 export interface LogcatSession {
     id: string;
     name: string;

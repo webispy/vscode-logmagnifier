@@ -1,5 +1,6 @@
 import { FilterGroup } from './Filter';
 
+/** A single step in a workflow, referencing a filter profile to apply. */
 export interface WorkflowStep {
     id: string;
     profileName: string;
@@ -20,6 +21,7 @@ export interface WorkflowStep {
     executionMode: 'sequential' | 'cumulative';
 }
 
+/** A named sequence of filter steps that can be executed against a log file. */
 export interface Workflow {
     id: string;
     name: string;
@@ -28,12 +30,14 @@ export interface Workflow {
     lastRunFile?: string;
 }
 
+/** Aggregated results of a workflow simulation run. */
 export interface SimulationResult {
     workflowId: string;
     startTime: number;
     steps: SimulationStepResult[];
 }
 
+/** Output of a single workflow step after execution. */
 export interface SimulationStepResult {
     stepIndex: number;
     profileName: string;
@@ -42,6 +46,7 @@ export interface SimulationStepResult {
     effectiveGroups: FilterGroup[]; // Cumulative groups
 }
 
+/** Portable bundle for importing/exporting a workflow with its profiles. */
 export interface WorkflowPackage {
     version: string;
     workflow: Workflow;
@@ -51,6 +56,7 @@ export interface WorkflowPackage {
     }[];
 }
 
+/** View model for rendering a workflow in the webview panel. */
 export interface WorkflowViewModel {
     id: string;
     name: string;
@@ -59,6 +65,7 @@ export interface WorkflowViewModel {
     profiles: ProfileViewModel[];
 }
 
+/** View model for a single profile step within the workflow tree. */
 export interface ProfileViewModel {
     id: string;
     name: string;

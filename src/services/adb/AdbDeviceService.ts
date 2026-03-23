@@ -21,9 +21,7 @@ export class AdbDeviceService {
 
     /** Queries ADB for connected devices and parses their properties. */
     public async getDevices(): Promise<AdbDevice[]> {
-        const adbPath = this.client.getAdbPath(); // Still need path for logging consistency? Or use client wrapper fully?
-        // Using client wrapper for execution
-        this.logger.info(`[ADB] Executing: ${adbPath} devices -l`);
+        this.logger.info(`[ADB] Executing: ${this.client.getAdbPath()} devices -l`);
 
         try {
             const stdout = await this.client.execAdb(['devices', '-l']);
@@ -424,7 +422,7 @@ export class AdbDeviceService {
     }
 
     private async getDeviceProps(deviceId: string): Promise<string> {
-        return this.client.execAdb(['-s', deviceId, 'shell', 'getprop']);
+        return this.getSystemProperties(deviceId);
     }
 
     private async getWmSize(deviceId: string): Promise<string> {

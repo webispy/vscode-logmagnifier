@@ -146,7 +146,7 @@ export class LogBookmarkService implements vscode.Disposable {
                     try {
                         await fs.promises.access(uri.fsPath);
                         this.missingFiles.delete(key);
-                    } catch (e: unknown) {
+                    } catch (_e: unknown) {
                         // File not accessible — mark as missing
                         this.missingFiles.add(key);
                     }

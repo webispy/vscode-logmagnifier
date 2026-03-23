@@ -85,7 +85,7 @@ export class FilterItemCommandManager {
                         try {
                             new RegExp(value);
                             return null;
-                        } catch (e: unknown) {
+                        } catch (_e: unknown) {
                             return Constants.Messages.Error.InvalidRegularExpression;
                         }
                     }
@@ -168,7 +168,7 @@ export class FilterItemCommandManager {
                     try {
                         new RegExp(value);
                         return null;
-                    } catch (e: unknown) {
+                    } catch (_e: unknown) {
                         return Constants.Messages.Error.InvalidRegularExpression;
                     }
                 }

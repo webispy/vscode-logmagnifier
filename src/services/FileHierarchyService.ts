@@ -243,7 +243,7 @@ export class FileHierarchyService {
             if (node.uri.scheme === 'file' && node.uri.fsPath.startsWith(tmpDir)) {
                 try {
                     await fsp.access(node.uri.fsPath);
-                } catch (e: unknown) {
+                } catch (_e: unknown) {
                     staleKeys.push(key);
                 }
             }

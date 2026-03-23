@@ -153,7 +153,8 @@ export class LogBookmarkHtmlGenerator {
                         const remaining = content.substring(lastIndex);
                         parts.push(escapeHtml(remaining));
                         safeContent = parts.join('');
-                    } catch {
+                    } catch (e: unknown) {
+                        this.logger.warn(`[LogBookmarkHtmlGenerator] Regex highlight failed: ${e instanceof Error ? e.message : String(e)}`);
                         safeContent = escapeHtml(content);
                     }
                 } else {

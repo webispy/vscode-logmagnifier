@@ -11,10 +11,11 @@ import { Logger } from '../Logger';
 import { AdbClient } from './AdbClient';
 
 export class AdbDeviceService {
-    private recordingProcesses: Map<string, { process: cp.ChildProcess, remotePath: string, pid?: string }> = new Map();
-    private stoppingDevices: Set<string> = new Set();
     private _onDidChangeRecordingStatus = new vscode.EventEmitter<void>();
     public readonly onDidChangeRecordingStatus = this._onDidChangeRecordingStatus.event;
+
+    private recordingProcesses: Map<string, { process: cp.ChildProcess, remotePath: string, pid?: string }> = new Map();
+    private stoppingDevices: Set<string> = new Set();
 
     constructor(private readonly logger: Logger, private readonly client: AdbClient) { }
 
@@ -207,8 +208,9 @@ export class AdbDeviceService {
                 const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'ls', '-l', remotePath]);
                 const parts = stdout.trim().split(/\s+/);
                 if (parts.length >= 5) { size = parseInt(parts[4], 10); }
-            } catch {
+            } catch (e: unknown) {
                 // Expected when file is not yet finalized on device
+                this.logger.info(`[AdbDeviceService] File size check pending: ${e instanceof Error ? e.message : String(e)}`);
             }
 
             this.logger.info(`[ADB] File size check (${attempts}/${maxAttempts}): ${size} bytes`);
@@ -243,11 +245,14 @@ export class AdbDeviceService {
                 await this.client.execAdb(['-s', deviceId, 'pull', remotePath, localPath]);
                 const uri = vscode.Uri.file(localPath);
                 await vscode.commands.executeCommand('vscode.open', uri);
-            } catch {
+            } catch (e: unknown) {
+                this.logger.error(`[AdbDeviceService] Failed to pull recording: ${e instanceof Error ? e.message : String(e)}`);
                 vscode.window.showErrorMessage(Constants.Messages.Error.RetrieveRecordingFailed);
             }
             // Cleanup
-            this.client.execAdb(['-s', deviceId, 'shell', 'rm', remotePath]).catch(() => { });
+            this.client.execAdb(['-s', deviceId, 'shell', 'rm', remotePath]).catch((e: unknown) => {
+                this.logger.info(`[AdbDeviceService] Remote cleanup failed: ${e instanceof Error ? e.message : String(e)}`);
+            });
         });
     }
 
@@ -260,8 +265,9 @@ export class AdbDeviceService {
         try {
             const stdout = await this.client.execAdb(['-s', deviceId, 'shell', 'settings', 'get', 'system', 'show_touches']);
             return stdout.trim() === '1';
-        } catch {
+        } catch (e: unknown) {
             // Device may not support this setting — default to off
+            this.logger.info(`[AdbDeviceService] Show-touches query failed: ${e instanceof Error ? e.message : String(e)}`);
             return false;
         }
     }
@@ -552,8 +558,9 @@ export class AdbDeviceService {
     public async runDumpsysAudioPolicy(deviceId: string): Promise<string> {
         try {
             return await this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'media.audio_policy']);
-        } catch {
+        } catch (e: unknown) {
             // media.audio_policy not available — fall back to generic audio dumpsys
+            this.logger.info(`[AdbDeviceService] media.audio_policy unavailable, falling back: ${e instanceof Error ? e.message : String(e)}`);
             return this.client.execAdb(['-s', deviceId, 'shell', 'dumpsys', 'audio']);
         }
     }

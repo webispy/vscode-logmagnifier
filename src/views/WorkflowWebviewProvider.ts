@@ -157,7 +157,8 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
     private async handleOpenFile(data: Extract<WorkflowWebviewMessage, { type: 'openFile' }>): Promise<void> {
         try {
             await vscode.commands.executeCommand('vscode.open', vscode.Uri.file(data.path));
-        } catch {
+        } catch (e: unknown) {
+            this.logger.warn(`[WorkflowWebviewProvider] Failed to open file: ${e instanceof Error ? e.message : String(e)}`);
             vscode.window.showErrorMessage(`Failed to open file: ${data.path}`);
         }
     }

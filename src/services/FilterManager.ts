@@ -30,10 +30,6 @@ export class FilterManager implements vscode.Disposable {
     private configDisposable: vscode.Disposable;
     private saveDebounceTimer: NodeJS.Timeout | undefined;
 
-    public get profileManagerRef(): ProfileManager {
-        return this.profileManager;
-    }
-
     constructor(private readonly context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
@@ -57,6 +53,10 @@ export class FilterManager implements vscode.Disposable {
                 this._onDidChangeFilters.fire();
             }
         });
+    }
+
+    public get profileManagerRef(): ProfileManager {
+        return this.profileManager;
     }
 
     private async reloadFromProfile() {
@@ -794,8 +794,8 @@ export class FilterManager implements vscode.Disposable {
         if (isRegex && keyword) {
             try {
                 new RegExp(keyword);
-            } catch {
-                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${keyword}`);
+            } catch (e: unknown) {
+                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${keyword}: ${e instanceof Error ? e.message : String(e)}`);
                 isEnabled = false;
             }
         }

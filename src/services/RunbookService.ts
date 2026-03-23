@@ -270,7 +270,8 @@ uptime
                 ? fs.realpathSync(resolved)
                 : path.join(fs.realpathSync(path.dirname(resolved)), path.basename(resolved));
             return realCandidate.startsWith(realBase + path.sep) || realCandidate === realBase;
-        } catch {
+        } catch (e: unknown) {
+            this.logger.warn(`[RunbookService] Path safety check failed: ${e instanceof Error ? e.message : String(e)}`);
             return false;
         }
     }

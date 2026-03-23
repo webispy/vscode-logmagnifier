@@ -237,8 +237,9 @@ export class JsonPrettyService implements vscode.Disposable {
                             parsed: parsed
                         });
                         startIndex = jsonCandidate.endIndex + 1;
-                    } catch {
+                    } catch (e: unknown) {
                         // Invalid syntax case (but bounded)
+                        this.logger.info(`[JsonPrettyService] JSON parse failed: ${e instanceof Error ? e.message : String(e)}`);
                         found.push({
                             type: 'invalid',
                             text: jsonCandidate.text

@@ -9,15 +9,15 @@ import { AdbLogcatService } from './adb/AdbLogcatService';
 import { AdbTargetAppService } from './adb/AdbTargetAppService';
 
 export class AdbService implements vscode.Disposable {
+    // Events need to be aggregated or exposed from sub-services
+    private _onDidChangeSessions = new vscode.EventEmitter<void>();
+    public readonly onDidChangeSessions = this._onDidChangeSessions.event;
+
     private client: AdbClient;
     private deviceService: AdbDeviceService;
     private targetAppService: AdbTargetAppService;
     private logcatService: AdbLogcatService;
     private disposables: vscode.Disposable[] = [];
-
-    // Events need to be aggregated or exposed from sub-services
-    private _onDidChangeSessions = new vscode.EventEmitter<void>();
-    public readonly onDidChangeSessions = this._onDidChangeSessions.event;
 
     constructor(private readonly logger: Logger) {
         this.client = new AdbClient(logger);

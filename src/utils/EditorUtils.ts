@@ -25,7 +25,7 @@ export class EditorUtils {
             const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
             if (activeTab && activeTab.input instanceof vscode.TabInputText) {
                 const uri = activeTab.input.uri;
-                if (uri.scheme === 'file') {
+                if (uri.scheme === Constants.Schemes.File) {
                     const size = await this.getFileSizeAsync(uri);
                     const sizeMB = (size || 0) / (1024 * 1024);
 
@@ -58,11 +58,11 @@ export class EditorUtils {
      */
     public static async getFileSizeAsync(uri: vscode.Uri, onError?: (error: unknown) => void): Promise<number | undefined> {
         try {
-            if (uri.scheme === 'file') {
+            if (uri.scheme === Constants.Schemes.File) {
                 try {
                     const stat = await vscode.workspace.fs.stat(uri);
                     return stat.size;
-                } catch {
+                } catch (e: unknown) {
                     // Fallback to node fs if workspace fs fails (though workspace.fs is preferred)
                     if (fs.existsSync(uri.fsPath)) {
                         return fs.statSync(uri.fsPath).size;
@@ -87,14 +87,14 @@ export class EditorUtils {
         let document = vscode.window.activeTextEditor?.document;
 
         // Reject virtual/output documents (e.g. tasks:, output:) — only file/untitled are processable
-        if (document && document.uri.scheme !== 'file' && document.uri.scheme !== 'untitled') {
+        if (document && document.uri.scheme !== Constants.Schemes.File && document.uri.scheme !== Constants.Schemes.Untitled) {
             document = undefined;
         }
 
         // Check visible editors if no active editor
         if (!document) {
             const visible = vscode.window.visibleTextEditors;
-            const supportedEditor = visible.find(e => e.document.uri.scheme === 'file' || e.document.uri.scheme === 'untitled');
+            const supportedEditor = visible.find(e => e.document.uri.scheme === Constants.Schemes.File || e.document.uri.scheme === Constants.Schemes.Untitled);
             if (supportedEditor) {
                 document = supportedEditor.document;
             }
@@ -105,7 +105,7 @@ export class EditorUtils {
             const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
             if (activeTab && activeTab.input instanceof vscode.TabInputText) {
                 const uri = activeTab.input.uri;
-                if (uri.scheme === 'file' || uri.scheme === 'untitled') {
+                if (uri.scheme === Constants.Schemes.File || uri.scheme === Constants.Schemes.Untitled) {
                     try {
                         document = await vscode.workspace.openTextDocument(uri);
                     } catch (e: unknown) {

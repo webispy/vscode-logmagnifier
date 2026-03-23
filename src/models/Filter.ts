@@ -6,6 +6,7 @@ export enum HighlightMode {
     FullLine = 2,
 }
 
+/** A single keyword or regex filter within a group. */
 export interface FilterItem {
     id: string;
     keyword: string;
@@ -21,6 +22,7 @@ export interface FilterItem {
     excludeStyle?: 'line-through' | 'hidden'; // Default: line-through
 }
 
+/** A named collection of filters that can be toggled as a unit. */
 export interface FilterGroup {
     id: string;
     name: string;

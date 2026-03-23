@@ -2,7 +2,8 @@ import * as path from 'path';
 
 import * as vscode from 'vscode';
 
-import { WorkflowViewModel } from '../services/WorkflowManager';
+import { WorkflowViewModel } from '../models/Workflow';
+
 import { Logger } from '../services/Logger';
 import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 

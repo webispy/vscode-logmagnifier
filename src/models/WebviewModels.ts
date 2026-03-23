@@ -1,7 +1,9 @@
+/** Base message type for all webview ↔ extension communication. */
 export interface WebviewMessage {
     type: string;
 }
 
+/** Messages sent from the bookmark webview to the extension host. */
 export interface BookmarkWebviewMessage extends WebviewMessage {
     type: 'jump' | 'remove' | 'copyAll' | 'openAll' | 'collapseAll' | 'clearAll' |
     'removeGroup' | 'focusFile' | 'removeFile' | 'toggleWordWrap' |
@@ -11,6 +13,7 @@ export interface BookmarkWebviewMessage extends WebviewMessage {
     groupId?: string;
 }
 
+/** JSON-safe representation of a bookmark for webview transfer. */
 export interface SerializedBookmarkItem {
     id: string;
     line: number;

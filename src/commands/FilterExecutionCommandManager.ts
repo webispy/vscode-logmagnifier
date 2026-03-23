@@ -103,7 +103,9 @@ export class FilterExecutionCommandManager {
                             // Try to open validation doc if possible
                             const doc = await vscode.workspace.openTextDocument(uri);
                             document = doc;
-                        } catch (e: unknown) { this.logger.error(`[FilterExecutionCommandManager] ${e instanceof Error ? e.message : String(e)}`); }
+                        } catch (e: unknown) {
+                            this.logger.error(`[FilterExecutionCommandManager] ${e instanceof Error ? e.message : String(e)}`);
+                        }
                     }
                 }
             }

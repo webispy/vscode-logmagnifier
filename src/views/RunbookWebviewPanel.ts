@@ -14,7 +14,7 @@ import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 export class RunbookWebviewPanel {
     private static readonly allowedShells = new Set(['/bin/sh', '/bin/bash', '/bin/zsh', 'cmd.exe', 'powershell.exe']);
 
-    public static currentPanels: Map<string, RunbookWebviewPanel> = new Map();
+    private static currentPanels: Map<string, RunbookWebviewPanel> = new Map();
     private readonly webviewPanel: vscode.WebviewPanel;
     private disposables: vscode.Disposable[] = [];
     private currentItem: RunbookMarkdown;

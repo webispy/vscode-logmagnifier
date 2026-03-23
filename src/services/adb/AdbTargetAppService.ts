@@ -107,8 +107,8 @@ export class AdbTargetAppService {
             try {
                 const stdout2 = await this.client.execAdb(['-s', deviceId, 'shell', 'ps']);
                 return this.parsePsOutput(stdout2);
-            } catch (e2: unknown) {
-                const msg2 = e2 instanceof Error ? e2.message : String(e2);
+            } catch (e: unknown) {
+                const msg2 = e instanceof Error ? e.message : String(e);
                 this.logger.error(`[ADB] Error getting running apps: ${msg2}`);
                 return new Set();
             }

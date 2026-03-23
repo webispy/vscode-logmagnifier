@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
-import { FilterManager } from '../services/FilterManager';
 import { FilterItem, FilterType, HighlightMode } from '../models/Filter';
+
+import { FilterManager } from '../services/FilterManager';
 import { IconUtils } from '../utils/IconUtils';
 
 export class FilterPropertyCommandManager {

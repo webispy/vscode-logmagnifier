@@ -232,7 +232,9 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
 
             quickPick.hide();
             await this.workflowManager.addProfileToWorkflow(data.id, profileNameToAdd, data.parentId);
-            this.refresh();
+            this.refresh().catch(e =>
+                this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+            );
         });
 
         quickPick.onDidTriggerItemButton(async (e) => {
@@ -287,7 +289,9 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         );
         if (confirm === 'Remove') {
             await this.workflowManager.removeStepFromWorkflow(data.id, data.stepId);
-            this.refresh();
+            this.refresh().catch(e =>
+                this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+            );
         }
     }
 
@@ -301,7 +305,9 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         } else {
             await this.workflowManager.moveStepDown(data.id, data.stepId);
         }
-        this.refresh();
+        this.refresh().catch(e =>
+            this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
+        );
     }
 
     /** Disposes all subscriptions. */

@@ -10,7 +10,7 @@ import { ThemeUtils } from '../utils/ThemeUtils';
 type TreeItem = FilterGroup | FilterItem;
 
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>, vscode.TreeDragAndDropController<TreeItem>, vscode.Disposable {
-    private static readonly MAX_ICON_CACHE_SIZE = 200;
+    private static readonly maxIconCacheSize = 200;
 
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
@@ -29,7 +29,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
     private getCachedIcon(key: string, generator: () => string): vscode.Uri {
         if (!this.iconCache.has(key)) {
-            if (this.iconCache.size >= FilterTreeDataProvider.MAX_ICON_CACHE_SIZE) {
+            if (this.iconCache.size >= FilterTreeDataProvider.maxIconCacheSize) {
                 const oldestKey = this.iconCache.keys().next().value;
                 if (oldestKey) { this.iconCache.delete(oldestKey); }
             }

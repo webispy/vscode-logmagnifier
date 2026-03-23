@@ -20,10 +20,10 @@ export interface ParsedProperty {
 }
 
 export class LenientJsonParser {
-    private static readonly MAX_DEPTH = 100;
-    private static readonly MAX_INPUT_LENGTH = 5 * 1024 * 1024; // 5MB
-    private static readonly NUM_CHARS = new Set('0123456789eE.+-');
-    private static readonly WS_CHARS = new Set(' \t\n\r');
+    private static readonly maxDepth = 100;
+    private static readonly maxInputLength = 5 * 1024 * 1024; // 5MB
+    private static readonly numChars = new Set('0123456789eE.+-');
+    private static readonly wsChars = new Set(' \t\n\r');
     private index = 0;
     private text = '';
     private depth = 0;
@@ -56,7 +56,7 @@ export class LenientJsonParser {
     }
 
     public parse(text: string): ParsedNode {
-        if (text.length > LenientJsonParser.MAX_INPUT_LENGTH) {
+        if (text.length > LenientJsonParser.maxInputLength) {
             return { type: 'string', value: '[input too large]', isError: true };
         }
 
@@ -82,7 +82,7 @@ export class LenientJsonParser {
             return { type: 'undefined' };
         }
 
-        if (this.depth > LenientJsonParser.MAX_DEPTH) {
+        if (this.depth > LenientJsonParser.maxDepth) {
             return { type: 'string', value: '[max depth exceeded]', isError: true };
         }
 
@@ -265,7 +265,7 @@ export class LenientJsonParser {
 
     private parseNumber(): number {
         const start = this.index;
-        while (this.index < this.text.length && LenientJsonParser.NUM_CHARS.has(this.text[this.index])) {
+        while (this.index < this.text.length && LenientJsonParser.numChars.has(this.text[this.index])) {
             this.index++;
         }
         const numStr = this.text.substring(start, this.index);
@@ -274,7 +274,7 @@ export class LenientJsonParser {
     }
 
     private skipWhitespace() {
-        while (this.index < this.text.length && LenientJsonParser.WS_CHARS.has(this.text[this.index])) {
+        while (this.index < this.text.length && LenientJsonParser.wsChars.has(this.text[this.index])) {
             this.index++;
         }
     }

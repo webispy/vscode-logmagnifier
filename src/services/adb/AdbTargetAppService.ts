@@ -6,7 +6,7 @@ import { Logger } from '../Logger';
 import { AdbClient } from './AdbClient';
 
 export class AdbTargetAppService {
-    private static readonly SCAN_CONCURRENCY = 8;
+    private static readonly scanConcurrency = 8;
     private deviceTargetApps: Map<string, string> = new Map(); // deviceId -> packageName
     private launchableAppsCache: Map<string, { packageName: string, componentName: string }[]> = new Map();
     private launchableAppScanPromises: Map<string, Promise<void>> = new Map();
@@ -357,7 +357,7 @@ export class AdbTargetAppService {
             }
         };
 
-        await Promise.all(Array.from({ length: Math.min(AdbTargetAppService.SCAN_CONCURRENCY, packages.length) }, () => worker()));
+        await Promise.all(Array.from({ length: Math.min(AdbTargetAppService.scanConcurrency, packages.length) }, () => worker()));
         results.sort((a, b) => a.packageName.localeCompare(b.packageName));
         return results;
     }

@@ -3,10 +3,10 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
 import { EditorUtils } from '../utils/EditorUtils';
+import { JsonTreeWebview } from '../views/JsonTreeWebview';
 import { HighlightService } from './HighlightService';
 import { LenientJsonParser } from './LenientJsonParser';
 import { Logger } from './Logger';
-import { JsonTreeWebview } from '../views/JsonTreeWebview';
 
 interface ExtractedJson {
     type: 'valid' | 'invalid' | 'incomplete';

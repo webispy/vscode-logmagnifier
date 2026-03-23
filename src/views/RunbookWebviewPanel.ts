@@ -12,6 +12,8 @@ import { Logger } from '../services/Logger';
 import { RunbookHtmlGenerator } from './RunbookHtmlGenerator';
 
 export class RunbookWebviewPanel {
+    private static readonly allowedShells = new Set(['/bin/sh', '/bin/bash', '/bin/zsh', 'cmd.exe', 'powershell.exe']);
+
     public static currentPanels: Map<string, RunbookWebviewPanel> = new Map();
     private readonly webviewPanel: vscode.WebviewPanel;
     private disposables: vscode.Disposable[] = [];
@@ -143,6 +145,10 @@ export class RunbookWebviewPanel {
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
         const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/sh';
+        if (!RunbookWebviewPanel.allowedShells.has(shell)) {
+            this.logger.error(`[RunbookWebview] Blocked unrecognized shell: ${shell}`);
+            return;
+        }
         const shellArgs = os.platform() === 'win32' ? ['/c', script] : ['-c', script];
 
         const child = cp.execFile(shell, shellArgs, {
@@ -221,8 +227,8 @@ export class RunbookWebviewPanel {
         try {
             const content = await fsp.readFile(filePath, 'utf-8');
             return crypto.createHash('sha256').update(content).digest('hex');
-        } catch {
-            // File may not exist or be inaccessible — treat as hash mismatch
+        } catch (e: unknown) {
+            this.logger.warn(`[RunbookWebview] Could not hash file: ${e instanceof Error ? e.message : String(e)}`);
             return undefined;
         }
     }

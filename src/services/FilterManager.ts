@@ -11,7 +11,7 @@ import { Logger } from './Logger';
 import { ProfileManager } from './ProfileManager';
 
 export class FilterManager implements vscode.Disposable {
-    private static readonly SAVE_DEBOUNCE_MS = 300;
+    private static readonly saveDebounceMs = 300;
 
     private _onDidChangeFilters: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeFilters: vscode.Event<void> = this._onDidChangeFilters.event;
@@ -110,7 +110,7 @@ export class FilterManager implements vscode.Disposable {
             this.saveFilters().catch(e =>
                 this.logger.error(`[FilterManager] Debounced save failed: ${e instanceof Error ? e.message : String(e)}`)
             );
-        }, FilterManager.SAVE_DEBOUNCE_MS);
+        }, FilterManager.saveDebounceMs);
     }
 
     private initDefaultFilters(target?: FilterGroup[]): void {

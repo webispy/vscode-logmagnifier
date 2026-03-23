@@ -2,9 +2,9 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
 export class RegexUtils {
-    private static readonly MAX_CACHE_SIZE = Constants.Defaults.RegexCacheSize;
-    private static readonly ESCAPE_REGEX = /[.*+?^${}()|[\]\\]/g;
-    private static readonly MAX_REPORTED_ERRORS = 200;
+    private static readonly maxCacheSize = Constants.Defaults.RegexCacheSize;
+    private static readonly escapeRegex = /[.*+?^${}()|[\]\\]/g;
+    private static readonly maxReportedErrors = 200;
 
     /** Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex. */
     private static cache: Map<string, RegExp> = new Map();
@@ -51,12 +51,12 @@ export class RegexUtils {
                 }
                 regex = new RegExp(keyword, flags);
             } else {
-                const escaped = keyword.replace(RegexUtils.ESCAPE_REGEX, '\\$&');
+                const escaped = keyword.replace(RegexUtils.escapeRegex, '\\$&');
                 regex = new RegExp(escaped, flags);
             }
 
             // LRU: Evict oldest if full
-            if (RegexUtils.cache.size >= RegexUtils.MAX_CACHE_SIZE) {
+            if (RegexUtils.cache.size >= RegexUtils.maxCacheSize) {
                 const oldestKey = RegexUtils.cache.keys().next().value;
                 if (oldestKey) {
                     RegexUtils.cache.delete(oldestKey);
@@ -71,7 +71,7 @@ export class RegexUtils {
             const errorKey = `${keyword}_${errorMessage}`;
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {
-                if (RegexUtils.reportedErrors.size >= RegexUtils.MAX_REPORTED_ERRORS) {
+                if (RegexUtils.reportedErrors.size >= RegexUtils.maxReportedErrors) {
                     // Evict oldest half instead of clearing all
                     const entries = Array.from(RegexUtils.reportedErrors);
                     const half = Math.floor(entries.length / 2);

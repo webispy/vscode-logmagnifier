@@ -11,8 +11,8 @@ import { AdbClient } from './AdbClient';
 import { AdbTargetAppService } from './AdbTargetAppService';
 
 export class AdbLogcatService {
-    private static readonly MAX_BUFFER_LINES = 10_000;
-    private static readonly FLUSH_INTERVAL_MS = 500;
+    private static readonly maxBufferLines = 10_000;
+    private static readonly flushIntervalMs = 500;
 
     private _onDidChangeSessions = new vscode.EventEmitter<void>();
     public readonly onDidChangeSessions = this._onDidChangeSessions.event;
@@ -266,8 +266,8 @@ export class AdbLogcatService {
         const buffer = this.buffers.get(sessionId) || [];
         buffer.push(...lines.filter(l => l.length > 0));
         // Evict oldest lines if buffer grows beyond cap (e.g. repeated flush failures)
-        if (buffer.length > AdbLogcatService.MAX_BUFFER_LINES) {
-            buffer.splice(0, buffer.length - AdbLogcatService.MAX_BUFFER_LINES);
+        if (buffer.length > AdbLogcatService.maxBufferLines) {
+            buffer.splice(0, buffer.length - AdbLogcatService.maxBufferLines);
         }
         this.buffers.set(sessionId, buffer);
 
@@ -276,7 +276,7 @@ export class AdbLogcatService {
                 this.flushLogs(sessionId).catch(e =>
                     this.logger.error(`[AdbLogcatService] Flush failed: ${e instanceof Error ? e.message : String(e)}`)
                 );
-            }, AdbLogcatService.FLUSH_INTERVAL_MS);
+            }, AdbLogcatService.flushIntervalMs);
             this.flushTimers.set(sessionId, timer);
         }
     }

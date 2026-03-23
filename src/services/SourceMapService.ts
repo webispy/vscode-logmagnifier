@@ -2,20 +2,25 @@ import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
 
+import { Logger } from './Logger';
+
 interface SourceMapping {
     sourceUri: vscode.Uri;
     lineMapping: number[]; // Index: filtered line, Value: original line
 }
 
 export class SourceMapService {
-    private static readonly MAX_MAPPINGS = 500;
+    private static readonly maxMappings = 500;
 
     private static instance: SourceMapService;
 
     private mappings: Map<string, SourceMapping> = new Map();
     private pendingNavigation: { uri: vscode.Uri, line: number, timestamp: number } | undefined;
+    private logger: Logger;
 
-    private constructor() { }
+    private constructor() {
+        this.logger = Logger.getInstance();
+    }
 
     public static getInstance(): SourceMapService {
         if (!SourceMapService.instance) {
@@ -31,9 +36,12 @@ export class SourceMapService {
      * @param lineMapping Array where index is filtered line number and value is source line number
      */
     public register(filteredUri: vscode.Uri, sourceUri: vscode.Uri, lineMapping: number[]): void {
-        if (this.mappings.size >= SourceMapService.MAX_MAPPINGS) {
+        if (this.mappings.size >= SourceMapService.maxMappings) {
             const oldestKey = this.mappings.keys().next().value;
-            if (oldestKey) { this.mappings.delete(oldestKey); }
+            if (oldestKey) {
+                this.logger.info(`[SourceMapService] Cache full (${SourceMapService.maxMappings}), evicting oldest mapping`);
+                this.mappings.delete(oldestKey);
+            }
         }
         this.mappings.set(filteredUri.toString(), {
             sourceUri,

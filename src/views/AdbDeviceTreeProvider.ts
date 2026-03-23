@@ -1,7 +1,8 @@
 import * as vscode from 'vscode';
 
-import { AdbService } from '../services/AdbService';
 import { AdbDevice, LogcatSession, LogcatTag, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem, ControlActionItem, DumpsysGroupItem, ControlDeviceItem, ControlDeviceActionItem, ChromeInspectItem, MessageItem } from '../models/AdbModels';
+
+import { AdbService } from '../services/AdbService';
 
 export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<AdbTreeItem | undefined | null | void> = new vscode.EventEmitter<AdbTreeItem | undefined | null | void>();

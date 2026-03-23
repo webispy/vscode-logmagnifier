@@ -16,7 +16,7 @@ interface ExportedRunbookItem {
 }
 
 export class RunbookService {
-    private static readonly MAX_IMPORT_DEPTH = 10;
+    private static readonly maxImportDepth = 10;
 
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
@@ -277,8 +277,8 @@ uptime
 
     private async deserializeItems(items: ExportedRunbookItem[], currentPath: string, depth: number = 0): Promise<void> {
         if (!Array.isArray(items)) { return; }
-        if (depth > RunbookService.MAX_IMPORT_DEPTH) {
-            this.logger.warn(`Runbook import: max nesting depth (${RunbookService.MAX_IMPORT_DEPTH}) exceeded, skipping deeper items`);
+        if (depth > RunbookService.maxImportDepth) {
+            this.logger.warn(`Runbook import: max nesting depth (${RunbookService.maxImportDepth}) exceeded, skipping deeper items`);
             return;
         }
 

@@ -16,7 +16,7 @@ export class AdbCommandError extends Error {
 }
 
 export class AdbClient {
-    private static readonly DEFAULT_TIMEOUT_MS = 30_000;
+    private static readonly defaultTimeoutMs = 30_000;
 
     constructor(private readonly logger: Logger) { }
 
@@ -29,7 +29,7 @@ export class AdbClient {
     public async execAdb(args: string[], options?: cp.ExecFileOptions): Promise<string> {
         return new Promise((resolve, reject) => {
             const adbPath = this.getAdbPath();
-            const opts = { timeout: AdbClient.DEFAULT_TIMEOUT_MS, ...options };
+            const opts = { timeout: AdbClient.defaultTimeoutMs, ...options };
             cp.execFile(adbPath, args, opts, (err, stdout, stderr) => {
                 if (err) {
                     const stderrStr = typeof stderr === 'string' ? stderr : '';

@@ -5,21 +5,22 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
+import { FilterGroup, FilterItem } from '../models/Filter';
+
 import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
-import { ResultCountService } from '../services/ResultCountService';
-import { LogProcessor } from '../services/LogProcessor';
-import { Logger } from '../services/Logger';
-import { QuickAccessProvider } from '../views/QuickAccessProvider';
-import { FilterGroup, FilterItem } from '../models/Filter';
 import { JsonPrettyService } from '../services/JsonPrettyService';
+import { Logger } from '../services/Logger';
+import { LogProcessor } from '../services/LogProcessor';
+import { ResultCountService } from '../services/ResultCountService';
 import { SourceMapService } from '../services/SourceMapService';
+import { QuickAccessProvider } from '../views/QuickAccessProvider';
+import { EditorToggleCommandManager } from './EditorToggleCommandManager';
+import { FilterExecutionCommandManager } from './FilterExecutionCommandManager';
+import { FilterExportImportCommandManager } from './FilterExportImportCommandManager';
 import { FilterGroupCommandManager } from './FilterGroupCommandManager';
 import { FilterItemCommandManager } from './FilterItemCommandManager';
 import { FilterPropertyCommandManager } from './FilterPropertyCommandManager';
-import { FilterExportImportCommandManager } from './FilterExportImportCommandManager';
-import { FilterExecutionCommandManager } from './FilterExecutionCommandManager';
-import { EditorToggleCommandManager } from './EditorToggleCommandManager';
 
 export interface CommandManagerServices {
     filterManager: FilterManager;
@@ -35,7 +36,7 @@ export interface CommandManagerServices {
 }
 
 export class CommandManager {
-    private static readonly JSON_PREVIEW_DEBOUNCE_MS = 50;
+    private static readonly jsonPreviewDebounceMs = 50;
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
     private debounceTimer: NodeJS.Timeout | undefined;
@@ -149,7 +150,7 @@ export class CommandManager {
         this.debounceTimer = setTimeout(() => {
             this.jsonPrettyService.execute(true, editor);
             this.debounceTimer = undefined;
-        }, CommandManager.JSON_PREVIEW_DEBOUNCE_MS);
+        }, CommandManager.jsonPreviewDebounceMs);
     }
 
     private registerClearDataCommand() {

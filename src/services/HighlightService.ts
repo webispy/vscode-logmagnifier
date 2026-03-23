@@ -18,7 +18,7 @@ export interface DecorationConfig {
 }
 
 export class HighlightService implements vscode.Disposable {
-    private static readonly MAX_DECORATION_CACHE = Constants.Defaults.DecorationCacheSize;
+    private static readonly maxDecorationCache = Constants.Defaults.DecorationCacheSize;
 
     private documentFilters: Map<string, { filter: FilterItem, groupId: string }[]> = new Map();
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
@@ -115,7 +115,7 @@ export class HighlightService implements vscode.Disposable {
             }
 
             // Evict oldest entry if cache is full
-            if (this.decorationTypes.size >= HighlightService.MAX_DECORATION_CACHE) {
+            if (this.decorationTypes.size >= HighlightService.maxDecorationCache) {
                 const oldestKey = this.decorationTypes.keys().next().value;
                 if (oldestKey) {
                     this.decorationTypes.get(oldestKey)?.decoration.dispose();

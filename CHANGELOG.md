@@ -1,5 +1,30 @@
 # Change Log
 
+## [1.6.5]
+
+### Added
+- **Runbook**: Added "Allow All for this Runbook" option to the script execution confirmation dialog, bypassing per-block confirmation for trusted runbooks. The flag resets when the panel is closed or a different runbook is loaded.
+- **Test**: Added comprehensive test suites for FilterTreeDataProvider, QuickAccess, ExportImport, LogBookmarkService, ColorService, and JsonPrettyService.
+
+### Changed
+- **Build**: Bundled the extension with esbuild for a significantly smaller `.vsix` package size.
+- **CI**: Upgraded GitHub Actions to Node.js 24-compatible versions.
+- **ADB**: Capped logcat per-session buffer at 10,000 lines to prevent unbounded memory growth.
+- **ADB**: Consolidated `findPid`/`parsePsForPid` into AdbClient for better cohesion.
+- **Code Quality**: Applied project-wide code style rules — consistent import ordering, member ordering, JSDoc on public methods, `[ClassName]` logger prefixes, and no `console.log/error` usage.
+
+### Fixed
+- **Security**: Hardened Runbook script execution and import with path validation and content sanitization.
+- **Security**: Added validation for untrusted filter/workflow imports and bounded user inputs (filter name length, group count limits).
+- **Security**: Strengthened ReDoS detection in RegexUtils with additional vulnerability patterns.
+- **Highlight**: Fixed memory leak in highlight decorations and added cancellation support for long-running highlight operations.
+- **Filter**: Fixed pending filter state not being flushed on dispose, preventing data loss.
+- **Workflow**: Fixed redundant step ID mapping in `duplicateWorkflow` that caused incorrect step references.
+- **Workflow**: Session temp files are now deleted on dispose to prevent disk accumulation.
+- **Editor**: Fixed crash when resolving active file on virtual (non-file) documents.
+- **UI**: Added eviction cap to FilterTreeDataProvider icon cache to prevent unbounded memory growth.
+- **Runbook**: Fixed missing codicons in Runbook webview by adding codicons dist to `localResourceRoots`.
+
 ## [1.6.4]
 
 ### Fixed

@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 import * as readline from 'readline';
+import { Readable } from 'stream';
 
 import * as vscode from 'vscode';
 
@@ -68,11 +69,13 @@ export class LogProcessor {
      * @returns Promise resolving to output path and statistics
      * @throws Error if file cannot be read or written
      */
-    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string, mergeGroups?: boolean }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
-        const fileStream = fs.createReadStream(inputPath, { encoding: 'utf8' });
+    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string, mergeGroups?: boolean, content?: string }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
+        const inputStream: Readable = options?.content !== undefined
+            ? Readable.from(options.content)
+            : fs.createReadStream(inputPath, { encoding: 'utf8' });
 
         const rl = readline.createInterface({
-            input: fileStream,
+            input: inputStream,
             crlfDelay: Infinity
         });
 
@@ -104,7 +107,7 @@ export class LogProcessor {
 
         // Surface stream errors as rejections
         const streamError = new Promise<never>((_, reject) => {
-            fileStream.on('error', (err) => reject(new Error(`Failed to read file ${inputPath}: ${err.message}`)));
+            inputStream.on('error', (err) => reject(new Error(`Failed to read file ${inputPath}: ${err.message}`)));
             rl.on('error', (err) => reject(new Error(`Readline error while processing ${inputPath}: ${err.message}`)));
             outputStream.on('error', (err) => reject(new Error(`Failed to write output file ${outputPath}: ${err.message}`)));
         });

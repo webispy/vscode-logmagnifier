@@ -1,9 +1,3 @@
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as fsp from 'fs/promises';
-import * as os from 'os';
-import * as path from 'path';
-
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
@@ -125,23 +119,7 @@ export class FilterExecutionCommandManager {
                 cancellable: false
             }, async (_progress) => {
                 try {
-                    let targetPath = filePathFromTab || document?.uri.fsPath;
-                    let tempInputPath: string | undefined;
-
-                    // Handle Untitled Files: Write to temp file first to use standard processor
-                    if (document && document.isUntitled) {
-                        const tmpDir = os.tmpdir();
-                        const randomSuffix = crypto.randomBytes(4).toString('hex');
-                        tempInputPath = path.join(tmpDir, `${Constants.Defaults.TempFilePrefix}untitled_${randomSuffix}.log`);
-
-                        try {
-                            await fs.promises.writeFile(tempInputPath, document.getText(), 'utf8');
-                            targetPath = tempInputPath;
-                        } catch (e: unknown) {
-                            this.logger.error(`[FilterExecutionCommandManager] Failed to create temp file for untitled document: ${e instanceof Error ? e.message : String(e)}`);
-                            throw new Error("Failed to process untitled file");
-                        }
-                    }
+                    const targetPath = filePathFromTab || document?.uri.fsPath;
 
                     if (!targetPath) {
                         throw new Error("Could not check active file path");
@@ -153,47 +131,26 @@ export class FilterExecutionCommandManager {
                         totalLineCount = document.lineCount;
                     }
 
-                    try {
-                        const result = await this.logProcessor.processFile(targetPath, activeGroups, {
-                            prependLineNumbers: this.prependLineNumbersEnabled,
-                            totalLineCount: totalLineCount
-                        });
-                        outputPath = result.outputPath;
-                        stats.processed = result.processed;
-                        stats.matched = result.matched;
+                    const result = await this.logProcessor.processFile(targetPath, activeGroups, {
+                        prependLineNumbers: this.prependLineNumbersEnabled,
+                        totalLineCount: totalLineCount,
+                        content: document ? document.getText() : undefined
+                    });
+                    outputPath = result.outputPath;
+                    stats.processed = result.processed;
+                    stats.matched = result.matched;
 
-                        // Register Source Map
-                        // If generated from a specific document, use its URI.
-                        // If generated from a file path (without doc), use file URI.
-                        let sourceUri: vscode.Uri | undefined;
-                        if (document) {
-                            sourceUri = document.uri;
-                        } else if (filePathFromTab) {
-                            sourceUri = vscode.Uri.file(filePathFromTab);
-                        }
+                    // Register Source Map
+                    let sourceUri: vscode.Uri | undefined;
+                    if (document) {
+                        sourceUri = document.uri;
+                    } else if (filePathFromTab) {
+                        sourceUri = vscode.Uri.file(filePathFromTab);
+                    }
 
-                        // Handle strict untitled file mapping:
-                        // If we created a temp input file for untitled doc, we still mapped lines from that content.
-                        // But the USER sees the 'untitled:Untitled-1' document.
-                        // Ideally we map back to the 'untitled:...' URI so opening it works if tab is open.
-                        // If tab is closed, we can't reopen 'untitled:' content easily unless we saved it?
-                        // Actually, SourceMapService stores the URI. clicking 'jumping' opens that URI.
-                        // If 'untitled', VSCode tries to find that open valid document.
-
-                        if (sourceUri && result.lineMapping) {
-                            const outputUri = vscode.Uri.file(outputPath);
-                            this.sourceMapService.register(outputUri, sourceUri, result.lineMapping);
-                        }
-
-                    } finally {
-                        // Cleanup temp input file if we created one
-                        if (tempInputPath) {
-                            try {
-                                await fsp.unlink(tempInputPath);
-                            } catch (e: unknown) {
-                                this.logger.info(`[FilterExecutionCommandManager] Cleanup temp file failed: ${e instanceof Error ? e.message : String(e)}`);
-                            }
-                        }
+                    if (sourceUri && result.lineMapping) {
+                        const outputUri = vscode.Uri.file(outputPath);
+                        this.sourceMapService.register(outputUri, sourceUri, result.lineMapping);
                     }
                 } catch (e: unknown) {
                     vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', e instanceof Error ? e.message : String(e)));

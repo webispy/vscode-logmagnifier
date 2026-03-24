@@ -13,7 +13,9 @@ suite('RunbookService Test Suite', () => {
     let context: vscode.ExtensionContext;
 
     setup(async () => {
-        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'runbook-test-'));
+        // Normalize through Uri.file() so the drive-letter case matches
+        // context.globalStorageUri.fsPath on Windows (e.g. c:\ vs C:\).
+        tempDir = vscode.Uri.file(fs.mkdtempSync(path.join(os.tmpdir(), 'runbook-test-'))).fsPath;
         const globalStoragePath = path.join(tempDir, 'globalStorage');
         fs.mkdirSync(globalStoragePath, { recursive: true });
 

@@ -151,7 +151,8 @@ suite('Workflow Final Verification', () => {
 
         // Create a temporary file to act as the source
         const tempDir = os.tmpdir();
-        const tempSourceFile = path.join(tempDir, `final_source_${Math.random().toString(36).substring(7)}.log`);
+        // Normalize through Uri.file() so drive-letter case matches fsPath on Windows
+        const tempSourceFile = vscode.Uri.file(path.join(tempDir, `final_source_${Math.random().toString(36).substring(7)}.log`)).fsPath;
         fs.writeFileSync(tempSourceFile, inputContent);
 
         // Create a dummy document object

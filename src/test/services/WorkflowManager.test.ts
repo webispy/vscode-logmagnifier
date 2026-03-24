@@ -128,7 +128,7 @@ suite('Workflow Pipeline Tests', () => {
         // 3. Verify Input File Flow (Tree Structure)
         // Root Input: /tmp/input.log
         // Child Input: Root's Output
-        assert.strictEqual(processedInputs[0], '/tmp/input.log', 'Root should take original input');
+        assert.strictEqual(processedInputs[0], document.uri.fsPath, 'Root should take original input');
         assert.strictEqual(processedInputs[1], rootStep!.outputFilePath, 'Child should take Root output as input');
     });
 
@@ -229,7 +229,7 @@ suite('Workflow Pipeline Tests', () => {
         // With mergeGroups=true, the profile name in `groups[0]?.name` will be 'Merged Group' for cumulative steps with multiple groups.
         // We need to identify steps by checks on input/output paths or existence.
 
-        const rootExec = processedDetails.find(d => d.input === '/tmp/input.log'); // Root process the initial input
+        const rootExec = processedDetails.find(d => d.input === document.uri.fsPath); // Root process the initial input
 
         // ChildA (P2+P3) -> "Merged Group"
         // ChildB (P3) -> "g3"
@@ -250,7 +250,7 @@ suite('Workflow Pipeline Tests', () => {
 
         // 1. Verify Root
         assert.ok(rootExec);
-        assert.strictEqual(rootExec.input, '/tmp/input.log', 'Root Input');
+        assert.strictEqual(rootExec.input, document.uri.fsPath, 'Root Input');
 
         // 2. Verify ChildA (Cum)
         assert.ok(childADetails, 'ChildA should execute (Merged Group)');

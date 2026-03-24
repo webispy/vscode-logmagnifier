@@ -1,0 +1,2 @@
+# Keep test resource log files with LF line endings on all platforms
+src/test/resources/*.log text eol=lf

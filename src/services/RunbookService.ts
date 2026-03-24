@@ -34,6 +34,7 @@ export class RunbookService {
             await this.createDefaultConfig();
         }
         await this.loadConfig();
+        this._onDidChangeTreeData.fire();
     }
 
     private get storagePath(): string {

@@ -149,7 +149,9 @@ export class RunbookWebviewPanel {
             this.logger.error(`[RunbookWebview] Blocked unrecognized shell: ${shell}`);
             return;
         }
-        const shellArgs = os.platform() === 'win32' ? ['/c', script] : ['-c', script];
+        const shellArgs = os.platform() === 'win32'
+            ? ['/c', `chcp 65001 >nul & ${script}`]
+            : ['-c', script];
 
         const child = cp.execFile(shell, shellArgs, {
             cwd,

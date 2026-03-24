@@ -206,7 +206,7 @@ export class LogProcessor {
         const outputUri = vscode.Uri.file(outputPath);
         FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
 
-        return { outputPath, processed, matched, lineMapping: adjustedMapping };
+        return { outputPath: outputUri.fsPath, processed, matched, lineMapping: adjustedMapping };
     }
 
     /**

@@ -144,13 +144,14 @@ export class RunbookWebviewPanel {
         this.webviewPanel.webview.postMessage({ command: 'command-running', blockId });
 
         const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || os.homedir();
-        const shell = os.platform() === 'win32' ? 'cmd.exe' : '/bin/sh';
+        const shell = os.platform() === 'win32' ? 'powershell.exe' : '/bin/sh';
         if (!RunbookWebviewPanel.allowedShells.has(shell)) {
             this.logger.error(`[RunbookWebview] Blocked unrecognized shell: ${shell}`);
             return;
         }
         const shellArgs = os.platform() === 'win32'
-            ? ['/c', `chcp 65001 >nul & ${script}`]
+            ? ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command',
+               `[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ${script}`]
             : ['-c', script];
 
         const child = cp.execFile(shell, shellArgs, {

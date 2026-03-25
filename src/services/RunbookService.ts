@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as fsp from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 
 import * as vscode from 'vscode';
@@ -57,7 +58,19 @@ export class RunbookService {
             await fsp.mkdir(defaultGroupPath, { recursive: true });
         }
         const defaultPath = path.join(defaultGroupPath, 'health-check.md');
-        const defaultContent = `# System Health Check
+        const defaultContent = os.platform() === 'win32'
+            ? this.defaultContentWindows()
+            : this.defaultContentUnix();
+        try {
+            await fsp.writeFile(defaultPath, defaultContent, 'utf-8');
+        } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[RunbookService] Failed to create default runbook markdown: ${msg}`);
+        }
+    }
+
+    private defaultContentUnix(): string {
+        return `# System Health Check
 
 ## Disk Usage
 
@@ -99,12 +112,58 @@ Check how long the system has been running.
 uptime
 \`\`\`
 `;
-        try {
-            await fsp.writeFile(defaultPath, defaultContent, 'utf-8');
-        } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : String(e);
-            this.logger.error(`[RunbookService] Failed to create default runbook markdown: ${msg}`);
-        }
+    }
+
+    private defaultContentWindows(): string {
+        return `# System Health Check
+
+## Disk Usage
+
+Check disk space usage for all drives.
+
+\`\`\`sh
+Get-PSDrive -PSProvider FileSystem | Format-Table Name,@{N='Used(GB)';E={[math]::Round($_.Used/1GB,2)}},@{N='Free(GB)';E={[math]::Round($_.Free/1GB,2)}} -AutoSize
+\`\`\`
+
+## Memory Usage
+
+Display current memory usage.
+
+\`\`\`sh
+$os = Get-CimInstance Win32_OperatingSystem
+[PSCustomObject]@{
+    'Total(GB)' = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
+    'Free(GB)'  = [math]::Round($os.FreePhysicalMemory / 1MB, 2)
+    'Used(GB)'  = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / 1MB, 2)
+} | Format-List
+\`\`\`
+
+## Network Connectivity
+
+Verify internet connectivity with a simple ping test.
+
+\`\`\`sh
+ping -n 3 8.8.8.8
+\`\`\`
+
+## Running Processes (Top 10 by CPU)
+
+List the top 10 processes sorted by CPU usage.
+
+\`\`\`sh
+Get-Process | Sort-Object CPU -Descending | Select-Object -First 10 Name,@{N='CPU(s)';E={[math]::Round($_.CPU,2)}},@{N='Mem(MB)';E={[math]::Round($_.WorkingSet/1MB,2)}} | Format-Table -AutoSize
+\`\`\`
+
+## System Uptime
+
+Check how long the system has been running.
+
+\`\`\`sh
+$boot = (Get-CimInstance Win32_OperatingSystem).LastBootUpTime
+$uptime = (Get-Date) - $boot
+"Uptime: {0}d {1}h {2}m (boot: {3})" -f $uptime.Days, $uptime.Hours, $uptime.Minutes, $boot.ToString('yyyy-MM-dd HH:mm:ss')
+\`\`\`
+`;
     }
 
     /** Scans the storage directory and rebuilds the runbook item tree. */

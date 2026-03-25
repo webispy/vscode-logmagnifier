@@ -1,4 +1,5 @@
 import * as fsp from 'fs/promises';
+import * as os from 'os';
 import * as path from 'path';
 
 import * as marked from 'marked';
@@ -47,6 +48,8 @@ export class RunbookHtmlGenerator {
         // Collect scripts for injection via nonce'd script block (not inline handlers)
         const scriptMap: Map<string, string> = new Map();
 
+        const shellLabel = os.platform() === 'win32' ? 'powershell' : 'sh';
+
         // Custom Renderer to inject Play buttons into `sh` blocks
         const renderer = new marked.Renderer();
         let blockIndex = 0;
@@ -62,7 +65,7 @@ export class RunbookHtmlGenerator {
                 return `
                 <div class="code-block-container" id="${currentBlockId}">
                     <div class="code-block-header">
-                        <span class="lang-label">sh</span>
+                        <span class="lang-label">${shellLabel}</span>
                         <div class="header-buttons">
                             <button class="play-btn" id="btn_${currentBlockId}" data-block-id="${currentBlockId}">
                                 <span class="codicon codicon-play"></span> Play

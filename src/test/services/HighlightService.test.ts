@@ -174,6 +174,53 @@ suite('HighlightService Test Suite', () => {
         // Full line mode also uses isWholeLine: true, but we check line ranges here.
     });
 
+    test('updateFilter rename changes match results', async () => {
+        const content = 'ERROR occurred\nWARN detected\nERROR again\nINFO message';
+        const editor = createMockEditor(content);
+
+        const group = filterManager.addGroup('Test Group', false)!;
+        filterManager.toggleGroup(group.id);
+        const filter = filterManager.addFilter(group.id, 'ERROR', 'include')!;
+
+        // Initial highlight: 'ERROR' matches 2 times
+        const countsBefore = await highlightService.updateHighlights(editor);
+        assert.strictEqual(countsBefore.get(filter.id), 2, 'ERROR should match 2 times');
+
+        // Rename filter keyword from 'ERROR' to 'WARN'
+        highlightService.refreshDecorationType();
+        editor.getDecorations().clear();
+        filterManager.updateFilter(group.id, filter.id, { keyword: 'WARN' });
+
+        const countsAfter = await highlightService.updateHighlights(editor);
+        assert.strictEqual(countsAfter.get(filter.id), 1, 'WARN should match 1 time after rename');
+
+        // Verify decoration ranges point to the WARN line
+        const activeDecorations = editor.getDecorations();
+        const ranges = Array.from(activeDecorations.values())[0];
+        assert.strictEqual(ranges.length, 1, 'Should have 1 decoration range');
+        assert.strictEqual(ranges[0].start.line, 1, 'Should highlight line 1 (WARN detected)');
+    });
+
+    test('updateFilter rename to non-matching keyword yields zero matches', async () => {
+        const content = 'ERROR occurred\nERROR again';
+        const editor = createMockEditor(content);
+
+        const group = filterManager.addGroup('Test Group', false)!;
+        filterManager.toggleGroup(group.id);
+        const filter = filterManager.addFilter(group.id, 'ERROR', 'include')!;
+
+        const countsBefore = await highlightService.updateHighlights(editor);
+        assert.strictEqual(countsBefore.get(filter.id), 2, 'ERROR should match 2 times');
+
+        // Rename to keyword that does not exist in content
+        highlightService.refreshDecorationType();
+        editor.getDecorations().clear();
+        filterManager.updateFilter(group.id, filter.id, { keyword: 'FATAL' });
+
+        const countsAfter = await highlightService.updateHighlights(editor);
+        assert.strictEqual(countsAfter.get(filter.id), 0, 'FATAL should match 0 times');
+    });
+
     test('Chunked Highlighting', async () => {
         // Create a content > 5000 lines to trigger chunked mode
         const lines = [];

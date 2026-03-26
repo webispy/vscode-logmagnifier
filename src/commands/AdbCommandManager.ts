@@ -9,6 +9,7 @@ import { Constants } from '../Constants';
 import { AdbDevice, LogcatSession, LogcatTag, LogPriority, ControlActionItem, ControlDeviceActionItem, AdbTreeItem, TargetAppItem, LaunchInstalledAppItem, SessionGroupItem } from '../models/AdbModels';
 
 import { AdbService } from '../services/AdbService';
+import { Logger } from '../services/Logger';
 import { AdbDeviceTreeProvider } from '../views/AdbDeviceTreeProvider';
 
 export class AdbCommandManager {
@@ -16,7 +17,8 @@ export class AdbCommandManager {
         private readonly context: vscode.ExtensionContext,
         private readonly adbService: AdbService,
         private readonly adbDeviceTreeProvider: AdbDeviceTreeProvider,
-        private readonly adbTreeView: vscode.TreeView<AdbTreeItem>
+        private readonly adbTreeView: vscode.TreeView<AdbTreeItem>,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
         this.registerSelectionListener();
@@ -375,32 +377,12 @@ export class AdbCommandManager {
 
                 if (deviceCount > 0) {
                     const chromeInspectUrl = 'chrome://inspect/#devices';
-                    let executable = '';
-                    let args: string[] = [];
 
-                    switch (process.platform) {
-                        case 'darwin':
-                            executable = 'open';
-                            args = ['-a', 'Google Chrome', chromeInspectUrl];
-                            break;
-                        case 'linux':
-                            executable = 'google-chrome';
-                            args = [chromeInspectUrl];
-                            break;
-                        case 'win32':
-                            executable = 'cmd';
-                            args = ['/c', 'start', 'chrome', chromeInspectUrl];
-                            break;
-                        default:
-                            vscode.window.showInformationMessage(`Platform '${process.platform}' not fully supported. Please open '${chromeInspectUrl}' in Chrome manually.`);
-                            return;
+                    if (process.platform === 'win32') {
+                        await this.openChromeInspectWindows(chromeInspectUrl);
+                    } else {
+                        this.openChromeInspectUnix(chromeInspectUrl);
                     }
-
-                    cp.execFile(executable, args, (error) => {
-                        if (error) {
-                            vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
-                        }
-                    });
 
                 } else {
                     vscode.window.showErrorMessage('❌ No connected Android devices found. Please check USB connection and debugging authorization.');
@@ -495,6 +477,64 @@ export class AdbCommandManager {
             priority,
             isEnabled: true
         };
+    }
+
+    /**
+     * Opens chrome://inspect on Windows.
+     * Recent Chrome versions block chrome:// URLs from command-line launch,
+     * so we copy the URL to clipboard and prompt the user to paste it.
+     */
+    private async openChromeInspectWindows(url: string): Promise<void> {
+        await vscode.env.clipboard.writeText(url);
+        this.logger.info(`[AdbCommand] Copied ${url} to clipboard (Windows chrome:// restriction)`);
+
+        cp.execFile('cmd', ['/c', 'start', '', 'chrome'], (error) => {
+            if (error) {
+                this.logger.error(`[AdbCommand] Failed to open Chrome: ${error.message}`);
+                vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
+            }
+        });
+
+        vscode.window.showInformationMessage(
+            'URL copied! Paste into Chrome address bar (Ctrl+L, Ctrl+V, Enter)',
+            'Copy Again'
+        ).then(choice => {
+            if (choice === 'Copy Again') {
+                vscode.env.clipboard.writeText(url);
+            }
+        });
+    }
+
+    /** Opens chrome://inspect on macOS/Linux where command-line URL launch works. */
+    private openChromeInspectUnix(url: string): void {
+        let executable = '';
+        let args: string[] = [];
+
+        switch (process.platform) {
+            case 'darwin':
+                executable = 'open';
+                args = ['-a', 'Google Chrome', url];
+                break;
+            case 'linux':
+                executable = 'google-chrome';
+                args = [url];
+                break;
+            default:
+                vscode.window.showInformationMessage(
+                    `Platform '${process.platform}' not fully supported. Please open '${url}' in Chrome manually.`
+                );
+                return;
+        }
+
+        const fullCommand = `${executable} ${args.map(a => a.includes(' ') ? `"${a}"` : a).join(' ')}`;
+        this.logger.info(`[AdbCommand] Executing: ${fullCommand}`);
+
+        cp.execFile(executable, args, (error) => {
+            if (error) {
+                this.logger.error(`[AdbCommand] Failed: ${error.message}`);
+                vscode.window.showErrorMessage(`Failed to open Chrome: ${error.message}`);
+            }
+        });
     }
 
     /** Shows a quick pick menu with app-level control actions (clear storage, dumpsys, etc.). */

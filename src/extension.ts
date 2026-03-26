@@ -170,7 +170,7 @@ export function activate(context: vscode.ExtensionContext) {
         treeDataProvider: adbDeviceTreeProvider,
         showCollapseAll: true
     });
-    new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView);
+    new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView, logger);
 
     // Runbook
     const runbookService = new RunbookService(context, logger);

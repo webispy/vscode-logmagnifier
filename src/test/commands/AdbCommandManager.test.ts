@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { AdbCommandManager } from '../../commands/AdbCommandManager';
 import { AdbService } from '../../services/AdbService';
+import { Logger } from '../../services/Logger';
 import { AdbDeviceTreeProvider } from '../../views/AdbDeviceTreeProvider';
 import { MockExtensionContext } from '../utils/Mocks';
 import { AdbDevice, LogcatSession } from '../../models/AdbModels';
@@ -40,7 +41,8 @@ suite('AdbCommandManager Test Suite', () => {
             mockService,
             mockTreeProvider,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            { onDidChangeSelection: () => ({ dispose: () => { } }) } as unknown as vscode.TreeView<any>
+            { onDidChangeSelection: () => ({ dispose: () => { } }) } as unknown as vscode.TreeView<any>,
+            Logger.getInstance()
         );
 
         vscode.commands.registerCommand = originalRegisterCommand;

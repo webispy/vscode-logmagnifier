@@ -1,5 +1,20 @@
 # Change Log
 
+## [1.6.6]
+
+### Changed
+- **CI**: Added Windows lint and test job running in parallel with the existing Ubuntu job to catch platform-specific issues early.
+- **Build**: Promoted all ESLint warnings to errors so lint issues are caught immediately in CI.
+- **Code Quality**: Applied code review fixes — proper error handling with `catch (e: unknown)`, consistent URI scheme constants, correct class member ordering, and import ordering cleanup.
+
+### Fixed
+- **ADB**: Fixed Chrome Inspect not opening on Windows. Windows Chrome blocks `chrome://` URLs via command-line; the extension now copies the URL to clipboard and shows a paste-guidance notification.
+- **Filter**: Fixed encoding-safe filtering on Windows by reading decoded document text from VS Code instead of raw disk bytes, resolving match failures for non-UTF-8 files (e.g. CP949, UTF-16).
+- **Workflow**: Fixed `LogProcessor` output path casing mismatch on Windows by normalizing through `Uri.fsPath`.
+- **Runbook**: Fixed Windows shell execution by switching from `cmd.exe` to `powershell.exe` with explicit UTF-8 output encoding, resolving garbled non-ASCII error messages.
+- **Runbook**: Added platform-specific default health-check content — Windows gets PowerShell-native commands instead of Unix-only ones.
+- **Runbook**: Fixed default System Check group not appearing in the sidebar until a manual add, by firing the tree-view change event after async initialization.
+
 ## [1.6.5]
 
 ### Added

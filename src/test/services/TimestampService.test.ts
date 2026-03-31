@@ -539,4 +539,59 @@ suite('TimestampService Test Suite', () => {
             assert.strictEqual(service.findLineByTime(index, new Date()), -1);
         });
     });
+
+    // ── Step 8: Index Cache ──
+
+    suite('index cache', () => {
+        const logLines = [
+            '03-30 10:00:00.000  1234  5678 D Tag: a',
+            '03-30 10:00:01.000  1234  5678 D Tag: b',
+        ];
+
+        test('getIndex returns undefined for unknown URI', () => {
+            assert.strictEqual(service.getIndex('unknown-uri'), undefined);
+        });
+
+        test('buildIndex stores result in cache, getIndex returns it', () => {
+            const fmt = service.detectFormat(logLines)!;
+            const index = service.buildIndex(logLines, fmt, 'cache-uri');
+            const cached = service.getIndex('cache-uri');
+            assert.strictEqual(cached, index);
+        });
+
+        test('invalidateIndex removes cached entry', () => {
+            const fmt = service.detectFormat(logLines)!;
+            service.buildIndex(logLines, fmt, 'inv-uri');
+            assert.ok(service.getIndex('inv-uri'));
+            service.invalidateIndex('inv-uri');
+            assert.strictEqual(service.getIndex('inv-uri'), undefined);
+        });
+
+        test('invalidateIndex on unknown URI does not throw', () => {
+            assert.doesNotThrow(() => service.invalidateIndex('no-such-uri'));
+        });
+
+        test('cache evicts oldest entry when exceeding max size', () => {
+            const fmt = service.detectFormat(logLines)!;
+            // Fill cache beyond default max (10)
+            for (let i = 0; i < 12; i++) {
+                service.buildIndex(logLines, fmt, `evict-uri-${i}`);
+            }
+            // Oldest entries should be evicted
+            assert.strictEqual(service.getIndex('evict-uri-0'), undefined);
+            assert.strictEqual(service.getIndex('evict-uri-1'), undefined);
+            // Recent entries should remain
+            assert.ok(service.getIndex('evict-uri-11'));
+        });
+
+        test('rebuilding same URI updates cache', () => {
+            const fmt = service.detectFormat(logLines)!;
+            const index1 = service.buildIndex(logLines, fmt, 'update-uri');
+            const moreLines = [...logLines, '03-30 10:00:02.000  1234  5678 D Tag: c'];
+            const index2 = service.buildIndex(moreLines, fmt, 'update-uri');
+            assert.notStrictEqual(index1, index2);
+            assert.strictEqual(service.getIndex('update-uri'), index2);
+            assert.strictEqual(index2.lineTimestamps.size, 3);
+        });
+    });
 });

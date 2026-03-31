@@ -60,6 +60,7 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    logger.info('[extension] Initializing core services...');
     const filterManager = new FilterManager(context);
     context.subscriptions.push(filterManager);
 
@@ -73,12 +74,15 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(quickAccessProvider);
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
+    logger.info('[extension] Core services initialized');
 
+    logger.info('[extension] Registering Workflow view...');
     const workflowProvider = new WorkflowWebviewProvider(context, workflowManager, logger);
     context.subscriptions.push(workflowProvider);
     context.subscriptions.push(
         vscode.window.registerWebviewViewProvider(Constants.Views.Workflow, workflowProvider)
     );
+    logger.info('[extension] Workflow view registered');
 
     let highlightCts: vscode.CancellationTokenSource | undefined;
 
@@ -94,6 +98,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     let lastProcessedDoc: vscode.TextDocument | undefined;
 
+    logger.info('[extension] Registering Filter views...');
     const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word', logger);
     context.subscriptions.push(wordTreeDataProvider);
     const wordTreeView = vscode.window.createTreeView(Constants.Views.Filters, {
@@ -127,6 +132,8 @@ export function activate(context: vscode.ExtensionContext) {
     setupExpansionSync(wordTreeView);
     setupExpansionSync(regexTreeView);
 
+    logger.info('[extension] Filter views registered');
+
     // Register Definition Provider for Click-to-Navigate
     context.subscriptions.push(
         vscode.languages.registerDefinitionProvider(
@@ -140,6 +147,7 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
+    logger.info('[extension] Registering Command Manager...');
     // Initialize Command Manager (Handles all command registrations)
     const jsonTreeWebview = new JsonTreeWebview(context, logger);
     context.subscriptions.push(jsonTreeWebview);
@@ -153,7 +161,10 @@ export function activate(context: vscode.ExtensionContext) {
     });
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
+    logger.info('[extension] Command Manager registered');
+
     // File Hierarchy Service & Navigation
+    logger.info('[extension] Registering File Hierarchy...');
     const fileHierarchyService = FileHierarchyService.createInstance(context);
     new NavigationCommandManager(context, fileHierarchyService, logger);
     const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
@@ -164,7 +175,10 @@ export function activate(context: vscode.ExtensionContext) {
         )
     );
 
+    logger.info('[extension] File Hierarchy registered');
+
     // ADB Devices
+    logger.info('[extension] Registering ADB Devices view...');
     const adbService = new AdbService(logger);
     context.subscriptions.push(adbService);
     const adbDeviceTreeProvider = new AdbDeviceTreeProvider(adbService);
@@ -175,7 +189,10 @@ export function activate(context: vscode.ExtensionContext) {
     });
     new AdbCommandManager(context, adbService, adbDeviceTreeProvider, adbTreeView, logger);
 
+    logger.info('[extension] ADB Devices view registered');
+
     // Runbook
+    logger.info('[extension] Registering Runbook view...');
     const runbookService = new RunbookService(context, logger);
     const runbookTreeDataProvider = new RunbookTreeDataProvider(runbookService);
     context.subscriptions.push(runbookTreeDataProvider);
@@ -185,7 +202,10 @@ export function activate(context: vscode.ExtensionContext) {
     });
     new RunbookCommandManager(context, runbookService, logger);
 
+    logger.info('[extension] Runbook view registered');
+
     // Log Bookmark
+    logger.info('[extension] Registering Bookmark view...');
     const bookmarkService = new LogBookmarkService(context);
     context.subscriptions.push(bookmarkService);
 
@@ -197,7 +217,10 @@ export function activate(context: vscode.ExtensionContext) {
 
     new LogBookmarkCommandManager(context, bookmarkService, highlightService);
 
+    logger.info('[extension] Bookmark view registered');
+
     // Timestamp Analysis — Status Bar + Time Range Explorer
+    logger.info('[extension] Registering Timestamp Analysis + Time Range Explorer...');
     const timestampService = new TimestampService();
     const timestampStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
     context.subscriptions.push(timestampStatusBar);
@@ -222,7 +245,7 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     const updateTimestampAnalysis = (document: vscode.TextDocument | undefined) => {
-        if (!document) {
+        if (!document || !isSupportedScheme(document.uri)) {
             timestampStatusBar.hide();
             timeRangeProvider.clearIndex();
             return;
@@ -293,6 +316,8 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
         timestampService.invalidateIndex(doc.uri.toString());
     }));
+    logger.info('[extension] Timestamp Analysis + Time Range Explorer registered');
+
     if (vscode.window.activeTextEditor) {
         updateTimestampAnalysis(vscode.window.activeTextEditor.document);
     }
@@ -317,6 +342,7 @@ export function activate(context: vscode.ExtensionContext) {
         lastProcessedDoc = editor.document;
     }
 
+    logger.info('[extension] Registering event listeners...');
     registerEditorEventListeners(context, {
         logger, sourceMapService, highlightService, resultCountService,
         quickAccessProvider, refreshHighlightsForEditor,
@@ -332,6 +358,7 @@ export function activate(context: vscode.ExtensionContext) {
         refreshHighlightsForEditor,
         setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
     });
+    logger.info('[extension] Activation complete');
 
     return {
         filterManager,

@@ -722,4 +722,110 @@ suite('TimestampService Test Suite', () => {
             assert.deepStrictEqual(result.lineMapping, [3, 4]);
         });
     });
+
+    // ── parseTimeInput ──
+
+    suite('parseTimeInput', () => {
+        const refDate = new Date(2026, 2, 30, 0, 0, 0, 0); // 2026-03-30
+        const cursorTime = new Date(2026, 2, 30, 14, 30, 0, 0); // 14:30:00
+
+        test('parses HH:MM', () => {
+            const result = service.parseTimeInput('14:32', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 32);
+            assert.strictEqual(result.getSeconds(), 0);
+            assert.strictEqual(result.getMilliseconds(), 0);
+        });
+
+        test('parses HH:MM:SS', () => {
+            const result = service.parseTimeInput('14:32:15', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 32);
+            assert.strictEqual(result.getSeconds(), 15);
+        });
+
+        test('parses HH:MM:SS.mmm', () => {
+            const result = service.parseTimeInput('14:32:15.123', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getMilliseconds(), 123);
+        });
+
+        test('parses HH:MM:SS.m (pads to milliseconds)', () => {
+            const result = service.parseTimeInput('14:32:15.1', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getMilliseconds(), 100);
+        });
+
+        test('parses single-digit hour', () => {
+            const result = service.parseTimeInput('9:05', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 9);
+            assert.strictEqual(result.getMinutes(), 5);
+        });
+
+        test('uses reference date for absolute time', () => {
+            const result = service.parseTimeInput('14:32', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getFullYear(), 2026);
+            assert.strictEqual(result.getMonth(), 2); // March (0-based)
+            assert.strictEqual(result.getDate(), 30);
+        });
+
+        test('returns undefined for invalid hours', () => {
+            assert.strictEqual(service.parseTimeInput('25:00', refDate), undefined);
+        });
+
+        test('returns undefined for invalid minutes', () => {
+            assert.strictEqual(service.parseTimeInput('14:60', refDate), undefined);
+        });
+
+        test('returns undefined for empty string', () => {
+            assert.strictEqual(service.parseTimeInput('', refDate), undefined);
+        });
+
+        test('returns undefined for garbage input', () => {
+            assert.strictEqual(service.parseTimeInput('hello', refDate), undefined);
+        });
+
+        test('parses +5m relative time', () => {
+            const result = service.parseTimeInput('+5m', refDate, cursorTime);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 35);
+        });
+
+        test('parses -30s relative time', () => {
+            const result = service.parseTimeInput('-30s', refDate, cursorTime);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 29);
+            assert.strictEqual(result.getSeconds(), 30);
+        });
+
+        test('parses +1h relative time', () => {
+            const result = service.parseTimeInput('+1h', refDate, cursorTime);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 15);
+            assert.strictEqual(result.getMinutes(), 30);
+        });
+
+        test('parses +100ms relative time', () => {
+            const result = service.parseTimeInput('+100ms', refDate, cursorTime);
+            assert.ok(result);
+            assert.strictEqual(result.getTime(), cursorTime.getTime() + 100);
+        });
+
+        test('relative time returns undefined without cursorTime', () => {
+            assert.strictEqual(service.parseTimeInput('+5m', refDate), undefined);
+        });
+
+        test('trims whitespace', () => {
+            const result = service.parseTimeInput('  14:32  ', refDate);
+            assert.ok(result);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 32);
+        });
+    });
 });

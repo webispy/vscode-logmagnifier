@@ -231,6 +231,7 @@ export const Ids = {
         TimeRangeTrimAfter: 'logmagnifier.timeRange.trimAfter',
         TimeRangeTrimBeforeLine: 'logmagnifier.timeRange.trimBeforeLine',
         TimeRangeTrimAfterLine: 'logmagnifier.timeRange.trimAfterLine',
+        TimestampGotoTime: 'logmagnifier.timestamp.gotoTime',
     },
 
     Views: {

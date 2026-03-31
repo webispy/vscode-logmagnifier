@@ -279,6 +279,61 @@ export class TimestampService {
     }
 
     /**
+     * Parse a user-supplied time input string into a Date.
+     *
+     * Supported formats:
+     * - Absolute: "14:32", "14:32:15", "14:32:15.123"
+     * - Relative: "+5m", "-30s", "+1h"
+     *
+     * Absolute times use the date from referenceDate (typically index.firstTime).
+     * Relative times offset from cursorTime (the timestamp at the current cursor line).
+     *
+     * @returns parsed Date, or undefined if the input is invalid
+     */
+    parseTimeInput(input: string, referenceDate: Date, cursorTime?: Date): Date | undefined {
+        const trimmed = input.trim();
+        if (!trimmed) {
+            return undefined;
+        }
+
+        // Relative time: +5m, -30s, +1h, +100ms
+        const relMatch = /^([+-])(\d+)(h|m|s|ms)$/.exec(trimmed);
+        if (relMatch) {
+            if (!cursorTime) {
+                return undefined;
+            }
+            const sign = relMatch[1] === '+' ? 1 : -1;
+            const value = parseInt(relMatch[2], 10);
+            const unit = relMatch[3];
+            let offsetMs = 0;
+            switch (unit) {
+                case 'h': offsetMs = value * 3600_000; break;
+                case 'm': offsetMs = value * 60_000; break;
+                case 's': offsetMs = value * 1000; break;
+                case 'ms': offsetMs = value; break;
+            }
+            return new Date(cursorTime.getTime() + sign * offsetMs);
+        }
+
+        // Absolute time: HH:MM, HH:MM:SS, HH:MM:SS.mmm
+        const absMatch = /^(\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/.exec(trimmed);
+        if (absMatch) {
+            const h = parseInt(absMatch[1], 10);
+            const m = parseInt(absMatch[2], 10);
+            const s = absMatch[3] !== undefined ? parseInt(absMatch[3], 10) : 0;
+            const ms = absMatch[4] !== undefined ? parseInt(absMatch[4].padEnd(3, '0'), 10) : 0;
+            if (h > 23 || m > 59 || s > 59 || ms > 999) {
+                return undefined;
+            }
+            const result = new Date(referenceDate);
+            result.setHours(h, m, s, ms);
+            return result;
+        }
+
+        return undefined;
+    }
+
+    /**
      * Parse a single line using the given format.
      * Returns the parsed Date, or undefined if the line has no timestamp.
      */

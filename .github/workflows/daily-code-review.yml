@@ -50,7 +50,7 @@ jobs:
           # Run Claude Code in non-interactive mode
           # Redirecting stderr to stdout (2>&1) to see any error messages in the CI logs.
           # We use tee to show output in console and save to file.
-          claude -p "Review the entire codebase based on the instructions in .claude/full-code-review.md and generate a full markdown report. Output ONLY the markdown report." --dangerously-skip-permissions 2>&1 | tee review_results/review-report.md
+          claude -p "Review the entire codebase based on the instructions in .agent/rules/code-review.md and generate a full markdown report. Output ONLY the markdown report." --dangerously-skip-permissions 2>&1 | tee review_results/review-report.md
 
       - name: Upload Review Report
         if: steps.check_commits.outputs.skip != 'true'

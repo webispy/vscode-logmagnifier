@@ -420,6 +420,54 @@
             "description": "When enabled, System Info queries the device's public IP via https://api.ipify.org. Disabled by default for privacy."
           }
         }
+      },
+      {
+        "title": "Timestamp",
+        "properties": {
+          "logmagnifier.timestamp.enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enable timestamp detection and analysis features."
+          },
+          "logmagnifier.timestamp.autoDetect": {
+            "type": "boolean",
+            "default": true,
+            "description": "Automatically detect timestamp format when a file is opened."
+          },
+          "logmagnifier.timestamp.customPatterns": {
+            "type": "array",
+            "default": [],
+            "description": "Custom timestamp patterns for format detection.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Display name for this format."
+                },
+                "regex": {
+                  "type": "string",
+                  "description": "Regular expression to match the timestamp."
+                },
+                "captureGroup": {
+                  "type": "number",
+                  "default": 1,
+                  "description": "Capture group index that holds the timestamp string."
+                },
+                "format": {
+                  "type": "string",
+                  "description": "Date format string (e.g., YYYY/MM/DD HH:mm:ss)."
+                }
+              },
+              "required": ["name", "regex", "format"]
+            }
+          },
+          "logmagnifier.timestamp.gapThreshold": {
+            "type": "number",
+            "default": 1000,
+            "description": "Minimum gap duration in milliseconds to highlight as a silence."
+          }
+        }
       }
     ],
     "viewsContainers": {
@@ -460,6 +508,11 @@
           "id": "logmagnifier-regex-filters",
           "name": "Regex Filters",
           "icon": "$(regex)"
+        },
+        {
+          "id": "logmagnifier-time-range",
+          "name": "Time Range Explorer",
+          "icon": "$(watch)"
         },
         {
           "id": "logmagnifier-adb-devices",

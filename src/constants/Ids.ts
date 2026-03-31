@@ -231,6 +231,7 @@ export const Ids = {
         RegexFilters: 'logmagnifier-regex-filters',
         Runbook: 'logmagnifier-runbook',
         Workflow: 'logmagnifier-workflow',
+        TimeRange: 'logmagnifier-time-range',
         ADBDevices: 'logmagnifier-adb-devices',
         Bookmark: 'logmagnifier-bookmark',
     },
@@ -268,6 +269,12 @@ export const Ids = {
             Path: 'adbPath',
             DefaultOptions: 'adbLogcatDefaultOptions',
             EnablePublicIpLookup: 'adbEnablePublicIpLookup',
+        },
+        Timestamp: {
+            Enabled: 'timestamp.enabled',
+            AutoDetect: 'timestamp.autoDetect',
+            CustomPatterns: 'timestamp.customPatterns',
+            GapThreshold: 'timestamp.gapThreshold',
         },
     },
 

@@ -225,6 +225,12 @@ export const Ids = {
 
         // Timestamp / Time Range
         TimeRangeJumpToLine: 'logmagnifier.timeRange.jumpToLine',
+        TimeRangeInclude: 'logmagnifier.timeRange.include',
+        TimeRangeIncludeWithMargin: 'logmagnifier.timeRange.includeWithMargin',
+        TimeRangeTrimBefore: 'logmagnifier.timeRange.trimBefore',
+        TimeRangeTrimAfter: 'logmagnifier.timeRange.trimAfter',
+        TimeRangeTrimBeforeLine: 'logmagnifier.timeRange.trimBeforeLine',
+        TimeRangeTrimAfterLine: 'logmagnifier.timeRange.trimAfterLine',
     },
 
     Views: {

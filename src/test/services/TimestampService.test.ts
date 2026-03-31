@@ -594,4 +594,132 @@ suite('TimestampService Test Suite', () => {
             assert.strictEqual(index2.lineTimestamps.size, 3);
         });
     });
+
+    // ── parseLine ──
+
+    suite('parseLine', () => {
+        test('returns Date for line with logcat timestamp', () => {
+            const fmt = service.detectFormat([
+                '03-30 14:30:05.123  1234  5678 D Tag: msg',
+            ])!;
+            const result = service.parseLine('03-30 14:30:05.123  1234  5678 D Tag: msg', fmt);
+            assert.ok(result instanceof Date);
+            assert.strictEqual(result.getHours(), 14);
+            assert.strictEqual(result.getMinutes(), 30);
+            assert.strictEqual(result.getSeconds(), 5);
+        });
+
+        test('returns undefined for line without timestamp', () => {
+            const fmt = service.detectFormat([
+                '03-30 14:30:05.123  1234  5678 D Tag: msg',
+            ])!;
+            assert.strictEqual(service.parseLine('no timestamp here', fmt), undefined);
+        });
+
+        test('returns Date for iso8601 format', () => {
+            const fmt = service.detectFormat([
+                '2026-03-30T14:30:05.000Z INFO message',
+            ])!;
+            const result = service.parseLine('2026-03-30T14:30:05.000Z INFO message', fmt);
+            assert.ok(result instanceof Date);
+        });
+    });
+
+    // ── filterLinesByTimeRange ──
+
+    suite('filterLinesByTimeRange', () => {
+        const logcatLines = [
+            '03-30 10:00:00.000  1234  5678 D Tag: line0',
+            '03-30 10:05:00.000  1234  5678 D Tag: line1',
+            '  continuation without timestamp',
+            '03-30 10:10:00.000  1234  5678 D Tag: line3',
+            '03-30 10:15:00.000  1234  5678 D Tag: line4',
+            '03-30 10:20:00.000  1234  5678 D Tag: line5',
+        ];
+
+        function makeDate(h: number, m: number): Date {
+            const d = new Date();
+            d.setMonth(2, 30); // March 30
+            d.setHours(h, m, 0, 0);
+            return d;
+        }
+
+        test('include range filters to matching lines only', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, makeDate(10, 5), makeDate(10, 10),
+            );
+            assert.strictEqual(result.filteredLines.length, 3);
+            assert.ok(result.filteredLines[0].includes('line1'));
+            assert.ok(result.filteredLines[1].includes('continuation'));
+            assert.ok(result.filteredLines[2].includes('line3'));
+            assert.deepStrictEqual(result.lineMapping, [1, 2, 3]);
+        });
+
+        test('includes context lines without timestamps', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, makeDate(10, 5), makeDate(10, 5),
+            );
+            // line1 + continuation (inherits line1 timestamp which is in range)
+            assert.strictEqual(result.filteredLines.length, 2);
+            assert.ok(result.filteredLines[0].includes('line1'));
+            assert.ok(result.filteredLines[1].includes('continuation'));
+        });
+
+        test('trim before: no startTime includes everything up to endTime', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, undefined, makeDate(10, 5),
+            );
+            assert.strictEqual(result.filteredLines.length, 3);
+            assert.ok(result.filteredLines[0].includes('line0'));
+            assert.ok(result.filteredLines[1].includes('line1'));
+            assert.ok(result.filteredLines[2].includes('continuation'));
+        });
+
+        test('trim after: no endTime includes everything from startTime', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, makeDate(10, 15), undefined,
+            );
+            assert.strictEqual(result.filteredLines.length, 2);
+            assert.ok(result.filteredLines[0].includes('line4'));
+            assert.ok(result.filteredLines[1].includes('line5'));
+        });
+
+        test('both undefined returns all lines', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, undefined, undefined,
+            );
+            assert.strictEqual(result.filteredLines.length, logcatLines.length);
+        });
+
+        test('empty lines array returns empty result', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                [], fmt, makeDate(10, 0), makeDate(10, 20),
+            );
+            assert.strictEqual(result.filteredLines.length, 0);
+            assert.strictEqual(result.lineMapping.length, 0);
+        });
+
+        test('range outside data returns empty result', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, makeDate(12, 0), makeDate(13, 0),
+            );
+            assert.strictEqual(result.filteredLines.length, 0);
+        });
+
+        test('lineMapping contains correct 0-based source indices', () => {
+            const fmt = service.detectFormat(logcatLines)!;
+            const result = service.filterLinesByTimeRange(
+                logcatLines, fmt, makeDate(10, 10), makeDate(10, 15),
+            );
+            // line3 (index 3) and line4 (index 4)
+            assert.deepStrictEqual(result.lineMapping, [3, 4]);
+        });
+    });
 });

@@ -105,8 +105,26 @@ const DETECT_SAMPLE_SIZE = 100;
 /** Minimum match ratio to accept a format (30%). */
 const MIN_MATCH_RATIO = 0.3;
 
+const DEFAULT_CACHE_MAX = 10;
+
 export class TimestampService {
     private readonly builtinFormats = getBuiltinFormats();
+    private readonly indexCache = new Map<string, TimestampIndex>();
+    private readonly cacheMax: number;
+
+    constructor(cacheMax = DEFAULT_CACHE_MAX) {
+        this.cacheMax = cacheMax;
+    }
+
+    /** Return a cached index for the given URI, or undefined if not cached. */
+    getIndex(documentUri: string): TimestampIndex | undefined {
+        return this.indexCache.get(documentUri);
+    }
+
+    /** Remove a cached index for the given URI. */
+    invalidateIndex(documentUri: string): void {
+        this.indexCache.delete(documentUri);
+    }
 
     /**
      * Detect the most likely timestamp format from a sample of lines.
@@ -178,7 +196,7 @@ export class TimestampService {
 
         const hourBuckets = this.buildHourBuckets(sortedEntries);
 
-        return {
+        const index: TimestampIndex = {
             documentUri,
             format,
             firstTime,
@@ -187,6 +205,17 @@ export class TimestampService {
             lineTimestamps,
             hourBuckets,
         };
+
+        // Evict oldest entries if cache is full
+        if (this.indexCache.size >= this.cacheMax && !this.indexCache.has(documentUri)) {
+            const oldestKey = this.indexCache.keys().next().value;
+            if (oldestKey !== undefined) {
+                this.indexCache.delete(oldestKey);
+            }
+        }
+        this.indexCache.set(documentUri, index);
+
+        return index;
     }
 
     /**

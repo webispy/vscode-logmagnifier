@@ -222,6 +222,9 @@ export const Ids = {
         RunbookExport: 'logmagnifier.runbook.export',
         RunbookImport: 'logmagnifier.runbook.import',
         RefreshRunbookView: 'logmagnifier.refreshRunbookView',
+
+        // Timestamp / Time Range
+        TimeRangeJumpToLine: 'logmagnifier.timeRange.jumpToLine',
     },
 
     Views: {

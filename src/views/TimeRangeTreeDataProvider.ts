@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 
+import { Constants } from '../Constants';
 import { TimestampIndex, TimeRangeNode } from '../models/Timestamp';
 import { IconUtils } from '../utils/IconUtils';
 import { ThemeUtils } from '../utils/ThemeUtils';
@@ -100,12 +101,12 @@ export class TimeRangeTreeDataProvider implements vscode.TreeDataProvider<TimeRa
             item.tooltip = md;
         }
 
-        // Leaf nodes jump to editor
+        // Leaf nodes jump to editor with flash
         if (isLeaf) {
             item.command = {
-                command: 'revealLine',
+                command: Constants.Commands.TimeRangeJumpToLine,
                 title: 'Go to Line',
-                arguments: [{ lineNumber: node.startLine + 1, at: 'center' }],
+                arguments: [node.startLine],
             };
         }
 

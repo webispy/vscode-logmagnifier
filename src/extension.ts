@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 
 import { Constants } from './Constants';
 import { FilterGroup, FilterItem, isFilterGroup } from './models/Filter';
+import { TimestampIndex } from './models/Timestamp';
 
 import { AdbCommandManager } from './commands/AdbCommandManager';
 import { CommandManager } from './commands/CommandManager';
@@ -208,6 +209,18 @@ export function activate(context: vscode.ExtensionContext) {
         showCollapseAll: true,
     });
 
+    const applyTimestampIndex = (index: TimestampIndex) => {
+        const text = timestampService.formatStatusBarText(index);
+        if (text) {
+            timestampStatusBar.text = text;
+            timestampStatusBar.tooltip = `Timestamp: ${index.format.name} (${index.lineTimestamps.size} lines with timestamps)`;
+            timestampStatusBar.show();
+        } else {
+            timestampStatusBar.hide();
+        }
+        timeRangeProvider.setIndex(index);
+    };
+
     const updateTimestampAnalysis = (document: vscode.TextDocument | undefined) => {
         if (!document) {
             timestampStatusBar.hide();
@@ -222,6 +235,15 @@ export function activate(context: vscode.ExtensionContext) {
                 timeRangeProvider.clearIndex();
                 return;
             }
+            const uri = document.uri.toString();
+
+            // Use cached index if available
+            const cached = timestampService.getIndex(uri);
+            if (cached) {
+                applyTimestampIndex(cached);
+                return;
+            }
+
             const lines: string[] = [];
             const sampleSize = Math.min(document.lineCount, 100);
             for (let i = 0; i < sampleSize; i++) {
@@ -237,16 +259,8 @@ export function activate(context: vscode.ExtensionContext) {
             for (let i = 0; i < document.lineCount; i++) {
                 allLines.push(document.lineAt(i).text);
             }
-            const index = timestampService.buildIndex(allLines, fmt, document.uri.toString());
-            const text = timestampService.formatStatusBarText(index);
-            if (text) {
-                timestampStatusBar.text = text;
-                timestampStatusBar.tooltip = `Timestamp: ${fmt.name} (${index.lineTimestamps.size} lines with timestamps)`;
-                timestampStatusBar.show();
-            } else {
-                timestampStatusBar.hide();
-            }
-            timeRangeProvider.setIndex(index);
+            const index = timestampService.buildIndex(allLines, fmt, uri);
+            applyTimestampIndex(index);
         } catch (e: unknown) {
             logger.error(`Error updating timestamp analysis: ${e instanceof Error ? e.message : String(e)}`);
             timestampStatusBar.hide();
@@ -254,8 +268,30 @@ export function activate(context: vscode.ExtensionContext) {
         }
     };
 
+    context.subscriptions.push(vscode.commands.registerCommand(
+        Constants.Commands.TimeRangeJumpToLine,
+        (line: number) => {
+            const editor = vscode.window.activeTextEditor;
+            if (!editor || line < 0 || line >= editor.document.lineCount) {
+                return;
+            }
+            const range = new vscode.Range(line, 0, line, 0);
+            editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+            editor.selection = new vscode.Selection(range.start, range.start);
+            highlightService.flashLine(editor, line);
+        }
+    ));
+
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
         updateTimestampAnalysis(editor?.document);
+    }));
+    // Invalidate timestamp cache when document content changes
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(e => {
+        timestampService.invalidateIndex(e.document.uri.toString());
+    }));
+    // Clean up timestamp cache when document is closed
+    context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
+        timestampService.invalidateIndex(doc.uri.toString());
     }));
     if (vscode.window.activeTextEditor) {
         updateTimestampAnalysis(vscode.window.activeTextEditor.document);

@@ -75,6 +75,7 @@ Follow the rules in `.agent/rules/work-plans.md` for task tracking.
 
 Key points:
 - Create plan files in `.agent/plans/` before starting non-trivial tasks
+- Each step 완료 시 즉시 체크박스 갱신, decisions/blockers 기록, INDEX.md 상태 반영
 - Keep `.agent/plans/INDEX.md` updated with one-line status per plan
 - On session start, read only `INDEX.md` first
 - Link related design docs at the top of each plan file

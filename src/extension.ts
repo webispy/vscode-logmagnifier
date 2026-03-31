@@ -22,6 +22,8 @@ import { LogProcessor } from './services/LogProcessor';
 import { ResultCountService } from './services/ResultCountService';
 import { RunbookService } from './services/RunbookService';
 import { SourceMapService } from './services/SourceMapService';
+import { TimestampService } from './services/TimestampService';
+import { TimeRangeTreeDataProvider } from './views/TimeRangeTreeDataProvider';
 import { WorkflowManager } from './services/WorkflowManager';
 import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
 import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
@@ -193,6 +195,71 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     new LogBookmarkCommandManager(context, bookmarkService, highlightService);
+
+    // Timestamp Analysis — Status Bar + Time Range Explorer
+    const timestampService = new TimestampService();
+    const timestampStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+    context.subscriptions.push(timestampStatusBar);
+
+    const timeRangeProvider = new TimeRangeTreeDataProvider();
+    context.subscriptions.push(timeRangeProvider);
+    vscode.window.createTreeView(Constants.Views.TimeRange, {
+        treeDataProvider: timeRangeProvider,
+        showCollapseAll: true,
+    });
+
+    const updateTimestampAnalysis = (document: vscode.TextDocument | undefined) => {
+        if (!document) {
+            timestampStatusBar.hide();
+            timeRangeProvider.clearIndex();
+            return;
+        }
+        try {
+            const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+            if (!config.get<boolean>(Constants.Configuration.Timestamp.Enabled, true) ||
+                !config.get<boolean>(Constants.Configuration.Timestamp.AutoDetect, true)) {
+                timestampStatusBar.hide();
+                timeRangeProvider.clearIndex();
+                return;
+            }
+            const lines: string[] = [];
+            const sampleSize = Math.min(document.lineCount, 100);
+            for (let i = 0; i < sampleSize; i++) {
+                lines.push(document.lineAt(i).text);
+            }
+            const fmt = timestampService.detectFormat(lines);
+            if (!fmt) {
+                timestampStatusBar.hide();
+                timeRangeProvider.clearIndex();
+                return;
+            }
+            const allLines: string[] = [];
+            for (let i = 0; i < document.lineCount; i++) {
+                allLines.push(document.lineAt(i).text);
+            }
+            const index = timestampService.buildIndex(allLines, fmt, document.uri.toString());
+            const text = timestampService.formatStatusBarText(index);
+            if (text) {
+                timestampStatusBar.text = text;
+                timestampStatusBar.tooltip = `Timestamp: ${fmt.name} (${index.lineTimestamps.size} lines with timestamps)`;
+                timestampStatusBar.show();
+            } else {
+                timestampStatusBar.hide();
+            }
+            timeRangeProvider.setIndex(index);
+        } catch (e: unknown) {
+            logger.error(`Error updating timestamp analysis: ${e instanceof Error ? e.message : String(e)}`);
+            timestampStatusBar.hide();
+            timeRangeProvider.clearIndex();
+        }
+    };
+
+    context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(editor => {
+        updateTimestampAnalysis(editor?.document);
+    }));
+    if (vscode.window.activeTextEditor) {
+        updateTimestampAnalysis(vscode.window.activeTextEditor.document);
+    }
 
     // Initialize mouse over context
     vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);

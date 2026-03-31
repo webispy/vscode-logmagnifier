@@ -104,6 +104,35 @@ export class IconUtils {
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="4" ${attr}/></svg>`;
     }
 
+    /**
+     * Generates a density bar chart SVG icon (16x16) for time range tree nodes.
+     * Each bar represents a sub-bucket; height is proportional to maxCount.
+     * Zero-count bars are not drawn (empty gap = no data).
+     */
+    public static generateDensityBarSvg(buckets: number[], maxCount: number, color: string): string {
+        color = IconUtils.sanitizeColor(color);
+        if (buckets.length === 0 || maxCount === 0) {
+            return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"></svg>`;
+        }
+        const barCount = buckets.length;
+        const gap = barCount <= 6 ? 1 : 0.5;
+        const innerWidth = 14; // 16 - 1px padding each side
+        const totalGap = (barCount - 1) * gap;
+        const barWidth = Math.max(1.5, (innerWidth - totalGap) / barCount);
+        const maxHeight = 13;
+        const border = `<rect x="0.5" y="0.5" width="15" height="15" rx="1.5" fill="none" stroke="${color}" stroke-width="0.7" opacity="0.4"/>`;
+        const bars = buckets.map((count, i) => {
+            if (count === 0) {
+                return '';
+            }
+            const height = Math.max(2, (count / maxCount) * maxHeight);
+            const x = 1 + i * (barWidth + gap);
+            const y = 15 - height;
+            return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${height.toFixed(1)}" fill="${color}" rx="0.5"/>`;
+        }).join('');
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">${border}${bars}</svg>`;
+    }
+
     /** Generates a simple filled-circle SVG icon. */
     public static generateSimpleCircleSvg(color: string): string {
         color = IconUtils.sanitizeColor(color);

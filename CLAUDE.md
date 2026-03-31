@@ -1,5 +1,14 @@
 # Project Guidelines
 
+## Project Structure
+
+```
+.agent/
+├── rules/        (committed) — code style, build, test, git, workflow rules
+├── plans/        (gitignored) — task progress tracking with INDEX.md
+└── designs/      (gitignored) — feature design specs and UI walkthroughs with INDEX.md
+```
+
 ## Code Style
 
 Follow the rules in `.agent/rules/code-style.md` for every new or modified file.
@@ -14,11 +23,33 @@ Key points:
 
 ## Build & Test
 
-- **Dev build**: `tsc` compiles to `out/`. `package.json` `"main"` points to `./out/extension.js`.
-- **Production build**: `esbuild` bundles to `dist/`. The build script patches `package.json` `"main"` to `./dist/extension.js` at packaging time via `setPackageMain`.
-- **`npm test`** runs `tsc` + `eslint` + `vscode-test`. Integration tests activate the extension using `package.json`'s `"main"` entry, so it **must** point to `./out/extension.js` in the committed file.
-- **Never change `"main"` in `package.json`** to `./dist/extension.js` permanently — it will break `npm test` after `rm -rf out/ dist/`.
-- Always verify changes with `rm -rf out/ dist/ && npm test` before considering work done.
+Follow the rules in `.agent/rules/build-test.md` for build and test workflows.
+
+Key points:
+- Dev build: `tsc` → `out/`, Production build: `esbuild` → `dist/`
+- `npm test` runs `tsc` + `eslint` + `vscode-test`
+- Never change `"main"` in `package.json` to `./dist/extension.js` permanently
+- Always verify with `rm -rf out/ dist/ && npm test` before considering work done
+
+## Testing
+
+Follow the rules in `.agent/rules/testing.md` for writing tests.
+
+Key points:
+- Tests in `src/test/`, mirroring source structure, named `*.test.ts`
+- Mocha TDD style: `suite()` / `test()` / `setup()`, not `describe()` / `it()`
+- Assertions: Node.js `assert` module (`strictEqual`, `deepStrictEqual`, `ok`)
+- New public methods need tests; bug fixes need regression tests
+
+## Git
+
+Follow the rules in `.agent/rules/git.md` for git commands and PR workflows.
+
+Key points:
+- Always use `--no-pager` for `git log` and `git diff`
+- No interactive flags (`-i`), no force-push to `main`
+- Branch naming: `<type>/<short-description>`
+- PR title under 70 characters, imperative mood
 
 ## Commit Messages
 
@@ -28,3 +59,32 @@ Key points:
 - Subject: `<subsystem>: <description>` — max 60 characters, imperative mood
 - Body: explain what and why (not how), wrap at 72 characters per line
 - Body must not be empty
+
+## Code Review
+
+Follow the rules in `.agent/rules/code-review.md` when performing full codebase reviews.
+
+Key points:
+- Review focus: rules compliance, structure, quality, security, performance, error handling, dependencies
+- Classify findings by severity: Critical / Major / Minor / Info
+- Save reports to `reports/` (gitignored), named `<model>_review_<version>_v<iteration>.md`
+
+## Work Plans
+
+Follow the rules in `.agent/rules/work-plans.md` for task tracking.
+
+Key points:
+- Create plan files in `.agent/plans/` before starting non-trivial tasks
+- Keep `.agent/plans/INDEX.md` updated with one-line status per plan
+- On session start, read only `INDEX.md` first
+- Link related design docs at the top of each plan file
+
+## Design Documents
+
+Follow the rules in `.agent/rules/design-docs.md` for feature design.
+
+Key points:
+- Design and walkthrough docs live in `.agent/designs/` (gitignored)
+- Keep `.agent/designs/INDEX.md` updated with one-line summary per design
+- Walkthroughs include ASCII art UI states and implementation notes per step
+- Reference during implementation, bug fixes, and refactoring

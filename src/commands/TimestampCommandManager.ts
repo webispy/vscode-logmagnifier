@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 
 import { FileHierarchyService } from '../services/FileHierarchyService';
+import { HighlightService } from '../services/HighlightService';
 import { Logger } from '../services/Logger';
 import { SourceMapService } from '../services/SourceMapService';
 import { TimestampService } from '../services/TimestampService';
@@ -18,6 +19,7 @@ export class TimestampCommandManager {
         private readonly context: vscode.ExtensionContext,
         private readonly timestampService: TimestampService,
         private readonly sourceMapService: SourceMapService,
+        private readonly highlightService: HighlightService,
         private readonly timeRangeProvider: TimeRangeTreeDataProvider,
         private readonly logger: Logger,
     ) {
@@ -51,6 +53,11 @@ export class TimestampCommandManager {
             vscode.commands.registerCommand(
                 Constants.Commands.TimeRangeTrimAfterLine,
                 () => this.trimAfterLine(),
+            ),
+            // Go to Timestamp
+            vscode.commands.registerCommand(
+                Constants.Commands.TimestampGotoTime,
+                () => this.gotoTime(),
             ),
         );
     }
@@ -116,6 +123,44 @@ export class TimestampCommandManager {
             return;
         }
         await this.executeTimeFilter(undefined, lineTime);
+    }
+
+    private async gotoTime(): Promise<void> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        const index = this.timeRangeProvider.getIndex();
+        if (!index) {
+            vscode.window.showWarningMessage('No timestamp index available for this document.');
+            return;
+        }
+
+        const cursorTime = this.getActiveLineTimestamp();
+
+        const input = await vscode.window.showInputBox({
+            prompt: 'Go to timestamp',
+            placeHolder: 'e.g. 14:32, 14:32:15, +5m, -30s',
+        });
+        if (input === undefined) {
+            return;
+        }
+
+        const targetTime = this.timestampService.parseTimeInput(input, index.firstTime, cursorTime);
+        if (!targetTime) {
+            vscode.window.showWarningMessage(`Invalid time input: "${input}"`);
+            return;
+        }
+
+        const line = this.timestampService.findLineByTime(index, targetTime);
+        if (line < 0 || line >= editor.document.lineCount) {
+            return;
+        }
+
+        const range = new vscode.Range(line, 0, line, 0);
+        editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+        editor.selection = new vscode.Selection(range.start, range.start);
+        this.highlightService.flashLine(editor, line);
     }
 
     /** Parse the timestamp from the active editor's cursor line. */

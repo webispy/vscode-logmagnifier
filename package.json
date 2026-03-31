@@ -580,6 +580,12 @@
         "command": "logmagnifier.hierarchy.showFullTree",
         "key": "ctrl+cmd+t",
         "when": "editorTextFocus"
+      },
+      {
+        "command": "logmagnifier.timestamp.gotoTime",
+        "key": "ctrl+cmd+g",
+        "mac": "ctrl+cmd+g",
+        "when": "editorTextFocus"
       }
     ],
     "commands": [
@@ -1332,6 +1338,12 @@
         "command": "logmagnifier.timeRange.trimAfterLine",
         "title": "Extract Start → This Line",
         "category": "LogMagnifier"
+      },
+      {
+        "command": "logmagnifier.timestamp.gotoTime",
+        "title": "Go to Timestamp",
+        "category": "LogMagnifier",
+        "icon": "$(watch)"
       }
     ],
     "submenus": [

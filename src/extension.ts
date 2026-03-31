@@ -224,6 +224,7 @@ export function activate(context: vscode.ExtensionContext) {
     logger.info('[extension] Registering Timestamp Analysis + Time Range Explorer...');
     const timestampService = new TimestampService();
     const timestampStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 50);
+    timestampStatusBar.command = Constants.Commands.TimestampGotoTime;
     context.subscriptions.push(timestampStatusBar);
 
     const timeRangeProvider = new TimeRangeTreeDataProvider();
@@ -318,7 +319,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
         timestampService.invalidateIndex(doc.uri.toString());
     }));
-    new TimestampCommandManager(context, timestampService, sourceMapService, timeRangeProvider, logger);
+    new TimestampCommandManager(context, timestampService, sourceMapService, highlightService, timeRangeProvider, logger);
     logger.info('[extension] Timestamp Analysis + Time Range Explorer registered');
 
     if (vscode.window.activeTextEditor) {

@@ -8,6 +8,7 @@ import { AdbCommandManager } from './commands/AdbCommandManager';
 import { CommandManager } from './commands/CommandManager';
 import { LogBookmarkCommandManager } from './commands/LogBookmarkCommandManager';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
+import { TimestampCommandManager } from './commands/TimestampCommandManager';
 import { RunbookCommandManager } from './commands/RunbookCommandManager';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
@@ -245,9 +246,10 @@ export function activate(context: vscode.ExtensionContext) {
     };
 
     const updateTimestampAnalysis = (document: vscode.TextDocument | undefined) => {
-        if (!document || !isSupportedScheme(document.uri)) {
-            timestampStatusBar.hide();
-            timeRangeProvider.clearIndex();
+        if (!document) {
+            return;
+        }
+        if (!isSupportedScheme(document.uri)) {
             return;
         }
         try {
@@ -316,6 +318,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
         timestampService.invalidateIndex(doc.uri.toString());
     }));
+    new TimestampCommandManager(context, timestampService, sourceMapService, timeRangeProvider, logger);
     logger.info('[extension] Timestamp Analysis + Time Range Explorer registered');
 
     if (vscode.window.activeTextEditor) {

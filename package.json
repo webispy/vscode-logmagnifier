@@ -1298,6 +1298,40 @@
         "command": "logmagnifier.hierarchy.showFullTree",
         "title": "Show Full Navigation Tree",
         "category": "LogMagnifier"
+      },
+      {
+        "command": "logmagnifier.timeRange.include",
+        "title": "Extract This Range",
+        "category": "LogMagnifier",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "logmagnifier.timeRange.includeWithMargin",
+        "title": "Extract Range ± Margin...",
+        "category": "LogMagnifier",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "logmagnifier.timeRange.trimBefore",
+        "title": "Extract This Time → End",
+        "category": "LogMagnifier",
+        "icon": "$(arrow-right)"
+      },
+      {
+        "command": "logmagnifier.timeRange.trimAfter",
+        "title": "Extract Start → This Time",
+        "category": "LogMagnifier",
+        "icon": "$(arrow-left)"
+      },
+      {
+        "command": "logmagnifier.timeRange.trimBeforeLine",
+        "title": "Extract This Line → End",
+        "category": "LogMagnifier"
+      },
+      {
+        "command": "logmagnifier.timeRange.trimAfterLine",
+        "title": "Extract Start → This Line",
+        "category": "LogMagnifier"
       }
     ],
     "submenus": [
@@ -1332,6 +1366,30 @@
     ],
     "menus": {
       "commandPalette": [
+        {
+          "command": "logmagnifier.timeRange.include",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.timeRange.includeWithMargin",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimBefore",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimAfter",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimBeforeLine",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimAfterLine",
+          "when": "false"
+        },
         {
           "command": "logmagnifier.addMatchListToBookmark",
           "when": "false"
@@ -1766,6 +1824,16 @@
           "command": "logmagnifier.addSelectionMatchesToBookmark",
           "group": "4_bookmark@2",
           "when": "editorHasSelection && resourceScheme != output && resourceScheme != debug"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimBeforeLine",
+          "group": "5_timeRange@1",
+          "when": "editorTextFocus && resourceScheme != output && resourceScheme != debug"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimAfterLine",
+          "group": "5_timeRange@2",
+          "when": "editorTextFocus && resourceScheme != output && resourceScheme != debug"
         }
       ],
       "logmagnifier.filterTypeSubmenu": [
@@ -1981,6 +2049,26 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "logmagnifier.timeRange.include",
+          "when": "view == logmagnifier-time-range && viewItem == timeRangeNode",
+          "group": "1_filter@1"
+        },
+        {
+          "command": "logmagnifier.timeRange.includeWithMargin",
+          "when": "view == logmagnifier-time-range && viewItem == timeRangeNode",
+          "group": "1_filter@2"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimBefore",
+          "when": "view == logmagnifier-time-range && viewItem == timeRangeNode",
+          "group": "2_trim@1"
+        },
+        {
+          "command": "logmagnifier.timeRange.trimAfter",
+          "when": "view == logmagnifier-time-range && viewItem == timeRangeNode",
+          "group": "2_trim@2"
+        },
         {
           "command": "logmagnifier.openChromeInspect",
           "when": "view == logmagnifier-adb-devices && viewItem == chromeInspect",

@@ -23,6 +23,11 @@ export class TimeRangeTreeDataProvider implements vscode.TreeDataProvider<TimeRa
         this.disposables.push(this._onDidChangeTreeData);
     }
 
+    /** Return the current index, if any. */
+    getIndex(): TimestampIndex | undefined {
+        return this.index;
+    }
+
     /** Replace the current index and refresh the tree. */
     setIndex(index: TimestampIndex): void {
         this.index = index;
@@ -100,6 +105,8 @@ export class TimeRangeTreeDataProvider implements vscode.TreeDataProvider<TimeRa
             }
             item.tooltip = md;
         }
+
+        item.contextValue = 'timeRangeNode';
 
         // Leaf nodes jump to editor with flash
         if (isLeaf) {

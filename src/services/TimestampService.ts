@@ -278,6 +278,55 @@ export class TimestampService {
         return entries[lo][0];
     }
 
+    /**
+     * Parse a single line using the given format.
+     * Returns the parsed Date, or undefined if the line has no timestamp.
+     */
+    parseLine(line: string, format: TimestampFormat): Date | undefined {
+        const match = format.regex.exec(line);
+        if (!match) {
+            return undefined;
+        }
+        return format.parse(match[format.captureGroup]);
+    }
+
+    /**
+     * Filter lines by time range, returning only lines within [startTime, endTime].
+     * Lines without a timestamp are included if they fall between two timestamped
+     * lines that are within the range (context lines such as stack traces).
+     *
+     * @returns filtered lines and a 0-based line mapping (output index → source line number)
+     */
+    filterLinesByTimeRange(
+        lines: string[],
+        format: TimestampFormat,
+        startTime?: Date,
+        endTime?: Date,
+    ): { filteredLines: string[]; lineMapping: number[] } {
+        const startMs = startTime?.getTime() ?? -Infinity;
+        const endMs = endTime?.getTime() ?? Infinity;
+
+        const filteredLines: string[] = [];
+        const lineMapping: number[] = [];
+
+        let lastTimestampInRange = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            const ts = this.parseLine(lines[i], format);
+            if (ts) {
+                const tsMs = ts.getTime();
+                lastTimestampInRange = tsMs >= startMs && tsMs <= endMs;
+            }
+            // Include line if last seen timestamp is within range
+            if (lastTimestampInRange) {
+                filteredLines.push(lines[i]);
+                lineMapping.push(i);
+            }
+        }
+
+        return { filteredLines, lineMapping };
+    }
+
     // ── Private helpers ──
 
     private buildHourBuckets(sortedEntries: [number, Date][]): TimeRangeNode[] {

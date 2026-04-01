@@ -26,7 +26,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         this.htmlGenerator = new LogBookmarkHtmlGenerator(this.extensionUri, this.bookmarkService, this.logger);
 
         this.disposables.push(this.bookmarkService.onDidChangeBookmarks(() => {
-            this.updateContent().catch(e =>
+            this.updateContent().catch((e: unknown) =>
                 this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
             );
         }));
@@ -38,13 +38,13 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
             // Preserve state, no forced collapse on add
             this.foldedUris.delete(addedKey);
 
-            this.updateContent().catch(e =>
+            this.updateContent().catch((e: unknown) =>
                 this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
             );
             // Clear flash after 1 second
             setTimeout(() => {
                 this.lastAddedUri = undefined;
-                this.updateContent().catch(e =>
+                this.updateContent().catch((e: unknown) =>
                     this.logger.error(`[BookmarkWebview] Failed to update after flash: ${e instanceof Error ? e.message : String(e)}`)
                 );
             }, 1000);
@@ -76,7 +76,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         uriString: newActiveUri
                     });
                 } else {
-                    this.updateContent().catch(e =>
+                    this.updateContent().catch((e: unknown) =>
                         this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
                     );
                 }
@@ -171,7 +171,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                             } else {
                                 this.foldedUris.add(data.uriString);
                             }
-                            this.updateContent().catch(e =>
+                            this.updateContent().catch((e: unknown) =>
                                 this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
                             );
                         }
@@ -184,7 +184,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 }
             });
 
-            this.updateContent().catch(e =>
+            this.updateContent().catch((e: unknown) =>
                 this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
             );
         } catch (e: unknown) {
@@ -200,7 +200,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
         for (const key of bookmarksMap.keys()) {
             this.foldedUris.add(key);
         }
-        this.updateContent().catch(e =>
+        this.updateContent().catch((e: unknown) =>
             this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)
         );
     }

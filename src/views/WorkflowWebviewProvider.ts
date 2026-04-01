@@ -51,7 +51,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
 
             // Listen for changes
             this.workflowManager.onDidChangeWorkflow(() => {
-                this.refresh().catch(e =>
+                this.refresh().catch((e: unknown) =>
                     this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
                 );
             }, null, this.disposables);
@@ -59,7 +59,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
             // Visibility changes
             webviewView.onDidChangeVisibility(() => {
                 if (webviewView.visible) {
-                    this.refresh().catch(e =>
+                    this.refresh().catch((e: unknown) =>
                         this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
                     );
                 }
@@ -233,7 +233,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
 
             quickPick.hide();
             await this.workflowManager.addProfileToWorkflow(data.id, profileNameToAdd, data.parentId);
-            this.refresh().catch(e =>
+            this.refresh().catch((e: unknown) =>
                 this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
             );
         });
@@ -290,7 +290,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         );
         if (confirm === 'Remove') {
             await this.workflowManager.removeStepFromWorkflow(data.id, data.stepId);
-            this.refresh().catch(e =>
+            this.refresh().catch((e: unknown) =>
                 this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
             );
         }
@@ -306,7 +306,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         } else {
             await this.workflowManager.moveStepDown(data.id, data.stepId);
         }
-        this.refresh().catch(e =>
+        this.refresh().catch((e: unknown) =>
             this.logger.error(`[WorkflowWebviewProvider] Refresh failed: ${e instanceof Error ? e.message : String(e)}`)
         );
     }

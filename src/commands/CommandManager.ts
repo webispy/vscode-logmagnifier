@@ -37,9 +37,6 @@ export interface CommandManagerServices {
 
 export class CommandManager {
     private static readonly jsonPreviewDebounceMs = 50;
-    private lastActiveLine: number = -1;
-    private lastUriStr: string = '';
-    private debounceTimer: NodeJS.Timeout | undefined;
 
     private readonly filterManager: FilterManager;
     private readonly highlightService: HighlightService;
@@ -50,6 +47,9 @@ export class CommandManager {
     private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly jsonPrettyService: JsonPrettyService;
     private readonly sourceMapService: SourceMapService;
+    private lastActiveLine: number = -1;
+    private lastUriStr: string = '';
+    private debounceTimer: NodeJS.Timeout | undefined;
 
     constructor(
         private readonly context: vscode.ExtensionContext,

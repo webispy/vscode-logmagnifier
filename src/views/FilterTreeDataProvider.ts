@@ -28,16 +28,17 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     }
 
     private getCachedIcon(key: string, generator: () => string): vscode.Uri {
-        if (!this.iconCache.has(key)) {
-            if (this.iconCache.size >= FilterTreeDataProvider.maxIconCacheSize) {
-                const oldestKey = this.iconCache.keys().next().value;
-                if (oldestKey) { this.iconCache.delete(oldestKey); }
-            }
-            const uri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(generator()).toString('base64')}`);
-            this.iconCache.set(key, uri);
-            return uri;
+        const cached = this.iconCache.get(key);
+        if (cached) {
+            return cached;
         }
-        return this.iconCache.get(key) as vscode.Uri;
+        if (this.iconCache.size >= FilterTreeDataProvider.maxIconCacheSize) {
+            const oldestKey = this.iconCache.keys().next().value;
+            if (oldestKey) { this.iconCache.delete(oldestKey); }
+        }
+        const uri = vscode.Uri.parse(`data:image/svg+xml;base64,${Buffer.from(generator()).toString('base64')}`);
+        this.iconCache.set(key, uri);
+        return uri;
     }
 
     /** Fires a tree data change event to refresh the view. */

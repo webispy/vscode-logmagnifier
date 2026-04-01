@@ -261,7 +261,7 @@ export class CommandManager {
         );
 
         if (reload === Constants.Prompts.ReloadConfirm) {
-            vscode.commands.executeCommand('workbench.action.reloadWindow');
+            await vscode.commands.executeCommand('workbench.action.reloadWindow');
         }
     }
 }

@@ -310,7 +310,7 @@ export class FilterExportImportCommandManager {
 
                     // Refresh list
                     quickPick.hide();
-                    vscode.commands.executeCommand(Constants.Commands.ManageProfiles);
+                    vscode.commands.executeCommand(Constants.Commands.ManageProfiles).then(undefined, () => { /* command routing error is non-fatal */ });
                 }
             });
 

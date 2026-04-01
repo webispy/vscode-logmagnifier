@@ -432,7 +432,7 @@ export class TimestampService {
         const sortedHours = Array.from(hourGroups.keys()).sort((a, b) => a - b);
 
         for (const hour of sortedHours) {
-            const entries = hourGroups.get(hour)!;
+            const entries = hourGroups.get(hour) ?? [];
             const startTime = entries[0][1];
             const endTime = entries[entries.length - 1][1];
             const startLine = entries[0][0];
@@ -472,7 +472,7 @@ export class TimestampService {
         const sortedBuckets = Array.from(subGroups.keys()).sort((a, b) => a - b);
 
         for (const bucket of sortedBuckets) {
-            const subEntries = subGroups.get(bucket)!;
+            const subEntries = subGroups.get(bucket) ?? [];
             const children = this.buildMinuteBuckets(subEntries);
 
             nodes.push({
@@ -505,7 +505,7 @@ export class TimestampService {
         const sortedMinutes = Array.from(minuteGroups.keys()).sort((a, b) => a - b);
 
         for (const minute of sortedMinutes) {
-            const minEntries = minuteGroups.get(minute)!;
+            const minEntries = minuteGroups.get(minute) ?? [];
             nodes.push({
                 startTime: minEntries[0][1],
                 endTime: minEntries[minEntries.length - 1][1],

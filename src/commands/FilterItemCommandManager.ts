@@ -330,11 +330,13 @@ export class FilterItemCommandManager {
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateFilter, (item: FilterGroup | undefined) => {
             // Pass the item (Group) to the AddFilter command so it knows where to add
-            vscode.commands.executeCommand(Constants.Commands.AddFilter, item);
+            vscode.commands.executeCommand(Constants.Commands.AddFilter, item).then(undefined, (e: unknown) =>
+                this.logger.error(`[FilterItemCommand] CreateFilter failed: ${e instanceof Error ? e.message : String(e)}`));
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateRegexFilter, (item: FilterGroup | undefined) => {
-            vscode.commands.executeCommand(Constants.Commands.AddRegexFilter, item);
+            vscode.commands.executeCommand(Constants.Commands.AddRegexFilter, item).then(undefined, (e: unknown) =>
+                this.logger.error(`[FilterItemCommand] CreateRegexFilter failed: ${e instanceof Error ? e.message : String(e)}`));
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteFilter, async (item: FilterGroup | FilterItem) => {

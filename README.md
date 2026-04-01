@@ -49,6 +49,12 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Runbook**: Manage and execute operational runbooks via an interactive, Markdown-based notebook interface with real-time webview output. Write documentation alongside executable shell code blocks, stop long-running commands, edit scripts inline, and share configurations via import/export.
 - **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
+- **Timestamp Analysis**: Automatic timestamp detection and time-based log navigation.
+  - **Auto Detection**: Recognizes 8 built-in formats (ISO 8601, Apache, syslog, Android logcat, etc.).
+  - **Time Range Explorer**: Hierarchical tree view (hour → 10min → minute) with density bar icons.
+  - **Time Range Extract**: Extract log segments by time range via tree or editor context menus.
+  - **Go to Timestamp**: Jump to a specific time (`Ctrl+Cmd+G`) with absolute (`HH:MM:SS`) or relative (`+5m`, `-30s`) input.
+  - **Selection Gap Display**: Select multiple lines to see time gaps — gutter icons mark gaps, hover shows duration, status bar summarizes the selection.
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
   - **CodeLens**: clickable "Original" and "Parent" links automatically appear at the top of filtered files.
   - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (Ctrl+Cmd+T).
@@ -158,6 +164,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 3.  **Depth Control**: Use the **+/-** icons to incrementally expand or collapse all nodes by one level at a time.
 4.  **Search**: Use the search box to filter visible nodes by key or value.
 
+### Timestamp Analysis
+
+1.  **Auto Detection**: Open a log file with timestamps — the format is detected automatically and shown in the status bar.
+2.  **Time Range Explorer**: Browse log distribution by time in the "Time Range Explorer" tree view. Click any node to jump to that time range.
+3.  **Extract by Time Range**:
+    - Right-click a tree node → **Extract This Time → End** or **Extract Start → This Time**.
+    - Right-click in the editor → **Extract This Line → End** or **Extract Start → This Line**.
+    - **Extract This Range** / **Extract Range ± Margin...** to extract a specific time window.
+4.  **Go to Timestamp**: Press `Ctrl+Cmd+G` (or click the status bar) to jump to a specific time. Supports absolute (`14:30`, `14:30:05.123`) and relative (`+5m`, `-30s`) input.
+5.  **Selection Gap Display**: Select multiple lines to analyze time gaps — clock icons appear in the gutter at gap locations, hover for details, and the status bar shows a summary.
+6.  **Settings**: Configure via `logmagnifier.timestamp.enabled`, `autoDetect`, `customPatterns`, and `gapThreshold`.
+
 ### Log Bookmarks
 
 ![Bookmarks Demo](resources/demo/bookmark.gif)
@@ -201,6 +219,10 @@ This extension contributes the following settings:
 * `logmagnifier.adbLogcatDefaultOptions`: Default options for adb logcat command. (Default: `-v threadtime`)
 * `logmagnifier.bookmark.maxMatches`: Maximum number of matches to add to bookmarks at once. (Default: `500`)
 * `logmagnifier.removeMatches.maxLines`: Threshold for confirming removal of lines matching selection. (Default: `2000`)
+* `logmagnifier.timestamp.enabled`: Enable timestamp analysis features. (Default: `true`)
+* `logmagnifier.timestamp.autoDetect`: Automatically detect timestamp format when opening log files. (Default: `true`)
+* `logmagnifier.timestamp.customPatterns`: Additional timestamp patterns for detection.
+* `logmagnifier.timestamp.gapThreshold`: Minimum time gap in milliseconds to display in selection gap analysis. (Default: `1000`)
 
 ## Known Limitations
 

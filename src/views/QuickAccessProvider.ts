@@ -2,10 +2,10 @@ import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
 
-import { EditorUtils } from '../utils/EditorUtils';
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
 import { WorkflowManager } from '../services/WorkflowManager';
+import { EditorUtils } from '../utils/EditorUtils';
 
 export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();

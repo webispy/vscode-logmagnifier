@@ -36,7 +36,8 @@ export class FilterExecutionCommandManager {
     /** Updates the prepend-line-numbers flag and syncs the VS Code context key. */
     private setPrependLineNumbersEnabled(value: boolean) {
         this.prependLineNumbersEnabled = value;
-        vscode.commands.executeCommand('setContext', Constants.ContextKeys.PrependLineNumbersEnabled, value);
+        vscode.commands.executeCommand('setContext', Constants.ContextKeys.PrependLineNumbersEnabled, value).then(undefined, (e: unknown) =>
+            this.logger.error(`[FilterExecution] setContext failed: ${e instanceof Error ? e.message : String(e)}`));
     }
 
     /**

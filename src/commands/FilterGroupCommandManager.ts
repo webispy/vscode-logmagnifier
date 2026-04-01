@@ -121,7 +121,8 @@ export class FilterGroupCommandManager {
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.DeleteGroup, (item: FilterGroup | undefined) => {
             if (item) {
-                vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item);
+                vscode.commands.executeCommand(Constants.Commands.DeleteFilter, item).then(undefined, (e: unknown) =>
+                    this.logger.error(`[FilterGroupCommand] DeleteGroup failed: ${e instanceof Error ? e.message : String(e)}`));
             }
         }));
     }

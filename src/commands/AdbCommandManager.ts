@@ -27,18 +27,11 @@ export class AdbCommandManager {
     /** Listens for tree view selection changes and updates the Chrome Inspect context key. */
     private registerSelectionListener() {
         this.context.subscriptions.push(this.adbTreeView.onDidChangeSelection(e => {
-            if (e.selection.length > 0) {
-                const item = e.selection[0];
-                // Check if it is Chrome Inspect item
-                // We use type guard or check property
-                if ('type' in item && item.type === 'chromeInspect') {
-                    vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', true);
-                } else {
-                    vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', false);
-                }
-            } else {
-                vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', false);
-            }
+            const isChromeInspect = e.selection.length > 0
+                && 'type' in e.selection[0]
+                && e.selection[0].type === 'chromeInspect';
+            vscode.commands.executeCommand('setContext', 'logmagnifier.chromeInspectSelected', isChromeInspect).then(undefined, (err: unknown) =>
+                this.logger.error(`[AdbCommand] setContext failed: ${err instanceof Error ? err.message : String(err)}`));
         }));
     }
 

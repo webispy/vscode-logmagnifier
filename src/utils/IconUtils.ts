@@ -138,4 +138,14 @@ export class IconUtils {
         color = IconUtils.sanitizeColor(color);
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="${color}"/></svg>`;
     }
+
+    /** Generates a small clock/gap indicator SVG icon for gutter display. */
+    public static generateGapSvg(color: string): string {
+        color = IconUtils.sanitizeColor(color);
+        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">`
+            + `<circle cx="8" cy="8" r="6.5" fill="none" stroke="${color}" stroke-width="1.5"/>`
+            + `<line x1="8" y1="4" x2="8" y2="8.5" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`
+            + `<line x1="8" y1="8.5" x2="11" y2="10" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>`
+            + `</svg>`;
+    }
 }

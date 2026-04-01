@@ -244,6 +244,34 @@ export class TimestampService {
     }
 
     /**
+     * Find gaps within a specific line range of an index.
+     * Same logic as findGaps but restricted to [startLine, endLine].
+     */
+    findGapsInRange(index: TimestampIndex, startLine: number, endLine: number, thresholdMs: number): GapInfo[] {
+        const entries = Array.from(index.lineTimestamps.entries())
+            .filter(([line]) => line >= startLine && line <= endLine)
+            .sort((a, b) => a[0] - b[0]);
+        const gaps: GapInfo[] = [];
+
+        for (let i = 1; i < entries.length; i++) {
+            const [prevLine, prevTime] = entries[i - 1];
+            const [currLine, currTime] = entries[i];
+            const durationMs = currTime.getTime() - prevTime.getTime();
+            if (durationMs >= thresholdMs) {
+                gaps.push({
+                    beforeLine: prevLine,
+                    afterLine: currLine,
+                    beforeTime: prevTime,
+                    afterTime: currTime,
+                    durationMs,
+                });
+            }
+        }
+
+        return gaps;
+    }
+
+    /**
      * Binary search for the line closest to (but not after) the target time.
      * Returns -1 if the index is empty.
      */

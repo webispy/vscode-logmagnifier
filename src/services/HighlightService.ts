@@ -2,9 +2,11 @@ import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
 import { FilterItem, HighlightMode } from '../models/Filter';
+import { GapInfo } from '../models/Timestamp';
 
 import { FilterManager } from './FilterManager';
 import { Logger } from './Logger';
+import { IconUtils } from '../utils/IconUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 
 export type HighlightColor = string | { light: string; dark: string };
@@ -24,6 +26,7 @@ export class HighlightService implements vscode.Disposable {
     private decorationTypes: Map<string, { decoration: vscode.TextEditorDecorationType, config: DecorationConfig }> = new Map();
     private activeFlashDecoration: vscode.TextEditorDecorationType | undefined;
     private activeFlashTimeout: NodeJS.Timeout | undefined;
+    private gapDecorationType: vscode.TextEditorDecorationType | undefined;
     private shownErrorFilterIds: Set<string> = new Set();
     private cachedEnableRegexHighlight: boolean = false;
     private cachedDefaultColor: HighlightColor = Constants.Configuration.Regex.DefaultHighlightColor;
@@ -498,6 +501,50 @@ export class HighlightService implements vscode.Disposable {
         }, Constants.Defaults.FlashDurationMs);
     }
 
+    /** Show gap gutter icons on the afterLine of each gap, with hover tooltips. */
+    public showGapDecorations(editor: vscode.TextEditor, gaps: GapInfo[]): void {
+        if (!this.gapDecorationType) {
+            const svg = IconUtils.generateGapSvg('#f0a020');
+            const iconUri = vscode.Uri.parse(
+                `data:image/svg+xml;base64,${Buffer.from(svg).toString('base64')}`,
+            );
+            this.gapDecorationType = vscode.window.createTextEditorDecorationType({
+                gutterIconPath: iconUri,
+                gutterIconSize: 'contain',
+            });
+        }
+
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const formatTime = (d: Date) =>
+            `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        const formatDuration = (ms: number): string => {
+            if (ms < 1000) { return `${ms}ms`; }
+            if (ms < 60_000) { return `${(ms / 1000).toFixed(1)}s`; }
+            return `${(ms / 60_000).toFixed(1)}m`;
+        };
+
+        const decorations: vscode.DecorationOptions[] = gaps.map(gap => {
+            const md = new vscode.MarkdownString();
+            md.appendMarkdown(
+                `**+${formatDuration(gap.durationMs)}** &nbsp; (${formatTime(gap.beforeTime)} → ${formatTime(gap.afterTime)})`,
+            );
+            const lineRange = editor.document.lineAt(gap.afterLine).range;
+            return {
+                range: lineRange,
+                hoverMessage: md,
+            };
+        });
+
+        editor.setDecorations(this.gapDecorationType, decorations);
+    }
+
+    /** Clear gap gutter icons from the editor. */
+    public clearGapDecorations(editor: vscode.TextEditor): void {
+        if (this.gapDecorationType) {
+            editor.setDecorations(this.gapDecorationType, []);
+        }
+    }
+
     public dispose() {
         if (this.activeFlashTimeout) {
             clearTimeout(this.activeFlashTimeout);
@@ -506,6 +553,10 @@ export class HighlightService implements vscode.Disposable {
         if (this.activeFlashDecoration) {
             this.activeFlashDecoration.dispose();
             this.activeFlashDecoration = undefined;
+        }
+        if (this.gapDecorationType) {
+            this.gapDecorationType.dispose();
+            this.gapDecorationType = undefined;
         }
         this.decorationTypes.forEach(val => val.decoration.dispose());
         this.decorationTypes.clear();

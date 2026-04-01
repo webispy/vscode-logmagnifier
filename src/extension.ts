@@ -322,6 +322,59 @@ export function activate(context: vscode.ExtensionContext) {
     new TimestampCommandManager(context, timestampService, sourceMapService, highlightService, timeRangeProvider, logger);
     logger.info('[extension] Timestamp Analysis + Time Range Explorer registered');
 
+    // Selection Gap Display — show gap gutter icons when multi-line selection
+    const selectionGapStatusBar = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 49);
+    context.subscriptions.push(selectionGapStatusBar);
+
+    context.subscriptions.push(vscode.window.onDidChangeTextEditorSelection(e => {
+        const editor = e.textEditor;
+        const index = timeRangeProvider.getIndex();
+        if (!editor || !index) {
+            highlightService.clearGapDecorations(editor);
+            selectionGapStatusBar.hide();
+            return;
+        }
+
+        const selection = e.selections[0];
+        const startLine = Math.min(selection.anchor.line, selection.active.line);
+        const endLine = Math.max(selection.anchor.line, selection.active.line);
+
+        if (startLine >= endLine) {
+            highlightService.clearGapDecorations(editor);
+            selectionGapStatusBar.hide();
+            return;
+        }
+
+        const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
+        const thresholdMs = config.get<number>(Constants.Configuration.Timestamp.GapThreshold) ?? 1000;
+        const gaps = timestampService.findGapsInRange(index, startLine, endLine, thresholdMs);
+
+        if (gaps.length === 0) {
+            highlightService.clearGapDecorations(editor);
+            selectionGapStatusBar.hide();
+            return;
+        }
+
+        highlightService.showGapDecorations(editor, gaps);
+
+        // Status bar summary
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const formatDuration = (ms: number): string => {
+            if (ms < 1000) { return `${ms}ms`; }
+            if (ms < 60_000) { return `${(ms / 1000).toFixed(1)}s`; }
+            return `${(ms / 60_000).toFixed(1)}m`; };
+        const lineCount = endLine - startLine + 1;
+        const maxGap = Math.max(...gaps.map(g => g.durationMs));
+        const firstTs = index.lineTimestamps.get(startLine);
+        const lastTs = index.lineTimestamps.get(endLine);
+        let timeRange = '';
+        if (firstTs && lastTs) {
+            timeRange = ` | ${pad(firstTs.getHours())}:${pad(firstTs.getMinutes())}~${pad(lastTs.getHours())}:${pad(lastTs.getMinutes())}`;
+        }
+        selectionGapStatusBar.text = `$(watch) ${lineCount} lines${timeRange} | ${gaps.length} gap${gaps.length > 1 ? 's' : ''} (max +${formatDuration(maxGap)})`;
+        selectionGapStatusBar.show();
+    }));
+
     if (vscode.window.activeTextEditor) {
         updateTimestampAnalysis(vscode.window.activeTextEditor.document);
     }

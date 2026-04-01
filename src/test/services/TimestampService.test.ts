@@ -828,4 +828,64 @@ suite('TimestampService Test Suite', () => {
             assert.strictEqual(result.getMinutes(), 32);
         });
     });
+
+    // ── findGapsInRange ──
+
+    suite('findGapsInRange', () => {
+        // Lines with timestamps at different intervals:
+        // line 0: 10:00:00 (gap to line 1: 5min)
+        // line 1: 10:05:00 (gap to line 2: 3s)
+        // line 2: 10:05:03 (gap to line 3: 10min)
+        // line 3: 10:15:00 (gap to line 4: 2s)
+        // line 4: 10:15:02
+        const gapLines = [
+            '03-30 10:00:00.000  1234  5678 D Tag: line0',
+            '03-30 10:05:00.000  1234  5678 D Tag: line1',
+            '03-30 10:05:03.000  1234  5678 D Tag: line2',
+            '03-30 10:15:00.000  1234  5678 D Tag: line3',
+            '03-30 10:15:02.000  1234  5678 D Tag: line4',
+        ];
+
+        test('finds gaps above threshold in full range', () => {
+            const fmt = service.detectFormat(gapLines)!;
+            const index = service.buildIndex(gapLines, fmt, 'gap-test-1');
+            const gaps = service.findGapsInRange(index, 0, 4, 5000); // 5s threshold
+            assert.strictEqual(gaps.length, 2); // 5min and 10min gaps
+            assert.strictEqual(gaps[0].afterLine, 1); // 10:00 → 10:05
+            assert.strictEqual(gaps[1].afterLine, 3); // 10:05:03 → 10:15
+        });
+
+        test('restricts to line range', () => {
+            const fmt = service.detectFormat(gapLines)!;
+            const index = service.buildIndex(gapLines, fmt, 'gap-test-2');
+            // Only lines 2~4: 10:05:03 → 10:15:00 (10min gap) → 10:15:02 (2s)
+            const gaps = service.findGapsInRange(index, 2, 4, 5000);
+            assert.strictEqual(gaps.length, 1);
+            assert.strictEqual(gaps[0].beforeLine, 2);
+            assert.strictEqual(gaps[0].afterLine, 3);
+        });
+
+        test('returns empty for no gaps above threshold', () => {
+            const fmt = service.detectFormat(gapLines)!;
+            const index = service.buildIndex(gapLines, fmt, 'gap-test-3');
+            // Lines 3~4: 10:15:00 → 10:15:02 (2s), threshold 5s
+            const gaps = service.findGapsInRange(index, 3, 4, 5000);
+            assert.strictEqual(gaps.length, 0);
+        });
+
+        test('returns empty for single line range', () => {
+            const fmt = service.detectFormat(gapLines)!;
+            const index = service.buildIndex(gapLines, fmt, 'gap-test-4');
+            const gaps = service.findGapsInRange(index, 0, 0, 1000);
+            assert.strictEqual(gaps.length, 0);
+        });
+
+        test('gap durationMs is correct', () => {
+            const fmt = service.detectFormat(gapLines)!;
+            const index = service.buildIndex(gapLines, fmt, 'gap-test-5');
+            const gaps = service.findGapsInRange(index, 0, 1, 1000);
+            assert.strictEqual(gaps.length, 1);
+            assert.strictEqual(gaps[0].durationMs, 5 * 60 * 1000); // 5 minutes
+        });
+    });
 });

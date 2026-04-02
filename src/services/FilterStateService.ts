@@ -38,12 +38,11 @@ export class FilterStateService {
 
     private ensureFilterMigration(filter: FilterItem): void {
         if (filter.highlightMode === undefined) {
-            interface LegacyFilterItem {
-                enableFullLineHighlight?: boolean;
+            const enableFullLine = 'enableFullLineHighlight' in filter && (filter as { enableFullLineHighlight?: boolean }).enableFullLineHighlight;
+            filter.highlightMode = enableFullLine ? HighlightMode.Line : HighlightMode.Word;
+            if ('enableFullLineHighlight' in filter) {
+                delete (filter as { enableFullLineHighlight?: boolean }).enableFullLineHighlight;
             }
-            const legacy = filter as unknown as LegacyFilterItem;
-            filter.highlightMode = legacy.enableFullLineHighlight ? HighlightMode.Line : HighlightMode.Word;
-            delete legacy.enableFullLineHighlight;
         }
     }
 }

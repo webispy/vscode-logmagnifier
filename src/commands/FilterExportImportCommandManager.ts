@@ -129,6 +129,7 @@ export class FilterExportImportCommandManager {
             await this.performExport(mode, selectedGroupIds);
         });
 
+        quickPick.onDidHide(() => quickPick.dispose());
         quickPick.show();
     }
 
@@ -370,6 +371,7 @@ export class FilterExportImportCommandManager {
                 }
             });
 
+            quickPick.onDidHide(() => quickPick.dispose());
             quickPick.show();
         }));
     }

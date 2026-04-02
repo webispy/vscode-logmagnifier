@@ -280,6 +280,8 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                         return [{ type: 'message', message: 'No devices connected' } as MessageItem];
                     }
                     return [chromeInspectItem, ...this.devices];
+                }).catch(() => {
+                    return [{ type: 'message', message: 'Failed to get devices' } as MessageItem];
                 });
             }
             if (this.devices.length === 0) {

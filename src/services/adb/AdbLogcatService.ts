@@ -267,7 +267,9 @@ export class AdbLogcatService {
         buffer.push(...lines.filter(l => l.length > 0));
         // Evict oldest lines if buffer grows beyond cap (e.g. repeated flush failures)
         if (buffer.length > AdbLogcatService.maxBufferLines) {
-            buffer.splice(0, buffer.length - AdbLogcatService.maxBufferLines);
+            const overflow = buffer.length - AdbLogcatService.maxBufferLines;
+            this.logger.warn(`[AdbLogcatService] Buffer overflow for session ${sessionId}: discarding ${overflow} oldest lines`);
+            buffer.splice(0, overflow);
         }
         this.buffers.set(sessionId, buffer);
 

@@ -15,6 +15,9 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     private _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
+    dropMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
+    dragMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
+
     private disposables: vscode.Disposable[] = [];
     private iconCache: Map<string, vscode.Uri> = new Map();
 
@@ -160,9 +163,6 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         const groups = this.filterManager.getGroups();
         return groups.find(g => g.filters.some(f => f.id === element.id));
     }
-
-    dropMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
-    dragMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
 
     /** Serializes the dragged tree item into the data transfer for reordering. */
     public handleDrag(source: readonly TreeItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {

@@ -8,8 +8,8 @@ import { AdbCommandManager } from './commands/AdbCommandManager';
 import { CommandManager } from './commands/CommandManager';
 import { LogBookmarkCommandManager } from './commands/LogBookmarkCommandManager';
 import { NavigationCommandManager } from './commands/NavigationCommandManager';
-import { TimestampCommandManager } from './commands/TimestampCommandManager';
 import { RunbookCommandManager } from './commands/RunbookCommandManager';
+import { TimestampCommandManager } from './commands/TimestampCommandManager';
 import { WorkflowCommandManager } from './commands/WorkflowCommandManager';
 import { FileHierarchyLensProvider } from './providers/FileHierarchyLensProvider';
 import { FilteredLogDefinitionProvider } from './providers/FilteredLogDefinitionProvider';
@@ -25,7 +25,6 @@ import { ResultCountService } from './services/ResultCountService';
 import { RunbookService } from './services/RunbookService';
 import { SourceMapService } from './services/SourceMapService';
 import { TimestampService } from './services/TimestampService';
-import { TimeRangeTreeDataProvider } from './views/TimeRangeTreeDataProvider';
 import { WorkflowManager } from './services/WorkflowManager';
 import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
 import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
@@ -33,6 +32,7 @@ import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
 import { QuickAccessProvider } from './views/QuickAccessProvider';
 import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
+import { TimeRangeTreeDataProvider } from './views/TimeRangeTreeDataProvider';
 import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
 
 // Cache frequently-read config values; invalidated in onDidChangeConfiguration
@@ -167,6 +167,7 @@ export function activate(context: vscode.ExtensionContext) {
     // File Hierarchy Service & Navigation
     logger.info('[extension] Registering File Hierarchy...');
     const fileHierarchyService = FileHierarchyService.createInstance(context);
+    context.subscriptions.push(fileHierarchyService);
     new NavigationCommandManager(context, fileHierarchyService, logger);
     const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
     context.subscriptions.push(

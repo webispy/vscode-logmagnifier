@@ -12,7 +12,7 @@ export interface HierarchyNode {
     label: string;
 }
 
-export class FileHierarchyService {
+export class FileHierarchyService implements vscode.Disposable {
     private static instance: FileHierarchyService;
 
     private _onDidChangeHierarchy: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -32,6 +32,9 @@ export class FileHierarchyService {
 
     /** Creates and returns the singleton instance, storing hierarchy in workspace state. */
     public static createInstance(context: vscode.ExtensionContext): FileHierarchyService {
+        if (FileHierarchyService.instance) {
+            return FileHierarchyService.instance;
+        }
         FileHierarchyService.instance = new FileHierarchyService(context.workspaceState);
         return FileHierarchyService.instance;
     }
@@ -229,6 +232,10 @@ export class FileHierarchyService {
 
         this.save();
         this._onDidChangeHierarchy.fire();
+    }
+
+    public dispose(): void {
+        this._onDidChangeHierarchy.dispose();
     }
 
     /**

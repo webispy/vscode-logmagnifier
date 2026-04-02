@@ -1,5 +1,24 @@
 # Change Log
 
+## [1.7.0]
+
+### Added
+- **Timestamp Analysis**: New timestamp-based log analysis feature for time-aware log navigation and extraction.
+  - **Auto Detection**: Recognizes 8 built-in timestamp formats (ISO 8601, Apache, syslog, Android logcat, etc.) with support for custom patterns.
+  - **Time Range Explorer**: Hierarchical tree view (hour → 10min → minute) with density bar icons for visualizing log distribution over time.
+  - **Time Range Extract**: Extract log segments by time range via tree context menus or editor context menus — supports "Extract This Time → End", "Extract Start → This Time", "Extract This Range", and "Extract Range ± Margin".
+  - **Go to Timestamp**: Jump to a specific time (`Ctrl+Cmd+G`) with absolute (`14:30`, `14:30:05.123`) or relative (`+5m`, `-30s`) input.
+  - **Selection Gap Display**: Select multiple lines to analyze time gaps — clock gutter icons mark gap locations, hover tooltips show duration, and status bar summarizes the selection.
+  - **Index Cache**: Cached timestamp index for fast repeated lookups with flash effect on tree navigation.
+- **Test**: Added comprehensive test suites for TimestampService, ProfileManager, SourceMapService, WebviewUtils, IconUtils, and Filter model.
+
+### Changed
+- **Code Quality**: Applied code review fixes — hardened error handling, improved type safety, consistent member ordering, and resource disposal patterns across services and views.
+
+### Fixed
+- **Stability**: Fixed FilterTreeDataProvider icon cache race condition and improved disposal safety in AdbLogcatService.
+- **Security**: Added missing input validation in FilterExportImportCommandManager and FileHierarchyService.
+
 ## [1.6.6]
 
 ### Changed

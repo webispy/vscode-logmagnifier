@@ -12,6 +12,7 @@ import { AddFilterTool } from './AddFilterTool';
 import { ApplyFilterTool } from './ApplyFilterTool';
 import { CreateProfileTool } from './CreateProfileTool';
 import { ExtractJsonTool } from './ExtractJsonTool';
+import { ExtractLogsWithMarginTool } from './ExtractLogsWithMarginTool';
 import { FilterByTimeRangeTool } from './FilterByTimeRangeTool';
 import { GetBookmarksTool } from './GetBookmarksTool';
 import { GetFiltersTool } from './GetFiltersTool';
@@ -78,6 +79,9 @@ export class LmToolManager implements vscode.Disposable {
                 timestampService, sourceMapService, logger
             )),
             vscode.lm.registerTool('logmagnifier-navigateToTime', new NavigateToTimeTool(timestampService)),
+            vscode.lm.registerTool('logmagnifier-extractLogsWithMargin', new ExtractLogsWithMarginTool(
+                timestampService, sourceMapService, logger
+            )),
         );
 
         // Filter property tools

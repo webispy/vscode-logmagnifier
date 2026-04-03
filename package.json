@@ -954,6 +954,27 @@
         }
       },
       {
+        "name": "logmagnifier-extractLogsWithMargin",
+        "displayName": "Extract Logs with Margin",
+        "modelDescription": "Extract log lines around a center time with a ± margin in seconds. For example, to get logs within 10 seconds before and after 14:30, use time='14:30' and marginSeconds=10. Opens the result in a new tab.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "extractLogsWithMargin",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "string",
+              "description": "Center time. Absolute: '14:32', '14:32:15'. Relative from cursor: '+5m', '-30s'."
+            },
+            "marginSeconds": {
+              "type": "number",
+              "description": "Margin in seconds applied before and after the center time."
+            }
+          },
+          "required": ["time", "marginSeconds"]
+        }
+      },
+      {
         "name": "logmagnifier-removeBookmark",
         "displayName": "Remove Bookmark",
         "modelDescription": "Remove a bookmark at a specific line number in the active file. Use getBookmarks first to see current bookmarks.",
@@ -1064,6 +1085,7 @@
           "logmagnifier-setCaseSensitivity",
           "logmagnifier-setHighlightMode",
           "logmagnifier-navigateToTime",
+          "logmagnifier-extractLogsWithMargin",
           "logmagnifier-removeBookmark",
           "logmagnifier-removeAllBookmarks",
           "logmagnifier-updateFilter",

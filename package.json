@@ -674,7 +674,7 @@
       {
         "name": "logmagnifier-filterByTimeRange",
         "displayName": "Filter Log by Time Range",
-        "modelDescription": "Filter the active log file to show only lines within a specified time range. Requires the log file to have detectable timestamps.",
+        "modelDescription": "Filter the active log file by time range and open the result in a new tab. Use startTime only to trim logs before that time (keep from startTime onward). Use endTime only to trim logs after that time (keep up to endTime). Use both to extract a specific time window. Supports HH:MM, HH:MM:SS, HH:MM:SS.mmm formats.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "filterByTimeRange",
         "inputSchema": {
@@ -935,6 +935,106 @@
           },
           "required": ["groupName", "keyword", "mode"]
         }
+      },
+      {
+        "name": "logmagnifier-navigateToTime",
+        "displayName": "Navigate to Time",
+        "modelDescription": "Move the editor cursor to the log line closest to a specified time. Supports absolute (HH:MM, HH:MM:SS, HH:MM:SS.mmm) and relative (+5m, -30s, +1h, +100ms) time formats.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "navigateToTime",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "time": {
+              "type": "string",
+              "description": "Target time. Absolute: '14:32', '14:32:15', '14:32:15.500'. Relative from cursor: '+5m', '-30s', '+1h', '+100ms'."
+            }
+          },
+          "required": ["time"]
+        }
+      },
+      {
+        "name": "logmagnifier-removeBookmark",
+        "displayName": "Remove Bookmark",
+        "modelDescription": "Remove a bookmark at a specific line number in the active file. Use getBookmarks first to see current bookmarks.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "removeBookmark",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "line": {
+              "type": "number",
+              "description": "Line number of the bookmark to remove (1-based)."
+            }
+          },
+          "required": ["line"]
+        }
+      },
+      {
+        "name": "logmagnifier-removeAllBookmarks",
+        "displayName": "Remove All Bookmarks",
+        "modelDescription": "Remove all bookmarks across all files. This is a destructive operation that cannot be undone.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "removeAllBookmarks",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "logmagnifier-updateFilter",
+        "displayName": "Update Filter",
+        "modelDescription": "Update a filter's keyword or nickname. Use this to refine filter patterns during analysis without removing and re-adding.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateFilter",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "Current keyword of the filter to update."
+            },
+            "newKeyword": {
+              "type": "string",
+              "description": "New keyword to replace the current one."
+            },
+            "nickname": {
+              "type": "string",
+              "description": "New display nickname for the filter."
+            }
+          },
+          "required": ["groupName", "keyword"]
+        }
+      },
+      {
+        "name": "logmagnifier-updateFilterColor",
+        "displayName": "Update Filter Color",
+        "modelDescription": "Change the highlight color of a filter. Colors: color00 (none/bold), color01 (yellow), color02 (orange), color03 (red), color04 (magenta), color05 (violet), color06 (blue), color07 (cyan), color08 (green), color09-16 (lighter variants).",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "updateFilterColor",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "The keyword of the filter to change color for."
+            },
+            "color": {
+              "type": "string",
+              "description": "Color ID: color00 (none), color01 (yellow), color02 (orange), color03 (red), color04 (magenta), color05 (violet), color06 (blue), color07 (cyan), color08 (green), color09-color16 (lighter variants).",
+              "enum": ["color00", "color01", "color02", "color03", "color04", "color05", "color06", "color07", "color08", "color09", "color10", "color11", "color12", "color13", "color14", "color15", "color16"]
+            }
+          },
+          "required": ["groupName", "keyword", "color"]
+        }
       }
     ],
     "chatToolSets": [
@@ -962,7 +1062,12 @@
           "logmagnifier-toggleFilterGroup",
           "logmagnifier-setContextLine",
           "logmagnifier-setCaseSensitivity",
-          "logmagnifier-setHighlightMode"
+          "logmagnifier-setHighlightMode",
+          "logmagnifier-navigateToTime",
+          "logmagnifier-removeBookmark",
+          "logmagnifier-removeAllBookmarks",
+          "logmagnifier-updateFilter",
+          "logmagnifier-updateFilterColor"
         ]
       }
     ],

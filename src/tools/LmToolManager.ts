@@ -18,6 +18,9 @@ import { GetFiltersTool } from './GetFiltersTool';
 import { GetLogSummaryTool } from './GetLogSummaryTool';
 import { ListProfilesTool } from './ListProfilesTool';
 import { ListWorkflowsTool } from './ListWorkflowsTool';
+import { NavigateToTimeTool } from './NavigateToTimeTool';
+import { RemoveAllBookmarksTool } from './RemoveAllBookmarksTool';
+import { RemoveBookmarkTool } from './RemoveBookmarkTool';
 import { RemoveFilterTool } from './RemoveFilterTool';
 import { RunWorkflowTool } from './RunWorkflowTool';
 import { SearchLogTool } from './SearchLogTool';
@@ -27,6 +30,8 @@ import { SetHighlightModeTool } from './SetHighlightModeTool';
 import { SwitchProfileTool } from './SwitchProfileTool';
 import { ToggleFilterGroupTool } from './ToggleFilterGroupTool';
 import { ToggleFilterTool } from './ToggleFilterTool';
+import { UpdateFilterColorTool } from './UpdateFilterColorTool';
+import { UpdateFilterTool } from './UpdateFilterTool';
 
 /** Registers all LogMagnifier tools for the VS Code Language Model Tools API. */
 export class LmToolManager implements vscode.Disposable {
@@ -72,6 +77,7 @@ export class LmToolManager implements vscode.Disposable {
             vscode.lm.registerTool('logmagnifier-filterByTimeRange', new FilterByTimeRangeTool(
                 timestampService, sourceMapService, logger
             )),
+            vscode.lm.registerTool('logmagnifier-navigateToTime', new NavigateToTimeTool(timestampService)),
         );
 
         // Filter property tools
@@ -81,6 +87,8 @@ export class LmToolManager implements vscode.Disposable {
             vscode.lm.registerTool('logmagnifier-setContextLine', new SetContextLineTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-setCaseSensitivity', new SetCaseSensitivityTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-setHighlightMode', new SetHighlightModeTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-updateFilter', new UpdateFilterTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-updateFilterColor', new UpdateFilterColorTool(filterManager)),
         );
 
         // Profile tools
@@ -100,6 +108,8 @@ export class LmToolManager implements vscode.Disposable {
         this.disposables.push(
             vscode.lm.registerTool('logmagnifier-getBookmarks', new GetBookmarksTool(bookmarkService)),
             vscode.lm.registerTool('logmagnifier-addBookmark', new AddBookmarkTool(bookmarkService)),
+            vscode.lm.registerTool('logmagnifier-removeBookmark', new RemoveBookmarkTool(bookmarkService)),
+            vscode.lm.registerTool('logmagnifier-removeAllBookmarks', new RemoveAllBookmarksTool(bookmarkService)),
         );
 
         // JSON tool

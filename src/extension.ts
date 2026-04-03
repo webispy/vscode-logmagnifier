@@ -26,6 +26,7 @@ import { RunbookService } from './services/RunbookService';
 import { SourceMapService } from './services/SourceMapService';
 import { TimestampService } from './services/TimestampService';
 import { WorkflowManager } from './services/WorkflowManager';
+import { LmToolManager } from './tools/LmToolManager';
 import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
 import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
 import { JsonTreeWebview } from './views/JsonTreeWebview';
@@ -379,6 +380,16 @@ export function activate(context: vscode.ExtensionContext) {
     if (vscode.window.activeTextEditor) {
         updateTimestampAnalysis(vscode.window.activeTextEditor.document);
     }
+
+    // Language Model Tools (AI Agent integration)
+    logger.info('[extension] Registering Language Model Tools...');
+    const lmToolManager = new LmToolManager(
+        filterManager, logProcessor,
+        timestampService, sourceMapService,
+        workflowManager, bookmarkService, logger
+    );
+    context.subscriptions.push(lmToolManager);
+    logger.info('[extension] Language Model Tools registered');
 
     // Initialize mouse over context
     vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);

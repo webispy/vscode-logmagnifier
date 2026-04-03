@@ -820,6 +820,121 @@
             }
           }
         }
+      },
+      {
+        "name": "logmagnifier-toggleFilter",
+        "displayName": "Toggle Filter",
+        "modelDescription": "Toggle a filter item's enabled/disabled state. Use getFilters first to see current filter states.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "toggleFilter",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "The keyword of the filter to toggle."
+            }
+          },
+          "required": ["groupName", "keyword"]
+        }
+      },
+      {
+        "name": "logmagnifier-toggleFilterGroup",
+        "displayName": "Toggle Filter Group",
+        "modelDescription": "Toggle a filter group's enabled/disabled state. When disabled, all filters in the group are excluded from matching.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "toggleFilterGroup",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group to toggle."
+            }
+          },
+          "required": ["groupName"]
+        }
+      },
+      {
+        "name": "logmagnifier-setContextLine",
+        "displayName": "Set Context Lines",
+        "modelDescription": "Set the number of context lines shown before and after each filter match. Valid values: 0 (none), 3 (±3), 5 (±5), 9 (±9).",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "setContextLine",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "The keyword of the filter to configure."
+            },
+            "lines": {
+              "type": "number",
+              "description": "Number of context lines: 0, 3, 5, or 9.",
+              "enum": [0, 3, 5, 9]
+            }
+          },
+          "required": ["groupName", "keyword", "lines"]
+        }
+      },
+      {
+        "name": "logmagnifier-setCaseSensitivity",
+        "displayName": "Set Case Sensitivity",
+        "modelDescription": "Set whether a filter matches case-sensitively or case-insensitively.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "setCaseSensitivity",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "The keyword of the filter to configure."
+            },
+            "enable": {
+              "type": "boolean",
+              "description": "true for case-sensitive, false for case-insensitive."
+            }
+          },
+          "required": ["groupName", "keyword", "enable"]
+        }
+      },
+      {
+        "name": "logmagnifier-setHighlightMode",
+        "displayName": "Set Highlight Mode",
+        "modelDescription": "Set the highlight mode for a filter. 'word' highlights only the matched text, 'line' highlights the line content, 'fullLine' highlights the entire line width.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "setHighlightMode",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group containing the filter."
+            },
+            "keyword": {
+              "type": "string",
+              "description": "The keyword of the filter to configure."
+            },
+            "mode": {
+              "type": "string",
+              "description": "Highlight mode: 'word', 'line', or 'fullLine'.",
+              "enum": ["word", "line", "fullLine"]
+            }
+          },
+          "required": ["groupName", "keyword", "mode"]
+        }
       }
     ],
     "chatToolSets": [
@@ -842,7 +957,12 @@
           "logmagnifier-runWorkflow",
           "logmagnifier-getBookmarks",
           "logmagnifier-addBookmark",
-          "logmagnifier-extractJson"
+          "logmagnifier-extractJson",
+          "logmagnifier-toggleFilter",
+          "logmagnifier-toggleFilterGroup",
+          "logmagnifier-setContextLine",
+          "logmagnifier-setCaseSensitivity",
+          "logmagnifier-setHighlightMode"
         ]
       }
     ],

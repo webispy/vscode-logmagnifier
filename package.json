@@ -15,7 +15,7 @@
   },
   "homepage": "https://github.com/webispy/vscode-logmagnifier#readme",
   "engines": {
-    "vscode": "^1.94.0"
+    "vscode": "^1.101.0"
   },
   "license": "Apache-2.0",
   "categories": [
@@ -534,6 +534,318 @@
         }
       ]
     },
+    "languageModelTools": [
+      {
+        "name": "logmagnifier-getLogSummary",
+        "displayName": "Get Log Summary",
+        "modelDescription": "Get summary information about the active log file: total lines, file size, detected timestamp format, time range, and current filter match counts.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "logSummary",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "logmagnifier-searchLog",
+        "displayName": "Search Log",
+        "modelDescription": "Search the active log file for lines matching a keyword or regex pattern. Returns matching lines with line numbers. Use this to explore log content before creating filters.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "searchLog",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "pattern": {
+              "type": "string",
+              "description": "The search keyword or regex pattern"
+            },
+            "isRegex": {
+              "type": "boolean",
+              "description": "If true, treat pattern as a regular expression. Default: false"
+            },
+            "caseSensitive": {
+              "type": "boolean",
+              "description": "If true, match case-sensitively. Default: false"
+            },
+            "maxResults": {
+              "type": "number",
+              "description": "Maximum number of matching lines to return. Default: 50"
+            },
+            "contextLines": {
+              "type": "number",
+              "description": "Number of context lines before and after each match. Default: 0"
+            }
+          },
+          "required": ["pattern"]
+        }
+      },
+      {
+        "name": "logmagnifier-getFilters",
+        "displayName": "Get Log Filters",
+        "modelDescription": "List all filter groups and their filter items in LogMagnifier. Returns group names, filter keywords, types (include/exclude), enabled state, and match counts.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getFilters",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "enabledOnly": {
+              "type": "boolean",
+              "description": "If true, return only enabled filters. Default: false"
+            }
+          }
+        }
+      },
+      {
+        "name": "logmagnifier-addFilter",
+        "displayName": "Add Log Filter",
+        "modelDescription": "Add a word or regex filter to LogMagnifier. If the specified group does not exist, it will be created. The filter is immediately applied to the active editor for highlighting.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "addFilter",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "keyword": {
+              "type": "string",
+              "description": "The keyword or regex pattern to filter"
+            },
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group. Created if it doesn't exist. Default: 'AI Filters'"
+            },
+            "type": {
+              "type": "string",
+              "enum": ["include", "exclude"],
+              "description": "Filter type. 'include' keeps matching lines, 'exclude' removes them. Default: 'include'"
+            },
+            "isRegex": {
+              "type": "boolean",
+              "description": "If true, treat keyword as a regular expression. Default: false"
+            },
+            "caseSensitive": {
+              "type": "boolean",
+              "description": "If true, match case-sensitively. Default: false"
+            }
+          },
+          "required": ["keyword"]
+        }
+      },
+      {
+        "name": "logmagnifier-removeFilter",
+        "displayName": "Remove Log Filter",
+        "modelDescription": "Remove a filter item by keyword or remove an entire filter group by name from LogMagnifier.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "removeFilter",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "keyword": {
+              "type": "string",
+              "description": "The filter keyword to remove. If not specified, removes the entire group."
+            },
+            "groupName": {
+              "type": "string",
+              "description": "Name of the filter group. Required."
+            }
+          },
+          "required": ["groupName"]
+        }
+      },
+      {
+        "name": "logmagnifier-applyFilter",
+        "displayName": "Apply Log Filters",
+        "modelDescription": "Apply all enabled filters to the active log file and create a new filtered document. Returns the number of matched lines and total lines processed.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "applyFilter",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "filterType": {
+              "type": "string",
+              "enum": ["word", "regex", "all"],
+              "description": "Which filter type to apply. 'all' applies both word and regex filters. Default: 'all'"
+            },
+            "groupName": {
+              "type": "string",
+              "description": "If specified, apply only filters from this group. Otherwise apply all enabled groups."
+            }
+          }
+        }
+      },
+      {
+        "name": "logmagnifier-filterByTimeRange",
+        "displayName": "Filter Log by Time Range",
+        "modelDescription": "Filter the active log file to show only lines within a specified time range. Requires the log file to have detectable timestamps.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "filterByTimeRange",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "startTime": {
+              "type": "string",
+              "description": "Start time (e.g. '14:30', '2024-01-15 14:30:00', '+5m' for relative). If omitted, no lower bound."
+            },
+            "endTime": {
+              "type": "string",
+              "description": "End time (e.g. '15:00', '2024-01-15 15:00:00', '+10m' for relative). If omitted, no upper bound."
+            }
+          }
+        }
+      },
+      {
+        "name": "logmagnifier-listProfiles",
+        "displayName": "List Filter Profiles",
+        "modelDescription": "List all saved filter profiles with their word/regex filter group counts. Profiles are named filter configurations that can be used in workflows. Also shows the currently active profile.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "listProfiles",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "logmagnifier-switchProfile",
+        "displayName": "Switch Filter Profile",
+        "modelDescription": "Switch to a different filter profile. All filters in the editor will change to the selected profile's configuration. The active editor's highlights update immediately.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "switchProfile",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the profile to activate"
+            }
+          },
+          "required": ["name"]
+        }
+      },
+      {
+        "name": "logmagnifier-createProfile",
+        "displayName": "Create Filter Profile",
+        "modelDescription": "Save the current filter configuration as a new named profile. The profile can later be used in workflows or switched to via switchProfile. Current filters remain active.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "createProfile",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name for the new profile"
+            }
+          },
+          "required": ["name"]
+        }
+      },
+      {
+        "name": "logmagnifier-listWorkflows",
+        "displayName": "List Log Analysis Workflows",
+        "modelDescription": "List all saved log analysis workflows. Each workflow contains ordered steps that reference filter profiles. Returns workflow names, step sequences with profile names, and execution modes (sequential/cumulative).",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "listWorkflows",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "logmagnifier-runWorkflow",
+        "displayName": "Run Log Analysis Workflow",
+        "modelDescription": "Execute a saved workflow against the active log file. Each step applies its profile's filters sequentially or cumulatively. Returns per-step results: matched line counts and output file paths.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "runWorkflow",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the workflow to run"
+            }
+          },
+          "required": ["name"]
+        }
+      },
+      {
+        "name": "logmagnifier-getBookmarks",
+        "displayName": "Get Log Bookmarks",
+        "modelDescription": "Get all bookmarks for the active log file. Returns line numbers, line content preview, and keyword tags for each bookmark.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getBookmarks",
+        "inputSchema": {
+          "type": "object",
+          "properties": {}
+        }
+      },
+      {
+        "name": "logmagnifier-addBookmark",
+        "displayName": "Add Log Bookmark",
+        "modelDescription": "Bookmark specific lines in the active log file. Optionally add a keyword tag for categorization (e.g., 'root-cause', 'crash-point'). Multiple lines can be bookmarked at once.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "addBookmark",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "lines": {
+              "type": "array",
+              "items": { "type": "number" },
+              "description": "Line numbers to bookmark (1-based)"
+            },
+            "tag": {
+              "type": "string",
+              "description": "Optional keyword tag for categorization"
+            }
+          },
+          "required": ["lines"]
+        }
+      },
+      {
+        "name": "logmagnifier-extractJson",
+        "displayName": "Extract JSON from Log",
+        "modelDescription": "Extract and parse JSON objects embedded in a log line. Returns the parsed JSON structure. Useful for analyzing API request/response payloads in logs.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "extractJson",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "line": {
+              "type": "number",
+              "description": "Line number to extract JSON from (1-based)"
+            },
+            "startLine": {
+              "type": "number",
+              "description": "Start line for multi-line JSON extraction (1-based). Use with endLine."
+            },
+            "endLine": {
+              "type": "number",
+              "description": "End line for multi-line JSON extraction (1-based). Use with startLine."
+            }
+          }
+        }
+      }
+    ],
+    "chatToolSets": [
+      {
+        "name": "logmagnifier",
+        "displayName": "LogMagnifier",
+        "description": "Log analysis tools: filter, search, bookmark, profile, workflow, JSON extraction, and time range",
+        "tools": [
+          "logmagnifier-getLogSummary",
+          "logmagnifier-searchLog",
+          "logmagnifier-getFilters",
+          "logmagnifier-addFilter",
+          "logmagnifier-removeFilter",
+          "logmagnifier-applyFilter",
+          "logmagnifier-filterByTimeRange",
+          "logmagnifier-listProfiles",
+          "logmagnifier-switchProfile",
+          "logmagnifier-createProfile",
+          "logmagnifier-listWorkflows",
+          "logmagnifier-runWorkflow",
+          "logmagnifier-getBookmarks",
+          "logmagnifier-addBookmark",
+          "logmagnifier-extractJson"
+        ]
+      }
+    ],
     "viewsWelcome": [],
     "keybindings": [
       {
@@ -2454,7 +2766,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "22.x",
     "@types/sanitize-html": "^2.16.0",
-    "@types/vscode": "^1.94.0",
+    "@types/vscode": "^1.101.0",
     "@vscode/test-cli": "^0.0.12",
     "@vscode/test-electron": "^2.5.2",
     "esbuild": "^0.27.4",

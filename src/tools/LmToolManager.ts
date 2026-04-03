@@ -21,7 +21,12 @@ import { ListWorkflowsTool } from './ListWorkflowsTool';
 import { RemoveFilterTool } from './RemoveFilterTool';
 import { RunWorkflowTool } from './RunWorkflowTool';
 import { SearchLogTool } from './SearchLogTool';
+import { SetCaseSensitivityTool } from './SetCaseSensitivityTool';
+import { SetContextLineTool } from './SetContextLineTool';
+import { SetHighlightModeTool } from './SetHighlightModeTool';
 import { SwitchProfileTool } from './SwitchProfileTool';
+import { ToggleFilterGroupTool } from './ToggleFilterGroupTool';
+import { ToggleFilterTool } from './ToggleFilterTool';
 
 /** Registers all LogMagnifier tools for the VS Code Language Model Tools API. */
 export class LmToolManager implements vscode.Disposable {
@@ -67,6 +72,15 @@ export class LmToolManager implements vscode.Disposable {
             vscode.lm.registerTool('logmagnifier-filterByTimeRange', new FilterByTimeRangeTool(
                 timestampService, sourceMapService, logger
             )),
+        );
+
+        // Filter property tools
+        this.disposables.push(
+            vscode.lm.registerTool('logmagnifier-toggleFilter', new ToggleFilterTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-toggleFilterGroup', new ToggleFilterGroupTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-setContextLine', new SetContextLineTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-setCaseSensitivity', new SetCaseSensitivityTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-setHighlightMode', new SetHighlightModeTool(filterManager)),
         );
 
         // Profile tools

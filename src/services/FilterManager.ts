@@ -875,6 +875,11 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager.getProfilesMetadata();
     }
 
+    /** Returns the filter groups for a profile without changing the active profile. */
+    public async getProfileGroups(name: string): Promise<FilterGroup[] | undefined> {
+        return this.profileManager.getProfileGroups(name);
+    }
+
     /** Deletes a profile by name, reloading the default profile if it was active. */
     public async deleteProfile(name: string): Promise<boolean> {
         const success = await this.profileManager.deleteProfile(name);
@@ -889,6 +894,43 @@ export class FilterManager implements vscode.Disposable {
     /** Saves the current filter groups to the specified profile. */
     public async saveProfile(name: string): Promise<void> {
         await this.profileManager.updateProfileData(name, this.groups);
+    }
+
+    /** Creates a new empty profile (no filters) and switches to it. */
+    public async createEmptyProfile(name: string): Promise<boolean> {
+        const emptyGroups: FilterGroup[] = [];
+        const success = await this.profileManager.createProfile(name, emptyGroups);
+        if (success) {
+            this.groups = [];
+            this.stateService.saveToState(this.groups);
+            await this.profileManager.loadProfile(name);
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
+            this.logger.info(`[FilterManager] Created empty profile: ${name}`);
+            return true;
+        }
+        return false;
+    }
+
+    /** Creates a new profile from another profile's filters and switches to it. */
+    public async createProfileFrom(name: string, sourceProfileName: string): Promise<boolean> {
+        const sourceGroups = await this.profileManager.getProfileGroups(sourceProfileName);
+        if (!sourceGroups) {
+            return false;
+        }
+
+        const copiedGroups = this.stateService.deepCopy(sourceGroups);
+        const success = await this.profileManager.createProfile(name, copiedGroups);
+        if (success) {
+            this.groups = copiedGroups;
+            this.stateService.saveToState(this.groups);
+            await this.profileManager.loadProfile(name);
+            this.invalidateCache();
+            this._onDidChangeFilters.fire();
+            this.logger.info(`[FilterManager] Created profile "${name}" from "${sourceProfileName}"`);
+            return true;
+        }
+        return false;
     }
 
     /** Creates a new profile with default filters and switches to it. */

@@ -4,9 +4,10 @@ import { FilterManager } from '../services/FilterManager';
 
 interface CreateProfileInput {
     name: string;
+    copyFrom?: string;
 }
 
-/** Saves the current filter configuration as a new named profile. */
+/** Creates a new filter profile with flexible source options. */
 export class CreateProfileTool implements vscode.LanguageModelTool<CreateProfileInput> {
     constructor(private readonly filterManager: FilterManager) {}
 
@@ -14,8 +15,14 @@ export class CreateProfileTool implements vscode.LanguageModelTool<CreateProfile
         options: vscode.LanguageModelToolInvocationPrepareOptions<CreateProfileInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
+        const { name, copyFrom } = options.input;
+        const source = copyFrom === 'current'
+            ? ' from current filters'
+            : copyFrom
+                ? ` from profile "${copyFrom}"`
+                : ' (empty)';
         return {
-            invocationMessage: `Creating profile "${options.input.name}" from current filters`,
+            invocationMessage: `Creating profile "${name}"${source}`,
         };
     }
 
@@ -23,7 +30,7 @@ export class CreateProfileTool implements vscode.LanguageModelTool<CreateProfile
         options: vscode.LanguageModelToolInvocationOptions<CreateProfileInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { name } = options.input;
+        const { name, copyFrom } = options.input;
 
         // Check if name already exists
         const existingNames = this.filterManager.getProfileNames();
@@ -33,7 +40,29 @@ export class CreateProfileTool implements vscode.LanguageModelTool<CreateProfile
             ]);
         }
 
-        const success = await this.filterManager.createProfile(name);
+        let success: boolean;
+
+        if (!copyFrom) {
+            // No source: create empty profile
+            success = await this.filterManager.createEmptyProfile(name);
+        } else if (copyFrom === 'current') {
+            // Snapshot current active filters
+            success = await this.filterManager.duplicateProfile(name);
+            if (success) {
+                await this.filterManager.loadProfile(name);
+            }
+        } else {
+            // Copy from a specific profile
+            if (!existingNames.includes(copyFrom)) {
+                return new vscode.LanguageModelToolResult([
+                    new vscode.LanguageModelTextPart(
+                        `Source profile "${copyFrom}" not found. Available profiles: ${existingNames.join(', ')}`
+                    )
+                ]);
+            }
+            success = await this.filterManager.createProfileFrom(name, copyFrom);
+        }
+
         if (!success) {
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart(`Failed to create profile "${name}".`)

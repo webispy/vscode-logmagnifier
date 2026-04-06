@@ -722,7 +722,7 @@
       {
         "name": "logmagnifier-createProfile",
         "displayName": "Create Filter Profile",
-        "modelDescription": "Save the current filter configuration as a new named profile. The profile can later be used in workflows or switched to via switchProfile. Current filters remain active.",
+        "modelDescription": "Create a new filter profile. Without copyFrom, creates an empty profile. With copyFrom set to 'current', snapshots the active filters. With copyFrom set to a profile name, copies that profile's filters. The new profile becomes active after creation.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "createProfile",
         "inputSchema": {
@@ -731,6 +731,48 @@
             "name": {
               "type": "string",
               "description": "Name for the new profile"
+            },
+            "copyFrom": {
+              "type": "string",
+              "description": "Source for initial filters: omit for empty profile, 'current' for active filters snapshot, or a profile name to copy from"
+            }
+          },
+          "required": ["name"]
+        }
+      },
+      {
+        "name": "logmagnifier-getProfileFilters",
+        "displayName": "Get Profile Filters",
+        "modelDescription": "Returns the filter groups and items for a specific profile without switching to it. Use this to inspect filters in any profile (active or not) for cross-profile analysis. Returns group names, filter keywords, types, and enabled state.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "getProfileFilters",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "profileName": {
+              "type": "string",
+              "description": "Name of the profile to inspect"
+            },
+            "enabledOnly": {
+              "type": "boolean",
+              "description": "If true, return only enabled filter groups. Default: false"
+            }
+          },
+          "required": ["profileName"]
+        }
+      },
+      {
+        "name": "logmagnifier-deleteProfile",
+        "displayName": "Delete Filter Profile",
+        "modelDescription": "Delete a filter profile by name. The Default profile cannot be deleted. Use this to clean up temporary profiles created during cross-profile analysis.",
+        "canBeReferencedInPrompt": true,
+        "toolReferenceName": "deleteProfile",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Name of the profile to delete"
             }
           },
           "required": ["name"]
@@ -1074,6 +1116,8 @@
           "logmagnifier-listProfiles",
           "logmagnifier-switchProfile",
           "logmagnifier-createProfile",
+          "logmagnifier-getProfileFilters",
+          "logmagnifier-deleteProfile",
           "logmagnifier-listWorkflows",
           "logmagnifier-runWorkflow",
           "logmagnifier-getBookmarks",

@@ -1200,8 +1200,14 @@
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.clearFilterData",
-        "title": "Clear Filter Data",
+        "command": "logmagnifier.clearWordFilterData",
+        "title": "Clear Word Filter Data",
+        "category": "LogMagnifier",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "logmagnifier.clearRegexFilterData",
+        "title": "Clear Regex Filter Data",
         "category": "LogMagnifier",
         "icon": "$(trash)"
       },

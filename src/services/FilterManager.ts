@@ -391,20 +391,31 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    /** Removes a filter group, restoring default regex presets if all regex groups are removed. */
+    /** Removes a filter group. */
     public removeGroup(groupId: string): void {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             this.groups = this.groups.filter(g => g.id !== groupId);
             this.logger.info(`[FilterManager] Filter group removed: ${group.name}`);
-
-            // If all regex groups are gone, restore defaults
-            if (group.isRegex) {
-                this.initDefaultFilters();
-            }
-
             this.notifyChange();
         }
+    }
+
+    /** Removes all word filter groups. */
+    public clearWordGroups(): void {
+        const before = this.groups.length;
+        this.groups = this.groups.filter(g => g.isRegex);
+        this.logger.info(`[FilterManager] Cleared ${before - this.groups.length} word filter group(s)`);
+        this.notifyChange();
+    }
+
+    /** Removes all regex filter groups and restores the default Presets group. */
+    public clearRegexGroups(): void {
+        const before = this.groups.length;
+        this.groups = this.groups.filter(g => !g.isRegex);
+        this.logger.info(`[FilterManager] Cleared ${before - this.groups.length} regex filter group(s)`);
+        this.initDefaultFilters();
+        this.notifyChange();
     }
 
     /** Toggles the enabled state of a filter group. */

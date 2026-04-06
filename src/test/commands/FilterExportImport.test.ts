@@ -23,14 +23,9 @@ suite('FilterExportImport Test Suite', () => {
         mockContext = new MockExtensionContext();
         filterManager = new FilterManager(mockContext);
 
-        // Clean up default groups
-        const safeGroup = filterManager.addGroup('Safe Group', true);
+        // Remove all groups for a clean slate
         const groups = filterManager.getGroups();
-        [...groups].forEach(g => {
-            if (g.id !== safeGroup?.id) {
-                filterManager.removeGroup(g.id);
-            }
-        });
+        [...groups].forEach(g => filterManager.removeGroup(g.id));
 
         tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'lm-export-test-'));
     });
@@ -137,13 +132,8 @@ suite('FilterExportImport Test Suite', () => {
 
             // Create another manager to import into
             const manager2 = new FilterManager(new MockExtensionContext());
-            const safeGroup = manager2.addGroup('Safe', true);
             const groups2 = manager2.getGroups();
-            [...groups2].forEach(g => {
-                if (g.id !== safeGroup?.id) {
-                    manager2.removeGroup(g.id);
-                }
-            });
+            [...groups2].forEach(g => manager2.removeGroup(g.id));
 
             const result = manager2.importFilters(exportJson, 'word', false);
             assert.ok(!result.error);
@@ -161,13 +151,8 @@ suite('FilterExportImport Test Suite', () => {
 
             // Set up target with different data
             const manager2 = new FilterManager(new MockExtensionContext());
-            const safeGroup = manager2.addGroup('Safe', true);
             const groups2 = manager2.getGroups();
-            [...groups2].forEach(g => {
-                if (g.id !== safeGroup?.id) {
-                    manager2.removeGroup(g.id);
-                }
-            });
+            [...groups2].forEach(g => manager2.removeGroup(g.id));
             manager2.addGroup('OldGroup', false);
 
             const result = manager2.importFilters(exportJson, 'word', true);

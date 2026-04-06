@@ -12,14 +12,9 @@ suite('ResultCountService Test Suite', () => {
         const mockContext = new MockExtensionContext();
         filterManager = new FilterManager(mockContext);
 
-        // Add a safe regex group to prevent default re-creation
-        const safeGroup = filterManager.addGroup('Safe Group', true);
+        // Remove all groups for a clean slate
         const groups = filterManager.getGroups();
-        [...groups].forEach(g => {
-            if (g.id !== safeGroup?.id) {
-                filterManager.removeGroup(g.id);
-            }
-        });
+        [...groups].forEach(g => filterManager.removeGroup(g.id));
 
         resultCountService = new ResultCountService(filterManager);
     });

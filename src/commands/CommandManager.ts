@@ -173,20 +173,31 @@ export class CommandManager {
                 }
             }),
 
-            vscode.commands.registerCommand(Constants.Commands.ClearFilterData, async () => {
+            vscode.commands.registerCommand(Constants.Commands.ClearWordFilterData, async () => {
                 const answer = await vscode.window.showWarningMessage(
-                    Constants.Prompts.ConfirmClearFilterData,
+                    Constants.Prompts.ConfirmClearWordFilterData,
                     { modal: true },
                     'Yes'
                 );
 
                 if (answer === 'Yes') {
-                    await this.clearGlobalStateKeys([
-                        Constants.GlobalState.FilterGroups,
-                        Constants.GlobalState.FilterProfiles,
-                        Constants.GlobalState.ActiveProfile,
-                    ]);
-                    await this.showClearResult(Constants.Messages.Info.ClearFilterDataCompleted);
+                    this.filterManager.clearWordGroups();
+                    await this.filterManager.saveFilters();
+                    await this.showClearResult(Constants.Messages.Info.ClearWordFilterDataCompleted);
+                }
+            }),
+
+            vscode.commands.registerCommand(Constants.Commands.ClearRegexFilterData, async () => {
+                const answer = await vscode.window.showWarningMessage(
+                    Constants.Prompts.ConfirmClearRegexFilterData,
+                    { modal: true },
+                    'Yes'
+                );
+
+                if (answer === 'Yes') {
+                    this.filterManager.clearRegexGroups();
+                    await this.filterManager.saveFilters();
+                    await this.showClearResult(Constants.Messages.Info.ClearRegexFilterDataCompleted);
                 }
             }),
 

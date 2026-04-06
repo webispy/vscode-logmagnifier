@@ -14,13 +14,10 @@ suite('FilterManager Import Validation Test Suite', () => {
         mockContext = new MockExtensionContext();
         filterManager = new FilterManager(mockContext);
 
-        // Keep a safe regex group to prevent default re-creation
-        filterManager.addGroup('Safe Group', true);
+        // Remove all groups for a clean slate
         const groups = filterManager.getGroups();
         for (const g of groups) {
-            if (g.name !== 'Safe Group') {
-                filterManager.removeGroup(g.id);
-            }
+            filterManager.removeGroup(g.id);
         }
     });
 

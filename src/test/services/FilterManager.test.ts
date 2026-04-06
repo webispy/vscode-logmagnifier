@@ -7,8 +7,8 @@ import { MockExtensionContext } from '../utils/Mocks';
  *
  * Strategy:
  * - Mocks ExtensionContext and GlobalState (Memento) to test persistence without VS Code API.
- * - Handles 'initDefaultFilters' behavior where removing the last regex group triggers default re-creation.
- * - Uses a 'Safe Group' (regex) to prevent automatic default restoration during tests.
+ * - On construction, FilterManager creates default 'Presets' regex group.
+ *   Setup removes all groups to start each test with a clean slate.
  */
 suite('FilterManager Export/Import Test Suite', () => {
     let filterManager: FilterManager;
@@ -18,28 +18,9 @@ suite('FilterManager Export/Import Test Suite', () => {
         mockContext = new MockExtensionContext();
         filterManager = new FilterManager(mockContext);
 
-        // Clearing groups triggers 'initDefaultFilters' if we remove the last regex group.
-        // To strictly clean up, we can add a temporary regex group, remove others, then we are left with the temp one.
-        // But for these tests, we can just be careful.
-
-        // Let's try to remove everything locally, but knowing 'Presets' might come back if we aren't careful.
-        // Strategy: Add a 'Safe' regex group first.
-        const safeGroup = filterManager.addGroup('Safe Group', true);
-
-        // now remove all others
+        // Remove all groups (including default Presets) for a clean slate.
         const groups = filterManager.getGroups();
-        [...groups].forEach(g => {
-            if (g.id !== safeGroup?.id) {
-                filterManager.removeGroup(g.id);
-            }
-        });
-
-        // Now we only have 'Safe Group'. We can leave it or try to remove it inside tests if needed,
-        // but 'removeGroup(safeGroup)' would trigger defaults again.
-        // So let's just make sure our tests expect 'Safe Group' or we work around it.
-
-        // Actually, cleaner: Modify the tests to accept `Safe Group` presence or just filter it out from verification.
-        // OR: Modify the test to create its own groups, then remove 'Safe Group' *immediately* after creating the test regex group.
+        [...groups].forEach(g => filterManager.removeGroup(g.id));
     });
 
     test('Export Single Group', () => {
@@ -66,16 +47,13 @@ suite('FilterManager Export/Import Test Suite', () => {
         filterManager.addFilter(wGroup.id, 'foo', 'include');
 
         // 2. Create Regex Group (Should be ignored in 'word' export)
-        // The 'Safe Group' from setup is already a regex group, so this is redundant for the test's purpose.
-        // const rGroup = filterManager.addGroup('Regex Group', true)!;
-        // filterManager.addFilter(rGroup.id, '.*', 'include', true);
+        filterManager.addGroup('Regex Group', true)!;
 
         // 3. Export Word
         const json = filterManager.exportFilters('word');
         const parsed = JSON.parse(json);
 
-        // 4. Verify
-        // We know 'Safe Group' is regex, so it shouldn't be here.
+        // 4. Verify — only word groups exported
         assert.strictEqual(parsed.groups.length, 1, 'Should only export 1 group (Word Group)');
         assert.strictEqual(parsed.groups[0].name, 'Word Group');
     });
@@ -88,18 +66,11 @@ suite('FilterManager Export/Import Test Suite', () => {
         const rGroup = filterManager.addGroup('Regex Group', true)!;
         filterManager.addFilter(rGroup.id, '.*', 'include', true);
 
-        // 2. Remove 'Safe Group' (Now that we have another regex group, this won't trigger defaults)
-        const groups = filterManager.getGroups();
-        const safe = groups.find(g => g.name === 'Safe Group');
-        if (safe) {
-            filterManager.removeGroup(safe.id);
-        }
-
         // 3. Export Regex
         const json = filterManager.exportFilters('regex');
         const parsed = JSON.parse(json);
 
-        // 4. Verify
+        // 4. Verify — only regex groups exported
         assert.strictEqual(parsed.groups.length, 1, 'Should only export 1 group');
         assert.strictEqual(parsed.groups[0].name, 'Regex Group');
         assert.strictEqual(parsed.groups[0].isRegex, true);
@@ -303,8 +274,6 @@ suite('FilterManager Export/Import Test Suite', () => {
 
         // 3. Import with Overwrite = true
         // This will clear existing groups of same mode ('word').
-        // 'Safe Group' is regex, so it stays.
-        // 'Existing Group' is word, so it goes.
         filterManager.importFilters(json, 'word', true);
 
         // 4. Verify
@@ -313,5 +282,72 @@ suite('FilterManager Export/Import Test Suite', () => {
 
         assert.strictEqual(wordGroups.length, 1, 'Should have exactly 1 word group after overwrite');
         assert.strictEqual(wordGroups[0].name, 'New Group');
+    });
+});
+
+suite('FilterManager Clear Groups Test Suite', () => {
+    let filterManager: FilterManager;
+    let mockContext: MockExtensionContext;
+
+    setup(() => {
+        mockContext = new MockExtensionContext();
+        filterManager = new FilterManager(mockContext);
+
+        // Remove all groups for a clean slate
+        const groups = filterManager.getGroups();
+        [...groups].forEach(g => filterManager.removeGroup(g.id));
+    });
+
+    test('clearWordGroups removes only word groups', () => {
+        filterManager.addGroup('Word 1', false);
+        filterManager.addGroup('Word 2', false);
+        filterManager.addGroup('Regex 1', true);
+
+        filterManager.clearWordGroups();
+
+        const groups = filterManager.getGroups();
+        assert.strictEqual(groups.length, 1);
+        assert.strictEqual(groups[0].name, 'Regex 1');
+        assert.strictEqual(groups[0].isRegex, true);
+    });
+
+    test('clearRegexGroups removes regex groups and restores Presets', () => {
+        filterManager.addGroup('Word 1', false);
+        filterManager.addGroup('Regex 1', true);
+        filterManager.addGroup('Regex 2', true);
+
+        filterManager.clearRegexGroups();
+
+        const groups = filterManager.getGroups();
+        const wordGroups = groups.filter(g => !g.isRegex);
+        const regexGroups = groups.filter(g => g.isRegex);
+
+        assert.strictEqual(wordGroups.length, 1);
+        assert.strictEqual(wordGroups[0].name, 'Word 1');
+        assert.strictEqual(regexGroups.length, 1);
+        assert.strictEqual(regexGroups[0].name, 'Presets');
+    });
+
+    test('clearRegexGroups restores Presets with default filters', () => {
+        filterManager.addGroup('My Regex', true);
+
+        filterManager.clearRegexGroups();
+
+        const presets = filterManager.getGroups().find(g => g.name === 'Presets');
+        assert.ok(presets, 'Presets group should be restored');
+        assert.strictEqual(presets.isRegex, true);
+        assert.strictEqual(presets.isEnabled, false);
+        assert.strictEqual(presets.filters.length, 2);
+        assert.strictEqual(presets.filters[0].nickname, 'Logcat style');
+        assert.strictEqual(presets.filters[1].nickname, 'Process Info');
+    });
+
+    test('removeGroup does not auto-restore Presets', () => {
+        // Add a regex group, then remove it — Presets should NOT reappear
+        const group = filterManager.addGroup('Temp Regex', true)!;
+        filterManager.removeGroup(group.id);
+
+        const groups = filterManager.getGroups();
+        assert.strictEqual(groups.length, 0, 'No groups should exist after removing the only group');
     });
 });

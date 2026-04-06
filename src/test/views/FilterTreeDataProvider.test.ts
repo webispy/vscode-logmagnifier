@@ -16,14 +16,9 @@ suite('FilterTreeDataProvider Test Suite', () => {
         mockContext = new MockExtensionContext();
         filterManager = new FilterManager(mockContext);
 
-        // Clean up default groups, keeping a safe regex group to prevent re-creation
-        const safeGroup = filterManager.addGroup('Safe Group', true);
+        // Remove all groups for a clean slate
         const groups = filterManager.getGroups();
-        [...groups].forEach(g => {
-            if (g.id !== safeGroup?.id) {
-                filterManager.removeGroup(g.id);
-            }
-        });
+        [...groups].forEach(g => filterManager.removeGroup(g.id));
 
         provider = new FilterTreeDataProvider(filterManager, 'word', Logger.getInstance());
     });
@@ -38,7 +33,7 @@ suite('FilterTreeDataProvider Test Suite', () => {
             const children = provider.getChildren() as (FilterGroup | FilterItem)[];
             const wordGroups = children.filter((c): c is FilterGroup => 'filters' in c);
             assert.ok(wordGroups.some(g => g.name === 'Word Group'));
-            assert.ok(!wordGroups.some(g => g.name === 'Safe Group'), 'Should not include regex groups');
+            assert.ok(wordGroups.every(g => !g.isRegex), 'Should not include regex groups');
         });
 
         test('returns filters within a group', () => {
@@ -222,7 +217,7 @@ suite('FilterTreeDataProvider Test Suite', () => {
             filterManager.addGroup('Regex Group', true);
 
             const children = provider.getChildren() as FilterGroup[];
-            assert.ok(children.every(g => !g.isRegex || g.name === 'Safe Group' ? false : true) === false);
+            assert.ok(children.every(g => !g.isRegex), 'Word mode should exclude regex groups');
             assert.ok(children.some(g => g.name === 'Word Group'));
         });
 

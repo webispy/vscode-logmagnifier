@@ -11,11 +11,13 @@ import { AddBookmarkTool } from './AddBookmarkTool';
 import { AddFilterTool } from './AddFilterTool';
 import { ApplyFilterTool } from './ApplyFilterTool';
 import { CreateProfileTool } from './CreateProfileTool';
+import { DeleteProfileTool } from './DeleteProfileTool';
 import { ExtractJsonTool } from './ExtractJsonTool';
 import { ExtractLogsWithMarginTool } from './ExtractLogsWithMarginTool';
 import { FilterByTimeRangeTool } from './FilterByTimeRangeTool';
 import { GetBookmarksTool } from './GetBookmarksTool';
 import { GetFiltersTool } from './GetFiltersTool';
+import { GetProfileFiltersTool } from './GetProfileFiltersTool';
 import { GetLogSummaryTool } from './GetLogSummaryTool';
 import { ListProfilesTool } from './ListProfilesTool';
 import { ListWorkflowsTool } from './ListWorkflowsTool';
@@ -100,6 +102,8 @@ export class LmToolManager implements vscode.Disposable {
             vscode.lm.registerTool('logmagnifier-listProfiles', new ListProfilesTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-switchProfile', new SwitchProfileTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-createProfile', new CreateProfileTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-getProfileFilters', new GetProfileFiltersTool(filterManager)),
+            vscode.lm.registerTool('logmagnifier-deleteProfile', new DeleteProfileTool(filterManager)),
         );
 
         // Workflow tools

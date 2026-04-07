@@ -260,7 +260,7 @@ steps:
     group: "Settings Log"
     words: [PrefCtrlListHelper, EGL_emulation]
     enable: true
-    caption: "Word filter 'Settings Log' enabled"
+    caption: "Text filter 'Settings Log' enabled"
     hold: 1500
 
   # Navigate a few more Settings screens to generate fresh highlighted log lines

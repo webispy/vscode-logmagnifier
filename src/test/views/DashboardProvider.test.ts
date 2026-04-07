@@ -40,7 +40,7 @@ suite('DashboardProvider Test Suite', () => {
 
     test('getChildren returns items at root level', async () => {
         const children = await provider.getChildren();
-        assert.ok(children.length > 0, 'Should return quick access items');
+        assert.ok(children.length > 0, 'Should return dashboard items');
 
         // Should contain profile item
         const profileItem = children.find(c => String(c.label).includes('Filter Profile'));

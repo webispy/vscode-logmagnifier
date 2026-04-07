@@ -50,10 +50,10 @@ export class LogProcessor {
 
             return {
                 includes: effectiveIncludes.map(f => ({
-                    regex: RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive),
+                    regex: RegexUtils.create(f.pattern, !!f.isRegex, !!f.caseSensitive),
                     contextLine: f.contextLine ?? 0
                 })),
-                excludes: effectiveExcludes.map(f => RegexUtils.create(f.keyword, !!f.isRegex, !!f.caseSensitive))
+                excludes: effectiveExcludes.map(f => RegexUtils.create(f.pattern, !!f.isRegex, !!f.caseSensitive))
             };
         });
     }

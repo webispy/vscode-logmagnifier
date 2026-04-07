@@ -11,7 +11,6 @@ import { FileHierarchyService } from '../../services/FileHierarchyService';
 function createFilter(pattern: string) {
     return {
         id: pattern,
-        keyword: pattern,
         pattern: pattern,
         type: 'include' as const,
         isEnabled: true
@@ -95,10 +94,10 @@ suite('Workflow Final Verification', () => {
         // REAL LogProcessor
         logProcessor = new LogProcessor();
 
-        // Mock SourceMapService
+        // Mock LineMappingService
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const registeredMappings: any[] = [];
-        const mockSourceMapService = {
+        const mockLineMappingService = {
             register: (filteredUri: vscode.Uri, sourceUri: vscode.Uri, lineMapping: number[]) => {
                 registeredMappings.push({
                     filtered: filteredUri.fsPath,
@@ -110,7 +109,7 @@ suite('Workflow Final Verification', () => {
 
         // Instantiate
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockSourceMapService as any);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockLineMappingService as any);
         workflowManager.stepDelay = 0; // Skip UI delay in tests to avoid CI timeout
 
         // Mock openStepResult to skip heavy VS Code API calls

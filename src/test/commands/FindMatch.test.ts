@@ -5,7 +5,7 @@ import { FilterManager } from '../../services/FilterManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 import { MockExtensionContext } from '../utils/Mocks';
 import { FilterGroup, FilterItem } from '../../models/Filter';
 
@@ -37,7 +37,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
         logProcessor = new MockLogProcessor();
         const logger = Logger.getInstance();
         highlightService = new MockHighlightService(filterManager, logger);
-        const sourceMapService = SourceMapService.getInstance();
+        const lineMappingService = LineMappingService.getInstance();
 
         // Mock TreeViews
         const textTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
@@ -49,7 +49,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
             highlightService,
             logProcessor,
             logger,
-            sourceMapService,
+            lineMappingService,
             textTreeView,
             regexTreeView,
             false
@@ -76,7 +76,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -105,7 +105,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -132,7 +132,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -166,7 +166,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -202,7 +202,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -229,7 +229,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,
@@ -257,7 +257,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
 
         const item = {
             id: '1',
-            keyword: 'apple',
+            pattern: 'apple',
             isRegex: false,
             isEnabled: true,
             caseSensitive: false,

@@ -6,10 +6,10 @@ export enum HighlightMode {
     FullLine = 2,
 }
 
-/** A single keyword or regex filter within a group. */
+/** A single text or regex filter within a group. */
 export interface FilterItem {
     id: string;
-    keyword: string;
+    pattern: string;
     type: FilterType;
     isEnabled: boolean;
     isRegex?: boolean;

@@ -10,7 +10,7 @@ import { Constants } from '../Constants';
 import { FileHierarchyService } from '../services/FileHierarchyService';
 import { HighlightService } from '../services/HighlightService';
 import { Logger } from '../services/Logger';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { TimestampService } from '../services/TimestampService';
 import { TimeRangeTreeDataProvider, TimeRangeTreeItem } from '../views/TimeRangeTreeDataProvider';
 
@@ -18,7 +18,7 @@ export class TimestampCommandManager {
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly timestampService: TimestampService,
-        private readonly sourceMapService: SourceMapService,
+        private readonly lineMappingService: LineMappingService,
         private readonly highlightService: HighlightService,
         private readonly timeRangeProvider: TimeRangeTreeDataProvider,
         private readonly logger: Logger,
@@ -211,10 +211,10 @@ export class TimestampCommandManager {
 
         const outputPath = await this.writeTempFile(filteredLines);
 
-        // Register source map and file hierarchy
+        // Register line mapping and file hierarchy
         const sourceUri = document.uri;
         const outputUri = vscode.Uri.file(outputPath);
-        this.sourceMapService.register(outputUri, sourceUri, lineMapping);
+        this.lineMappingService.register(outputUri, sourceUri, lineMapping);
         FileHierarchyService.getInstance().registerChild(sourceUri, outputUri, 'filter');
 
         // Open the result file

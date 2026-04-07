@@ -9,10 +9,10 @@ interface SourceMapping {
     lineMapping: number[]; // Index: filtered line, Value: original line
 }
 
-export class SourceMapService {
+export class LineMappingService {
     private static readonly maxMappings = 500;
 
-    private static instance: SourceMapService;
+    private static instance: LineMappingService;
 
     private mappings: Map<string, SourceMapping> = new Map();
     private pendingNavigation: { uri: vscode.Uri, line: number, timestamp: number } | undefined;
@@ -22,11 +22,11 @@ export class SourceMapService {
         this.logger = Logger.getInstance();
     }
 
-    public static getInstance(): SourceMapService {
-        if (!SourceMapService.instance) {
-            SourceMapService.instance = new SourceMapService();
+    public static getInstance(): LineMappingService {
+        if (!LineMappingService.instance) {
+            LineMappingService.instance = new LineMappingService();
         }
-        return SourceMapService.instance;
+        return LineMappingService.instance;
     }
 
     /**
@@ -36,10 +36,10 @@ export class SourceMapService {
      * @param lineMapping Array where index is filtered line number and value is source line number
      */
     public register(filteredUri: vscode.Uri, sourceUri: vscode.Uri, lineMapping: number[]): void {
-        if (this.mappings.size >= SourceMapService.maxMappings) {
+        if (this.mappings.size >= LineMappingService.maxMappings) {
             const oldestKey = this.mappings.keys().next().value;
             if (oldestKey) {
-                this.logger.info(`[SourceMapService] Cache full (${SourceMapService.maxMappings}), evicting oldest mapping`);
+                this.logger.info(`[LineMappingService] Cache full (${LineMappingService.maxMappings}), evicting oldest mapping`);
                 this.mappings.delete(oldestKey);
             }
         }

@@ -8,7 +8,7 @@ import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 import { FilterGroup } from '../../models/Filter';
 import { Workflow } from '../../models/Workflow';
 
@@ -43,7 +43,7 @@ suite('Workflow URI Execution Tests', () => {
         profileManager = new ProfileManager(context);
         logProcessor = new LogProcessor();
 
-        const mockSourceMapService = {
+        const mockLineMappingService = {
             register: () => { }
         };
 
@@ -53,7 +53,7 @@ suite('Workflow URI Execution Tests', () => {
             logProcessor,
             logger,
             highlightService,
-            mockSourceMapService as unknown as SourceMapService
+            mockLineMappingService as unknown as LineMappingService
         );
     });
 
@@ -74,7 +74,7 @@ suite('Workflow URI Execution Tests', () => {
         (profileManager as any).getProfileGroups = async () => [{
             id: 'g1',
             name: 'Group 1',
-            filters: [{ id: 'f1', keyword: 'test', isEnabled: true, type: 'include' }]
+            filters: [{ id: 'f1', pattern: 'test', isEnabled: true, type: 'include' }]
         }];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (profileManager as any).getProfileNames = () => ['Default'];
@@ -115,7 +115,7 @@ suite('Workflow URI Execution Tests', () => {
         (profileManager as any).getProfileGroups = async () => [{
             id: 'g1',
             name: 'Group 1',
-            filters: [{ id: 'f1', keyword: 'test', isEnabled: true, type: 'include' }]
+            filters: [{ id: 'f1', pattern: 'test', isEnabled: true, type: 'include' }]
         }] as FilterGroup[];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (profileManager as any).getProfileNames = () => ['Default'];
@@ -153,7 +153,7 @@ suite('Workflow URI Execution Tests', () => {
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (profileManager as any).getProfileGroups = async () => [{
-            id: 'g1', name: 'G1', filters: [{ id: 'f1', keyword: 'test', isEnabled: true, type: 'include' }]
+            id: 'g1', name: 'G1', filters: [{ id: 'f1', pattern: 'test', isEnabled: true, type: 'include' }]
         }] as FilterGroup[];
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (profileManager as any).getProfileNames = () => ['P1', 'P2'];

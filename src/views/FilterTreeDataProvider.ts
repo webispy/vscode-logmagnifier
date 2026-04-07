@@ -68,16 +68,16 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 item.description = `${element.filters.length} items`;
                 return item;
             } else {
-                let label = element.keyword;
+                let label = element.pattern;
 
                 if (element.isRegex) {
-                    label = element.nickname ?? element.keyword;
+                    label = element.nickname ?? element.pattern;
                 } else {
                     // Apply tilde prefix for exclude items (both enabled and disabled)
                     if (element.type === 'exclude') {
-                        label = `^${element.keyword}`;
+                        label = `^${element.pattern}`;
                     } else {
-                        label = element.keyword;
+                        label = element.pattern;
                     }
                 }
 
@@ -90,7 +90,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 item.id = element.id;
 
                 if (element.isRegex && element.nickname) {
-                    item.description = element.keyword;
+                    item.description = element.pattern;
                 } else {
                     item.description = '';
                 }

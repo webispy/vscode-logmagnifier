@@ -119,7 +119,7 @@ suite('FilterExportImport Test Suite', () => {
 
             const readBack = await fsp.readFile(filePath, 'utf8');
             const parsed = JSON.parse(readBack);
-            assert.strictEqual(parsed.groups[0].filters[0].keyword, 'roundtrip');
+            assert.strictEqual(parsed.groups[0].filters[0].pattern, 'roundtrip');
         });
     });
 

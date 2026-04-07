@@ -4,7 +4,7 @@ import { FilterManager } from '../services/FilterManager';
 
 interface SetContextLineInput {
     groupName: string;
-    keyword: string;
+    pattern: string;
     lines: number;
 }
 
@@ -18,9 +18,9 @@ export class SetContextLineTool implements vscode.LanguageModelTool<SetContextLi
         options: vscode.LanguageModelToolInvocationPrepareOptions<SetContextLineInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const { keyword, lines } = options.input;
+        const { pattern, lines } = options.input;
         return {
-            invocationMessage: `Setting context lines to ±${lines} for filter "${keyword}"`,
+            invocationMessage: `Setting context lines to ±${lines} for filter "${pattern}"`,
         };
     }
 
@@ -28,7 +28,7 @@ export class SetContextLineTool implements vscode.LanguageModelTool<SetContextLi
         options: vscode.LanguageModelToolInvocationOptions<SetContextLineInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { groupName, keyword, lines } = options.input;
+        const { groupName, pattern, lines } = options.input;
 
         if (!SetContextLineTool.VALID_LEVELS.includes(lines)) {
             return new vscode.LanguageModelToolResult([
@@ -45,10 +45,10 @@ export class SetContextLineTool implements vscode.LanguageModelTool<SetContextLi
             ]);
         }
 
-        const filter = group.filters.find(f => f.keyword === keyword);
+        const filter = group.filters.find(f => f.pattern === pattern);
         if (!filter) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Filter "${keyword}" not found in group "${groupName}".`)
+                new vscode.LanguageModelTextPart(`Filter "${pattern}" not found in group "${groupName}".`)
             ]);
         }
 
@@ -56,8 +56,8 @@ export class SetContextLineTool implements vscode.LanguageModelTool<SetContextLi
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
                 lines === 0
-                    ? `Context lines disabled for filter "${keyword}".`
-                    : `Context lines set to ±${lines} for filter "${keyword}".`
+                    ? `Context lines disabled for filter "${pattern}".`
+                    : `Context lines set to ±${lines} for filter "${pattern}".`
             )
         ]);
     }

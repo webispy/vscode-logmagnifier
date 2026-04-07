@@ -4,12 +4,12 @@ import { FilterManager } from '../services/FilterManager';
 
 interface UpdateFilterInput {
     groupName: string;
-    keyword: string;
-    newKeyword?: string;
+    pattern: string;
+    newPattern?: string;
     nickname?: string;
 }
 
-/** Updates a filter's keyword or nickname. */
+/** Updates a filter's pattern or nickname. */
 export class UpdateFilterTool implements vscode.LanguageModelTool<UpdateFilterInput> {
     constructor(private readonly filterManager: FilterManager) {}
 
@@ -17,12 +17,12 @@ export class UpdateFilterTool implements vscode.LanguageModelTool<UpdateFilterIn
         options: vscode.LanguageModelToolInvocationPrepareOptions<UpdateFilterInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const { keyword, newKeyword, nickname } = options.input;
+        const { pattern, newPattern, nickname } = options.input;
         const changes: string[] = [];
-        if (newKeyword) { changes.push(`keyword → "${newKeyword}"`); }
+        if (newPattern) { changes.push(`pattern → "${newPattern}"`); }
         if (nickname !== undefined) { changes.push(`nickname → "${nickname}"`); }
         return {
-            invocationMessage: `Updating filter "${keyword}": ${changes.join(', ')}`,
+            invocationMessage: `Updating filter "${pattern}": ${changes.join(', ')}`,
         };
     }
 
@@ -30,11 +30,11 @@ export class UpdateFilterTool implements vscode.LanguageModelTool<UpdateFilterIn
         options: vscode.LanguageModelToolInvocationOptions<UpdateFilterInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { groupName, keyword, newKeyword, nickname } = options.input;
+        const { groupName, pattern, newPattern, nickname } = options.input;
 
-        if (!newKeyword && nickname === undefined) {
+        if (!newPattern && nickname === undefined) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart('No updates specified. Provide newKeyword and/or nickname.')
+                new vscode.LanguageModelTextPart('No updates specified. Provide newPattern and/or nickname.')
             ]);
         }
 
@@ -45,21 +45,21 @@ export class UpdateFilterTool implements vscode.LanguageModelTool<UpdateFilterIn
             ]);
         }
 
-        const filter = group.filters.find(f => f.keyword === keyword);
+        const filter = group.filters.find(f => f.pattern === pattern);
         if (!filter) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Filter "${keyword}" not found in group "${groupName}".`)
+                new vscode.LanguageModelTextPart(`Filter "${pattern}" not found in group "${groupName}".`)
             ]);
         }
 
-        const updates: { keyword?: string; nickname?: string } = {};
-        if (newKeyword) { updates.keyword = newKeyword; }
+        const updates: { pattern?: string; nickname?: string } = {};
+        if (newPattern) { updates.pattern = newPattern; }
         if (nickname !== undefined) { updates.nickname = nickname; }
 
         this.filterManager.updateFilter(group.id, filter.id, updates);
 
         const changes: string[] = [];
-        if (newKeyword) { changes.push(`keyword → "${newKeyword}"`); }
+        if (newPattern) { changes.push(`pattern → "${newPattern}"`); }
         if (nickname !== undefined) { changes.push(`nickname → "${nickname}"`); }
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(`Updated filter: ${changes.join(', ')}.`)

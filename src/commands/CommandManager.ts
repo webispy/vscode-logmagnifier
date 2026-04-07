@@ -13,7 +13,7 @@ import { JsonPrettyService } from '../services/JsonPrettyService';
 import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
 import { ResultCountService } from '../services/ResultCountService';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { QuickAccessProvider } from '../views/QuickAccessProvider';
 import { EditorToggleCommandManager } from './EditorToggleCommandManager';
 import { FilterExecutionCommandManager } from './FilterExecutionCommandManager';
@@ -32,7 +32,7 @@ export interface CommandManagerServices {
     textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     jsonPrettyService: JsonPrettyService;
-    sourceMapService: SourceMapService;
+    lineMappingService: LineMappingService;
 }
 
 export class CommandManager {
@@ -46,7 +46,7 @@ export class CommandManager {
     private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly jsonPrettyService: JsonPrettyService;
-    private readonly sourceMapService: SourceMapService;
+    private readonly lineMappingService: LineMappingService;
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
     private debounceTimer: NodeJS.Timeout | undefined;
@@ -63,13 +63,13 @@ export class CommandManager {
         this.textTreeView = services.textTreeView;
         this.regexTreeView = services.regexTreeView;
         this.jsonPrettyService = services.jsonPrettyService;
-        this.sourceMapService = services.sourceMapService;
+        this.lineMappingService = services.lineMappingService;
         // Instantiate sub-modules
         new FilterGroupCommandManager(context, this.filterManager, this.logger);
         new FilterItemCommandManager(context, this.filterManager, this.logger, this.textTreeView);
         new FilterPropertyCommandManager(context, this.filterManager);
         new FilterExportImportCommandManager(context, this.filterManager);
-        new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.sourceMapService, this.textTreeView, this.regexTreeView);
+        new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.lineMappingService, this.textTreeView, this.regexTreeView);
         new EditorToggleCommandManager(context, this.quickAccessProvider, this.jsonPrettyService);
 
         this.registerClearDataCommand();

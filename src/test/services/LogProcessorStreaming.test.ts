@@ -23,8 +23,8 @@ suite('LogProcessor Streaming Edge Cases', () => {
         return { id, name, filters: [], isEnabled: true, isRegex: false, isExpanded: true };
     }
 
-    function createFilter(id: string, keyword: string, type: FilterType) {
-        return { id, keyword, type, isEnabled: true, isRegex: false, contextLine: 0, caseSensitive: false };
+    function createFilter(id: string, pattern: string, type: FilterType) {
+        return { id, pattern, type, isEnabled: true, isRegex: false, contextLine: 0, caseSensitive: false };
     }
 
     setup(async () => {

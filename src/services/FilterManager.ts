@@ -128,8 +128,8 @@ export class FilterManager implements vscode.Disposable {
                     isExpanded: true
                 };
                 featuredGroup.filters.push(
-                    { id: crypto.randomUUID(), keyword: '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}', type: 'include', isEnabled: true, isRegex: true, nickname: 'Logcat style', contextLine: 0 },
-                    { id: crypto.randomUUID(), keyword: '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+', type: 'include', isEnabled: true, isRegex: true, nickname: 'Process Info', contextLine: 0 }
+                    { id: crypto.randomUUID(), pattern: '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}', type: 'include', isEnabled: true, isRegex: true, nickname: 'Logcat style', contextLine: 0 },
+                    { id: crypto.randomUUID(), pattern: '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+', type: 'include', isEnabled: true, isRegex: true, nickname: 'Process Info', contextLine: 0 }
                 );
                 target.push(featuredGroup);
             } else {
@@ -258,20 +258,20 @@ export class FilterManager implements vscode.Disposable {
      * Adds a new filter to the specified group, returning undefined if a duplicate exists.
      *
      * @param groupId - Target group identifier
-     * @param keyword - Filter pattern (plain text or regex)
+     * @param pattern - Filter pattern (plain text or regex)
      * @param type - Whether this filter includes or excludes matching lines
-     * @param isRegex - Whether the keyword is a regular expression
+     * @param isRegex - Whether the pattern is a regular expression
      * @param nickname - Optional display name for the filter
      * @returns The created filter item, or undefined if the group was not found or a duplicate exists
      */
-    public addFilter(groupId: string, keyword: string, type: FilterType, isRegex: boolean = false, nickname?: string): FilterItem | undefined {
+    public addFilter(groupId: string, pattern: string, type: FilterType, isRegex: boolean = false, nickname?: string): FilterItem | undefined {
         const group = this.groups.find(g => g.id === groupId);
         if (group) {
             const exists = group.filters.some(f => {
                 if (isRegex) {
-                    return f.keyword === keyword && f.nickname === nickname;
+                    return f.pattern === pattern && f.nickname === nickname;
                 }
-                return f.keyword.toLowerCase() === keyword.toLowerCase() && f.type === type;
+                return f.pattern.toLowerCase() === pattern.toLowerCase() && f.type === type;
             });
 
             if (exists) {
@@ -280,7 +280,7 @@ export class FilterManager implements vscode.Disposable {
 
             const newFilter: FilterItem = {
                 id: crypto.randomUUID(),
-                keyword,
+                pattern,
                 type,
                 isEnabled: true,
                 isRegex,
@@ -289,7 +289,7 @@ export class FilterManager implements vscode.Disposable {
                 contextLine: 0
             };
             group.filters.push(newFilter);
-            this.logger.info(`[FilterManager] Filter added to group '${group.name}': ${keyword} (Type: ${type}, Regex: ${isRegex})`);
+            this.logger.info(`[FilterManager] Filter added to group '${group.name}': ${pattern} (Type: ${type}, Regex: ${isRegex})`);
             this.notifyChange();
             return newFilter;
         }
@@ -327,13 +327,13 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    /** Updates a filter's keyword and/or nickname. */
-    public updateFilter(groupId: string, filterId: string, updates: { keyword?: string, nickname?: string }): void {
+    /** Updates a filter's pattern and/or nickname. */
+    public updateFilter(groupId: string, filterId: string, updates: { pattern?: string, nickname?: string }): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
             const { filter } = found;
-            if (updates.keyword !== undefined) {
-                filter.keyword = updates.keyword;
+            if (updates.pattern !== undefined) {
+                filter.pattern = updates.pattern;
             }
             if (updates.nickname !== undefined) {
                 filter.nickname = updates.nickname;
@@ -475,7 +475,7 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             const { group, filter } = found;
             filter.isEnabled = !filter.isEnabled;
-            this.logger.info(`[FilterManager] Filter '${filter.keyword}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
+            this.logger.info(`[FilterManager] Filter '${filter.pattern}' in group '${group.name}' ${filter.isEnabled ? 'enabled' : 'disabled'}`);
             this.notifyChange();
         }
     }
@@ -503,7 +503,7 @@ export class FilterManager implements vscode.Disposable {
                     filter.color = this.assignColor(group);
                 }
 
-                this.logger.info(`[FilterManager] Filter '${filter.keyword}' type set to: ${filter.type}`);
+                this.logger.info(`[FilterManager] Filter '${filter.pattern}' type set to: ${filter.type}`);
                 this.notifyChange();
             }
         }
@@ -580,15 +580,15 @@ export class FilterManager implements vscode.Disposable {
         if (sourceGroupId !== targetGroupId) {
             const exists = targetGroup.filters.some(f => {
                 if (targetGroup.isRegex) {
-                    return f.keyword === activeFilter.keyword && f.nickname === activeFilter.nickname;
+                    return f.pattern === activeFilter.pattern && f.nickname === activeFilter.nickname;
                 }
-                // Check keyword only, ignoring type (as requested by user)
-                return f.keyword.toLowerCase() === activeFilter.keyword.toLowerCase();
+                // Check pattern only, ignoring type (as requested by user)
+                return f.pattern.toLowerCase() === activeFilter.pattern.toLowerCase();
             });
 
             if (exists) {
                 this.logger.warn(`[FilterManager] Cannot move filter: Duplicate exists in target group '${targetGroup.name}'`);
-                vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', activeFilter.keyword).replace('{1}', targetGroup.name));
+                vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', activeFilter.pattern).replace('{1}', targetGroup.name));
                 return;
             }
         }
@@ -797,23 +797,25 @@ export class FilterManager implements vscode.Disposable {
         const contextLine = typeof f.contextLine === 'number' && validContextLines.includes(f.contextLine) ? f.contextLine : 0;
         const highlightMode = typeof f.highlightMode === 'number' && [0, 1, 2].includes(f.highlightMode) ? f.highlightMode as HighlightMode : undefined;
 
-        const keyword = typeof f.keyword === 'string' ? f.keyword.slice(0, 500) : '';
+        // Support legacy 'keyword' field from older exports
+        const rawPattern = typeof f.pattern === 'string' ? f.pattern : (typeof f.keyword === 'string' ? f.keyword : '');
+        const pattern = rawPattern.slice(0, 500);
         const isRegex = typeof f.isRegex === 'boolean' ? f.isRegex : false;
 
         // Validate regex syntax at import time to prevent invalid patterns from persisting in state
         let isEnabled = typeof f.isEnabled === 'boolean' ? f.isEnabled : true;
-        if (isRegex && keyword) {
+        if (isRegex && pattern) {
             try {
-                new RegExp(keyword);
+                new RegExp(pattern);
             } catch (e: unknown) {
-                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${keyword}: ${e instanceof Error ? e.message : String(e)}`);
+                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${pattern}: ${e instanceof Error ? e.message : String(e)}`);
                 isEnabled = false;
             }
         }
 
         return {
             id: crypto.randomUUID(),
-            keyword,
+            pattern,
             type: f.type === 'include' || f.type === 'exclude' ? f.type : 'include',
             isEnabled,
             isRegex,

@@ -46,8 +46,8 @@ suite('GetProfileFiltersTool', () => {
         const errorGroup = parsed.find((g: { name: string }) => g.name === 'ErrorFilters');
         assert.ok(errorGroup, 'Should find ErrorFilters group');
         assert.strictEqual(errorGroup.filters.length, 2);
-        assert.strictEqual(errorGroup.filters[0].keyword, 'ERROR');
-        assert.strictEqual(errorGroup.filters[1].keyword, 'WARN');
+        assert.strictEqual(errorGroup.filters[0].pattern, 'ERROR');
+        assert.strictEqual(errorGroup.filters[1].pattern, 'WARN');
     });
 
     test('enabledOnly filters disabled groups', async () => {

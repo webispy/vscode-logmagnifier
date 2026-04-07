@@ -16,14 +16,14 @@ suite('RemoveFilterTool', () => {
         tool = new RemoveFilterTool(filterManager);
     });
 
-    test('removes a filter by keyword', async () => {
+    test('removes a filter by pattern', async () => {
         const group = filterManager.addGroup('Test', false)!;
         filterManager.addFilter(group.id, 'error', 'include', false);
         filterManager.addFilter(group.id, 'warn', 'include', false);
 
         const result = await tool.invoke(
             {
-                input: { groupName: 'Test', keyword: 'error' },
+                input: { groupName: 'Test', pattern: 'error' },
                 toolInvocationToken: undefined as never,
             },
             token
@@ -35,7 +35,7 @@ suite('RemoveFilterTool', () => {
         const updatedGroup = filterManager.getGroups().find(g => g.name === 'Test');
         assert.ok(updatedGroup);
         assert.strictEqual(updatedGroup.filters.length, 1);
-        assert.strictEqual(updatedGroup.filters[0].keyword, 'warn');
+        assert.strictEqual(updatedGroup.filters[0].pattern, 'warn');
     });
 
     test('removes entire group', async () => {
@@ -75,7 +75,7 @@ suite('RemoveFilterTool', () => {
 
         const result = await tool.invoke(
             {
-                input: { groupName: 'G', keyword: 'nonexistent' },
+                input: { groupName: 'G', pattern: 'nonexistent' },
                 toolInvocationToken: undefined as never,
             },
             token

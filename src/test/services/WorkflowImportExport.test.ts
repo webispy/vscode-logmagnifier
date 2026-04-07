@@ -5,7 +5,7 @@ import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 import { WorkflowPackage } from '../../models/Workflow';
 import { FilterType } from '../../models/Filter';
 
@@ -15,7 +15,7 @@ suite('Workflow Import/Export Test Suite', () => {
     let logProcessor: LogProcessor;
     let logger: Logger;
     let highlightService: HighlightService;
-    let sourceMapService: SourceMapService;
+    let lineMappingService: LineMappingService;
     let context: vscode.ExtensionContext;
     let globalStateData: Record<string, unknown> = {};
 
@@ -35,7 +35,7 @@ suite('Workflow Import/Export Test Suite', () => {
         highlightService = { registerDocumentFilters: () => { } } as unknown as HighlightService;
         profileManager = new ProfileManager(context);
         logProcessor = new LogProcessor();
-        sourceMapService = { register: () => { } } as unknown as SourceMapService;
+        lineMappingService = { register: () => { } } as unknown as LineMappingService;
 
         workflowManager = new WorkflowManager(
             context,
@@ -43,7 +43,7 @@ suite('Workflow Import/Export Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            sourceMapService
+            lineMappingService
         );
     });
 
@@ -55,7 +55,7 @@ suite('Workflow Import/Export Test Suite', () => {
                 name: 'Group 1',
                 isEnabled: true,
                 isRegex: false,
-                filters: [{ id: 'f1', keyword: 'error', type: 'include' as FilterType, isEnabled: true, color: '#ff0000' }]
+                filters: [{ id: 'f1', pattern: 'error', type: 'include' as FilterType, isEnabled: true, color: '#ff0000' }]
             }];
 
             await profileManager.updateProfileData('Auth', filterGroups);
@@ -89,7 +89,7 @@ suite('Workflow Import/Export Test Suite', () => {
 
             globalStateData['logmagnifier.workflows'] = [legacyWorkflow];
             // Re-init to load legacy data
-            workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, sourceMapService);
+            workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, lineMappingService);
 
             const json = await workflowManager.exportWorkflow('legacy_id');
             const pkg = JSON.parse(json!) as WorkflowPackage;

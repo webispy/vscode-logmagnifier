@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { Logger } from '../services/Logger';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { TimestampService } from '../services/TimestampService';
 
 interface FilterByTimeRangeInput {
@@ -17,7 +17,7 @@ interface FilterByTimeRangeInput {
 export class FilterByTimeRangeTool implements vscode.LanguageModelTool<FilterByTimeRangeInput> {
     constructor(
         private readonly timestampService: TimestampService,
-        private readonly sourceMapService: SourceMapService,
+        private readonly lineMappingService: LineMappingService,
         private readonly logger: Logger
     ) {}
 
@@ -96,9 +96,9 @@ export class FilterByTimeRangeTool implements vscode.LanguageModelTool<FilterByT
             const tmpFile = path.join(os.tmpdir(), `LM_timerange_${Date.now()}.log`);
             fs.writeFileSync(tmpFile, result.filteredLines.join('\n'), 'utf-8');
 
-            // Register source map
+            // Register line mapping
             const outputUri = vscode.Uri.file(tmpFile);
-            this.sourceMapService.register(outputUri, doc.uri, result.lineMapping);
+            this.lineMappingService.register(outputUri, doc.uri, result.lineMapping);
 
             // Open filtered document
             const newDoc = await vscode.workspace.openTextDocument(tmpFile);

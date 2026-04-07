@@ -18,13 +18,13 @@ suite('Workflow Pipeline Tests', () => {
     let context: vscode.ExtensionContext;
 
     // Mock Data
-    const mockFilter1 = { id: 'f1', keyword: 'filter1', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter2 = { id: 'f2', keyword: 'filter2', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter3 = { id: 'f3', keyword: 'filter3', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter4 = { id: 'f4', keyword: 'filter4', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter5 = { id: 'f5', keyword: 'filter5', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter20 = { id: 'f20', keyword: 'filter20', isEnabled: true, type: 'include' as FilterType };
-    const mockFilter40 = { id: 'f40', keyword: 'filter40', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter1 = { id: 'f1', pattern: 'filter1', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter2 = { id: 'f2', pattern: 'filter2', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter3 = { id: 'f3', pattern: 'filter3', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter4 = { id: 'f4', pattern: 'filter4', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter5 = { id: 'f5', pattern: 'filter5', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter20 = { id: 'f20', pattern: 'filter20', isEnabled: true, type: 'include' as FilterType };
+    const mockFilter40 = { id: 'f40', pattern: 'filter40', isEnabled: true, type: 'include' as FilterType };
 
     setup(() => {
         // Mock Context
@@ -66,11 +66,11 @@ suite('Workflow Pipeline Tests', () => {
             };
         };
 
-        const mockSourceMapService = {
+        const mockLineMappingService = {
             register: (_f: vscode.Uri, _s: vscode.Uri, _m: number[]) => { }
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockSourceMapService as any);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockLineMappingService as any);
     });
 
     test('Scenario 1: Independent Execution (Root -> Child)', async () => {
@@ -118,11 +118,11 @@ suite('Workflow Pipeline Tests', () => {
 
         // 2. Verify Filters (Independent = Self Only)
         // Root (P1): f1, f2 + Child (P2): f3
-        const rootFilters = rootStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const rootFilters = rootStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(rootFilters, ['filter1', 'filter2', 'filter3'].sort(), 'Root should have P1+P2 filters');
 
         // Child (P2): f3 (No inheritance from Root, just itself)
-        const childFilters = childStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const childFilters = childStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(childFilters, ['filter3'].sort(), 'Child should have P2 filters (Independent)');
 
         // 3. Verify Input File Flow (Tree Structure)
@@ -161,15 +161,15 @@ suite('Workflow Pipeline Tests', () => {
         // Root (P1 + P2 + P3)
         // P1(f1,f2), P2(f3), P3(f4,f5)
         // With mergeGroups=true, they are all in one group
-        const rootFilters = rootStep.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const rootFilters = rootStep.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(rootFilters, ['filter1', 'filter2', 'filter3', 'filter4', 'filter5'].sort());
 
         // Child (P2 + P3)
-        const childFilters = childStep.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const childFilters = childStep.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(childFilters, ['filter3', 'filter4', 'filter5'].sort());
 
         // GrandChild (P3)
-        const grandChildFilters = grandChildStep.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const grandChildFilters = grandChildStep.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(grandChildFilters, ['filter4', 'filter5'].sort());
     });
 
@@ -258,7 +258,7 @@ suite('Workflow Pipeline Tests', () => {
 
         // P2 + P3
         const childAStepResult = result!.steps.find(s => s.outputFilePath === childADetails.output)!;
-        const childAFilters = childAStepResult.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
+        const childAFilters = childAStepResult.effectiveGroups.flatMap(g => g.filters).map(f => f.pattern).sort();
         assert.deepStrictEqual(childAFilters, ['filter3', 'filter4', 'filter5'].sort());
 
         // 3. Verify GrandChildA (Seq)
@@ -322,7 +322,7 @@ suite('Workflow Pipeline Tests', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         context.globalState.get = ((_key: string) => [legacyWorkflow]) as any;
 
-        const mockSourceMap = { register: () => { } };
+        const mockLineMapping = { register: () => { } };
 
         // Re-initialize manager to trigger loadFromState
         const wm = new WorkflowManager(
@@ -332,7 +332,7 @@ suite('Workflow Pipeline Tests', () => {
             logger,
             highlightService,
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            mockSourceMap as any
+            mockLineMapping as any
         );
 
         const workflows = wm.getWorkflows();

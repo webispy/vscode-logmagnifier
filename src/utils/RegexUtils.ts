@@ -13,13 +13,13 @@ export class RegexUtils {
     /**
      * Creates a RegExp object safely with caching.
      * Returns a NEW RegExp instance every time to avoid shared 'lastIndex' state bugs.
-     * @param keyword The pattern or search text.
-     * @param isRegex Whether the keyword is a regex pattern.
+     * @param pattern The pattern or search text.
+     * @param isRegex Whether the pattern is a regex.
      * @param caseSensitive Whether the search should be case sensitive.
      * @returns A RegExp object. Returns a match-nothing regex on error.
      */
-    public static create(keyword: string, isRegex: boolean, caseSensitive: boolean): RegExp {
-        const key = `${keyword}\x00${isRegex}\x00${caseSensitive}`;
+    public static create(pattern: string, isRegex: boolean, caseSensitive: boolean): RegExp {
+        const key = `${pattern}\x00${isRegex}\x00${caseSensitive}`;
         const cached = RegexUtils.cache.get(key);
         if (cached) {
             // LRU: Refresh by deleting and re-inserting
@@ -43,15 +43,15 @@ export class RegexUtils {
                     /(\.\*){2,}/,                      // multiple greedy wildcards: .*.*
                     /\(\.[\*\+]\)\{/,                  // dot-star/plus in group with repetition: (.*){n}
                 ];
-                if (keyword.length > MAX_REGEX_LENGTH) {
+                if (pattern.length > MAX_REGEX_LENGTH) {
                     throw new Error('Pattern too long');
                 }
-                if (REDOS_PATTERNS.some(p => p.test(keyword))) {
+                if (REDOS_PATTERNS.some(p => p.test(pattern))) {
                     throw new Error('Pattern contains nested quantifiers that may cause performance issues');
                 }
-                regex = new RegExp(keyword, flags);
+                regex = new RegExp(pattern, flags);
             } else {
-                const escaped = keyword.replace(RegexUtils.escapeRegex, '\\$&');
+                const escaped = pattern.replace(RegexUtils.escapeRegex, '\\$&');
                 regex = new RegExp(escaped, flags);
             }
 
@@ -68,7 +68,7 @@ export class RegexUtils {
         } catch (e: unknown) {
             // Report error to user (once per invalid pattern to avoid spam)
             const errorMessage = e instanceof Error ? e.message : String(e);
-            const errorKey = `${keyword}_${errorMessage}`;
+            const errorKey = `${pattern}_${errorMessage}`;
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {
                 if (RegexUtils.reportedErrors.size >= RegexUtils.maxReportedErrors) {
@@ -81,7 +81,7 @@ export class RegexUtils {
                 }
                 RegexUtils.reportedErrors.add(errorKey);
                 const message = Constants.Messages.Error.InvalidRegexPatternDetailed
-                    .replace('{0}', keyword)
+                    .replace('{0}', pattern)
                     .replace('{1}', errorMessage);
                 vscode.window.showErrorMessage(message);
             }

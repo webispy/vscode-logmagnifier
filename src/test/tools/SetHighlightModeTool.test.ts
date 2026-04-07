@@ -22,7 +22,7 @@ suite('SetHighlightModeTool', () => {
         const filter = filterManager.addFilter(group.id, 'error', 'include', false)!;
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', mode: 'line' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', mode: 'line' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -36,7 +36,7 @@ suite('SetHighlightModeTool', () => {
         const filter = filterManager.addFilter(group.id, 'error', 'include', false)!;
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', mode: 'fullLine' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', mode: 'fullLine' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -51,7 +51,7 @@ suite('SetHighlightModeTool', () => {
         filterManager.setFilterHighlightMode(group.id, filter.id, HighlightMode.Line);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', mode: 'word' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', mode: 'word' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -65,7 +65,7 @@ suite('SetHighlightModeTool', () => {
         filterManager.addFilter(group.id, 'error', 'include', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', mode: 'invalid' as 'word' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', mode: 'invalid' as 'word' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -75,7 +75,7 @@ suite('SetHighlightModeTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error', mode: 'word' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error', mode: 'word' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -87,7 +87,7 @@ suite('SetHighlightModeTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing', mode: 'word' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing', mode: 'word' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -97,7 +97,7 @@ suite('SetHighlightModeTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k', mode: 'line' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string; mode: 'line' }>,
+            { input: { groupName: 'G', pattern: 'k', mode: 'line' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string; mode: 'line' }>,
             token
         );
 

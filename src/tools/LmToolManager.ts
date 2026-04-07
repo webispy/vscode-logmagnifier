@@ -4,7 +4,7 @@ import { FilterManager } from '../services/FilterManager';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { TimestampService } from '../services/TimestampService';
 import { WorkflowManager } from '../services/WorkflowManager';
 import { AddBookmarkTool } from './AddBookmarkTool';
@@ -44,14 +44,14 @@ export class LmToolManager implements vscode.Disposable {
         filterManager: FilterManager,
         logProcessor: LogProcessor,
         timestampService: TimestampService,
-        sourceMapService: SourceMapService,
+        lineMappingService: LineMappingService,
         workflowManager: WorkflowManager,
         bookmarkService: LogBookmarkService,
         logger: Logger
     ) {
         this.registerTools(
             filterManager, logProcessor,
-            timestampService, sourceMapService,
+            timestampService, lineMappingService,
             workflowManager, bookmarkService, logger
         );
     }
@@ -60,7 +60,7 @@ export class LmToolManager implements vscode.Disposable {
         filterManager: FilterManager,
         logProcessor: LogProcessor,
         timestampService: TimestampService,
-        sourceMapService: SourceMapService,
+        lineMappingService: LineMappingService,
         workflowManager: WorkflowManager,
         bookmarkService: LogBookmarkService,
         logger: Logger
@@ -71,18 +71,18 @@ export class LmToolManager implements vscode.Disposable {
             vscode.lm.registerTool('logmagnifier-addFilter', new AddFilterTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-removeFilter', new RemoveFilterTool(filterManager)),
             vscode.lm.registerTool('logmagnifier-applyFilter', new ApplyFilterTool(
-                filterManager, logProcessor, sourceMapService, logger
+                filterManager, logProcessor, lineMappingService, logger
             )),
             vscode.lm.registerTool('logmagnifier-getLogSummary', new GetLogSummaryTool(
                 filterManager, timestampService
             )),
             vscode.lm.registerTool('logmagnifier-searchLog', new SearchLogTool(logger)),
             vscode.lm.registerTool('logmagnifier-filterByTimeRange', new FilterByTimeRangeTool(
-                timestampService, sourceMapService, logger
+                timestampService, lineMappingService, logger
             )),
             vscode.lm.registerTool('logmagnifier-navigateToTime', new NavigateToTimeTool(timestampService)),
             vscode.lm.registerTool('logmagnifier-extractLogsWithMargin', new ExtractLogsWithMarginTool(
-                timestampService, sourceMapService, logger
+                timestampService, lineMappingService, logger
             )),
         );
 

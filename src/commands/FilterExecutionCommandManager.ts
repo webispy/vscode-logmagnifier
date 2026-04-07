@@ -7,7 +7,7 @@ import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
 import { LogProcessor } from '../services/LogProcessor';
 import { Logger } from '../services/Logger';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { EditorUtils } from '../utils/EditorUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 
@@ -21,7 +21,7 @@ export class FilterExecutionCommandManager {
         private readonly highlightService: HighlightService,
         private readonly logProcessor: LogProcessor,
         private readonly logger: Logger,
-        private readonly sourceMapService: SourceMapService,
+        private readonly lineMappingService: LineMappingService,
         private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>,
         private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
         registerCommands: boolean = true
@@ -141,7 +141,7 @@ export class FilterExecutionCommandManager {
                     stats.processed = result.processed;
                     stats.matched = result.matched;
 
-                    // Register Source Map
+                    // Register line mapping
                     let sourceUri: vscode.Uri | undefined;
                     if (document) {
                         sourceUri = document.uri;
@@ -151,7 +151,7 @@ export class FilterExecutionCommandManager {
 
                     if (sourceUri && result.lineMapping) {
                         const outputUri = vscode.Uri.file(outputPath);
-                        this.sourceMapService.register(outputUri, sourceUri, result.lineMapping);
+                        this.lineMappingService.register(outputUri, sourceUri, result.lineMapping);
                     }
                 } catch (e: unknown) {
                     vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', e instanceof Error ? e.message : String(e)));
@@ -191,8 +191,8 @@ export class FilterExecutionCommandManager {
     }
 
     /**
-     * Navigates to the next or previous match of a filter keyword in the active editor.
-     * @param item The filter item whose keyword to search for; falls back to tree view selection.
+     * Navigates to the next or previous match of a filter pattern in the active editor.
+     * @param item The filter item whose pattern to search for; falls back to tree view selection.
      * @param direction Whether to search forward or backward, wrapping at document boundaries.
      */
     private async findMatch(item: FilterItem | undefined, direction: 'next' | 'previous') {
@@ -207,7 +207,7 @@ export class FilterExecutionCommandManager {
             if (selection && selection.length > 0) {
                 const selected = selection[0];
                 // Ensure it is a FilterItem (not a Group) and it is enabled
-                if ('keyword' in selected) { // Simple check for FilterItem
+                if ('pattern' in selected) { // Simple check for FilterItem
                     item = selected as FilterItem;
                 }
             }
@@ -219,7 +219,7 @@ export class FilterExecutionCommandManager {
         }
 
         if (!item.isEnabled) {
-            vscode.window.showInformationMessage(Constants.Messages.Info.FilterDisabled.replace('{0}', item.keyword));
+            vscode.window.showInformationMessage(Constants.Messages.Info.FilterDisabled.replace('{0}', item.pattern));
             return;
         }
 
@@ -229,7 +229,7 @@ export class FilterExecutionCommandManager {
         // Use RegexUtils
         const isRegex = !!item.isRegex;
         const caseSensitive = !!item.caseSensitive;
-        const regex = RegexUtils.create(item.keyword, isRegex, caseSensitive);
+        const regex = RegexUtils.create(item.pattern, isRegex, caseSensitive);
 
         const fullText = document.getText();
         let targetMatch: { index: number, text: string } | undefined;
@@ -346,7 +346,7 @@ export class FilterExecutionCommandManager {
         }
 
         const position = editor.selection.active;
-        const location = this.sourceMapService.getOriginalLocation(editor.document.uri, position.line);
+        const location = this.lineMappingService.getOriginalLocation(editor.document.uri, position.line);
 
         if (location) {
             try {
@@ -371,12 +371,12 @@ export class FilterExecutionCommandManager {
 
     /** Registers all filter execution, navigation, and view toggle commands. */
     private registerCommands() {
-        // Prepend line numbers toggle
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Enable, () => {
+        // Prepend line numbers
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetPrependLineNumbers.Enable, () => {
             this.setPrependLineNumbersEnabled(true);
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.TogglePrependLineNumbers.Disable, () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetPrependLineNumbers.Disable, () => {
             this.setPrependLineNumbersEnabled(false);
         }));
 

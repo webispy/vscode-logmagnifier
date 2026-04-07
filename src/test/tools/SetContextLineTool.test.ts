@@ -21,7 +21,7 @@ suite('SetContextLineTool', () => {
         const filter = filterManager.addFilter(group.id, 'error', 'include', false)!;
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', lines: 5 }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', lines: 5 }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -35,7 +35,7 @@ suite('SetContextLineTool', () => {
         filterManager.addFilter(group.id, 'error', 'include', false)!;
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', lines: 0 }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', lines: 0 }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -48,7 +48,7 @@ suite('SetContextLineTool', () => {
         filterManager.addFilter(group.id, 'error', 'include', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', lines: 7 }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', lines: 7 }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -58,7 +58,7 @@ suite('SetContextLineTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error', lines: 3 }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error', lines: 3 }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -70,7 +70,7 @@ suite('SetContextLineTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing', lines: 3 }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing', lines: 3 }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -80,7 +80,7 @@ suite('SetContextLineTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k', lines: 3 } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string; lines: number }>,
+            { input: { groupName: 'G', pattern: 'k', lines: 3 } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string; lines: number }>,
             token
         );
 

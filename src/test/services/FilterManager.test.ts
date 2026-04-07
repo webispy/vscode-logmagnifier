@@ -38,7 +38,7 @@ suite('FilterManager Export/Import Test Suite', () => {
         assert.strictEqual(parsed.groups.length, 1);
         assert.strictEqual(parsed.groups[0].name, 'Test Group');
         assert.strictEqual(parsed.groups[0].filters.length, 1);
-        assert.strictEqual(parsed.groups[0].filters[0].keyword, 'Test Filter');
+        assert.strictEqual(parsed.groups[0].filters[0].pattern, 'Test Filter');
     });
 
     test('Export All Filters (Word Mode)', () => {
@@ -109,7 +109,7 @@ suite('FilterManager Export/Import Test Suite', () => {
                     filters: [
                         {
                             id: 'f-1',
-                            keyword: 'Imported Key',
+                            pattern: 'Imported Key',
                             type: 'include',
                             isEnabled: true
                         }
@@ -130,10 +130,10 @@ suite('FilterManager Export/Import Test Suite', () => {
         const importedGroup = groups.find(g => g.name === 'Imported Group');
         assert.ok(importedGroup, 'Imported group should exist');
         assert.strictEqual(importedGroup.filters.length, 1);
-        assert.strictEqual(importedGroup.filters[0].keyword, 'Imported Key');
+        assert.strictEqual(importedGroup.filters[0].pattern, 'Imported Key');
     });
 
-    test('Import preserves keyword whitespace', () => {
+    test('Import preserves pattern whitespace', () => {
         const importData = {
             version: '1.0.0',
             groups: [{
@@ -142,9 +142,9 @@ suite('FilterManager Export/Import Test Suite', () => {
                 isRegex: false,
                 isEnabled: true,
                 filters: [
-                    { id: 'f1', keyword: ' ERROR ', type: 'include', isEnabled: true },
-                    { id: 'f2', keyword: '  leading', type: 'include', isEnabled: true },
-                    { id: 'f3', keyword: 'trailing  ', type: 'exclude', isEnabled: true },
+                    { id: 'f1', pattern: ' ERROR ', type: 'include', isEnabled: true },
+                    { id: 'f2', pattern: '  leading', type: 'include', isEnabled: true },
+                    { id: 'f3', pattern: 'trailing  ', type: 'exclude', isEnabled: true },
                 ]
             }]
         };
@@ -154,9 +154,9 @@ suite('FilterManager Export/Import Test Suite', () => {
 
         const group = filterManager.getGroups().find(g => g.name === 'Whitespace Group');
         assert.ok(group);
-        assert.strictEqual(group.filters[0].keyword, ' ERROR ');
-        assert.strictEqual(group.filters[1].keyword, '  leading');
-        assert.strictEqual(group.filters[2].keyword, 'trailing  ');
+        assert.strictEqual(group.filters[0].pattern, ' ERROR ');
+        assert.strictEqual(group.filters[1].pattern, '  leading');
+        assert.strictEqual(group.filters[2].pattern, 'trailing  ');
     });
 
     test('Import sanitizes filter properties with type validation', () => {
@@ -169,7 +169,7 @@ suite('FilterManager Export/Import Test Suite', () => {
                 isEnabled: true,
                 filters: [{
                     id: 'f-bad',
-                    keyword: 12345,              // wrong type: number instead of string
+                    pattern: 12345,              // wrong type: number instead of string
                     type: 'invalid_type',         // invalid enum value
                     isEnabled: 'yes',             // wrong type: string instead of boolean
                     isRegex: 'true',              // wrong type: string instead of boolean
@@ -189,7 +189,7 @@ suite('FilterManager Export/Import Test Suite', () => {
         const filter = group.filters[0];
 
         // All invalid values should fall back to safe defaults
-        assert.strictEqual(filter.keyword, '', 'Non-string keyword should become empty');
+        assert.strictEqual(filter.pattern, '', 'Non-string pattern should become empty');
         assert.strictEqual(filter.type, 'include', 'Invalid type should default to include');
         assert.strictEqual(filter.isEnabled, true, 'Non-boolean isEnabled should default to true');
         assert.strictEqual(filter.isRegex, false, 'Non-boolean isRegex should default to false');
@@ -199,8 +199,8 @@ suite('FilterManager Export/Import Test Suite', () => {
         assert.strictEqual(filter.excludeStyle, undefined, 'Invalid excludeStyle should become undefined');
     });
 
-    test('Import truncates oversized keyword and name', () => {
-        const longKeyword = 'x'.repeat(1000);
+    test('Import truncates oversized pattern and name', () => {
+        const longPattern = 'x'.repeat(1000);
         const longName = 'G'.repeat(500);
         const longNickname = 'N'.repeat(400);
         const importData = {
@@ -212,7 +212,7 @@ suite('FilterManager Export/Import Test Suite', () => {
                 isEnabled: true,
                 filters: [{
                     id: 'f-long',
-                    keyword: longKeyword,
+                    pattern: longPattern,
                     type: 'include',
                     isEnabled: true,
                     nickname: longNickname,
@@ -226,7 +226,7 @@ suite('FilterManager Export/Import Test Suite', () => {
         const group = filterManager.getGroups().find(g => g.name === longName.slice(0, 200));
         assert.ok(group, 'Group name should be truncated to 200 chars');
         assert.strictEqual(group.name.length, 200);
-        assert.strictEqual(group.filters[0].keyword.length, 500, 'Keyword should be truncated to 500 chars');
+        assert.strictEqual(group.filters[0].pattern.length, 500, 'Keyword should be truncated to 500 chars');
         assert.strictEqual(group.filters[0].nickname?.length, 200, 'Nickname should be truncated to 200 chars');
     });
 
@@ -240,7 +240,7 @@ suite('FilterManager Export/Import Test Suite', () => {
                 isEnabled: true,
                 filters: [{
                     id: 'original-filter-id',
-                    keyword: 'test',
+                    pattern: 'test',
                     type: 'include',
                     isEnabled: true,
                 }]

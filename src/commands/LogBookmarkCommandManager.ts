@@ -200,7 +200,7 @@ export class LogBookmarkCommandManager {
             return;
         }
 
-        // Case 2: Selection based keyword toggle
+        // Case 2: Selection based pattern toggle
         const selectedText = editor.document.getText(selection);
         if (!selectedText) {
             return;
@@ -266,7 +266,7 @@ export class LogBookmarkCommandManager {
         this.processBookmarkMatches(editor, matchedLines, selectedText, MAX_MATCHES);
     }
 
-    /** Bookmarks all lines matching a filter item's keyword in the active editor. */
+    /** Bookmarks all lines matching a filter item's pattern in the active editor. */
     private async addMatchListToBookmark(filter: FilterItem) {
         if (!filter) {
             return;
@@ -275,19 +275,19 @@ export class LogBookmarkCommandManager {
         const editor = await this.getActiveEditor();
         if (!editor) { return; }
 
-        const keyword = filter.keyword;
-        if (!keyword) {
+        const pattern = filter.pattern;
+        if (!pattern) {
             return;
         }
 
         const config = vscode.workspace.getConfiguration(Constants.Configuration.Section);
         const MAX_MATCHES = config.get<number>(Constants.Configuration.Bookmark.MaxMatches, 500);
 
-        const regex = RegexUtils.create(keyword, !!filter.isRegex, !!filter.caseSensitive);
+        const regex = RegexUtils.create(pattern, !!filter.isRegex, !!filter.caseSensitive);
         const matchedLines: number[] = [];
         this.findMatchingLines(editor.document, regex, MAX_MATCHES + 1, (line) => matchedLines.push(line));
 
-        this.processBookmarkMatches(editor, matchedLines, keyword, MAX_MATCHES);
+        this.processBookmarkMatches(editor, matchedLines, pattern, MAX_MATCHES);
     }
 
     private removeBookmark(item: BookmarkItem) {

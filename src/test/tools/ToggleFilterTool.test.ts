@@ -22,7 +22,7 @@ suite('ToggleFilterTool', () => {
         assert.strictEqual(filter.isEnabled, true);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -32,7 +32,7 @@ suite('ToggleFilterTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -44,7 +44,7 @@ suite('ToggleFilterTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -54,7 +54,7 @@ suite('ToggleFilterTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string }>,
+            { input: { groupName: 'G', pattern: 'k' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string }>,
             token
         );
 

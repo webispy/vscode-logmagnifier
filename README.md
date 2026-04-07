@@ -55,6 +55,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Time Range Extract**: Extract log segments by time range via tree or editor context menus.
   - **Go to Timestamp**: Jump to a specific time (`Ctrl+Cmd+G`) with absolute (`HH:MM:SS`) or relative (`+5m`, `-30s`) input.
   - **Selection Gap Display**: Select multiple lines to see time gaps — gutter icons mark gaps, hover shows duration, status bar summarizes the selection.
+- **AI Agent Integration**: Language Model Tools for GitHub Copilot Agent Mode — control filters, profiles, workflows, bookmarks, timestamps, and JSON extraction via natural language (`#logmagnifier` tool set).
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
   - **CodeLens**: clickable "Original" and "Parent" links automatically appear at the top of filtered files.
   - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (Ctrl+Cmd+T).
@@ -198,6 +199,22 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - Bookmarks are saved and restored across sessions.
     - **LIFO Ordering**: Newest bookmark files always appear at the top.
     - **Smart Scroll**: View maintains position and expanded/collapsed state for each file independently.
+
+### AI Agent Integration
+
+1.  **Overview**: LogMagnifier registers Language Model Tools so that AI agents (e.g., GitHub Copilot Agent Mode) can interact with the extension's features via natural language.
+2.  **How to Use**:
+    - In Copilot Chat, type `#logmagnifier` to scope the tool set, then ask in natural language — e.g., *"Add a text filter for ERROR and apply it"*, *"Show bookmarks for this file"*, or *"Extract logs around 14:30 ± 30 seconds"*.
+    - Tools are also available individually in any VS Code extension that supports the `vscode.lm` API.
+3.  **Available Tool Categories**:
+    - **Filter**: get, add, remove, update, apply filters; toggle filters/groups; set context lines, case sensitivity, highlight mode, and color.
+    - **Search**: log summary, keyword search, time range filter, extract with margin.
+    - **Profile**: list, switch, create (with copyFrom), inspect, and delete profiles.
+    - **Workflow**: list and run automated analysis workflows.
+    - **Bookmark**: get, add, remove, and clear bookmarks.
+    - **JSON**: extract and pretty-print JSON from log lines.
+    - **Time**: navigate to a specific timestamp (absolute or relative).
+4.  **Requirements**: VS Code 1.101.0 or higher for Language Model Tools and Chat Tool Sets support.
 
 ## Requirements
 

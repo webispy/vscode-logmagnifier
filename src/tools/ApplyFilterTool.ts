@@ -6,7 +6,7 @@ import { LogProcessor } from '../services/LogProcessor';
 import { LineMappingService } from '../services/LineMappingService';
 
 interface ApplyFilterInput {
-    filterType?: 'word' | 'regex' | 'all';
+    filterType?: 'text' | 'regex' | 'all';
     groupName?: string;
 }
 
@@ -61,7 +61,7 @@ export class ApplyFilterTool implements vscode.LanguageModelTool<ApplyFilterInpu
 
         if (resolvedType) {
             candidateGroups = candidateGroups.filter(g =>
-                resolvedType === 'word' ? !g.isRegex : g.isRegex
+                resolvedType === 'text' ? !g.isRegex : g.isRegex
             );
         }
 

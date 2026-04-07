@@ -113,7 +113,7 @@ suite('Profile Integration Test Suite', () => {
         filterManager.addFilter(exGroup.id, 'export-keyword', 'include');
         await wait(350);
 
-        const json = filterManager.exportFilters('word'); // Export text filters
+        const json = filterManager.exportFilters('text'); // Export text filters
 
         // 2. Switch to Profile Import
         await filterManager.createProfile('Import Target');
@@ -121,7 +121,7 @@ suite('Profile Integration Test Suite', () => {
         assert.strictEqual(filterManager.getGroups().find(g => g.name === 'Export Group'), undefined);
 
         // 3. Import
-        filterManager.importFilters(json, 'word', false);
+        filterManager.importFilters(json, 'text', false);
         await wait(350);
 
         // 4. Verify Import

@@ -46,11 +46,11 @@ suite('FilterManager Export/Import Test Suite', () => {
         const wGroup = filterManager.addGroup('Word Group', false)!;
         filterManager.addFilter(wGroup.id, 'foo', 'include');
 
-        // 2. Create Regex Group (Should be ignored in 'word' export)
+        // 2. Create Regex Group (Should be ignored in 'text' export)
         filterManager.addGroup('Regex Group', true)!;
 
-        // 3. Export Word
-        const json = filterManager.exportFilters('word');
+        // 3. Export Text
+        const json = filterManager.exportFilters('text');
         const parsed = JSON.parse(json);
 
         // 4. Verify — only word groups exported
@@ -84,7 +84,7 @@ suite('FilterManager Export/Import Test Suite', () => {
 
         // 2. Export only Group 1 and 3
         const idsToExport = [g1.id, g3.id];
-        const json = filterManager.exportFilters('word', idsToExport);
+        const json = filterManager.exportFilters('text', idsToExport);
         const parsed = JSON.parse(json);
 
         // 3. Verify
@@ -120,7 +120,7 @@ suite('FilterManager Export/Import Test Suite', () => {
         const json = JSON.stringify(importData);
 
         // 2. Import
-        const result = filterManager.importFilters(json, 'word', false);
+        const result = filterManager.importFilters(json, 'text', false);
 
         // 3. Verify
         assert.strictEqual(result.count, 1, 'Should have imported 1 group');
@@ -149,7 +149,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             }]
         };
 
-        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        const result = filterManager.importFilters(JSON.stringify(importData), 'text', false);
         assert.strictEqual(result.count, 1);
 
         const group = filterManager.getGroups().find(g => g.name === 'Whitespace Group');
@@ -181,7 +181,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             }]
         };
 
-        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        const result = filterManager.importFilters(JSON.stringify(importData), 'text', false);
         assert.strictEqual(result.count, 1);
 
         const group = filterManager.getGroups().find(g => g.name === 'Malicious Group');
@@ -220,7 +220,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             }]
         };
 
-        const result = filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        const result = filterManager.importFilters(JSON.stringify(importData), 'text', false);
         assert.strictEqual(result.count, 1);
 
         const group = filterManager.getGroups().find(g => g.name === longName.slice(0, 200));
@@ -247,7 +247,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             }]
         };
 
-        filterManager.importFilters(JSON.stringify(importData), 'word', false);
+        filterManager.importFilters(JSON.stringify(importData), 'text', false);
 
         const group = filterManager.getGroups().find(g => g.name === 'ID Test Group');
         assert.ok(group);
@@ -265,7 +265,7 @@ suite('FilterManager Export/Import Test Suite', () => {
             groups: [
                 {
                     name: 'New Group',
-                    isRegex: false, // Matches 'word' mode
+                    isRegex: false, // Matches 'text' mode
                     filters: []
                 }
             ]
@@ -273,8 +273,8 @@ suite('FilterManager Export/Import Test Suite', () => {
         const json = JSON.stringify(importData);
 
         // 3. Import with Overwrite = true
-        // This will clear existing groups of same mode ('word').
-        filterManager.importFilters(json, 'word', true);
+        // This will clear existing groups of same mode ('text').
+        filterManager.importFilters(json, 'text', true);
 
         // 4. Verify
         const groups = filterManager.getGroups();

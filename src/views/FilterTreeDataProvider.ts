@@ -23,7 +23,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
 
     constructor(
         private readonly filterManager: FilterManager,
-        private readonly mode: 'word' | 'regex',
+        private readonly mode: 'text' | 'regex',
         private readonly logger: Logger
     ) {
         this.disposables.push(this.filterManager.onDidChangeFilters(() => this.refresh()));

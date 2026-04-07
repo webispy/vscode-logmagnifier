@@ -103,7 +103,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
 
         // Access private method by casting to any
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (commandManager as any).applyFilter('word');
+        await (commandManager as any).applyFilter('text');
 
         const processed = logProcessor.lastProcessedGroups;
 
@@ -138,7 +138,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
 
         // Execute for Group 1 only
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await (commandManager as any).applyFilter('word', g1);
+        await (commandManager as any).applyFilter('text', g1);
 
         const processed = logProcessor.lastProcessedGroups;
 
@@ -165,7 +165,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         try {
             // Apply filter with no groups
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (commandManager as any).applyFilter('word');
+            await (commandManager as any).applyFilter('text');
 
             assert.strictEqual(capturedMessage, 'No active text groups selected.');
         } finally {
@@ -238,7 +238,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
 
             // Execute apply filter
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            await (testCommandManager as any).applyFilter('word');
+            await (testCommandManager as any).applyFilter('text');
 
             assert.strictEqual(actualProcessed, 800000, 'Should process exactly 800,000 lines for the large file');
             assert.strictEqual(actualMatched, 80000, 'Should match exactly 80,000 lines containing ERROR');

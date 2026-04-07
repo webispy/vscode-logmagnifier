@@ -661,7 +661,7 @@
           "properties": {
             "filterType": {
               "type": "string",
-              "enum": ["word", "regex", "all"],
+              "enum": ["text", "regex", "all"],
               "description": "Which filter type to apply. 'all' applies both text and regex filters. Default: 'all'"
             },
             "groupName": {

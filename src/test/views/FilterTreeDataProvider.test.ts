@@ -20,7 +20,7 @@ suite('FilterTreeDataProvider Test Suite', () => {
         const groups = filterManager.getGroups();
         [...groups].forEach(g => filterManager.removeGroup(g.id));
 
-        provider = new FilterTreeDataProvider(filterManager, 'word', Logger.getInstance());
+        provider = new FilterTreeDataProvider(filterManager, 'text', Logger.getInstance());
     });
 
     teardown(() => {

@@ -1,5 +1,29 @@
 # Change Log
 
+## [1.7.1]
+
+### Added
+- **AI Agent Integration**: 28 Language Model Tools via `vscode.lm.registerTool` for Copilot Agent Mode (`#logmagnifier` tool set).
+  - **Filter Tools**: getFilters, addFilter, removeFilter, updateFilter, updateFilterColor, applyFilter, toggleFilter, toggleFilterGroup, setContextLine, setCaseSensitivity, setHighlightMode.
+  - **Search Tools**: getLogSummary, searchLog, filterByTimeRange, extractLogsWithMargin.
+  - **Profile Tools**: listProfiles, switchProfile, createProfile (with copyFrom), getProfileFilters, deleteProfile.
+  - **Workflow Tools**: listWorkflows, runWorkflow.
+  - **Bookmark Tools**: getBookmarks, addBookmark, removeBookmark, removeAllBookmarks.
+  - **JSON Tool**: extractJson.
+  - **Time Tools**: navigateToTime.
+- **Legacy Compatibility**: Auto-migrate legacy filters in stored profiles on upgrade; import compatibility for pre-1.7.1 export files (keyword→pattern, contextLine→contextLines, line-through→strikethrough).
+
+### Changed
+- **Terminology**: Renamed "Word Filter" to "Text Filter" across all user-facing UI, commands, and view IDs to accurately reflect plain-text substring matching behavior.
+- **Terminology**: Renamed "Quick Access" to "Dashboard", "keyword" to "pattern", "sequential/cumulative" to "independent/aggregated", "SimulationResult" to "ExecutionResult".
+- **Terminology**: Renamed internal field names — `FilterItem.keyword` → `FilterItem.pattern`, `contextLine` → `contextLines`, `line-through` → `strikethrough`, `SourceMapService` → `LineMappingService`.
+- **Terminology**: Renamed cycling commands from `Toggle~` to `Cycle~/Set~` for semantic clarity.
+- **Filter**: Split "Clear Filter Data" into separate "Clear Text Filter Data" and "Clear Regex Filter Data" commands.
+- **Filter**: Internal filter mode type renamed from `'word'` to `'text'`.
+
+### Fixed
+- **Migration**: Added globalState migrations for all renamed fields and enum values to ensure seamless upgrade from v1.7.0.
+
 ## [1.7.0]
 
 ### Added

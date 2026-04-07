@@ -275,7 +275,7 @@ export class HighlightService implements vscode.Disposable {
         const decoRequests: { color: HighlightColor | undefined, isFullLine: boolean, textDecoration?: string, fontWeight?: string, useLineRange: boolean, textColor?: string }[] = [];
 
         if (isExclude) {
-            const style = filter.excludeStyle || 'line-through';
+            const style = filter.excludeStyle || 'strikethrough';
             if (style === 'hidden') {
                 decoRequests.push({
                     color: undefined,

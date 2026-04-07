@@ -731,7 +731,7 @@ async function executeStep(
       break;
     }
 
-    case 'add-word-filter-group': {
+    case 'add-text-filter-group': {
       const groupSel = `.monaco-list-row[aria-label*='${step.group}']`;
 
       // Hover an element, capture hover frame, then capture press (:active) frame and release.
@@ -759,26 +759,26 @@ async function executeStep(
       };
 
       // 1. Create the group
-      await page.locator("[aria-label='Word Filters Section']").first().hover({ force: true });
+      await page.locator("[aria-label='Text Filters Section']").first().hover({ force: true });
       await delay(300);
-      await hoverAndClick("[aria-label='Add Word Filter Group']", `Hover header → Add Word Filter Group`);
+      await hoverAndClick("[aria-label='Add Text Filter Group']", `Hover header → Add Text Filter Group`);
       await delay(600);
       await typeAnimated(step.group, `Naming the group`);
       await page.keyboard.press('Enter');
       await delay(800);
       if (captureFrame) await captureFrame(`Group '${step.group}' created`);
 
-      // 2. Add each keyword
+      // 2. Add each pattern
       for (const word of step.words) {
-        const addWordSel = `${groupSel} [aria-label='Add Word Filter']`;
+        const addWordSel = `${groupSel} [aria-label='Add Text Filter']`;
         await page.locator(groupSel).first().hover({ force: true });
         await delay(300);
-        await hoverAndClick(addWordSel, `Hover group row → Add Word Filter`);
+        await hoverAndClick(addWordSel, `Hover group row → Add Text Filter`);
         await delay(500);
-        await typeAnimated(word, `Add keyword: ${word}`);
+        await typeAnimated(word, `Add pattern: ${word}`);
         await page.keyboard.press('Enter');
         await delay(600);
-        if (captureFrame) await captureFrame(`Add keyword: ${word}`);
+        if (captureFrame) await captureFrame(`Add pattern: ${word}`);
       }
 
       // 3. Enable the group if requested

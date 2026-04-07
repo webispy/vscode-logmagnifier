@@ -16,7 +16,7 @@ suite('LogProcessor Test Suite', () => {
 
     test('checkMatchCompiled: basic include filter', () => {
         const group: CompiledGroup = {
-            includes: [{ regex: RegexUtils.create('Error', false, false), contextLine: 0 }],
+            includes: [{ regex: RegexUtils.create('Error', false, false), contextLines: 0 }],
             excludes: []
         };
 
@@ -42,7 +42,7 @@ suite('LogProcessor Test Suite', () => {
         const excludeRegex = RegexUtils.create('Ignored', false, false);
 
         const group: CompiledGroup = {
-            includes: [{ regex: includeRegex, contextLine: 0 }],
+            includes: [{ regex: includeRegex, contextLines: 0 }],
             excludes: [excludeRegex]
         };
 
@@ -55,8 +55,8 @@ suite('LogProcessor Test Suite', () => {
     test('checkMatchCompiled: context lines calculation', () => {
         const group: CompiledGroup = {
             includes: [
-                { regex: RegexUtils.create('Critical', false, false), contextLine: 5 },
-                { regex: RegexUtils.create('Error', false, false), contextLine: 2 }
+                { regex: RegexUtils.create('Critical', false, false), contextLines: 5 },
+                { regex: RegexUtils.create('Error', false, false), contextLines: 2 }
             ],
             excludes: []
         };

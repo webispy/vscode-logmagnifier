@@ -32,14 +32,14 @@ suite('LogProcessor Integration Test Suite', () => {
     }
 
     // Helper to create a filter item
-    function createFilter(id: string, pattern: string, type: FilterType, enabled: boolean = true, isRegex: boolean = false, contextLine: number = 0, caseSensitive: boolean = false): FilterItem {
+    function createFilter(id: string, pattern: string, type: FilterType, enabled: boolean = true, isRegex: boolean = false, contextLines: number = 0, caseSensitive: boolean = false): FilterItem {
         return {
             id,
             pattern,
             type,
             isEnabled: enabled,
             isRegex,
-            contextLine,
+            contextLines,
             caseSensitive
         };
     }
@@ -173,7 +173,7 @@ suite('LogProcessor Integration Test Suite', () => {
 
         const filterGroup = createGroup('context-group', 'Context');
         const contextFilter = createFilter('f-context', 'Retrying', 'include');
-        contextFilter.contextLine = 1;
+        contextFilter.contextLines = 1;
         filterGroup.filters.push(contextFilter);
 
         const result = await processor.processFile(sampleLogPath, [filterGroup]);

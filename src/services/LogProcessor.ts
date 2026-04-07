@@ -15,7 +15,7 @@ import { RegexUtils } from '../utils/RegexUtils';
 import { FileHierarchyService } from './FileHierarchyService';
 
 export interface CompiledGroup {
-    includes: { regex: RegExp, contextLine: number }[];
+    includes: { regex: RegExp, contextLines: number }[];
     excludes: RegExp[];
 }
 
@@ -51,7 +51,7 @@ export class LogProcessor {
             return {
                 includes: effectiveIncludes.map(f => ({
                     regex: RegexUtils.create(f.pattern, !!f.isRegex, !!f.caseSensitive),
-                    contextLine: f.contextLine ?? 0
+                    contextLines: f.contextLines ?? 0
                 })),
                 excludes: effectiveExcludes.map(f => RegexUtils.create(f.pattern, !!f.isRegex, !!f.caseSensitive))
             };
@@ -241,7 +241,7 @@ export class LogProcessor {
                     include.regex.lastIndex = 0; // Reset state for global regex
                     if (include.regex.test(line)) {
                         matchFound = true;
-                        maxContext = Math.max(maxContext, include.contextLine);
+                        maxContext = Math.max(maxContext, include.contextLines);
                     }
                 }
             }

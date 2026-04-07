@@ -18,8 +18,8 @@ export interface FilterItem {
     highlightMode?: HighlightMode;
     caseSensitive?: boolean;
     resultCount?: number;
-    contextLine?: number; // 0, 3, 5, 9
-    excludeStyle?: 'line-through' | 'hidden'; // Default: line-through
+    contextLines?: number; // 0, 3, 5, 9
+    excludeStyle?: 'strikethrough' | 'hidden'; // Default: strikethrough
 }
 
 /** A named collection of filters that can be toggled as a unit. */

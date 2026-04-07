@@ -1,12 +1,12 @@
 import * as vscode from 'vscode';
 import { Constants } from '../Constants';
-import { QuickAccessProvider } from '../views/QuickAccessProvider';
+import { DashboardProvider } from '../views/DashboardProvider';
 import { JsonPrettyService } from '../services/JsonPrettyService';
 
 export class EditorToggleCommandManager {
     constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly quickAccessProvider: QuickAccessProvider,
+        private readonly dashboardProvider: DashboardProvider,
         private readonly jsonPrettyService: JsonPrettyService
     ) {
         this.registerCommands();
@@ -35,7 +35,7 @@ export class EditorToggleCommandManager {
             // If argument is provided, set it directly
             if (value !== undefined) {
                 await config.update('occurrencesHighlight', value, vscode.ConfigurationTarget.Global);
-                this.quickAccessProvider.refresh();
+                this.dashboardProvider.refresh();
                 return;
             }
 
@@ -69,12 +69,12 @@ export class EditorToggleCommandManager {
                 }
 
                 await config.update('occurrencesHighlight', newValue, vscode.ConfigurationTarget.Global);
-                this.quickAccessProvider.refresh();
+                this.dashboardProvider.refresh();
             }
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFileSizeUnit, () => {
-            this.quickAccessProvider.toggleFileSizeUnit();
+            this.dashboardProvider.toggleFileSizeUnit();
         }));
 
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleJsonPreview, async () => {
@@ -82,7 +82,7 @@ export class EditorToggleCommandManager {
             const current = config.get<boolean>(Constants.Configuration.JsonPreviewEnabled);
             const newValue = !current;
             await config.update(Constants.Configuration.JsonPreviewEnabled, newValue, vscode.ConfigurationTarget.Global);
-            this.quickAccessProvider.refresh();
+            this.dashboardProvider.refresh();
 
             if (newValue) {
                 this.jsonPrettyService.execute(true);

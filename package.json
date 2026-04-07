@@ -489,7 +489,7 @@
     "views": {
       "logmagnifier-container": [
         {
-          "id": "logmagnifier-quick-access",
+          "id": "logmagnifier-dashboard",
           "name": "Quick Access",
           "icon": "$(tools)"
         },
@@ -1693,7 +1693,7 @@
         "title": "As Tags (tag:...)"
       },
       {
-        "command": "logmagnifier.setExcludeStyle.lineThrough",
+        "command": "logmagnifier.setExcludeStyle.strikethrough",
         "title": "Line Strike"
       },
       {
@@ -2224,7 +2224,7 @@
           "when": "false"
         },
         {
-          "command": "logmagnifier.setExcludeStyle.lineThrough",
+          "command": "logmagnifier.setExcludeStyle.strikethrough",
           "when": "false"
         },
         {
@@ -2522,7 +2522,7 @@
       ],
       "logmagnifier.excludeStyleSubmenu": [
         {
-          "command": "logmagnifier.setExcludeStyle.lineThrough",
+          "command": "logmagnifier.setExcludeStyle.strikethrough",
           "title": "Line Strike",
           "group": "1_style@1"
         },
@@ -2982,7 +2982,7 @@
         },
         {
           "command": "logmagnifier.workflow.run",
-          "when": "view == logmagnifier-quick-access && viewItem == workflowInstance",
+          "when": "view == logmagnifier-dashboard && viewItem == workflowInstance",
           "group": "inline"
         },
         {

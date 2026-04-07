@@ -178,7 +178,7 @@ export const Ids = {
         CopyGroupEnabledItemsWithTag: 'logmagnifier.copyGroupEnabledItemsWithTag',
 
         SetExcludeStyle: {
-            LineThrough: 'logmagnifier.setExcludeStyle.lineThrough',
+            Strikethrough: 'logmagnifier.setExcludeStyle.strikethrough',
             Hidden: 'logmagnifier.setExcludeStyle.hidden',
         },
 
@@ -237,7 +237,7 @@ export const Ids = {
 
     Views: {
         Container: 'logmagnifier-container',
-        QuickAccess: 'logmagnifier-quick-access',
+        Dashboard: 'logmagnifier-quick-access',
         TextFilters: 'logmagnifier-text-filters',
         RegexFilters: 'logmagnifier-regex-filters',
         Runbook: 'logmagnifier-runbook',

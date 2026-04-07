@@ -128,8 +128,8 @@ export class FilterManager implements vscode.Disposable {
                     isExpanded: true
                 };
                 featuredGroup.filters.push(
-                    { id: crypto.randomUUID(), pattern: '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}', type: 'include', isEnabled: true, isRegex: true, nickname: 'Logcat style', contextLine: 0 },
-                    { id: crypto.randomUUID(), pattern: '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+', type: 'include', isEnabled: true, isRegex: true, nickname: 'Process Info', contextLine: 0 }
+                    { id: crypto.randomUUID(), pattern: '^\\d{2}-\\d{2}\\s\\d{2}:\\d{2}:\\d{2}\\.\\d{3}', type: 'include', isEnabled: true, isRegex: true, nickname: 'Logcat style', contextLines: 0 },
+                    { id: crypto.randomUUID(), pattern: '^\\s*\\d+\\s+\\d+\\s+[a-zA-Z_]\\S*\\s+\\S+\\s+-?\\d+', type: 'include', isEnabled: true, isRegex: true, nickname: 'Process Info', contextLines: 0 }
                 );
                 target.push(featuredGroup);
             } else {
@@ -286,7 +286,7 @@ export class FilterManager implements vscode.Disposable {
                 isRegex,
                 nickname,
                 color: (!isRegex && type === Constants.FilterTypes.Include) ? this.assignColor(group) : undefined,
-                contextLine: 0
+                contextLines: 0
             };
             group.filters.push(newFilter);
             this.logger.info(`[FilterManager] Filter added to group '${group.name}': ${pattern} (Type: ${type}, Regex: ${isRegex})`);
@@ -374,9 +374,9 @@ export class FilterManager implements vscode.Disposable {
         if (found) {
             const { filter } = found;
             const levels = Constants.Defaults.ContextLineLevels;
-            const currentIndex = levels.indexOf(filter.contextLine ?? 0);
+            const currentIndex = levels.indexOf(filter.contextLines ?? 0);
             const nextIndex = (currentIndex + 1) % levels.length;
-            filter.contextLine = levels[nextIndex];
+            filter.contextLines = levels[nextIndex];
             this.notifyChange();
         }
     }
@@ -521,7 +521,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     /** Sets the visual style for excluded lines (strikethrough or hidden). */
-    public setFilterExcludeStyle(groupId: string, filterId: string, style: 'line-through' | 'hidden'): void {
+    public setFilterExcludeStyle(groupId: string, filterId: string, style: 'strikethrough' | 'hidden'): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
             if (found.filter.excludeStyle !== style) {
@@ -546,8 +546,8 @@ export class FilterManager implements vscode.Disposable {
     public setFilterContextLine(groupId: string, filterId: string, lines: number): void {
         const found = this.findFilter(groupId, filterId);
         if (found) {
-            if (found.filter.contextLine !== lines) {
-                found.filter.contextLine = lines;
+            if (found.filter.contextLines !== lines) {
+                found.filter.contextLines = lines;
                 this.notifyChange();
             }
         }
@@ -794,7 +794,9 @@ export class FilterManager implements vscode.Disposable {
 
     private sanitizeImportedFilter(f: Record<string, unknown>): FilterItem {
         const validContextLines = Constants.Defaults.ContextLineLevels as readonly number[];
-        const contextLine = typeof f.contextLine === 'number' && validContextLines.includes(f.contextLine) ? f.contextLine : 0;
+        // Support legacy 'contextLine' field from older exports
+        const rawContextLines = typeof f.contextLines === 'number' ? f.contextLines : (typeof f.contextLine === 'number' ? f.contextLine : 0);
+        const contextLines = validContextLines.includes(rawContextLines) ? rawContextLines : 0;
         const highlightMode = typeof f.highlightMode === 'number' && [0, 1, 2].includes(f.highlightMode) ? f.highlightMode as HighlightMode : undefined;
 
         // Support legacy 'keyword' field from older exports
@@ -823,8 +825,10 @@ export class FilterManager implements vscode.Disposable {
             color: typeof f.color === 'string' ? f.color : undefined,
             highlightMode,
             caseSensitive: typeof f.caseSensitive === 'boolean' ? f.caseSensitive : undefined,
-            contextLine,
-            excludeStyle: f.excludeStyle === 'hidden' ? 'hidden' : undefined,
+            contextLines,
+            excludeStyle: f.excludeStyle === 'hidden' ? 'hidden'
+                : (f.excludeStyle === 'strikethrough' || f.excludeStyle === 'line-through') ? 'strikethrough'
+                : undefined,
         };
     }
 

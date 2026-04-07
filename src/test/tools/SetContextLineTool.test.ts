@@ -27,7 +27,7 @@ suite('SetContextLineTool', () => {
 
         const text = (result.content[0] as vscode.LanguageModelTextPart).value;
         assert.ok(text.includes('±5'));
-        assert.strictEqual(filter.contextLine, 5);
+        assert.strictEqual(filter.contextLines, 5);
     });
 
     test('disables context lines with 0', async () => {

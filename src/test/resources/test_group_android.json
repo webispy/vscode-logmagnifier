@@ -10,7 +10,7 @@
                     "isEnabled": true,
                     "isRegex": false,
                     "color": "color13",
-                    "contextLine": 0
+                    "contextLines": 0
                 },
                 {
                     "pattern": "MainActivity",
@@ -18,7 +18,7 @@
                     "isEnabled": true,
                     "isRegex": false,
                     "color": "color13",
-                    "contextLine": 0,
+                    "contextLines": 0,
                     "excludeStyle": "hidden"
                 },
                 {
@@ -27,7 +27,7 @@
                     "isEnabled": true,
                     "isRegex": false,
                     "color": "color05",
-                    "contextLine": 3,
+                    "contextLines": 3,
                     "highlightMode": 1,
                     "caseSensitive": true
                 }

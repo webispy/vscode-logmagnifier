@@ -160,10 +160,10 @@ suite('FilterManager Import Validation Test Suite', () => {
         const filter = imported.filters[0];
         assert.strictEqual(filter.isEnabled, true, 'Default isEnabled should be true');
         assert.strictEqual(filter.isRegex, false, 'Default isRegex should be false');
-        assert.strictEqual(filter.contextLine, 0, 'Default contextLine should be 0');
+        assert.strictEqual(filter.contextLines, 0, 'Default contextLines should be 0');
     });
 
-    test('import with invalid contextLine uses 0', () => {
+    test('import with invalid contextLines uses 0', () => {
         const json = JSON.stringify({
             version: '1.0',
             groups: [{
@@ -175,7 +175,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                     type: 'include',
                     isEnabled: true,
                     isRegex: false,
-                    contextLine: 999
+                    contextLines: 999
                 }]
             }]
         });
@@ -185,6 +185,6 @@ suite('FilterManager Import Validation Test Suite', () => {
 
         const imported = filterManager.getGroups().find(g => g.name === 'Bad Context');
         assert.ok(imported);
-        assert.strictEqual(imported.filters[0].contextLine, 0, 'Invalid contextLine should fall back to 0');
+        assert.strictEqual(imported.filters[0].contextLines, 0, 'Invalid contextLines should fall back to 0');
     });
 });

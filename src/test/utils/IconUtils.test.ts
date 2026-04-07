@@ -33,7 +33,7 @@ suite('IconUtils Test Suite', () => {
 
     suite('generateExcludeSvg', () => {
         test('generates strike-through variant by default', () => {
-            const svg = IconUtils.generateExcludeSvg('#f00', '#0f0', 'line-through');
+            const svg = IconUtils.generateExcludeSvg('#f00', '#0f0', 'strikethrough');
             assert.ok(svg.includes('abc'));
             assert.ok(svg.includes('line'));
         });

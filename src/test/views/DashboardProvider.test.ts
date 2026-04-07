@@ -4,11 +4,11 @@ import * as vscode from 'vscode';
 import { FilterManager } from '../../services/FilterManager';
 import { Logger } from '../../services/Logger';
 import { WorkflowManager } from '../../services/WorkflowManager';
-import { QuickAccessProvider } from '../../views/QuickAccessProvider';
+import { DashboardProvider } from '../../views/DashboardProvider';
 import { MockExtensionContext } from '../utils/Mocks';
 
-suite('QuickAccessProvider Test Suite', () => {
-    let provider: QuickAccessProvider;
+suite('DashboardProvider Test Suite', () => {
+    let provider: DashboardProvider;
     let filterManager: FilterManager;
     let mockContext: MockExtensionContext;
 
@@ -20,7 +20,7 @@ suite('QuickAccessProvider Test Suite', () => {
             onDidChangeWorkflow: () => ({ dispose: () => { } })
         } as unknown as WorkflowManager;
 
-        provider = new QuickAccessProvider(filterManager, mockWorkflowManager, Logger.getInstance());
+        provider = new DashboardProvider(filterManager, mockWorkflowManager, Logger.getInstance());
     });
 
     teardown(() => {

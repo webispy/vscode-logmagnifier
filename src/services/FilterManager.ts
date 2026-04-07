@@ -59,6 +59,10 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager;
     }
 
+    public get filterStateServiceRef(): FilterStateService {
+        return this.stateService;
+    }
+
     private async reloadFromProfile() {
         const activeProfileName = this.profileManager.getActiveProfile();
         const groups = await this.profileManager.getProfileGroups(activeProfileName);
@@ -737,7 +741,8 @@ export class FilterManager implements vscode.Disposable {
                 // New format: Root is object with version and groups
                 importedGroups = parsedData.groups;
                 importedVersion = parsedData.version;
-                this.logger.info(`[FilterManager] Importing ${importedGroups.length} groups from JSON (File Version: ${importedVersion || 'unknown'}).`);
+                const needsMigration = FilterStateService.isLegacyVersion(importedVersion);
+                this.logger.info(`[FilterManager] Importing ${importedGroups.length} groups from JSON (File Version: ${importedVersion || 'unknown'}, legacy: ${needsMigration}).`);
             } else if (Array.isArray(parsedData)) {
                 // Old format: Root is an array of groups
                 importedGroups = parsedData;
@@ -772,7 +777,7 @@ export class FilterManager implements vscode.Disposable {
                     isEnabled: typeof group.isEnabled === 'boolean' ? group.isEnabled : true,
                     isRegex: !!group.isRegex,
                     isExpanded: group.isExpanded ?? true,
-                    filters: (group.filters || []).map((f: unknown) => this.sanitizeImportedFilter(f as Record<string, unknown>))
+                    filters: (group.filters || []).map((f: unknown) => this.stateService.sanitizeImportedFilter(f as Record<string, unknown>))
                 };
 
                 this.groups.push(newGroup);
@@ -792,44 +797,9 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    private sanitizeImportedFilter(f: Record<string, unknown>): FilterItem {
-        const validContextLines = Constants.Defaults.ContextLineLevels as readonly number[];
-        // Support legacy 'contextLine' field from older exports
-        const rawContextLines = typeof f.contextLines === 'number' ? f.contextLines : (typeof f.contextLine === 'number' ? f.contextLine : 0);
-        const contextLines = validContextLines.includes(rawContextLines) ? rawContextLines : 0;
-        const highlightMode = typeof f.highlightMode === 'number' && [0, 1, 2].includes(f.highlightMode) ? f.highlightMode as HighlightMode : undefined;
-
-        // Support legacy 'keyword' field from older exports
-        const rawPattern = typeof f.pattern === 'string' ? f.pattern : (typeof f.keyword === 'string' ? f.keyword : '');
-        const pattern = rawPattern.slice(0, 500);
-        const isRegex = typeof f.isRegex === 'boolean' ? f.isRegex : false;
-
-        // Validate regex syntax at import time to prevent invalid patterns from persisting in state
-        let isEnabled = typeof f.isEnabled === 'boolean' ? f.isEnabled : true;
-        if (isRegex && pattern) {
-            try {
-                new RegExp(pattern);
-            } catch (e: unknown) {
-                this.logger.warn(`[FilterManager] Imported filter has invalid regex, disabling: ${pattern}: ${e instanceof Error ? e.message : String(e)}`);
-                isEnabled = false;
-            }
-        }
-
-        return {
-            id: crypto.randomUUID(),
-            pattern,
-            type: f.type === 'include' || f.type === 'exclude' ? f.type : 'include',
-            isEnabled,
-            isRegex,
-            nickname: typeof f.nickname === 'string' ? f.nickname.slice(0, 200) : undefined,
-            color: typeof f.color === 'string' ? f.color : undefined,
-            highlightMode,
-            caseSensitive: typeof f.caseSensitive === 'boolean' ? f.caseSensitive : undefined,
-            contextLines,
-            excludeStyle: f.excludeStyle === 'hidden' ? 'hidden'
-                : (f.excludeStyle === 'strikethrough' || f.excludeStyle === 'line-through') ? 'strikethrough'
-                : undefined,
-        };
+    /** @deprecated Use FilterStateService.sanitizeImportedFilter() instead. Kept for backward compatibility. */
+    public sanitizeImportedFilter(f: Record<string, unknown>): FilterItem {
+        return this.stateService.sanitizeImportedFilter(f);
     }
 
     /** Updates match counts for filters and groups, firing change events for each modified filter. */

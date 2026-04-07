@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { WorkflowManager } from '../../services/WorkflowManager';
 import { ProfileManager } from '../../services/ProfileManager';
+import { FilterStateService } from '../../services/FilterStateService';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
@@ -12,6 +13,7 @@ import { FilterType } from '../../models/Filter';
 suite('Workflow Import/Export Test Suite', () => {
     let workflowManager: WorkflowManager;
     let profileManager: ProfileManager;
+    let filterStateService: FilterStateService;
     let logProcessor: LogProcessor;
     let logger: Logger;
     let highlightService: HighlightService;
@@ -34,6 +36,7 @@ suite('Workflow Import/Export Test Suite', () => {
         logger = { info: () => { }, error: () => { }, warn: () => { }, debug: () => { } } as unknown as Logger;
         highlightService = { registerDocumentFilters: () => { } } as unknown as HighlightService;
         profileManager = new ProfileManager(context);
+        filterStateService = new FilterStateService(context, Logger.getInstance());
         logProcessor = new LogProcessor();
         lineMappingService = { register: () => { } } as unknown as LineMappingService;
 
@@ -43,7 +46,8 @@ suite('Workflow Import/Export Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            lineMappingService
+            lineMappingService,
+            filterStateService
         );
     });
 
@@ -200,6 +204,42 @@ suite('Workflow Import/Export Test Suite', () => {
 
             const importedWf = workflowManager.getWorkflow('wf5');
             assert.strictEqual(importedWf, undefined, 'Workflow should not be saved if cancelled');
+        });
+
+        test('Legacy workflow import migrates keyword→pattern, contextLine→contextLines, line-through→strikethrough', async () => {
+            const legacyPkg = {
+                version: '1.6.0',
+                workflow: {
+                    id: 'wf-legacy',
+                    name: 'Legacy Workflow',
+                    steps: [{ id: 's1', profileName: 'LegacyProfile', executionMode: 'cumulative' }]
+                },
+                profiles: [{
+                    name: 'LegacyProfile',
+                    groups: [{
+                        id: 'g1', name: 'Group', isEnabled: true, isRegex: false,
+                        filters: [
+                            { id: 'f1', keyword: 'old_keyword', type: 'include', isEnabled: true, contextLine: 5, excludeStyle: 'line-through' }
+                        ]
+                    }]
+                }]
+            };
+
+            const success = await workflowManager.importWorkflow(JSON.stringify(legacyPkg));
+            assert.strictEqual(success, true);
+
+            // Verify executionMode migration
+            const wf = workflowManager.getWorkflow('wf-legacy');
+            assert.ok(wf);
+            assert.strictEqual(wf.steps[0].executionMode, 'aggregated');
+
+            // Verify filter field migrations in profile
+            const groups = await profileManager.getProfileGroups('LegacyProfile');
+            assert.ok(groups);
+            const filter = groups![0].filters[0];
+            assert.strictEqual(filter.pattern, 'old_keyword', 'keyword should be migrated to pattern');
+            assert.strictEqual(filter.contextLines, 5, 'contextLine should be migrated to contextLines');
+            assert.strictEqual(filter.excludeStyle, 'strikethrough', 'line-through should be migrated to strikethrough');
         });
     });
 });

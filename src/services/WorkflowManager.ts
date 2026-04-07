@@ -10,6 +10,7 @@ import { Constants } from '../Constants';
 import { FilterGroup, FilterItem } from '../models/Filter';
 import { Workflow, WorkflowStep, WorkflowPackage, ExecutionResult, StepExecutionResult, WorkflowViewModel } from '../models/Workflow';
 
+import { FilterStateService } from './FilterStateService';
 import { HighlightService } from './HighlightService';
 import { Logger } from './Logger';
 import { LogProcessor } from './LogProcessor';
@@ -38,7 +39,8 @@ export class WorkflowManager implements vscode.Disposable {
         private readonly logProcessor: LogProcessor,
         private readonly logger: Logger,
         private readonly highlightService: HighlightService,
-        private readonly lineMappingService: LineMappingService
+        private readonly lineMappingService: LineMappingService,
+        private readonly filterStateService?: FilterStateService
     ) {
         this.workflows = this.loadFromState();
         this.cleanupStaleTempFiles();
@@ -566,6 +568,19 @@ export class WorkflowManager implements vscode.Disposable {
                     throw new Error('Invalid profile name');
                 }
                 pData.name = pData.name.replace(/[\x00-\x1f]/g, '');
+            }
+
+            // Sanitize bundled profile filters for legacy exports (pre-1.7.1)
+            const isLegacy = FilterStateService.isLegacyVersion(pkg.version);
+            if (isLegacy) {
+                this.logger.info(`[WorkflowManager] Legacy workflow package (version: ${pkg.version || 'unknown'}), applying filter migration.`);
+            }
+            if (this.filterStateService) {
+                for (const pData of pkg.profiles) {
+                    if (Array.isArray(pData.groups)) {
+                        this.filterStateService.sanitizeFilterGroups(pData.groups);
+                    }
+                }
             }
 
             const profileNameMapping: Map<string, string> = new Map();

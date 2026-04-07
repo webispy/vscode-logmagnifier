@@ -572,7 +572,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                     setDebounceTimer(undefined);
                 }, 500));
 
-                // Update Quick Access if untitled (size changes)
+                // Update Dashboard if untitled (size changes)
                 if (e.document.isUntitled) {
                     dashboardProvider.refresh();
                 }
@@ -582,7 +582,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
         }
     }));
 
-    // Update Quick Access when file is saved (size changes)
+    // Update Dashboard when file is saved (size changes)
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
         try {
             if (vscode.window.activeTextEditor && doc === vscode.window.activeTextEditor.document) {
@@ -661,7 +661,7 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
                 invalidateCachedConfig();
             }
 
-            // Refresh Quick Access view if editor settings change
+            // Refresh Dashboard view if editor settings change
             if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
                 e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
                 e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {

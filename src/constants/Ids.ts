@@ -237,7 +237,7 @@ export const Ids = {
 
     Views: {
         Container: 'logmagnifier-container',
-        Dashboard: 'logmagnifier-quick-access',
+        Dashboard: 'logmagnifier-dashboard',
         TextFilters: 'logmagnifier-text-filters',
         RegexFilters: 'logmagnifier-regex-filters',
         Runbook: 'logmagnifier-runbook',

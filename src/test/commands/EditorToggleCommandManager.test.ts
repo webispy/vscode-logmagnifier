@@ -1,13 +1,13 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { EditorToggleCommandManager } from '../../commands/EditorToggleCommandManager';
-import { QuickAccessProvider } from '../../views/QuickAccessProvider';
+import { DashboardProvider } from '../../views/DashboardProvider';
 import { JsonPrettyService } from '../../services/JsonPrettyService';
 import { MockExtensionContext } from '../utils/Mocks';
 
 suite('EditorToggleCommandManager Test Suite', () => {
     let mockContext: MockExtensionContext;
-    let mockQuickAccessProvider: QuickAccessProvider;
+    let mockDashboardProvider: DashboardProvider;
     let mockJsonPrettyService: JsonPrettyService;
     let registeredCommands: Map<string, (...args: unknown[]) => unknown>;
     let originalRegisterCommand: typeof vscode.commands.registerCommand;
@@ -22,16 +22,16 @@ suite('EditorToggleCommandManager Test Suite', () => {
             return { dispose: () => { } };
         };
 
-        mockQuickAccessProvider = {
+        mockDashboardProvider = {
             refresh: () => { },
             toggleFileSizeUnit: () => { }
-        } as unknown as QuickAccessProvider;
+        } as unknown as DashboardProvider;
 
         mockJsonPrettyService = {
             execute: async () => { }
         } as unknown as JsonPrettyService;
 
-        new EditorToggleCommandManager(mockContext as unknown as vscode.ExtensionContext, mockQuickAccessProvider, mockJsonPrettyService);
+        new EditorToggleCommandManager(mockContext as unknown as vscode.ExtensionContext, mockDashboardProvider, mockJsonPrettyService);
         vscode.commands.registerCommand = originalRegisterCommand;
     });
 

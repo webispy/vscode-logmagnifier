@@ -42,7 +42,7 @@ steps:
     file: shared/open-logmagnifier.yaml
 
   - type: setup-sidebar
-    collapsed: [Quick Access, Workflows, Word Filters, Regex Filters, ADB Devices, Runbook]
+    collapsed: [Dashboard, Workflows, Text Filters, Regex Filters, ADB Devices, Runbook]
     capture: false
 
   - type: delay

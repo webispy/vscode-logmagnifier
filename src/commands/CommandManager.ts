@@ -14,7 +14,7 @@ import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
 import { ResultCountService } from '../services/ResultCountService';
 import { LineMappingService } from '../services/LineMappingService';
-import { QuickAccessProvider } from '../views/QuickAccessProvider';
+import { DashboardProvider } from '../views/DashboardProvider';
 import { EditorToggleCommandManager } from './EditorToggleCommandManager';
 import { FilterExecutionCommandManager } from './FilterExecutionCommandManager';
 import { FilterExportImportCommandManager } from './FilterExportImportCommandManager';
@@ -27,7 +27,7 @@ export interface CommandManagerServices {
     highlightService: HighlightService;
     resultCountService: ResultCountService;
     logProcessor: LogProcessor;
-    quickAccessProvider: QuickAccessProvider;
+    dashboardProvider: DashboardProvider;
     logger: Logger;
     textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
@@ -41,7 +41,7 @@ export class CommandManager {
     private readonly filterManager: FilterManager;
     private readonly highlightService: HighlightService;
     private readonly logProcessor: LogProcessor;
-    private readonly quickAccessProvider: QuickAccessProvider;
+    private readonly dashboardProvider: DashboardProvider;
     private readonly logger: Logger;
     private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
@@ -58,7 +58,7 @@ export class CommandManager {
         this.filterManager = services.filterManager;
         this.highlightService = services.highlightService;
         this.logProcessor = services.logProcessor;
-        this.quickAccessProvider = services.quickAccessProvider;
+        this.dashboardProvider = services.dashboardProvider;
         this.logger = services.logger;
         this.textTreeView = services.textTreeView;
         this.regexTreeView = services.regexTreeView;
@@ -70,7 +70,7 @@ export class CommandManager {
         new FilterPropertyCommandManager(context, this.filterManager);
         new FilterExportImportCommandManager(context, this.filterManager);
         new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.lineMappingService, this.textTreeView, this.regexTreeView);
-        new EditorToggleCommandManager(context, this.quickAccessProvider, this.jsonPrettyService);
+        new EditorToggleCommandManager(context, this.dashboardProvider, this.jsonPrettyService);
 
         this.registerClearDataCommand();
         this.registerEventListeners();

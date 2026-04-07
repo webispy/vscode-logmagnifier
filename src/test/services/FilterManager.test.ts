@@ -175,7 +175,7 @@ suite('FilterManager Export/Import Test Suite', () => {
                     isRegex: 'true',              // wrong type: string instead of boolean
                     highlightMode: 99,            // out of range
                     caseSensitive: 1,             // wrong type: number instead of boolean
-                    contextLine: 7,               // not in allowed levels [0,3,5,9]
+                    contextLines: 7,               // not in allowed levels [0,3,5,9]
                     excludeStyle: 'bold',         // invalid value
                 }]
             }]
@@ -195,7 +195,7 @@ suite('FilterManager Export/Import Test Suite', () => {
         assert.strictEqual(filter.isRegex, false, 'Non-boolean isRegex should default to false');
         assert.strictEqual(filter.highlightMode, undefined, 'Out-of-range highlightMode should become undefined');
         assert.strictEqual(filter.caseSensitive, undefined, 'Non-boolean caseSensitive should become undefined');
-        assert.strictEqual(filter.contextLine, 0, 'Invalid contextLine should default to 0');
+        assert.strictEqual(filter.contextLines, 0, 'Invalid contextLines should default to 0');
         assert.strictEqual(filter.excludeStyle, undefined, 'Invalid excludeStyle should become undefined');
     });
 

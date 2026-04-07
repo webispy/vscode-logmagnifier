@@ -13,7 +13,7 @@
 #   5. Move cursor to the truncated JSON line, open JSON Preview
 #      — lenient parser recovers structure from partial data
 #   6. Close JSON Preview
-#   7. Enable Auto JSON Preview via Quick Access sidebar toggle
+#   7. Enable Auto JSON Preview via Dashboard sidebar toggle
 #   8. Navigate lines in the editor — JSON Preview updates automatically
 #
 # Log file layout (fixtures/workspace/service.log):
@@ -55,8 +55,8 @@ steps:
     file: shared/open-logmagnifier.yaml
 
   - type: setup-sidebar
-    expanded: [Quick Access]
-    collapsed: [Workflows, Word Filters, Regex Filters, ADB Devices, Runbook]
+    expanded: [Dashboard]
+    collapsed: [Workflows, Text Filters, Regex Filters, ADB Devices, Runbook]
     capture: false
 
   - type: delay
@@ -265,11 +265,11 @@ steps:
     ms: 400
 
   # ----------------------------------------------------------
-  # 7. Enable Auto JSON Preview from the Quick Access sidebar
+  # 7. Enable Auto JSON Preview from the Dashboard sidebar
   # ----------------------------------------------------------
 
   - type: screenshot
-    caption: "Quick Access — JSON Preview is currently Off"
+    caption: "Dashboard — JSON Preview is currently Off"
     hold: 2000
 
   - type: aria-click

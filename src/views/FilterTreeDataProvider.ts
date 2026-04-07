@@ -86,7 +86,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                 }
 
                 const item = new vscode.TreeItem(label, vscode.TreeItemCollapsibleState.None);
-                item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLine ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}_es${element.excludeStyle || 'line-through'}${element.resultCount && element.resultCount > 0 ? '_hasMatches' : ''}`;
+                item.contextValue = `${element.isEnabled ? 'filterItemEnabled' : 'filterItemDisabled'}_cl${element.contextLines ?? 0}_hm${element.highlightMode ?? 0}_cs${element.caseSensitive ? 1 : 0}_col${element.color ?? 'none'}_type${element.type}_es${element.excludeStyle || 'strikethrough'}${element.resultCount && element.resultCount > 0 ? '_hasMatches' : ''}`;
                 item.id = element.id;
 
                 if (element.isRegex && element.nickname) {
@@ -99,7 +99,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
                     if (element.type === 'exclude') {
                         const fillColor = ThemeUtils.neutralColor;
                         const strokeColor = ThemeUtils.strokeColor;
-                        const style = element.excludeStyle ?? 'line-through';
+                        const style = element.excludeStyle ?? 'strikethrough';
 
                         item.iconPath = this.getCachedIcon(`exclude_${fillColor}_${strokeColor}_${style}`, () => IconUtils.generateExcludeSvg(fillColor, strokeColor, style));
                     } else if (element.color) {

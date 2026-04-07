@@ -3,30 +3,30 @@
 # ============================================================
 #
 # This is the primary demo GIF shown at the top of README.md.
-# It records a complete walkthrough of the core Word Filters workflow,
+# It records a complete walkthrough of the core Text Filters workflow,
 # covering the most fundamental features end-to-end:
 #
 #   1. Open test_log_android.log in the editor
-#   2. Expand the Word Filters section in the LogMagnifier sidebar
+#   2. Expand the Text Filters section in the LogMagnifier sidebar
 #   3. Create a group "Android Activity"
-#   4. Add three keyword filters: Choreographer, CameraManagerGlobal, AdFit
+#   4. Add three keytext filters: Choreographer, CameraManagerGlobal, AdFit
 #   5. Enable the group — highlights appear instantly in the editor
 #   6. Cycle highlight modes across the three filters:
 #        Choreographer     : word → line → full line (demonstrates all modes)
 #        CameraManagerGlobal : word → line
 #        AdFit             : stays at word
 #      Final state: Choreographer=full, CameraManagerGlobal=line, AdFit=word
-#   7. Apply Word Filter — matching lines extracted to a new editor tab
-#   8. Add a second group "Network Requests" with keyword: Request
+#   7. Apply Text Filter — matching lines extracted to a new editor tab
+#   8. Add a second group "Network Requests" with pattern: Request
 #   9. Disable "Android Activity", enable "Network Requests"
-#  10. Apply Word Filter again — new filtered output shows only Request lines
+#  10. Apply Text Filter again — new filtered output shows only Request lines
 #      (demonstrates switching between independent filter profiles)
 #  11. Full Tree — click the code lens on the last tab to open the hierarchy
 #      picker; navigate to the 2nd tab (Android Activity), then back to the
 #      1st tab (original log file)
 #
 # Log file: fixtures/workspace/test_log_android.log
-#   Keywords and representative lines:
+#   Patterns and representative lines:
 #     "Choreographer"       — lines   4, 10, 134  (frame-skip & animation logs)
 #     "CameraManagerGlobal" — lines 5–9, 139–143  (camera state transitions)
 #     "AdFit"               — lines  83, 89, 111, 183  (ad SDK events)
@@ -66,13 +66,13 @@ steps:
     file: shared/open-logmagnifier.yaml
 
   - type: setup-sidebar
-    expanded: [Quick Access, Word Filters]
+    expanded: [Dashboard, Text Filters]
     collapsed: [Workflows, Regex Filters, ADB Devices, Runbook]
     capture: false
 
-  # Drag the sash below Quick Access down to give it enough height to
+  # Drag the sash below Dashboard down to give it enough height to
   # show all items without clipping.  The first .monaco-sash.horizontal
-  # inside .sidebar is the boundary between Quick Access and the section
+  # inside .sidebar is the boundary between Dashboard and the section
   # immediately below it.
   - type: drag
     selector: ".sidebar .monaco-sash.horizontal"
@@ -112,22 +112,22 @@ steps:
     hold: 2500
 
   # ----------------------------------------------------------
-  # 2. Show the empty Word Filters panel
+  # 2. Show the empty Text Filters panel
   # ----------------------------------------------------------
 
   - type: screenshot
-    caption: "Word Filters — empty, ready to configure"
+    caption: "Text Filters — empty, ready to configure"
     hold: 2000
 
   # ----------------------------------------------------------
-  # 3–5. Create group "Android Activity", add keywords, enable
+  # 3–5. Create group "Android Activity", add patterns, enable
   # ----------------------------------------------------------
 
-  - type: add-word-filter-group
+  - type: add-text-filter-group
     group: "Android Activity"
     words: [Choreographer, CameraManagerGlobal, AdFit]
     enable: true
-    caption: "Group enabled — keywords highlighted in the log"
+    caption: "Group enabled — patterns highlighted in the log"
     hold: 3000
 
   # ----------------------------------------------------------
@@ -224,12 +224,12 @@ steps:
     hold: 3000
 
   # ----------------------------------------------------------
-  # 7. Apply Word Filter — extract matching lines to a new tab
+  # 7. Apply Text Filter — extract matching lines to a new tab
   # ----------------------------------------------------------
 
   - type: aria-click
     role: button
-    name: "Apply Word Filter"
+    name: "Apply Text Filter"
     caption: "Apply filter — extract matching lines to a new editor tab"
 
   - type: delay
@@ -244,14 +244,14 @@ steps:
     hold: 3000
 
   # ----------------------------------------------------------
-  # 8. Create filter group "Network Requests" with keyword: Request
+  # 8. Create filter group "Network Requests" with pattern: Request
   # ----------------------------------------------------------
 
-  - type: add-word-filter-group
+  - type: add-text-filter-group
     group: "Network Requests"
     words: [Request]
     enable: false
-    caption: "Group 'Network Requests' ready — keyword 'Request' added"
+    caption: "Group 'Network Requests' ready — pattern 'Request' added"
     hold: 2000
 
   # ----------------------------------------------------------
@@ -310,12 +310,12 @@ steps:
     hold: 3000
 
   # ----------------------------------------------------------
-  # 10. Apply Word Filter with the new active group
+  # 10. Apply Text Filter with the new active group
   # ----------------------------------------------------------
 
   - type: aria-click
     role: button
-    name: "Apply Word Filter"
+    name: "Apply Text Filter"
     caption: "Apply filter — extract Request lines to a new tab"
 
   - type: delay

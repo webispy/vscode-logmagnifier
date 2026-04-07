@@ -9,8 +9,8 @@
 #   3. Select "com.android.settings" as the target app
 #   4. Add a Logcat session for the device (no extra tag filters)
 #   5. Start the session — live logs stream into a new editor tab
-#   6. Switch to Word Filters: add "SettingsSliceProvider" and enable it
-#   7. Live logcat lines containing the keyword are highlighted in real time
+#   6. Switch to Text Filters: add "SettingsSliceProvider" and enable it
+#   7. Live logcat lines containing the pattern are highlighted in real time
 #   8. Take a screenshot — the captured image opens in VS Code
 #
 # Emulator setup:
@@ -36,7 +36,7 @@
 #   Launch before recording to ensure it appears in the "target app" picker:
 #     adb shell am start -n com.android.settings/.Settings
 #
-# Word Filter keyword: SettingsSliceProvider
+# Text Filter pattern: SettingsSliceProvider
 #   This tag appears frequently in Settings logcat output and produces a
 #   visible highlight effect against the streaming log lines.
 #
@@ -78,7 +78,7 @@ steps:
 
   - type: setup-sidebar
     expanded: [ADB Devices]
-    collapsed: [Quick Access, Word Filters, Workflows, Regex Filters, Runbook]
+    collapsed: [Dashboard, Text Filters, Workflows, Regex Filters, Runbook]
     capture: false
 
   - type: delay
@@ -230,20 +230,20 @@ steps:
     hold: 3000
 
   # ----------------------------------------------------------
-  # 5. Switch to Word Filters (keep ADB Devices expanded too)
-  #    Keywords chosen from observed Settings logcat tag frequency:
+  # 5. Switch to Text Filters (keep ADB Devices expanded too)
+  #    Patterns chosen from observed Settings logcat tag frequency:
   #      PrefCtrlListHelper  — most frequent tag (~3300 hits per session)
   #      SliceDataConverter  — common slice-loading tag (~200 hits)
   #      SettingsSliceProvider — slice provider init tag (~130 hits)
   # ----------------------------------------------------------
 
   - type: setup-sidebar
-    expanded: [ADB Devices, Word Filters]
-    collapsed: [Quick Access, Workflows, Regex Filters, Runbook]
+    expanded: [ADB Devices, Text Filters]
+    collapsed: [Dashboard, Workflows, Regex Filters, Runbook]
     capture: false
 
-  # Drag the sash between ADB Devices and Word Filters down to give
-  # Word Filters enough visible height to show the group and keywords.
+  # Drag the sash between ADB Devices and Text Filters down to give
+  # Text Filters enough visible height to show the group and patterns.
   - type: drag
     selector: ".sidebar .monaco-sash.horizontal"
     deltaY: -120
@@ -253,10 +253,10 @@ steps:
     ms: 600
 
   # ----------------------------------------------------------
-  # 5b. Add "Settings Log" word filter group and enable it
+  # 5b. Add "Settings Log" text filter group and enable it
   # ----------------------------------------------------------
 
-  - type: add-word-filter-group
+  - type: add-text-filter-group
     group: "Settings Log"
     words: [PrefCtrlListHelper, EGL_emulation]
     enable: true
@@ -276,7 +276,7 @@ steps:
     ms: 1500
 
   - type: screenshot
-    caption: "Keywords highlighted — PrefCtrlListHelper and EGL_emulation light up across live log lines"
+    caption: "Patterns highlighted — PrefCtrlListHelper and EGL_emulation light up across live log lines"
     hold: 3500
 
   # ----------------------------------------------------------
@@ -285,7 +285,7 @@ steps:
 
   - type: setup-sidebar
     expanded: [ADB Devices]
-    collapsed: [Word Filters]
+    collapsed: [Text Filters]
     capture: false
 
   - type: delay

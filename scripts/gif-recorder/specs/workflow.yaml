@@ -4,14 +4,14 @@
 #
 # Demonstrates the Workflows feature end-to-end:
 #
-#   1. Expand Quick Access, Workflows, and Word Filters in the sidebar
-#   2. Drag Quick Access sash to reveal the Filter Profile item
+#   1. Expand Dashboard, Workflows, and Text Filters in the sidebar
+#   2. Drag Dashboard sash to reveal the Filter Profile item
 #   3. Open test_log_android.log
-#   4. Create Filter Profile "Activity Monitor" via Quick Access
-#   5. Add Word Filter group "Camera Events" with keywords:
+#   4. Create Filter Profile "Activity Monitor" via Dashboard
+#   5. Add Text Filter group "Camera Events" with patterns:
 #        CameraManagerGlobal, Choreographer
-#   6. Create Filter Profile "Camera State Drill" via Quick Access
-#   7. Add Word Filter group "Camera States" with keyword:
+#   6. Create Filter Profile "Camera State Drill" via Dashboard
+#   7. Add Text Filter group "Camera States" with pattern:
 #        CAMERA_STATE_ACTIVE  (present in CameraManagerGlobal result lines)
 #   8. Create a new Workflow named "Camera Analysis"
 #   9. Add "Activity Monitor" profile to the workflow,
@@ -56,11 +56,11 @@ steps:
     file: shared/open-logmagnifier.yaml
 
   - type: setup-sidebar
-    expanded: [Quick Access, Workflows, Word Filters]
+    expanded: [Dashboard, Workflows, Text Filters]
     collapsed: [Regex Filters, ADB Devices, Runbook]
     capture: false
 
-  # Drag the sash below Quick Access down to reveal the Filter Profile item.
+  # Drag the sash below Dashboard down to reveal the Filter Profile item.
   - type: drag
     selector: ".sidebar .monaco-sash.horizontal"
     deltaY: 100
@@ -100,7 +100,7 @@ steps:
 
   # ----------------------------------------------------------
   # 2. Create Filter Profile "Activity Monitor"
-  #    Click the "Filter Profile: …" item in Quick Access to open
+  #    Click the "Filter Profile: …" item in Dashboard to open
   #    the profile manager Quick Pick, then choose "New Profile…".
   # ----------------------------------------------------------
 
@@ -147,10 +147,10 @@ steps:
     hold: 2000
 
   # ----------------------------------------------------------
-  # 3. Add Word Filter group "Camera Events" with two keywords, enable
+  # 3. Add Text Filter group "Camera Events" with two patterns, enable
   # ----------------------------------------------------------
 
-  - type: add-word-filter-group
+  - type: add-text-filter-group
     group: "Camera Events"
     words: [CameraManagerGlobal, Choreographer]
     enable: true
@@ -200,12 +200,12 @@ steps:
     hold: 2000
 
   # ----------------------------------------------------------
-  # 5. Add Word Filter group "Camera States" with keyword, enable
+  # 5. Add Text Filter group "Camera States" with pattern, enable
   #    CAMERA_STATE_ACTIVE appears in the CameraManagerGlobal lines
   #    captured by profile 1.
   # ----------------------------------------------------------
 
-  - type: add-word-filter-group
+  - type: add-text-filter-group
     group: "Camera States"
     words: [CAMERA_STATE_ACTIVE]
     enable: true

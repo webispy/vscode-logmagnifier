@@ -68,7 +68,7 @@ export type Step =
   | AdbLaunchAppStep
   | AdbShellStep
   | AdbEnsureEmulatorStep
-  | AddWordFilterGroupStep;
+  | AddTextFilterGroupStep;
 
 /** Common fields shared by all steps */
 interface BaseStep {
@@ -395,7 +395,7 @@ export interface EnsureExpandedStep extends BaseStep {
  * collapsed. Sections not listed are left in their current state.
  *
  * Section names use the short form without the trailing " Section" suffix:
- *   expanded: [Quick Access, Word Filters]
+ *   expanded: [Dashboard, Text Filters]
  *   collapsed: [Workflows, Regex Filters, ADB Devices, Runbook]
  *
  * This replaces a sequence of individual `ensure-expanded` / `ensure-collapsed` steps,
@@ -403,7 +403,7 @@ export interface EnsureExpandedStep extends BaseStep {
  */
 export interface SetupSidebarStep extends BaseStep {
   type: 'setup-sidebar';
-  /** Section names to ensure are expanded (e.g. ["Quick Access", "Word Filters"]) */
+  /** Section names to ensure are expanded (e.g. ["Dashboard", "Text Filters"]) */
   expanded?: string[];
   /** Section names to ensure are collapsed (e.g. ["Workflows", "Regex Filters"]) */
   collapsed?: string[];
@@ -543,33 +543,33 @@ export interface AdbEnsureEmulatorStep {
 }
 
 /**
- * Create a Word Filter group, add keywords, and optionally enable the group.
+ * Create a Text Filter group, add patterns, and optionally enable the group.
  *
  * Replaces the repetitive hover → hover → click → type → Enter sequence that
  * appears in multiple spec files whenever a filter group is configured.
  *
  * Intermediate frames are captured automatically (if captureFrame is available):
- *   - Hover over the "Add Word Filter Group" button
- *   - One frame per keyword after it is added to the list
+ *   - Hover over the "Add Text Filter Group" button
+ *   - One frame per pattern after it is added to the list
  *   - Hover over "Enable" (when enable: true)
  *
  * The main loop's final frame (with caption/hold) is produced as usual.
  *
  * Example:
- *   - type: add-word-filter-group
+ *   - type: add-text-filter-group
  *     group: "Android Activity"
  *     words: [Choreographer, CameraManagerGlobal, AdFit]
  *     enable: true
- *     caption: "Group enabled — keywords highlighted in the log"
+ *     caption: "Group enabled — patterns highlighted in the log"
  *     hold: 3000
  */
-export interface AddWordFilterGroupStep extends BaseStep {
-  type: 'add-word-filter-group';
-  /** Name of the new word filter group */
+export interface AddTextFilterGroupStep extends BaseStep {
+  type: 'add-text-filter-group';
+  /** Name of the new text filter group */
   group: string;
-  /** Keywords to add to the group */
+  /** Patterns to add to the group */
   words: string[];
-  /** Whether to enable the group after all keywords are added (default: false) */
+  /** Whether to enable the group after all patterns are added (default: false) */
   enable?: boolean;
 }
 

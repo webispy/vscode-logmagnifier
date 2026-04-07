@@ -44,6 +44,17 @@ export class FilterStateService {
             delete legacy['keyword'];
         }
 
+        // Migrate legacy 'contextLine' field to 'contextLines'
+        if ('contextLine' in legacy && filter.contextLines === undefined) {
+            filter.contextLines = typeof legacy['contextLine'] === 'number' ? legacy['contextLine'] as number : 0;
+            delete legacy['contextLine'];
+        }
+
+        // Migrate legacy 'line-through' excludeStyle to 'strikethrough'
+        if (filter.excludeStyle === 'line-through' as string) {
+            filter.excludeStyle = 'strikethrough';
+        }
+
         if (filter.highlightMode === undefined) {
             const enableFullLine = 'enableFullLineHighlight' in filter && (filter as { enableFullLineHighlight?: boolean }).enableFullLineHighlight;
             filter.highlightMode = enableFullLine ? HighlightMode.Line : HighlightMode.Word;

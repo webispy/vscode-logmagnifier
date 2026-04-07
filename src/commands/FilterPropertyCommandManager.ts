@@ -36,14 +36,14 @@ export class FilterPropertyCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Include, setFilterTypeHandler(Constants.FilterTypes.Include)));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetFilterType.Exclude, setFilterTypeHandler(Constants.FilterTypes.Exclude)));
 
-        const setExcludeStyleHandler = (style: 'line-through' | 'hidden') => (item: FilterItem) => {
+        const setExcludeStyleHandler = (style: 'strikethrough' | 'hidden') => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);
             if (targetGroup) {
                 this.filterManager.setFilterExcludeStyle(targetGroup.id, item.id, style);
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.LineThrough, setExcludeStyleHandler('line-through')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.Strikethrough, setExcludeStyleHandler('strikethrough')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.SetExcludeStyle.Hidden, setExcludeStyleHandler('hidden')));
 
         const toggleHighlightModeHandler = (item: FilterItem) => {

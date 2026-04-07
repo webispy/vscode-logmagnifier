@@ -24,7 +24,7 @@ suite('LogProcessor Streaming Edge Cases', () => {
     }
 
     function createFilter(id: string, pattern: string, type: FilterType) {
-        return { id, pattern, type, isEnabled: true, isRegex: false, contextLine: 0, caseSensitive: false };
+        return { id, pattern, type, isEnabled: true, isRegex: false, contextLines: 0, caseSensitive: false };
     }
 
     setup(async () => {
@@ -114,7 +114,7 @@ suite('LogProcessor Streaming Edge Cases', () => {
 
         const group = createGroup('g1', 'G');
         const filter = createFilter('f1', 'ERROR', 'include');
-        filter.contextLine = 3;
+        filter.contextLines = 3;
         group.filters.push(filter);
 
         const result = await processor.processFile(boundaryFile, [group]);

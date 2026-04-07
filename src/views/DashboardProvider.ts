@@ -7,7 +7,7 @@ import { Logger } from '../services/Logger';
 import { WorkflowManager } from '../services/WorkflowManager';
 import { EditorUtils } from '../utils/EditorUtils';
 
-export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
+export class DashboardProvider implements vscode.TreeDataProvider<vscode.TreeItem>, vscode.Disposable {
     private _onDidChangeTreeData: vscode.EventEmitter<vscode.TreeItem | undefined | null | void> = new vscode.EventEmitter<vscode.TreeItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<vscode.TreeItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private disposables: vscode.Disposable[] = [];
@@ -26,7 +26,7 @@ export class QuickAccessProvider implements vscode.TreeDataProvider<vscode.TreeI
 
     /** Fires a tree data change event to refresh the view. */
     refresh(): void {
-        this.logger.info('QuickAccessProvider.refresh() called');
+        this.logger.info('DashboardProvider.refresh() called');
         this._onDidChangeTreeData.fire();
     }
 

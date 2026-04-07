@@ -31,7 +31,7 @@ import { AdbDeviceTreeProvider } from './views/AdbDeviceTreeProvider';
 import { FilterTreeDataProvider } from './views/FilterTreeDataProvider';
 import { JsonTreeWebview } from './views/JsonTreeWebview';
 import { LogBookmarkWebviewProvider } from './views/LogBookmarkWebviewProvider';
-import { QuickAccessProvider } from './views/QuickAccessProvider';
+import { DashboardProvider } from './views/DashboardProvider';
 import { RunbookTreeDataProvider } from './views/RunbookTreeDataProvider';
 import { TimeRangeTreeDataProvider } from './views/TimeRangeTreeDataProvider';
 import { WorkflowWebviewProvider } from './views/WorkflowWebviewProvider';
@@ -72,8 +72,8 @@ export function activate(context: vscode.ExtensionContext) {
     const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, lineMappingService);
     context.subscriptions.push(workflowManager);
 
-    const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager, logger);
-    context.subscriptions.push(quickAccessProvider);
+    const dashboardProvider = new DashboardProvider(filterManager, workflowManager, logger);
+    context.subscriptions.push(dashboardProvider);
     context.subscriptions.push(highlightService);
     const resultCountService = new ResultCountService(filterManager);
     logger.info('[extension] Core services initialized');
@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(jsonPrettyService);
     new CommandManager(context, {
         filterManager, highlightService, resultCountService, logProcessor,
-        quickAccessProvider, logger, textTreeView, regexTreeView,
+        dashboardProvider, logger, textTreeView, regexTreeView,
         jsonPrettyService, lineMappingService
     });
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
@@ -394,11 +394,11 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize mouse over context
     vscode.commands.executeCommand('setContext', Constants.ContextKeys.BookmarkMouseOver, false);
 
-    logger.info(`Registering QuickAccessProvider with view ID: ${Constants.Views.QuickAccess}`);
+    logger.info(`Registering DashboardProvider with view ID: ${Constants.Views.Dashboard}`);
     context.subscriptions.push(
-        vscode.window.registerTreeDataProvider(Constants.Views.QuickAccess, quickAccessProvider)
+        vscode.window.registerTreeDataProvider(Constants.Views.Dashboard, dashboardProvider)
     );
-    logger.info('QuickAccessProvider registered');
+    logger.info('DashboardProvider registered');
 
     // Initial highlight
     if (vscode.window.activeTextEditor) {
@@ -414,7 +414,7 @@ export function activate(context: vscode.ExtensionContext) {
     logger.info('[extension] Registering event listeners...');
     registerEditorEventListeners(context, {
         logger, lineMappingService, highlightService, resultCountService,
-        quickAccessProvider, refreshHighlightsForEditor,
+        dashboardProvider, refreshHighlightsForEditor,
         getLastProcessedDoc: () => lastProcessedDoc,
         setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
         getDebounceTimer: () => debounceTimer,
@@ -422,7 +422,7 @@ export function activate(context: vscode.ExtensionContext) {
     });
 
     registerFilterEventListeners(context, {
-        logger, filterManager, highlightService, quickAccessProvider,
+        logger, filterManager, highlightService, dashboardProvider,
         textTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
         refreshHighlightsForEditor,
         setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
@@ -457,7 +457,7 @@ interface EditorEventListenerDeps {
     lineMappingService: LineMappingService;
     highlightService: HighlightService;
     resultCountService: ResultCountService;
-    quickAccessProvider: QuickAccessProvider;
+    dashboardProvider: DashboardProvider;
     refreshHighlightsForEditor: (editor: vscode.TextEditor) => Promise<void>;
     getLastProcessedDoc: () => vscode.TextDocument | undefined;
     setLastProcessedDoc: (doc: vscode.TextDocument | undefined) => void;
@@ -467,7 +467,7 @@ interface EditorEventListenerDeps {
 
 function registerEditorEventListeners(context: vscode.ExtensionContext, deps: EditorEventListenerDeps) {
     const { logger, lineMappingService, highlightService, resultCountService,
-        quickAccessProvider, refreshHighlightsForEditor,
+        dashboardProvider, refreshHighlightsForEditor,
         getLastProcessedDoc, setLastProcessedDoc,
         getDebounceTimer, setDebounceTimer } = deps;
 
@@ -513,7 +513,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                 const scheme = editor.document.uri.scheme;
                 logger.info(`Active editor changed to: ${fileName} (Scheme: ${scheme}, LargeFileOptimizations: ${largeFileOptimizations})`);
 
-                quickAccessProvider.refresh();
+                dashboardProvider.refresh();
 
                 await refreshHighlightsForEditor(editor);
                 setLastProcessedDoc(editor.document);
@@ -529,7 +529,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                             if (sizeMB > Constants.Defaults.LargeFileSizeLimitMB) {
                                 setLastProcessedDoc(undefined);
                                 resultCountService.clearCounts();
-                                quickAccessProvider.refresh();
+                                dashboardProvider.refresh();
                                 logger.info(`Active editor changed to (Tab): ${uri.fsPath} (${sizeMB.toFixed(2)}MB). - Too large for extension host (Limit ${Constants.Defaults.LargeFileSizeLimitMB}MB).`);
                                 vscode.window.setStatusBarMessage(`LogMagnifier: File too large (${sizeMB.toFixed(1)}MB). VS Code limits extension support to ${Constants.Defaults.LargeFileSizeLimitMB}MB.`, 5000);
                             }
@@ -574,7 +574,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
 
                 // Update Quick Access if untitled (size changes)
                 if (e.document.isUntitled) {
-                    quickAccessProvider.refresh();
+                    dashboardProvider.refresh();
                 }
             }
         } catch (e: unknown) {
@@ -586,7 +586,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(doc => {
         try {
             if (vscode.window.activeTextEditor && doc === vscode.window.activeTextEditor.document) {
-                quickAccessProvider.refresh();
+                dashboardProvider.refresh();
             }
         } catch (e: unknown) {
             logger.error(`Error in onDidSaveTextDocument: ${e instanceof Error ? e.message : String(e)}`);
@@ -599,7 +599,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
             if (getLastProcessedDoc() === doc) {
                 setLastProcessedDoc(undefined);
                 resultCountService.clearCounts();
-                quickAccessProvider.refresh();
+                dashboardProvider.refresh();
             }
             lineMappingService.unregister(doc.uri);
             highlightService.unregisterDocumentFilters(doc.uri);
@@ -613,7 +613,7 @@ interface FilterEventListenerDeps {
     logger: Logger;
     filterManager: FilterManager;
     highlightService: HighlightService;
-    quickAccessProvider: QuickAccessProvider;
+    dashboardProvider: DashboardProvider;
     textTreeDataProvider: FilterTreeDataProvider;
     regexTreeDataProvider: FilterTreeDataProvider;
     runbookTreeDataProvider: RunbookTreeDataProvider;
@@ -622,7 +622,7 @@ interface FilterEventListenerDeps {
 }
 
 function registerFilterEventListeners(context: vscode.ExtensionContext, deps: FilterEventListenerDeps) {
-    const { logger, filterManager, highlightService, quickAccessProvider,
+    const { logger, filterManager, highlightService, dashboardProvider,
         textTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
         refreshHighlightsForEditor, setLastProcessedDoc } = deps;
 
@@ -665,7 +665,7 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
             if (e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.WordWrap}`) ||
                 e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.MinimapEnabled}`) ||
                 e.affectsConfiguration(`${Constants.Configuration.Editor.Section}.${Constants.Configuration.Editor.StickyScrollEnabled}`)) {
-                quickAccessProvider.refresh();
+                dashboardProvider.refresh();
             }
         } catch (e: unknown) {
             logger.error(`Error in onDidChangeConfiguration: ${e instanceof Error ? e.message : String(e)}`);

@@ -122,19 +122,19 @@ suite('HighlightService Test Suite', () => {
         assert.strictEqual(ranges[0].start.line, 1);
     });
 
-    test('updateHighlightsSync: exclude line-through style', async () => {
+    test('updateHighlightsSync: exclude strikethrough style', async () => {
         const content = 'Match 1\nStrike this\nMatch 2';
         const editor = createMockEditor(content);
 
         const group = filterManager.addGroup('Test Group', false)!;
         filterManager.toggleGroup(group.id);
-        filterManager.addFilter(group.id, 'Strike', 'exclude'); // default is line-through
+        filterManager.addFilter(group.id, 'Strike', 'exclude'); // default is strikethrough
 
         await highlightService.updateHighlights(editor);
 
         const activeDecorations = editor.getDecorations();
-        // Exclude 'line-through' style creates 2 decorations (whole line strike + bold pattern)
-        assert.strictEqual(activeDecorations.size, 2, 'Should have 2 decorations for line-through exclude');
+        // Exclude 'strikethrough' style creates 2 decorations (whole line strike + bold pattern)
+        assert.strictEqual(activeDecorations.size, 2, 'Should have 2 decorations for strikethrough exclude');
     });
 
     test('Highlight Modes: word, line, full-line', async () => {

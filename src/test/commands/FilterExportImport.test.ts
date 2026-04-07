@@ -106,7 +106,7 @@ suite('FilterExportImport Test Suite', () => {
 
             assert.strictEqual(exported.highlightMode, HighlightMode.FullLine);
             assert.strictEqual(exported.caseSensitive, true);
-            assert.strictEqual(exported.contextLine, 3);
+            assert.strictEqual(exported.contextLines, 3);
         });
 
         test('export file round-trip through filesystem', async () => {

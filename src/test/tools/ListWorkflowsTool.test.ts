@@ -28,8 +28,8 @@ suite('ListWorkflowsTool', () => {
                     name: 'Test Workflow',
                     description: 'A test',
                     steps: [
-                        { profileName: 'Profile A', executionMode: 'sequential', description: 'Step 1' },
-                        { profileName: 'Profile B', executionMode: 'cumulative', parentId: 'step1' },
+                        { profileName: 'Profile A', executionMode: 'independent', description: 'Step 1' },
+                        { profileName: 'Profile B', executionMode: 'aggregated', parentId: 'step1' },
                     ],
                 },
             ],
@@ -47,6 +47,6 @@ suite('ListWorkflowsTool', () => {
         assert.strictEqual(parsed[0].name, 'Test Workflow');
         assert.strictEqual(parsed[0].stepCount, 2);
         assert.strictEqual(parsed[0].steps[0].profileName, 'Profile A');
-        assert.strictEqual(parsed[0].steps[1].executionMode, 'cumulative');
+        assert.strictEqual(parsed[0].steps[1].executionMode, 'aggregated');
     });
 });

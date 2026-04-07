@@ -73,17 +73,17 @@ suite('Workflow Pipeline Tests', () => {
         workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockSourceMapService as any);
     });
 
-    test('Scenario 1: Sequential Execution (Root -> Child)', async () => {
+    test('Scenario 1: Independent Execution (Root -> Child)', async () => {
         // Tree: Root (Seq) -> Child (Seq)
         // Root: Profile1 (f1, f2)
         // Child: Profile2 (f3) -> Child takes Root's Output as Input
 
         const workflow: Workflow = {
             id: 'seq1',
-            name: 'Sequential Pipeline',
+            name: 'Independent Pipeline',
             steps: [
-                { id: 'root', profileName: 'Profile1', executionMode: 'sequential' },
-                { id: 'child', profileName: 'Profile2', executionMode: 'sequential', parentId: 'root' }
+                { id: 'root', profileName: 'Profile1', executionMode: 'independent' },
+                { id: 'child', profileName: 'Profile2', executionMode: 'independent', parentId: 'root' }
             ]
         };
         workflowManager.getWorkflow = (_id: string) => workflow;
@@ -105,7 +105,7 @@ suite('Workflow Pipeline Tests', () => {
         await workflowManager.run('seq1', document);
 
         const result = workflowManager.getLastRunResult();
-        assert.ok(result, 'Simulation result should exist');
+        assert.ok(result, 'Execution result should exist');
         assert.strictEqual(result.steps.length, 2);
 
         // 1. Verify Execution Order
@@ -116,14 +116,14 @@ suite('Workflow Pipeline Tests', () => {
         assert.ok(childStep, 'Child step missing');
         assert.ok(rootStep!.stepIndex < childStep!.stepIndex, 'Root should run before Child');
 
-        // 2. Verify Filters (Sequential = Self Only)
+        // 2. Verify Filters (Independent = Self Only)
         // Root (P1): f1, f2 + Child (P2): f3
         const rootFilters = rootStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
         assert.deepStrictEqual(rootFilters, ['filter1', 'filter2', 'filter3'].sort(), 'Root should have P1+P2 filters');
 
         // Child (P2): f3 (No inheritance from Root, just itself)
         const childFilters = childStep!.effectiveGroups.flatMap(g => g.filters).map(f => f.keyword).sort();
-        assert.deepStrictEqual(childFilters, ['filter3'].sort(), 'Child should have P2 filters (Sequential)');
+        assert.deepStrictEqual(childFilters, ['filter3'].sort(), 'Child should have P2 filters (Independent)');
 
         // 3. Verify Input File Flow (Tree Structure)
         // Root Input: /tmp/input.log
@@ -132,19 +132,19 @@ suite('Workflow Pipeline Tests', () => {
         assert.strictEqual(processedInputs[1], rootStep!.outputFilePath, 'Child should take Root output as input');
     });
 
-    test('Scenario 2: Cumulative Execution (Root -> Child -> GrandChild)', async () => {
+    test('Scenario 2: Aggregated Execution (Root -> Child -> GrandChild)', async () => {
         // Tree: Root (Cum) -> Child (Cum) -> GrandChild (Cum)
-        // Root: P1. Cumulative = P1 + P2 + P3
-        // Child: P2. Cumulative = P2 + P3
-        // GrandChild: P3. Cumulative = P3
+        // Root: P1. Aggregated = P1 + P2 + P3
+        // Child: P2. Aggregated = P2 + P3
+        // GrandChild: P3. Aggregated = P3
 
         const workflow: Workflow = {
             id: 'cum1',
-            name: 'Cumulative Pipeline',
+            name: 'Aggregated Pipeline',
             steps: [
-                { id: 'root', profileName: 'Profile1', executionMode: 'cumulative' },
-                { id: 'child', profileName: 'Profile2', executionMode: 'cumulative', parentId: 'root' },
-                { id: 'grandchild', profileName: 'Profile3', executionMode: 'cumulative', parentId: 'child' }
+                { id: 'root', profileName: 'Profile1', executionMode: 'aggregated' },
+                { id: 'child', profileName: 'Profile2', executionMode: 'aggregated', parentId: 'root' },
+                { id: 'grandchild', profileName: 'Profile3', executionMode: 'aggregated', parentId: 'child' }
             ]
         };
         workflowManager.getWorkflow = (_id: string) => workflow;
@@ -194,10 +194,10 @@ suite('Workflow Pipeline Tests', () => {
             id: 'mixed1',
             name: 'Mixed Tree',
             steps: [
-                { id: 'root', profileName: 'Profile1', executionMode: 'sequential' },
-                { id: 'childA', profileName: 'Profile2', executionMode: 'cumulative', parentId: 'root' },
-                { id: 'grandChildA', profileName: 'Profile3', executionMode: 'sequential', parentId: 'childA' },
-                { id: 'childB', profileName: 'Profile3', executionMode: 'sequential', parentId: 'root' }
+                { id: 'root', profileName: 'Profile1', executionMode: 'independent' },
+                { id: 'childA', profileName: 'Profile2', executionMode: 'aggregated', parentId: 'root' },
+                { id: 'grandChildA', profileName: 'Profile3', executionMode: 'independent', parentId: 'childA' },
+                { id: 'childB', profileName: 'Profile3', executionMode: 'independent', parentId: 'root' }
             ]
         };
         workflowManager.getWorkflow = (_id: string) => workflow;
@@ -226,7 +226,7 @@ suite('Workflow Pipeline Tests', () => {
         // Topological sort ensures Root runs first. Children run after.
 
         // Get processed details by profile for easier verification
-        // With mergeGroups=true, the profile name in `groups[0]?.name` will be 'Merged Group' for cumulative steps with multiple groups.
+        // With mergeGroups=true, the profile name in `groups[0]?.name` will be 'Merged Group' for aggregated steps with multiple groups.
         // We need to identify steps by checks on input/output paths or existence.
 
         const rootExec = processedDetails.find(d => d.input === document.uri.fsPath); // Root process the initial input
@@ -278,8 +278,8 @@ suite('Workflow Pipeline Tests', () => {
             id: 'badtree',
             name: 'Bad Tree',
             steps: [
-                { id: 's1', profileName: 'Profile1', executionMode: 'sequential', parentId: 'ghost' }, // Missing parent
-                { id: 's2', profileName: 'Profile2', executionMode: 'sequential' } // Root
+                { id: 's1', profileName: 'Profile1', executionMode: 'independent', parentId: 'ghost' }, // Missing parent
+                { id: 's2', profileName: 'Profile2', executionMode: 'independent' } // Root
             ]
         };
         workflowManager.getWorkflow = (_id: string) => workflow;
@@ -308,7 +308,7 @@ suite('Workflow Pipeline Tests', () => {
         assert.strictEqual(secondStep.profileName, 'Profile2', 'S2 (valid root) runs second');
     });
 
-    test('Legacy Data Migration: Defaults executionMode to sequential', () => {
+    test('Legacy Data Migration: Defaults executionMode to independent', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const legacyWorkflow: any = {
             id: 'legacy1',
@@ -337,24 +337,24 @@ suite('Workflow Pipeline Tests', () => {
 
         const workflows = wm.getWorkflows();
         const step = workflows[0].steps[0];
-        assert.strictEqual(step.executionMode, 'sequential', 'Should default to sequential');
+        assert.strictEqual(step.executionMode, 'independent', 'Should default to independent');
     });
 
     test('Visualization: DFS Order and Metadata', async () => {
         // Tree:
-        // Root (Seq)
-        //  -> ChildA (Cum)
-        //      -> GrandChildA (Cum)
-        //  -> ChildB (Seq)
+        // Root (Ind)
+        //  -> ChildA (Agg)
+        //      -> GrandChildA (Agg)
+        //  -> ChildB (Ind)
 
         const workflow: Workflow = {
             id: 'viz1',
             name: 'Viz Test',
             steps: [
-                { id: 'root', profileName: 'P1', executionMode: 'sequential' },
-                { id: 'childA', profileName: 'P2', executionMode: 'cumulative', parentId: 'root' }, // Continuous
-                { id: 'grandChildA', profileName: 'P3', executionMode: 'cumulative', parentId: 'childA' }, // Continuous
-                { id: 'childB', profileName: 'P4', executionMode: 'sequential', parentId: 'root' } // Branch
+                { id: 'root', profileName: 'P1', executionMode: 'independent' },
+                { id: 'childA', profileName: 'P2', executionMode: 'aggregated', parentId: 'root' }, // Continuous
+                { id: 'grandChildA', profileName: 'P3', executionMode: 'aggregated', parentId: 'childA' }, // Continuous
+                { id: 'childB', profileName: 'P4', executionMode: 'independent', parentId: 'root' } // Branch
             ]
         };
         workflowManager.getWorkflow = (_id: string) => workflow;
@@ -381,17 +381,17 @@ suite('Workflow Pipeline Tests', () => {
 
         // ChildA (Depth 2)
         assert.strictEqual(profiles[1].depth, 2);
-        assert.strictEqual(profiles[1].connectionType, 'continuous', 'Cumulative child should be continuous');
+        assert.strictEqual(profiles[1].connectionType, 'continuous', 'Aggregated child should be continuous');
         assert.strictEqual(profiles[1].isLastChild, false); // Has sibling ChildB
 
         // GrandChildA (Depth 3)
         assert.strictEqual(profiles[2].depth, 3);
-        assert.strictEqual(profiles[2].connectionType, 'continuous', 'Cumulative child of cumulative');
+        assert.strictEqual(profiles[2].connectionType, 'continuous', 'Aggregated child of aggregated');
         assert.strictEqual(profiles[2].isLastChild, true); // Only child
 
         // ChildB (Depth 2)
         assert.strictEqual(profiles[3].depth, 2);
-        assert.strictEqual(profiles[3].connectionType, 'branch', 'Sequential child should be branch');
+        assert.strictEqual(profiles[3].connectionType, 'branch', 'Independent child should be branch');
         assert.strictEqual(profiles[3].isLastChild, true); // Last child of root
     });
 

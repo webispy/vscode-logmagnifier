@@ -179,7 +179,7 @@ suite('ProfileManager Test Suite', () => {
         const metadata = manager.getProfilesMetadata();
         const mixed = metadata.find(m => m.name === 'Mixed');
         assert.ok(mixed);
-        assert.strictEqual(mixed.wordCount, 2);
+        assert.strictEqual(mixed.textCount, 2);
         assert.strictEqual(mixed.regexCount, 1);
     });
 

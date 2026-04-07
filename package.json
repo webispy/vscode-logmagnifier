@@ -500,8 +500,8 @@
           "type": "webview"
         },
         {
-          "id": "logmagnifier-filters",
-          "name": "Word Filters",
+          "id": "logmagnifier-text-filters",
+          "name": "Text Filters",
           "icon": "$(filter)"
         },
         {
@@ -1142,12 +1142,12 @@
       {
         "command": "logmagnifier.nextMatch",
         "key": "ctrl+cmd+]",
-        "when": "editorTextFocus || focusedView == logmagnifier-filters || focusedView == logmagnifier-regex-filters"
+        "when": "editorTextFocus || focusedView == logmagnifier-text-filters || focusedView == logmagnifier-regex-filters"
       },
       {
         "command": "logmagnifier.previousMatch",
         "key": "ctrl+cmd+[",
-        "when": "editorTextFocus || focusedView == logmagnifier-filters || focusedView == logmagnifier-regex-filters"
+        "when": "editorTextFocus || focusedView == logmagnifier-text-filters || focusedView == logmagnifier-regex-filters"
       },
       {
         "command": "logmagnifier.removeMatchesWithSelection",
@@ -1193,10 +1193,10 @@
     ],
     "commands": [
       {
-        "command": "logmagnifier.addFilterGroup",
-        "title": "Add Word Filter Group",
+        "command": "logmagnifier.addTextFilterGroup",
+        "title": "Add Text Filter Group",
         "category": "LogMagnifier",
-        "description": "Create a new group to organize word filters",
+        "description": "Create a new group to organize text filters",
         "icon": "$(new-folder)"
       },
       {
@@ -1206,8 +1206,8 @@
         "icon": "$(new-folder)"
       },
       {
-        "command": "logmagnifier.addFilter",
-        "title": "Add Word Filter",
+        "command": "logmagnifier.addTextFilter",
+        "title": "Add Text Filter",
         "icon": "$(plus)"
       },
       {
@@ -1221,8 +1221,8 @@
         "icon": "$(plus)"
       },
       {
-        "command": "logmagnifier.applyWordFilter",
-        "title": "Apply Word Filter",
+        "command": "logmagnifier.applyTextFilter",
+        "title": "Apply Text Filter",
         "category": "LogMagnifier",
         "icon": "$(run-all)"
       },
@@ -1244,8 +1244,8 @@
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.clearWordFilterData",
-        "title": "Clear Word Filter Data",
+        "command": "logmagnifier.clearTextFilterData",
+        "title": "Clear Text Filter Data",
         "category": "LogMagnifier",
         "icon": "$(trash)"
       },
@@ -1524,8 +1524,8 @@
         "icon": "$(json)"
       },
       {
-        "command": "logmagnifier.exportWordFilters",
-        "title": "Export Word Filters",
+        "command": "logmagnifier.exportTextFilters",
+        "title": "Export Text Filters",
         "category": "LogMagnifier",
         "icon": "$(repo-push)"
       },
@@ -1536,8 +1536,8 @@
         "icon": "$(trash)"
       },
       {
-        "command": "logmagnifier.importWordFilters",
-        "title": "Import Word Filters",
+        "command": "logmagnifier.importTextFilters",
+        "title": "Import Text Filters",
         "category": "LogMagnifier",
         "icon": "$(repo-pull)"
       },
@@ -1623,18 +1623,18 @@
         "icon": "$(repo-pull)"
       },
       {
-        "command": "logmagnifier.addSelectionToFilter",
-        "title": "Add Selection to Word Filter",
+        "command": "logmagnifier.addSelectionToTextFilter",
+        "title": "Add Selection to Text Filter",
         "category": "LogMagnifier",
         "icon": "$(plus)"
       },
       {
-        "command": "logmagnifier.expandAllWordGroups",
+        "command": "logmagnifier.expandAllTextGroups",
         "title": "Expand All Groups",
         "icon": "$(expand-all)"
       },
       {
-        "command": "logmagnifier.collapseAllWordGroups",
+        "command": "logmagnifier.collapseAllTextGroups",
         "title": "Collapse All Groups",
         "icon": "$(collapse-all)"
       },
@@ -2016,7 +2016,7 @@
           "when": "false"
         },
         {
-          "command": "logmagnifier.addFilter",
+          "command": "logmagnifier.addTextFilter",
           "when": "false"
         },
         {
@@ -2268,11 +2268,11 @@
           "when": "false"
         },
         {
-          "command": "logmagnifier.expandAllWordGroups",
+          "command": "logmagnifier.expandAllTextGroups",
           "when": "false"
         },
         {
-          "command": "logmagnifier.collapseAllWordGroups",
+          "command": "logmagnifier.collapseAllTextGroups",
           "when": "false"
         },
         {
@@ -2427,7 +2427,7 @@
           "when": "editorTextFocus && logmagnifier.isFilteredLog"
         },
         {
-          "command": "logmagnifier.addSelectionToFilter",
+          "command": "logmagnifier.addSelectionToTextFilter",
           "group": "2_filter",
           "when": "editorHasSelection"
         },
@@ -2548,9 +2548,9 @@
       ],
       "view/title": [
         {
-          "command": "logmagnifier.addFilterGroup",
+          "command": "logmagnifier.addTextFilterGroup",
           "group": "navigation",
-          "when": "view == logmagnifier-filters"
+          "when": "view == logmagnifier-text-filters"
         },
         {
           "command": "logmagnifier.addRegexFilterGroup",
@@ -2558,43 +2558,43 @@
           "when": "view == logmagnifier-regex-filters"
         },
         {
-          "command": "logmagnifier.expandAllWordGroups",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.expandAllTextGroups",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@1"
         },
         {
-          "command": "logmagnifier.collapseAllWordGroups",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.collapseAllTextGroups",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@2"
         },
         {
-          "command": "logmagnifier.exportWordFilters",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.exportTextFilters",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@3"
         },
         {
-          "command": "logmagnifier.importWordFilters",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.importTextFilters",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@4"
         },
         {
-          "command": "logmagnifier.addFilterGroup",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.addTextFilterGroup",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@5"
         },
         {
           "command": "logmagnifier.togglePrependLineNumbers.enable",
-          "when": "view == logmagnifier-filters && !logmagnifier.prependLineNumbersEnabled",
+          "when": "view == logmagnifier-text-filters && !logmagnifier.prependLineNumbersEnabled",
           "group": "navigation@6"
         },
         {
           "command": "logmagnifier.togglePrependLineNumbers.disable",
-          "when": "view == logmagnifier-filters && logmagnifier.prependLineNumbersEnabled",
+          "when": "view == logmagnifier-text-filters && logmagnifier.prependLineNumbersEnabled",
           "group": "navigation@6"
         },
         {
-          "command": "logmagnifier.applyWordFilter",
-          "when": "view == logmagnifier-filters",
+          "command": "logmagnifier.applyTextFilter",
+          "when": "view == logmagnifier-text-filters",
           "group": "navigation@7"
         },
         {
@@ -2702,72 +2702,72 @@
         },
         {
           "command": "logmagnifier.previousMatch",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "1_nav@1"
         },
         {
           "command": "logmagnifier.nextMatch",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "1_nav@2"
         },
         {
           "command": "logmagnifier.addMatchListToBookmark",
-          "when": "(view == logmagnifier-filters && viewItem =~ /.*_hasMatches/) || (view == logmagnifier-regex-filters && viewItem =~ /.*_hasMatches/)",
+          "when": "(view == logmagnifier-text-filters && viewItem =~ /.*_hasMatches/) || (view == logmagnifier-regex-filters && viewItem =~ /.*_hasMatches/)",
           "group": "1_nav@3"
         },
         {
           "submenu": "logmagnifier.filterTypeSubmenu",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/",
           "group": "2_conf@1"
         },
         {
           "submenu": "logmagnifier.caseSensitivitySubmenu",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/",
           "group": "2_conf@2"
         },
         {
           "command": "logmagnifier.changeFilterColor",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
           "group": "3_appearance@1"
         },
         {
           "submenu": "logmagnifier.excludeStyleSubmenu",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeexclude.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeexclude.*/",
           "group": "3_appearance@1"
         },
         {
           "submenu": "logmagnifier.highlightModeSubmenu",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
           "group": "3_appearance@2"
         },
         {
           "submenu": "logmagnifier.contextLinesSubmenu",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
           "group": "4_context"
         },
         {
           "command": "logmagnifier.enableFilter",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "5_state@1"
         },
         {
           "command": "logmagnifier.disableFilter",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "5_state@2"
         },
         {
           "command": "logmagnifier.editFilterItem",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "6_edit@1"
         },
         {
           "command": "logmagnifier.deleteFilter",
-          "when": "viewItem =~ /filterItem.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterItem.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "6_edit@2"
         },
         {
           "command": "logmagnifier.createFilter",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterGroup.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterGroup.*/",
           "group": "1_modification"
         },
         {
@@ -2777,22 +2777,22 @@
         },
         {
           "command": "logmagnifier.enableGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "2_state"
         },
         {
           "command": "logmagnifier.disableGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "2_state"
         },
         {
           "command": "logmagnifier.enableAllItemsInGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "2_state_batch"
         },
         {
           "command": "logmagnifier.disableAllItemsInGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "2_state_batch"
         },
         {
@@ -2802,17 +2802,17 @@
         },
         {
           "command": "logmagnifier.renameFilterGroup",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterGroup.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterGroup.*/",
           "group": "3_edit@1"
         },
         {
           "command": "logmagnifier.deleteGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "3_edit@2"
         },
         {
           "command": "logmagnifier.runFilterGroup",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterGroup.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterGroup.*/",
           "group": "inline@9"
         },
         {
@@ -2821,8 +2821,8 @@
           "group": "inline@9"
         },
         {
-          "command": "logmagnifier.addFilter",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterGroup.*/",
+          "command": "logmagnifier.addTextFilter",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterGroup.*/",
           "group": "inline@1"
         },
         {
@@ -2832,102 +2832,102 @@
         },
         {
           "command": "logmagnifier.deleteGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "inline@2"
         },
         {
           "command": "logmagnifier.enableGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupDisabled",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupDisabled",
           "group": "inline@3"
         },
         {
           "command": "logmagnifier.disableGroup",
-          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupEnabled",
+          "when": "viewItem =~ /filterGroup.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem == filterGroupEnabled",
           "group": "inline@3"
         },
         {
           "command": "logmagnifier.previousMatch",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "inline@1"
         },
         {
           "command": "logmagnifier.nextMatch",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && viewItem =~ /filterItem.*/",
           "group": "inline@2"
         },
         {
           "command": "logmagnifier.changeFilterColor",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@3"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.word",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm0.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm0.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.line",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm1.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm1.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterHighlightMode.full",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm2.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_hm2.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@4"
         },
         {
           "command": "logmagnifier.toggleFilterCaseSensitivity.off",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cs0.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cs0.*/",
           "group": "inline@5"
         },
         {
           "command": "logmagnifier.toggleFilterCaseSensitivity.on",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cs1.*/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cs1.*/",
           "group": "inline@5"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl0",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl0.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl0.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl3",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl3.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl3.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl5",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl5.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl5.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterContextLine_cl9",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl9.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_cl9.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterType.include",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeinclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.toggleFilterType.exclude",
-          "when": "view == logmagnifier-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeexclude/",
+          "when": "view == logmagnifier-text-filters && viewItem =~ /filterItem.*/ && viewItem =~ /.*_typeexclude/",
           "group": "inline@6"
         },
         {
           "command": "logmagnifier.deleteFilter",
-          "when": "viewItem =~ /filterItem.*/ && (view == logmagnifier-filters || view == logmagnifier-regex-filters)",
+          "when": "viewItem =~ /filterItem.*/ && (view == logmagnifier-text-filters || view == logmagnifier-regex-filters)",
           "group": "inline@7"
         },
         {
           "command": "logmagnifier.enableFilter",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemDisabled || viewItem =~ /filterItemDisabled_cl.*/)",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemDisabled || viewItem =~ /filterItemDisabled_cl.*/)",
           "group": "inline@8"
         },
         {
           "command": "logmagnifier.disableFilter",
-          "when": "(view == logmagnifier-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
+          "when": "(view == logmagnifier-text-filters || view == logmagnifier-regex-filters) && (viewItem == filterItemEnabled || viewItem =~ /filterItemEnabled_cl.*/)",
           "group": "inline@8"
         },
         {

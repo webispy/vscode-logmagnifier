@@ -125,7 +125,7 @@ suite('Workflow Final Verification', () => {
         (workflowManager as any)._test_registeredMappings = registeredMappings;
     });
 
-    test('3-Step Pipeline: Cumulative Filtering, Sequential Opening, and Chain Mapping', async () => {
+    test('3-Step Pipeline: Aggregated Filtering, Independent Opening, and Chain Mapping', async () => {
         // --- PREPARE INPUT ---
         const inputContent = [
             "Say hello.",
@@ -141,9 +141,9 @@ suite('Workflow Final Verification', () => {
             id: 'sim_final',
             name: 'Final Pipeline',
             steps: [
-                { id: 's1', profileName: 'profile1', executionMode: 'cumulative' as const },
-                { id: 's2', profileName: 'profile2', executionMode: 'cumulative' as const, parentId: 's1' },
-                { id: 's3', profileName: 'profile3', executionMode: 'sequential' as const, parentId: 's2' }
+                { id: 's1', profileName: 'profile1', executionMode: 'aggregated' as const },
+                { id: 's2', profileName: 'profile2', executionMode: 'aggregated' as const, parentId: 's1' },
+                { id: 's3', profileName: 'profile3', executionMode: 'independent' as const, parentId: 's2' }
             ]
         };
 
@@ -171,14 +171,14 @@ suite('Workflow Final Verification', () => {
 
         // --- VERIFY RESULT ---
         const result = workflowManager.getLastRunResult();
-        assert.ok(result, 'Simulation result should exist');
+        assert.ok(result, 'Execution result should exist');
         assert.strictEqual(result.steps.length, 3, 'Should have 3 steps');
 
         const step1 = result.steps[0];
         const step2 = result.steps[1];
         const step3 = result.steps[2];
 
-        // 1. Verify Cumulative Filtering
+        // 1. Verify Aggregated Filtering
         const content1 = fs.readFileSync(step1.outputFilePath, 'utf8');
         assert.ok(content1.includes('hello'), 'Step 1 should have hello'); // P1
         assert.ok(!content1.includes('noise'), 'Step 1 should NOT have noise');

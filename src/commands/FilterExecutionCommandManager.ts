@@ -22,7 +22,7 @@ export class FilterExecutionCommandManager {
         private readonly logProcessor: LogProcessor,
         private readonly logger: Logger,
         private readonly sourceMapService: SourceMapService,
-        private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>,
+        private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>,
         private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>,
         registerCommands: boolean = true
     ) {
@@ -203,7 +203,7 @@ export class FilterExecutionCommandManager {
 
         // If no item passed (via shortcut), try to get from TreeView selection
         if (!item) {
-            const selection = this.wordTreeView.selection;
+            const selection = this.textTreeView.selection;
             if (selection && selection.length > 0) {
                 const selected = selection[0];
                 // Ensure it is a FilterItem (not a Group) and it is enabled
@@ -300,9 +300,9 @@ export class FilterExecutionCommandManager {
 
     /** Expands all filter groups of the given type in the corresponding tree view. */
     private async expandAllGroups(isRegex: boolean) {
-        this.logger.info(`[FilterExecutionCommandManager] CMD: expandAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        this.logger.info(`[FilterExecutionCommandManager] CMD: expandAll${isRegex ? 'Regex' : 'Text'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
-        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
+        const treeView = isRegex ? this.regexTreeView : this.textTreeView;
 
         for (const group of groups) {
             this.filterManager.setGroupExpanded(group.id, true);
@@ -316,10 +316,10 @@ export class FilterExecutionCommandManager {
 
     /** Collapses all filter groups of the given type using the native tree collapse command. */
     private async collapseAllGroups(isRegex: boolean) {
-        this.logger.info(`[FilterExecutionCommandManager] CMD: collapseAll${isRegex ? 'Regex' : 'Word'}Groups triggered`);
+        this.logger.info(`[FilterExecutionCommandManager] CMD: collapseAll${isRegex ? 'Regex' : 'Text'}Groups triggered`);
         const groups = this.filterManager.getGroups().filter(g => !!g.isRegex === isRegex);
-        const treeView = isRegex ? this.regexTreeView : this.wordTreeView;
-        const viewId = isRegex ? Constants.Views.RegexFilters : Constants.Views.Filters;
+        const treeView = isRegex ? this.regexTreeView : this.textTreeView;
+        const viewId = isRegex ? Constants.Views.RegexFilters : Constants.Views.TextFilters;
 
         // Update persistence state
         for (const group of groups) {
@@ -381,7 +381,7 @@ export class FilterExecutionCommandManager {
         }));
 
         // View commands
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllWordGroups, async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExpandAllTextGroups, async () => {
             await this.expandAllGroups(false);
         }));
 
@@ -389,7 +389,7 @@ export class FilterExecutionCommandManager {
             await this.expandAllGroups(true);
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllWordGroups, async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CollapseAllTextGroups, async () => {
             await this.collapseAllGroups(false);
         }));
 
@@ -408,7 +408,7 @@ export class FilterExecutionCommandManager {
             await this.findMatch(item, 'previous');
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyWordFilter, () => this.applyFilter('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyTextFilter, () => this.applyFilter('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RunFilterGroup, (group: FilterGroup) => {
             const type = group.isRegex ? 'regex' : 'word';
             this.applyFilter(type, group);

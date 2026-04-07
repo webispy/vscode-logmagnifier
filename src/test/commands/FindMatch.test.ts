@@ -40,7 +40,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
         const sourceMapService = SourceMapService.getInstance();
 
         // Mock TreeViews
-        const wordTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
+        const textTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
         const regexTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
 
         commandManager = new FilterExecutionCommandManager(
@@ -50,7 +50,7 @@ suite('FilterExecutionCommandManager - Find Match Test Suite', () => {
             logProcessor,
             logger,
             sourceMapService,
-            wordTreeView,
+            textTreeView,
             regexTreeView,
             false
         );

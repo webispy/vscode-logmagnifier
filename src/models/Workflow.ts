@@ -15,10 +15,10 @@ export interface WorkflowStep {
 
     /**
      * Execution Strategy
-     * - 'sequential': Apply ONLY this step's filters. (Independent Analysis)
-     * - 'cumulative': Apply this step's filters + ALL descendant steps' filters. (Deep Dive/Preview)
+     * - 'independent': Apply ONLY this step's filters. (Independent Analysis)
+     * - 'aggregated': Apply this step's filters + ALL descendant steps' filters. (Deep Dive/Preview)
      */
-    executionMode: 'sequential' | 'cumulative';
+    executionMode: 'independent' | 'aggregated';
 }
 
 /** A named sequence of filter steps that can be executed against a log file. */
@@ -30,20 +30,20 @@ export interface Workflow {
     lastRunFile?: string;
 }
 
-/** Aggregated results of a workflow simulation run. */
-export interface SimulationResult {
+/** Aggregated results of a workflow execution run. */
+export interface ExecutionResult {
     workflowId: string;
     startTime: number;
-    steps: SimulationStepResult[];
+    steps: StepExecutionResult[];
 }
 
 /** Output of a single workflow step after execution. */
-export interface SimulationStepResult {
+export interface StepExecutionResult {
     stepIndex: number;
     profileName: string;
     outputFilePath: string;
     matchedCount: number;
-    effectiveGroups: FilterGroup[]; // Cumulative groups
+    effectiveGroups: FilterGroup[]; // Aggregated groups
 }
 
 /** Portable bundle for importing/exporting a workflow with its profiles. */
@@ -73,10 +73,10 @@ export interface ProfileViewModel {
     groups: FilterGroup[];
     isMissing?: boolean;
     parentId?: string;
-    executionMode?: 'sequential' | 'cumulative';
+    executionMode?: 'independent' | 'aggregated';
     depth?: number;
     isLastChild?: boolean;
     connectionType?: 'branch' | 'continuous';
     hasChildren?: boolean;
-    nodeType?: 'seq-complex' | 'seq-simple' | 'cumulative';
+    nodeType?: 'ind-complex' | 'ind-simple' | 'aggregated';
 }

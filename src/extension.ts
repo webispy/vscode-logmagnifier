@@ -69,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
     const lineMappingService = LineMappingService.getInstance();
     const logProcessor = new LogProcessor();
     const highlightService = new HighlightService(filterManager, logger);
-    const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, lineMappingService);
+    const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, lineMappingService, filterManager.filterStateServiceRef);
     context.subscriptions.push(workflowManager);
 
     const dashboardProvider = new DashboardProvider(filterManager, workflowManager, logger);

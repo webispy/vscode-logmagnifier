@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
-import { SimulationStepResult } from '../models/Workflow';
+import { StepExecutionResult } from '../models/Workflow';
 
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
@@ -23,7 +23,7 @@ export class WorkflowCommandManager {
     }
 
     private registerCommands() {
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowOpenResult, async (stepResult: SimulationStepResult) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.WorkflowOpenResult, async (stepResult: StepExecutionResult) => {
             if (stepResult && stepResult.outputFilePath) {
                 await this.workflowManager.openStepResult(stepResult);
             }

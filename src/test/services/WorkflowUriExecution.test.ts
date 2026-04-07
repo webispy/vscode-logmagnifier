@@ -132,7 +132,7 @@ suite('Workflow URI Execution Tests', () => {
         await workflowManager.run(workflowId, fileUri);
 
         const result = workflowManager.getLastRunResult(workflowId);
-        assert.ok(result, 'Simulation result should be created');
+        assert.ok(result, 'Execution result should be created');
     });
 
     test('Workflow pipeline should complete all steps when processing from a Uri', async () => {

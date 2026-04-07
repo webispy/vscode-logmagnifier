@@ -11,7 +11,7 @@ export class FilterItemCommandManager {
         private readonly context: vscode.ExtensionContext,
         private readonly filterManager: FilterManager,
         private readonly logger: Logger,
-        private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>
+        private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>
     ) {
         this.registerCommands();
     }
@@ -103,7 +103,7 @@ export class FilterItemCommandManager {
                 }
 
             } else {
-                // Word Filter: simple keyword edit
+                // Text Filter: simple keyword edit
                 const newKeyword = await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterNewKeyword,
                     value: item.keyword,
@@ -120,7 +120,7 @@ export class FilterItemCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilter, async (group: FilterGroup | undefined) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddTextFilter, async (group: FilterGroup | undefined) => {
             const targetGroupId = await this.ensureGroupId(group, false);
             if (!targetGroupId) {
                 return;
@@ -183,7 +183,7 @@ export class FilterItemCommandManager {
             }
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionToFilter, async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddSelectionToTextFilter, async () => {
             const editor = vscode.window.activeTextEditor;
             if (!editor || editor.selection.isEmpty) {
                 vscode.window.showInformationMessage(Constants.Messages.Info.SelectTextFirst);
@@ -195,8 +195,8 @@ export class FilterItemCommandManager {
                 return;
             }
 
-            // Check for focused group in Word Search view
-            const focusedItem = this.wordTreeView.selection[0];
+            // Check for focused group in Text Filters view
+            const focusedItem = this.textTreeView.selection[0];
             let targetGroupId: string | undefined;
 
             if (focusedItem) {
@@ -216,12 +216,12 @@ export class FilterItemCommandManager {
             if (targetGroupId) {
                 // Add to existing group
                 // Check if it's a regex group.
-                // Requirement implies "Word filters".
+                // Requirement implies "Text filters".
                 const targetGroup = this.filterManager.getGroups().find(g => g.id === targetGroupId);
                 if (targetGroup) {
                     if (targetGroup.isRegex) {
                         // Cannot add simple text selection to regex group as-is.
-                        // Assume we only target Word Filter groups context.
+                        // Assume we only target Text Filter groups context.
                         targetGroupId = undefined;
                     } else {
                         // Check for duplicate keyword regardless of type
@@ -328,9 +328,9 @@ export class FilterItemCommandManager {
             this.handleFilterToggle(item, 'toggle');
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateFilter, (item: FilterGroup | undefined) => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CreateTextFilter, (item: FilterGroup | undefined) => {
             // Pass the item (Group) to the AddFilter command so it knows where to add
-            vscode.commands.executeCommand(Constants.Commands.AddFilter, item).then(undefined, (e: unknown) =>
+            vscode.commands.executeCommand(Constants.Commands.AddTextFilter, item).then(undefined, (e: unknown) =>
                 this.logger.error(`[FilterItemCommand] CreateFilter failed: ${e instanceof Error ? e.message : String(e)}`));
         }));
 

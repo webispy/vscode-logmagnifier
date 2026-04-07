@@ -38,30 +38,30 @@ export class ProfileManager implements vscode.Disposable {
         });
     }
 
-    /** Returns metadata for all profiles, including word and regex filter counts. */
-    public getProfilesMetadata(): { name: string, wordCount: number, regexCount: number }[] {
+    /** Returns metadata for all profiles, including text and regex filter counts. */
+    public getProfilesMetadata(): { name: string, textCount: number, regexCount: number }[] {
         const profiles = this.context.globalState.get<FilterProfile[]>(Constants.GlobalState.FilterProfiles) || [];
 
         // Check if Default is present
         const hasDefault = profiles.some(p => p.name === Constants.Labels.DefaultProfile);
 
         const metadata = profiles.map(p => {
-            let wordCount = 0, regexCount = 0;
+            let textCount = 0, regexCount = 0;
             if (p.groups) {
                 p.groups.forEach(g => {
                     if (g.isRegex) {
                         regexCount++;
                     } else {
-                        wordCount++;
+                        textCount++;
                     }
                 });
             }
-            return { name: p.name, wordCount, regexCount };
+            return { name: p.name, textCount, regexCount };
         });
 
         if (!hasDefault) {
             // Default profile usually has Presets (1 group)
-            metadata.unshift({ name: Constants.Labels.DefaultProfile, wordCount: 1, regexCount: 0 });
+            metadata.unshift({ name: Constants.Labels.DefaultProfile, textCount: 1, regexCount: 0 });
         }
 
         return metadata.sort((a, b) => {

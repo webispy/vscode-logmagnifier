@@ -43,12 +43,12 @@ export class SwitchProfileTool implements vscode.LanguageModelTool<SwitchProfile
         }
 
         const groups = this.filterManager.getGroups();
-        const wordCount = groups.filter(g => !g.isRegex).length;
+        const textCount = groups.filter(g => !g.isRegex).length;
         const regexCount = groups.filter(g => g.isRegex).length;
 
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
-                `Switched to profile "${name}" (${wordCount} word group(s), ${regexCount} regex group(s)). Editor highlights updated.`
+                `Switched to profile "${name}" (${textCount} text group(s), ${regexCount} regex group(s)). Editor highlights updated.`
             )
         ]);
     }

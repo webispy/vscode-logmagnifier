@@ -55,7 +55,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         const sourceMapService = SourceMapService.getInstance();
 
         // Mock TreeViews (casted as any to avoid complex mocking of TreeView)
-        const wordTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
+        const textTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
         const regexTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
 
         commandManager = new FilterExecutionCommandManager(
@@ -65,7 +65,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
             logProcessor,
             logger,
             sourceMapService,
-            wordTreeView,
+            textTreeView,
             regexTreeView,
             false // Do not register commands
         );
@@ -75,7 +75,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         await vscode.window.showTextDocument(doc);
     });
 
-    test('Apply Word Filter (Global) - Group Enablement', async () => {
+    test('Apply Text Filter (Global) - Group Enablement', async () => {
         // Scenario:
         // Group 1: Disabled, Contains Enabled Item
         // Group 2: Enabled, Contains Disabled Item (no enabled items)
@@ -146,7 +146,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         assert.strictEqual(processed[0].id, g1.id, 'Should process Group 1');
     });
 
-    test('Apply Word Filter (Global) - Warning Check', async () => {
+    test('Apply Text Filter (Global) - Warning Check', async () => {
         // Scenario:
         // No groups added.
         // Expected: Warning message "No active word groups selected."
@@ -175,7 +175,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         }
     });
 
-    test('Apply Word Filter - Large File (70MB)', async function () {
+    test('Apply Text Filter - Large File (70MB)', async function () {
         this.timeout(60000); // Give it enough time since it's a large file
 
         // Create ~70MB temp file

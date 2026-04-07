@@ -113,7 +113,7 @@ suite('Profile Integration Test Suite', () => {
         filterManager.addFilter(exGroup.id, 'export-keyword', 'include');
         await wait(350);
 
-        const json = filterManager.exportFilters('word'); // Export word filters
+        const json = filterManager.exportFilters('word'); // Export text filters
 
         // 2. Switch to Profile Import
         await filterManager.createProfile('Import Target');

@@ -401,11 +401,11 @@ export class FilterManager implements vscode.Disposable {
         }
     }
 
-    /** Removes all word filter groups. */
-    public clearWordGroups(): void {
+    /** Removes all text filter groups. */
+    public clearTextGroups(): void {
         const before = this.groups.length;
         this.groups = this.groups.filter(g => g.isRegex);
-        this.logger.info(`[FilterManager] Cleared ${before - this.groups.length} word filter group(s)`);
+        this.logger.info(`[FilterManager] Cleared ${before - this.groups.length} text filter group(s)`);
         this.notifyChange();
     }
 
@@ -870,8 +870,8 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager.getProfileNames();
     }
 
-    /** Returns metadata for all profiles including word and regex filter group counts. */
-    public getProfilesMetadata(): { name: string, wordCount: number, regexCount: number }[] {
+    /** Returns metadata for all profiles including text and regex filter group counts. */
+    public getProfilesMetadata(): { name: string, textCount: number, regexCount: number }[] {
         return this.profileManager.getProfilesMetadata();
     }
 

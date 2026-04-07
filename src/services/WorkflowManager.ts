@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 
 import { Constants } from '../Constants';
 import { FilterGroup, FilterItem } from '../models/Filter';
-import { Workflow, WorkflowStep, WorkflowPackage, SimulationResult, SimulationStepResult, WorkflowViewModel } from '../models/Workflow';
+import { Workflow, WorkflowStep, WorkflowPackage, ExecutionResult, StepExecutionResult, WorkflowViewModel } from '../models/Workflow';
 
 import { HighlightService } from './HighlightService';
 import { Logger } from './Logger';
@@ -20,12 +20,12 @@ export class WorkflowManager implements vscode.Disposable {
     private _onDidChangeWorkflow: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeWorkflow: vscode.Event<void> = this._onDidChangeWorkflow.event;
 
-    private _onDidRunWorkflow: vscode.EventEmitter<SimulationResult> = new vscode.EventEmitter<SimulationResult>();
-    readonly onDidRunWorkflow: vscode.Event<SimulationResult> = this._onDidRunWorkflow.event;
+    private _onDidRunWorkflow: vscode.EventEmitter<ExecutionResult> = new vscode.EventEmitter<ExecutionResult>();
+    readonly onDidRunWorkflow: vscode.Event<ExecutionResult> = this._onDidRunWorkflow.event;
 
     private disposables: vscode.Disposable[] = [];
     private workflows: Workflow[] = [];
-    private lastRunResults: Map<string, SimulationResult> = new Map();
+    private lastRunResults: Map<string, ExecutionResult> = new Map();
     private lastExecutionId: string | undefined;
     private sessionFiles: Set<string> = new Set();
     private activeStepId: string | undefined;
@@ -85,12 +85,16 @@ export class WorkflowManager implements vscode.Disposable {
 
     private loadFromState(): Workflow[] {
         const workflows = this.context.globalState.get<Workflow[]>(Constants.GlobalState.Workflows) ?? [];
-        // Migration: Ensure new fields exist
+        // Migration: Ensure new fields exist and rename legacy values
         workflows.forEach(w => {
             if (w.steps) {
                 w.steps.forEach(s => {
-                    if (!s.executionMode) {
-                        s.executionMode = 'sequential';
+                    // Migrate legacy 'sequential' → 'independent', 'cumulative' → 'aggregated'
+                    const mode = s.executionMode as string;
+                    if (mode === 'sequential' || !mode) {
+                        s.executionMode = 'independent';
+                    } else if (mode === 'cumulative') {
+                        s.executionMode = 'aggregated';
                     }
                     // parentId is optional, so undefined is fine
                 });
@@ -105,7 +109,7 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     /** Returns the last run result for the given workflow, the active workflow, or the most recent execution. */
-    public getLastRunResult(workflowId?: string): SimulationResult | undefined {
+    public getLastRunResult(workflowId?: string): ExecutionResult | undefined {
         const id = workflowId || this.getActiveWorkflow() || this.lastExecutionId;
         if (id) {
             return this.lastRunResults.get(id);
@@ -227,7 +231,7 @@ export class WorkflowManager implements vscode.Disposable {
             step.children.forEach((childId: string, index: number) => {
                 const childStep = stepMap.get(childId);
                 if (childStep) {
-                    const childType = childStep.executionMode === 'sequential' ? 'branch' : 'continuous';
+                    const childType = childStep.executionMode === 'independent' ? 'branch' : 'continuous';
                     traverse(childId, depth + 1, index === step.children.length - 1, childType);
                 }
             });
@@ -257,8 +261,8 @@ export class WorkflowManager implements vscode.Disposable {
 
             const stepNode = stepMap.get(step.id);
             const hasChildren = stepNode && stepNode.children.length > 0;
-            const nodeType: 'seq-complex' | 'seq-simple' | 'cumulative' =
-                step.depth === 1 ? (hasChildren ? 'seq-complex' : 'seq-simple') : 'cumulative';
+            const nodeType: 'ind-complex' | 'ind-simple' | 'aggregated' =
+                step.depth === 1 ? (hasChildren ? 'ind-complex' : 'ind-simple') : 'aggregated';
 
             return {
                 id: step.id,
@@ -406,7 +410,7 @@ export class WorkflowManager implements vscode.Disposable {
                 id: newId,
                 profileName: profileName,
                 parentId: parentId,
-                executionMode: parentId ? 'cumulative' : 'sequential'
+                executionMode: parentId ? 'aggregated' : 'independent'
             });
             await this.saveWorkflow(workflow);
             await this.expandWorkflow(workflowId);
@@ -493,7 +497,7 @@ export class WorkflowManager implements vscode.Disposable {
             sim.steps = ((sim as { profileNames: string[] }).profileNames).map(p => ({
                 id: crypto.randomUUID(),
                 profileName: p,
-                executionMode: 'sequential' // Migration default
+                executionMode: 'independent' // Migration default
             }));
         }
 
@@ -548,7 +552,9 @@ export class WorkflowManager implements vscode.Disposable {
                     throw new Error('Invalid step profile name');
                 }
                 step.profileName = step.profileName.replace(/[\x00-\x1f]/g, '');
-                step.executionMode = step.executionMode === 'cumulative' ? 'cumulative' : 'sequential';
+                // Migrate legacy values: 'cumulative' → 'aggregated', anything else → 'independent'
+                const mode = step.executionMode as string;
+                step.executionMode = (mode === 'aggregated' || mode === 'cumulative') ? 'aggregated' : 'independent';
             }
 
             // Validate profiles
@@ -609,7 +615,7 @@ export class WorkflowManager implements vscode.Disposable {
                 if (step.parentId && this.hasCycle(pkg.workflow.steps, step.id, step.parentId)) {
                     this.logger.warn(`[Workflow] Cycle detected in imported workflow step ${step.id}, clearing parentId`);
                     step.parentId = undefined;
-                    step.executionMode = 'sequential';
+                    step.executionMode = 'independent';
                 }
             }
 
@@ -700,7 +706,7 @@ export class WorkflowManager implements vscode.Disposable {
         sim.lastRunFile = currentFilePath;
         await this.saveWorkflow(sim);
 
-        const stepResults: SimulationStepResult[] = [];
+        const stepResults: StepExecutionResult[] = [];
         this.logger.info(`[WorkflowManager] Starting run execution loop for ${sim.name}`);
 
         try {
@@ -763,7 +769,7 @@ export class WorkflowManager implements vscode.Disposable {
                     }
                 }
 
-                const stepIdToResult = new Map<string, SimulationStepResult>();
+                const stepIdToResult = new Map<string, StepExecutionResult>();
 
                 // 3. Execute Pipeline
                 for (let i = 0; i < processingOrder.length; i++) {
@@ -799,10 +805,10 @@ export class WorkflowManager implements vscode.Disposable {
                         effectiveGroups.push(...this.cloneGroupsWithSuffix(profileData.groups, `_s${stepIndex}`));
                     }
 
-                    // Determine if we need to include descendants (Cumulative Logic)
-                    // Rule: If explicit 'cumulative' mode OR if this step is a Parent (has children)
+                    // Determine if we need to include descendants (Aggregated Logic)
+                    // Rule: If explicit 'aggregated' mode OR if this step is a Parent (has children)
                     const hasChildren = sim.steps.some(s => s.parentId === step.id);
-                    if (step.executionMode === 'cumulative' || hasChildren) {
+                    if (step.executionMode === 'aggregated' || hasChildren) {
                         // Gather descendants
                         const descendants = this.getDescendants(sim.steps, step.id);
                         for (const desc of descendants) {
@@ -826,7 +832,7 @@ export class WorkflowManager implements vscode.Disposable {
                     this.sessionFiles.add(result.outputPath);
 
                     // Store Result
-                    const stepResult: SimulationStepResult = {
+                    const stepResult: StepExecutionResult = {
                         stepIndex: stepIndex,
                         profileName: step.profileName,
                         outputFilePath: result.outputPath,
@@ -848,8 +854,8 @@ export class WorkflowManager implements vscode.Disposable {
                 }
             });
 
-            // Store Simulation Result
-            const runResult: SimulationResult = {
+            // Store Execution Result
+            const runResult: ExecutionResult = {
                 workflowId: workflowId,
                 startTime: Date.now(),
                 steps: stepResults
@@ -869,7 +875,7 @@ export class WorkflowManager implements vscode.Disposable {
     }
 
     /** Opens the output file for a step result in the editor with highlight decorations applied. */
-    public async openStepResult(step: SimulationStepResult) {
+    public async openStepResult(step: StepExecutionResult) {
         try {
             await fsp.access(step.outputFilePath);
         } catch (e: unknown) {

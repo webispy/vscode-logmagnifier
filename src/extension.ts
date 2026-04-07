@@ -101,11 +101,11 @@ export function activate(context: vscode.ExtensionContext) {
     let lastProcessedDoc: vscode.TextDocument | undefined;
 
     logger.info('[extension] Registering Filter views...');
-    const wordTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word', logger);
-    context.subscriptions.push(wordTreeDataProvider);
-    const wordTreeView = vscode.window.createTreeView(Constants.Views.Filters, {
-        treeDataProvider: wordTreeDataProvider,
-        dragAndDropController: wordTreeDataProvider,
+    const textTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word', logger);
+    context.subscriptions.push(textTreeDataProvider);
+    const textTreeView = vscode.window.createTreeView(Constants.Views.TextFilters, {
+        treeDataProvider: textTreeDataProvider,
+        dragAndDropController: textTreeDataProvider,
         showCollapseAll: false
     });
 
@@ -131,7 +131,7 @@ export function activate(context: vscode.ExtensionContext) {
         }));
     };
 
-    setupExpansionSync(wordTreeView);
+    setupExpansionSync(textTreeView);
     setupExpansionSync(regexTreeView);
 
     logger.info('[extension] Filter views registered');
@@ -158,7 +158,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(jsonPrettyService);
     new CommandManager(context, {
         filterManager, highlightService, resultCountService, logProcessor,
-        quickAccessProvider, logger, wordTreeView, regexTreeView,
+        quickAccessProvider, logger, textTreeView, regexTreeView,
         jsonPrettyService, sourceMapService
     });
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
@@ -423,7 +423,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     registerFilterEventListeners(context, {
         logger, filterManager, highlightService, quickAccessProvider,
-        wordTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
+        textTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
         refreshHighlightsForEditor,
         setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
     });
@@ -614,7 +614,7 @@ interface FilterEventListenerDeps {
     filterManager: FilterManager;
     highlightService: HighlightService;
     quickAccessProvider: QuickAccessProvider;
-    wordTreeDataProvider: FilterTreeDataProvider;
+    textTreeDataProvider: FilterTreeDataProvider;
     regexTreeDataProvider: FilterTreeDataProvider;
     runbookTreeDataProvider: RunbookTreeDataProvider;
     refreshHighlightsForEditor: (editor: vscode.TextEditor) => Promise<void>;
@@ -623,7 +623,7 @@ interface FilterEventListenerDeps {
 
 function registerFilterEventListeners(context: vscode.ExtensionContext, deps: FilterEventListenerDeps) {
     const { logger, filterManager, highlightService, quickAccessProvider,
-        wordTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
+        textTreeDataProvider, regexTreeDataProvider, runbookTreeDataProvider,
         refreshHighlightsForEditor, setLastProcessedDoc } = deps;
 
     // Update highlights when filters change
@@ -676,7 +676,7 @@ function registerFilterEventListeners(context: vscode.ExtensionContext, deps: Fi
     context.subscriptions.push(vscode.window.onDidChangeActiveColorTheme(async () => {
         try {
             highlightService.refreshDecorationType();
-            wordTreeDataProvider.refresh();
+            textTreeDataProvider.refresh();
             regexTreeDataProvider.refresh();
             runbookTreeDataProvider.refresh();
             if (vscode.window.activeTextEditor) {

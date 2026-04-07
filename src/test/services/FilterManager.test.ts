@@ -298,12 +298,12 @@ suite('FilterManager Clear Groups Test Suite', () => {
         [...groups].forEach(g => filterManager.removeGroup(g.id));
     });
 
-    test('clearWordGroups removes only word groups', () => {
-        filterManager.addGroup('Word 1', false);
-        filterManager.addGroup('Word 2', false);
+    test('clearTextGroups removes only text groups', () => {
+        filterManager.addGroup('Text 1', false);
+        filterManager.addGroup('Text 2', false);
         filterManager.addGroup('Regex 1', true);
 
-        filterManager.clearWordGroups();
+        filterManager.clearTextGroups();
 
         const groups = filterManager.getGroups();
         assert.strictEqual(groups.length, 1);

@@ -29,7 +29,7 @@ export interface CommandManagerServices {
     logProcessor: LogProcessor;
     quickAccessProvider: QuickAccessProvider;
     logger: Logger;
-    wordTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     jsonPrettyService: JsonPrettyService;
     sourceMapService: SourceMapService;
@@ -43,7 +43,7 @@ export class CommandManager {
     private readonly logProcessor: LogProcessor;
     private readonly quickAccessProvider: QuickAccessProvider;
     private readonly logger: Logger;
-    private readonly wordTreeView: vscode.TreeView<FilterGroup | FilterItem>;
+    private readonly textTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly jsonPrettyService: JsonPrettyService;
     private readonly sourceMapService: SourceMapService;
@@ -60,16 +60,16 @@ export class CommandManager {
         this.logProcessor = services.logProcessor;
         this.quickAccessProvider = services.quickAccessProvider;
         this.logger = services.logger;
-        this.wordTreeView = services.wordTreeView;
+        this.textTreeView = services.textTreeView;
         this.regexTreeView = services.regexTreeView;
         this.jsonPrettyService = services.jsonPrettyService;
         this.sourceMapService = services.sourceMapService;
         // Instantiate sub-modules
         new FilterGroupCommandManager(context, this.filterManager, this.logger);
-        new FilterItemCommandManager(context, this.filterManager, this.logger, this.wordTreeView);
+        new FilterItemCommandManager(context, this.filterManager, this.logger, this.textTreeView);
         new FilterPropertyCommandManager(context, this.filterManager);
         new FilterExportImportCommandManager(context, this.filterManager);
-        new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.sourceMapService, this.wordTreeView, this.regexTreeView);
+        new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.sourceMapService, this.textTreeView, this.regexTreeView);
         new EditorToggleCommandManager(context, this.quickAccessProvider, this.jsonPrettyService);
 
         this.registerClearDataCommand();
@@ -173,17 +173,17 @@ export class CommandManager {
                 }
             }),
 
-            vscode.commands.registerCommand(Constants.Commands.ClearWordFilterData, async () => {
+            vscode.commands.registerCommand(Constants.Commands.ClearTextFilterData, async () => {
                 const answer = await vscode.window.showWarningMessage(
-                    Constants.Prompts.ConfirmClearWordFilterData,
+                    Constants.Prompts.ConfirmClearTextFilterData,
                     { modal: true },
                     'Yes'
                 );
 
                 if (answer === 'Yes') {
-                    this.filterManager.clearWordGroups();
+                    this.filterManager.clearTextGroups();
                     await this.filterManager.saveFilters();
-                    await this.showClearResult(Constants.Messages.Info.ClearWordFilterDataCompleted);
+                    await this.showClearResult(Constants.Messages.Info.ClearTextFilterDataCompleted);
                 }
             }),
 

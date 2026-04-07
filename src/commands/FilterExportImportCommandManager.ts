@@ -26,11 +26,11 @@ export class FilterExportImportCommandManager {
     }
 
     private registerCommands() {
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportWordFilters, () => this.handleExport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportTextFilters, () => this.handleExport('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportGroup, (group: FilterGroup) => this.handleExportGroup(group)));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportWordFilters, () => this.handleImport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportTextFilters, () => this.handleImport('word')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportRegexFilters, () => this.handleImport('regex')));
 
         this.registerProfileCommands();
@@ -48,7 +48,7 @@ export class FilterExportImportCommandManager {
 
         // Create QuickPick
         const quickPick = vscode.window.createQuickPick();
-        quickPick.title = mode === 'word' ? Constants.Prompts.ExportWordFilters : Constants.Prompts.ExportRegexFilters;
+        quickPick.title = mode === 'word' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters;
         quickPick.placeholder = Constants.Prompts.SelectGroupsToExport;
         quickPick.canSelectMany = true; // Enable native checkboxes
         quickPick.matchOnDescription = true;
@@ -149,7 +149,7 @@ export class FilterExportImportCommandManager {
         const uri = await vscode.window.showSaveDialog({
             defaultUri: defaultUri,
             filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ExportWordFilters : Constants.Prompts.ExportRegexFilters
+            title: mode === 'word' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters
         });
 
         if (uri) {
@@ -206,7 +206,7 @@ export class FilterExportImportCommandManager {
         const uris = await vscode.window.showOpenDialog({
             canSelectMany: false,
             filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ImportWordFilters : Constants.Prompts.ImportRegexFilters
+            title: mode === 'word' ? Constants.Prompts.ImportTextFilters : Constants.Prompts.ImportRegexFilters
         });
 
         if (uris && uris.length > 0) {
@@ -277,8 +277,8 @@ export class FilterExportImportCommandManager {
                     return {
                         label: p.name === activeProfile ? `$(check) ${p.name}` : p.name,
                         description: p.name === activeProfile
-                            ? `Active (Word: ${p.wordCount}, Regex: ${p.regexCount})`
-                            : `(Word: ${p.wordCount}, Regex: ${p.regexCount})`,
+                            ? `Active (Text: ${p.textCount}, Regex: ${p.regexCount})`
+                            : `(Text: ${p.textCount}, Regex: ${p.regexCount})`,
                         detail: 'Switch to this profile',
                         buttons: p.name === Constants.Labels.DefaultProfile ? [] : [
                             {

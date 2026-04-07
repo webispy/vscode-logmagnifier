@@ -70,13 +70,13 @@ export class CreateProfileTool implements vscode.LanguageModelTool<CreateProfile
         }
 
         const groups = this.filterManager.getGroups();
-        const wordCount = groups.filter(g => !g.isRegex).length;
+        const textCount = groups.filter(g => !g.isRegex).length;
         const regexCount = groups.filter(g => g.isRegex).length;
         const totalFilters = groups.reduce((sum, g) => sum + g.filters.length, 0);
 
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
-                `Profile "${name}" created with ${wordCount} word group(s), ${regexCount} regex group(s), ${totalFilters} total filter(s).`
+                `Profile "${name}" created with ${textCount} text group(s), ${regexCount} regex group(s), ${totalFilters} total filter(s).`
             )
         ]);
     }

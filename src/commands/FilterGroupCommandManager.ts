@@ -16,7 +16,7 @@ export class FilterGroupCommandManager {
     }
 
     private registerCommands() {
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddFilterGroup, async () => {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.AddTextFilterGroup, async () => {
             const name = (await vscode.window.showInputBox({
                 prompt: Constants.Prompts.EnterFilterGroupName,
                 validateInput: (v) => v.length > Constants.Defaults.MaxNameLength
@@ -26,7 +26,7 @@ export class FilterGroupCommandManager {
             if (name) {
                 const group = this.filterManager.addGroup(name, false);
                 if (!group) {
-                    vscode.window.showErrorMessage(Constants.Messages.Error.WordFilterGroupExists.replace('{0}', name));
+                    vscode.window.showErrorMessage(Constants.Messages.Error.TextFilterGroupExists.replace('{0}', name));
                 }
             }
         }));

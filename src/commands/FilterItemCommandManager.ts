@@ -41,10 +41,10 @@ export class FilterItemCommandManager {
 
         const groups = this.filterManager.getGroups().filter(g => isRegex ? g.isRegex : !g.isRegex);
         if (groups.length === 0) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.NoFilterGroups.replace('{0}', isRegex ? 'Regex' : 'Word'));
+            vscode.window.showErrorMessage(Constants.Messages.Error.NoFilterGroups.replace('{0}', isRegex ? 'Regex' : 'Text'));
             return undefined;
         }
-        const selected = await vscode.window.showQuickPick(groups.map(g => ({ label: g.name, id: g.id })), { placeHolder: `Select ${isRegex ? 'Regex' : 'Word'} Filter Group` });
+        const selected = await vscode.window.showQuickPick(groups.map(g => ({ label: g.name, id: g.id })), { placeHolder: `Select ${isRegex ? 'Regex' : 'Text'} Filter Group` });
         return selected?.id;
     }
 

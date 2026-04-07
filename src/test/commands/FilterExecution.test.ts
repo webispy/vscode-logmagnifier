@@ -149,7 +149,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
     test('Apply Text Filter (Global) - Warning Check', async () => {
         // Scenario:
         // No groups added.
-        // Expected: Warning message "No active word groups selected."
+        // Expected: Warning message "No active text groups selected."
 
         // Mock vscode.window.showWarningMessage
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -167,7 +167,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             await (commandManager as any).applyFilter('word');
 
-            assert.strictEqual(capturedMessage, 'No active word groups selected.');
+            assert.strictEqual(capturedMessage, 'No active text groups selected.');
         } finally {
             // Restore original method
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

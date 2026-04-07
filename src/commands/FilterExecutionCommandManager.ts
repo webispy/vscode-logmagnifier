@@ -81,7 +81,8 @@ export class FilterExecutionCommandManager {
             });
 
             if (activeGroups.length === 0) {
-                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', filterType || 'filter'));
+                const displayType = filterType === 'word' ? 'text' : filterType;
+                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', displayType || 'filter'));
                 return;
             }
 

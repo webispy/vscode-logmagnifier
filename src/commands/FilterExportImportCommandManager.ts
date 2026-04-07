@@ -136,7 +136,8 @@ export class FilterExportImportCommandManager {
     /** Serializes selected filter groups to JSON and prompts the user to save the file. */
     private async performExport(mode: 'word' | 'regex', groupIds: string[]) {
         const filtersJson = this.filterManager.exportFilters(mode, groupIds);
-        const fileName = `logmagnifier_${mode}_filters.json`;
+        const displayMode = mode === 'word' ? 'text' : mode;
+        const fileName = `logmagnifier_${displayMode}_filters.json`;
 
         const downloadsPath = path.join(os.homedir(), 'Downloads');
         let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
@@ -155,7 +156,7 @@ export class FilterExportImportCommandManager {
         if (uri) {
             try {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
-                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Word' : 'Regex').replace('{1}', uri.fsPath));
+                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Text' : 'Regex').replace('{1}', uri.fsPath));
             } catch (e: unknown) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
@@ -237,7 +238,7 @@ export class FilterExportImportCommandManager {
                 } else if (result.count === 0) {
                     vscode.window.showWarningMessage(Constants.Messages.Warn.NoMatchingFilters);
                 } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Word' : 'Regex'));
+                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Text' : 'Regex'));
                 }
             } catch (e: unknown) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', e instanceof Error ? e.message : String(e)));

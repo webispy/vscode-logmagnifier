@@ -598,7 +598,7 @@
       {
         "name": "logmagnifier-addFilter",
         "displayName": "Add Log Filter",
-        "modelDescription": "Add a word or regex filter to LogMagnifier. If the specified group does not exist, it will be created. The filter is immediately applied to the active editor for highlighting.",
+        "modelDescription": "Add a text or regex filter to LogMagnifier. If the specified group does not exist, it will be created. The filter is immediately applied to the active editor for highlighting.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "addFilter",
         "inputSchema": {
@@ -662,7 +662,7 @@
             "filterType": {
               "type": "string",
               "enum": ["word", "regex", "all"],
-              "description": "Which filter type to apply. 'all' applies both word and regex filters. Default: 'all'"
+              "description": "Which filter type to apply. 'all' applies both text and regex filters. Default: 'all'"
             },
             "groupName": {
               "type": "string",
@@ -694,7 +694,7 @@
       {
         "name": "logmagnifier-listProfiles",
         "displayName": "List Filter Profiles",
-        "modelDescription": "List all saved filter profiles with their word/regex filter group counts. Profiles are named filter configurations that can be used in workflows. Also shows the currently active profile.",
+        "modelDescription": "List all saved filter profiles with their text/regex filter group counts. Profiles are named filter configurations that can be used in workflows. Also shows the currently active profile.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "listProfiles",
         "inputSchema": {
@@ -1061,7 +1061,7 @@
               "type": "string",
               "description": "Current pattern of the filter to update."
             },
-            "newKeyword": {
+            "newPattern": {
               "type": "string",
               "description": "New pattern to replace the current one."
             },

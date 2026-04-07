@@ -598,7 +598,7 @@
       {
         "name": "logmagnifier-addFilter",
         "displayName": "Add Log Filter",
-        "modelDescription": "Add a text or regex filter to LogMagnifier. If the specified group does not exist, it will be created. The filter is immediately applied to the active editor for highlighting.",
+        "modelDescription": "Add a text or regex filter to LogMagnifier. If the specified group does not exist, it will be created. IMPORTANT: Newly created groups are disabled by default — call toggleFilterGroup to enable the group before calling applyFilter. The filter is immediately applied to the active editor for highlighting.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "addFilter",
         "inputSchema": {
@@ -653,7 +653,7 @@
       {
         "name": "logmagnifier-applyFilter",
         "displayName": "Apply Log Filters",
-        "modelDescription": "Apply all enabled filters to the active log file and create a new filtered document. Returns the number of matched lines and total lines processed.",
+        "modelDescription": "Apply filters to the active log file and create a new filtered document. When groupName is specified, the named group is applied regardless of its enabled/disabled state. When groupName is omitted, only enabled groups are applied. Returns the number of matched lines and total lines processed.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "applyFilter",
         "inputSchema": {

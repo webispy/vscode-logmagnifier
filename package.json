@@ -490,7 +490,7 @@
       "logmagnifier-container": [
         {
           "id": "logmagnifier-dashboard",
-          "name": "Quick Access",
+          "name": "Dashboard",
           "icon": "$(tools)"
         },
         {
@@ -582,7 +582,7 @@
       {
         "name": "logmagnifier-getFilters",
         "displayName": "Get Log Filters",
-        "modelDescription": "List all filter groups and their filter items in LogMagnifier. Returns group names, filter keywords, types (include/exclude), enabled state, and match counts.",
+        "modelDescription": "List all filter groups and their filter items in LogMagnifier. Returns group names, filter patterns, types (include/exclude), enabled state, and match counts.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "getFilters",
         "inputSchema": {
@@ -743,7 +743,7 @@
       {
         "name": "logmagnifier-getProfileFilters",
         "displayName": "Get Profile Filters",
-        "modelDescription": "Returns the filter groups and items for a specific profile without switching to it. Use this to inspect filters in any profile (active or not) for cross-profile analysis. Returns group names, filter keywords, types, and enabled state.",
+        "modelDescription": "Returns the filter groups and items for a specific profile without switching to it. Use this to inspect filters in any profile (active or not) for cross-profile analysis. Returns group names, filter patterns, types, and enabled state.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "getProfileFilters",
         "inputSchema": {
@@ -781,7 +781,7 @@
       {
         "name": "logmagnifier-listWorkflows",
         "displayName": "List Log Analysis Workflows",
-        "modelDescription": "List all saved log analysis workflows. Each workflow contains ordered steps that reference filter profiles. Returns workflow names, step sequences with profile names, and execution modes (sequential/cumulative).",
+        "modelDescription": "List all saved log analysis workflows. Each workflow contains ordered steps that reference filter profiles. Returns workflow names, step sequences with profile names, and execution modes (independent/aggregated).",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "listWorkflows",
         "inputSchema": {
@@ -792,7 +792,7 @@
       {
         "name": "logmagnifier-runWorkflow",
         "displayName": "Run Log Analysis Workflow",
-        "modelDescription": "Execute a saved workflow against the active log file. Each step applies its profile's filters sequentially or cumulatively. Returns per-step results: matched line counts and output file paths.",
+        "modelDescription": "Execute a saved workflow against the active log file. Each step applies its profile's filters independently or in aggregated mode. Returns per-step results: matched line counts and output file paths.",
         "canBeReferencedInPrompt": true,
         "toolReferenceName": "runWorkflow",
         "inputSchema": {

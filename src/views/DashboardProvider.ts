@@ -35,7 +35,7 @@ export class DashboardProvider implements vscode.TreeDataProvider<vscode.TreeIte
         return element;
     }
 
-    /** Returns the list of quick-access toggle and status items for the root level. */
+    /** Returns the list of dashboard toggle and status items for the root level. */
     async getChildren(element?: vscode.TreeItem): Promise<vscode.TreeItem[]> {
         if (element) {
             return Promise.resolve([]);

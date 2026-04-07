@@ -208,7 +208,7 @@ suite('FilterStateService Test Suite', () => {
     });
 
     suite('sanitizeFilterGroups', () => {
-        test('sanitizes all filters within groups in-place', () => {
+        test('sanitizes all filters within groups (creates new IDs)', () => {
             const groups: FilterGroup[] = [
                 {
                     id: 'g1', name: 'Group', isEnabled: true,
@@ -222,6 +222,26 @@ suite('FilterStateService Test Suite', () => {
             assert.strictEqual(groups[0].filters[0].pattern, 'old_keyword');
             assert.strictEqual(groups[0].filters[0].contextLines, 3);
             assert.strictEqual(groups[0].filters[0].excludeStyle, 'strikethrough');
+            assert.notStrictEqual(groups[0].filters[0].id, 'f1', 'sanitizeFilterGroups should create new IDs');
+        });
+    });
+
+    suite('migrateFilterGroups', () => {
+        test('migrates legacy fields in-place preserving IDs', () => {
+            const groups: FilterGroup[] = [
+                {
+                    id: 'g1', name: 'Group', isEnabled: true,
+                    filters: [
+                        { id: 'f1', keyword: 'old_keyword', type: 'include', isEnabled: true, contextLine: 3, excludeStyle: 'line-through' } as unknown as FilterItem
+                    ]
+                }
+            ];
+            service.migrateFilterGroups(groups);
+
+            assert.strictEqual(groups[0].filters[0].pattern, 'old_keyword');
+            assert.strictEqual(groups[0].filters[0].contextLines, 3);
+            assert.strictEqual(groups[0].filters[0].excludeStyle, 'strikethrough');
+            assert.strictEqual(groups[0].filters[0].id, 'f1', 'migrateFilterGroups should preserve existing IDs');
         });
     });
 

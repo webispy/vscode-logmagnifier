@@ -96,13 +96,24 @@ export class FilterStateService {
     }
 
     /**
-     * Sanitizes all filters within the given groups (in-place replacement).
-     * Used by WorkflowManager when importing bundled profiles from older versions.
+     * Sanitizes all filters within the given groups (creates new FilterItem objects with new IDs).
+     * Used by WorkflowManager when importing bundled profiles from external files.
      */
     public sanitizeFilterGroups(groups: FilterGroup[]): void {
         for (const group of groups) {
             if (!group || !Array.isArray(group.filters)) { continue; }
             group.filters = group.filters.map(f => this.sanitizeImportedFilter(f as unknown as Record<string, unknown>));
+        }
+    }
+
+    /**
+     * Migrates legacy fields in-place within the given groups, preserving existing IDs.
+     * Used by ProfileManager when loading profiles from globalState.
+     */
+    public migrateFilterGroups(groups: FilterGroup[]): void {
+        for (const group of groups) {
+            if (!group || !Array.isArray(group.filters)) { continue; }
+            group.filters.forEach(f => this.ensureFilterMigration(f));
         }
     }
 
@@ -117,7 +128,7 @@ export class FilterStateService {
         return 0;
     }
 
-    private ensureFilterMigration(filter: FilterItem): void {
+    public ensureFilterMigration(filter: FilterItem): void {
         // Migrate legacy 'keyword' field to 'pattern'
         const legacy = filter as unknown as Record<string, unknown>;
         if ('keyword' in legacy && !filter.pattern) {

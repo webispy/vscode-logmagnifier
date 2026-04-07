@@ -33,8 +33,8 @@ export class FilterManager implements vscode.Disposable {
     constructor(private readonly context: vscode.ExtensionContext) {
         this.logger = Logger.getInstance();
         this.colorService = new ColorService();
-        this.profileManager = new ProfileManager(context);
         this.stateService = new FilterStateService(context, this.logger);
+        this.profileManager = new ProfileManager(context, this.stateService);
 
         this.groups = this.stateService.loadFromState();
         this.resetCounts();

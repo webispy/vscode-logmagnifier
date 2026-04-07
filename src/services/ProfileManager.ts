@@ -3,6 +3,8 @@ import * as vscode from 'vscode';
 import { Constants } from '../Constants';
 import { FilterGroup } from '../models/Filter';
 
+import { FilterStateService } from './FilterStateService';
+
 export interface FilterProfile {
     name: string;
     groups: FilterGroup[];
@@ -13,7 +15,10 @@ export class ProfileManager implements vscode.Disposable {
     private _onDidChangeProfile: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     readonly onDidChangeProfile: vscode.Event<void> = this._onDidChangeProfile.event;
 
-    constructor(private readonly context: vscode.ExtensionContext) { }
+    constructor(
+        private readonly context: vscode.ExtensionContext,
+        private readonly filterStateService?: FilterStateService
+    ) { }
 
     /** Returns the name of the currently active filter profile. */
     public getActiveProfile(): string {
@@ -170,6 +175,7 @@ export class ProfileManager implements vscode.Disposable {
         const profile = profiles.find(p => p.name === name);
 
         if (profile) {
+            this.migrateProfileFilters(profile);
             await this.context.globalState.update(Constants.GlobalState.ActiveProfile, name);
             this._onDidChangeProfile.fire();
             return profile.groups;
@@ -196,6 +202,7 @@ export class ProfileManager implements vscode.Disposable {
 
         const profile = profiles.find(p => p.name === name);
         if (profile) {
+            this.migrateProfileFilters(profile);
             return profile.groups;
         }
 
@@ -216,6 +223,15 @@ export class ProfileManager implements vscode.Disposable {
 
         await this.updateProfileData(name, groups);
         return true;
+    }
+
+    /**
+     * Applies in-place filter migration to a profile's groups, preserving existing IDs.
+     * Handles legacy field names (keyword→pattern, contextLine→contextLines, line-through→strikethrough).
+     */
+    private migrateProfileFilters(profile: FilterProfile): void {
+        if (!this.filterStateService) { return; }
+        this.filterStateService.migrateFilterGroups(profile.groups);
     }
 
     public dispose() {

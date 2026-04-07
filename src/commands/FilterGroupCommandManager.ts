@@ -98,7 +98,7 @@ export class FilterGroupCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItems, async (group: FilterGroup) => {
             await this.copyToClipboard(
                 group,
-                (items) => items.map(f => f.keyword).join('\n'),
+                (items) => items.map(f => f.pattern).join('\n'),
                 Constants.Messages.Info.CopiedItems
             );
         }));
@@ -106,7 +106,7 @@ export class FilterGroupCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsSingleLine, async (group: FilterGroup) => {
             await this.copyToClipboard(
                 group,
-                (items) => items.map(f => f.keyword).join(' '), // Use space as delimiter
+                (items) => items.map(f => f.pattern).join(' '), // Use space as delimiter
                 Constants.Messages.Info.CopiedItemsSingleLine
             );
         }));
@@ -114,7 +114,7 @@ export class FilterGroupCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CopyGroupEnabledItemsWithTag, async (group: FilterGroup) => {
             await this.copyToClipboard(
                 group,
-                (items) => items.map(f => `tag:${f.keyword}`).join(' '),
+                (items) => items.map(f => `tag:${f.pattern}`).join(' '),
                 Constants.Messages.Info.CopiedItemsTags
             );
         }));

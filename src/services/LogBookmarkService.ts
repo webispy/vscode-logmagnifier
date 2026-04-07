@@ -7,7 +7,7 @@ import { Constants } from '../Constants';
 import { BookmarkItem, BookmarkResult } from '../models/Bookmark';
 
 import { Logger } from './Logger';
-import { SourceMapService } from './SourceMapService';
+import { LineMappingService } from './LineMappingService';
 
 export class LogBookmarkService implements vscode.Disposable {
     private _onDidChangeBookmarks: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -200,7 +200,7 @@ export class LogBookmarkService implements vscode.Disposable {
      * Adds a single bookmark at the specified line in the editor.
      * @param editor - The text editor containing the document to bookmark.
      * @param line - Zero-based line number to bookmark.
-     * @param options - Optional match text for keyword bookmarks and group ID for batch association.
+     * @param options - Optional match text for pattern bookmarks and group ID for batch association.
      * @returns A result indicating success or a failure message.
      */
     public addBookmark(editor: vscode.TextEditor, line: number, options?: { matchText?: string, groupId?: string }): BookmarkResult {
@@ -226,8 +226,8 @@ export class LogBookmarkService implements vscode.Disposable {
             }
 
             // Check if it's a filtered log
-            const sourceMapService = SourceMapService.getInstance();
-            if (sourceMapService.hasMapping(uri)) {
+            const lineMappingService = LineMappingService.getInstance();
+            if (lineMappingService.hasMapping(uri)) {
                 // We show a warning but allow adding the bookmark
                 vscode.window.showWarningMessage(Constants.Messages.Warn.FilteredLogViewBookmark);
             }
@@ -249,7 +249,7 @@ export class LogBookmarkService implements vscode.Disposable {
             );
 
             if (isDuplicate) {
-                return { success: false, message: 'Bookmark already exists for this keyword on this line.' };
+                return { success: false, message: 'Bookmark already exists for this pattern on this line.' };
             }
 
             const lineContent = doc.lineAt(line).text;

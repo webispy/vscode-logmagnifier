@@ -7,7 +7,7 @@ import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
 import { Workflow } from '../../models/Workflow';
 import { Constants } from '../../Constants';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 
 suite('Workflow Badge Logic Test Suite', () => {
     let workflowManager: WorkflowManager;
@@ -16,7 +16,7 @@ suite('Workflow Badge Logic Test Suite', () => {
     let profileManager: ProfileManager;
     let logger: Logger;
     let highlightService: HighlightService;
-    let sourceMapService: SourceMapService;
+    let lineMappingService: LineMappingService;
 
     setup(() => {
         context = {
@@ -46,7 +46,7 @@ suite('Workflow Badge Logic Test Suite', () => {
         });
 
         highlightService = { registerDocumentFilters: () => { } } as unknown as HighlightService;
-        sourceMapService = { register: () => { } } as unknown as SourceMapService;
+        lineMappingService = { register: () => { } } as unknown as LineMappingService;
 
         workflowManager = new WorkflowManager(
             context,
@@ -54,7 +54,7 @@ suite('Workflow Badge Logic Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            sourceMapService
+            lineMappingService
         );
     });
 
@@ -104,7 +104,7 @@ suite('Workflow Badge Logic Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            sourceMapService
+            lineMappingService
         );
 
         const vms = await newManager.getWorkflowViewModels();

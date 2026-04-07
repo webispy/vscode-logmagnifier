@@ -37,6 +37,13 @@ export class FilterStateService {
     }
 
     private ensureFilterMigration(filter: FilterItem): void {
+        // Migrate legacy 'keyword' field to 'pattern'
+        const legacy = filter as unknown as Record<string, unknown>;
+        if ('keyword' in legacy && !filter.pattern) {
+            filter.pattern = String(legacy['keyword']);
+            delete legacy['keyword'];
+        }
+
         if (filter.highlightMode === undefined) {
             const enableFullLine = 'enableFullLineHighlight' in filter && (filter as { enableFullLineHighlight?: boolean }).enableFullLineHighlight;
             filter.highlightMode = enableFullLine ? HighlightMode.Line : HighlightMode.Word;

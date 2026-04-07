@@ -23,7 +23,7 @@ suite('Profile Sync Integration Test Suite', () => {
         const logProcessor = new LogProcessor();
         const logger = Logger.getInstance();
         const highlightService = new HighlightService(filterManager, logger);
-        const sourceMapService = {
+        const lineMappingService = {
             mappings: new Map(),
             register: () => { },
             unregister: () => { }
@@ -36,7 +36,7 @@ suite('Profile Sync Integration Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            sourceMapService
+            lineMappingService
         );
     });
 
@@ -56,7 +56,7 @@ suite('Profile Sync Integration Test Suite', () => {
                 isRegex: false,
                 isExpanded: true,
                 filters: [
-                    { id: 'f1', keyword: 'sync-keyword', type: 'include', isEnabled: true, isRegex: false }
+                    { id: 'f1', pattern: 'sync-keyword', type: 'include', isEnabled: true, isRegex: false }
                 ]
             }
         ]);
@@ -75,7 +75,7 @@ suite('Profile Sync Integration Test Suite', () => {
         const syncGroup = groups.find(g => g.name === 'Sync Group');
 
         assert.ok(syncGroup, 'FilterManager should have loaded the Sync Group');
-        assert.strictEqual(syncGroup.filters[0].keyword, 'sync-keyword');
+        assert.strictEqual(syncGroup.filters[0].pattern, 'sync-keyword');
         assert.strictEqual(filterManager.getActiveProfile(), profileName);
     });
 });

@@ -27,7 +27,7 @@ suite('FilterStateService Test Suite', () => {
                 name: 'Group 1',
                 isEnabled: true,
                 filters: [
-                    { id: 'f1', keyword: 'error', type: 'include', isEnabled: true }
+                    { id: 'f1', pattern: 'error', type: 'include', isEnabled: true }
                 ]
             }
         ];
@@ -38,14 +38,14 @@ suite('FilterStateService Test Suite', () => {
         assert.strictEqual(loaded.length, 1);
         assert.strictEqual(loaded[0].name, 'Group 1');
         assert.strictEqual(loaded[0].filters.length, 1);
-        assert.strictEqual(loaded[0].filters[0].keyword, 'error');
+        assert.strictEqual(loaded[0].filters[0].pattern, 'error');
     });
 
     test('loadFromState migrates legacy enableFullLineHighlight to highlightMode', () => {
         // Simulate legacy data with enableFullLineHighlight
         interface LegacyFilter {
             id: string;
-            keyword: string;
+            pattern: string;
             type: string;
             isEnabled: boolean;
             enableFullLineHighlight?: boolean;
@@ -56,9 +56,9 @@ suite('FilterStateService Test Suite', () => {
                 name: 'Legacy Group',
                 isEnabled: true,
                 filters: [
-                    { id: 'f1', keyword: 'warn', type: 'include', isEnabled: true, enableFullLineHighlight: true } as LegacyFilter,
-                    { id: 'f2', keyword: 'info', type: 'include', isEnabled: true, enableFullLineHighlight: false } as LegacyFilter,
-                    { id: 'f3', keyword: 'debug', type: 'include', isEnabled: true } as LegacyFilter
+                    { id: 'f1', pattern: 'warn', type: 'include', isEnabled: true, enableFullLineHighlight: true } as LegacyFilter,
+                    { id: 'f2', pattern: 'info', type: 'include', isEnabled: true, enableFullLineHighlight: false } as LegacyFilter,
+                    { id: 'f3', pattern: 'debug', type: 'include', isEnabled: true } as LegacyFilter
                 ]
             }
         ];
@@ -81,7 +81,7 @@ suite('FilterStateService Test Suite', () => {
             id: 'g1',
             name: 'Original',
             isEnabled: true,
-            filters: [{ id: 'f1', keyword: 'test', type: 'include', isEnabled: true }]
+            filters: [{ id: 'f1', pattern: 'test', type: 'include', isEnabled: true }]
         };
 
         const copy = service.deepCopy(original);
@@ -90,10 +90,10 @@ suite('FilterStateService Test Suite', () => {
 
         // Modify original and verify copy is independent
         original.name = 'Modified';
-        original.filters[0].keyword = 'changed';
+        original.filters[0].pattern = 'changed';
 
         assert.strictEqual(copy.name, 'Original');
-        assert.strictEqual(copy.filters[0].keyword, 'test');
+        assert.strictEqual(copy.filters[0].pattern, 'test');
     });
 
     test('deepCopy handles empty objects', () => {

@@ -22,7 +22,7 @@ suite('SetCaseSensitivityTool', () => {
         assert.strictEqual(filter.caseSensitive ?? false, false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', enable: true }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', enable: true }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -37,7 +37,7 @@ suite('SetCaseSensitivityTool', () => {
         filterManager.setFilterCaseSensitivity(group.id, filter.id, true);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', enable: false }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', enable: false }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -47,7 +47,7 @@ suite('SetCaseSensitivityTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error', enable: true }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error', enable: true }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -59,7 +59,7 @@ suite('SetCaseSensitivityTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing', enable: true }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing', enable: true }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -69,7 +69,7 @@ suite('SetCaseSensitivityTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k', enable: true } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string; enable: boolean }>,
+            { input: { groupName: 'G', pattern: 'k', enable: true } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string; enable: boolean }>,
             token
         );
 

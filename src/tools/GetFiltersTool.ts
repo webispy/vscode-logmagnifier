@@ -25,7 +25,7 @@ export class GetFiltersTool implements vscode.LanguageModelTool<GetFiltersInput>
             filterCount: g.filters.length,
             resultCount: g.resultCount ?? 0,
             filters: g.filters.map(f => ({
-                keyword: f.keyword,
+                pattern: f.pattern,
                 type: f.type,
                 isEnabled: f.isEnabled,
                 caseSensitive: f.caseSensitive ?? false,

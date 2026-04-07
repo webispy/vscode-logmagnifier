@@ -267,7 +267,7 @@ export class HighlightService implements vscode.Disposable {
         matchCounts: Map<string, number>,
         offset: number
     ) {
-        if (!filter.keyword) {
+        if (!filter.pattern) {
             return;
         }
 
@@ -323,7 +323,7 @@ export class HighlightService implements vscode.Disposable {
         });
 
         try {
-            const regex = RegexUtils.create(filter.keyword, !!filter.isRegex, !!filter.caseSensitive);
+            const regex = RegexUtils.create(filter.pattern, !!filter.isRegex, !!filter.caseSensitive);
             let count = 0;
             let match;
 
@@ -356,14 +356,14 @@ export class HighlightService implements vscode.Disposable {
 
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
-            this.logger.warn(`[HighlightService] Failed to apply filter '${filter.keyword}': ${msg}`);
+            this.logger.warn(`[HighlightService] Failed to apply filter '${filter.pattern}': ${msg}`);
 
             // Show error message once per filter to avoid spam during chunked processing
             if (filter.isRegex && !this.shownErrorFilterIds.has(filter.id)) {
                 this.shownErrorFilterIds.add(filter.id);
                 (async () => {
                     const selection = await vscode.window.showErrorMessage(
-                        Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.keyword),
+                        Constants.Messages.Error.InvalidFilterPattern.replace('{0}', filter.pattern),
                         'Edit Filter',
                         'Disable Filter'
                     );
@@ -417,7 +417,7 @@ export class HighlightService implements vscode.Disposable {
 
         for (const group of activeGroups) {
             for (const filter of group.filters) {
-                if (!filter.isEnabled || !filter.keyword) {
+                if (!filter.isEnabled || !filter.pattern) {
                     continue;
                 }
                 if (filter.isRegex && !this.cachedEnableRegexHighlight) {
@@ -425,7 +425,7 @@ export class HighlightService implements vscode.Disposable {
                 }
 
                 try {
-                    const regex = RegexUtils.create(filter.keyword, !!filter.isRegex, !!filter.caseSensitive);
+                    const regex = RegexUtils.create(filter.pattern, !!filter.isRegex, !!filter.caseSensitive);
                     if (regex.test(text)) {
                         return filter.color || (typeof this.cachedDefaultColor === 'string' ? this.cachedDefaultColor : undefined);
                     }

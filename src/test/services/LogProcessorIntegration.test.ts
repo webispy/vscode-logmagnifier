@@ -32,10 +32,10 @@ suite('LogProcessor Integration Test Suite', () => {
     }
 
     // Helper to create a filter item
-    function createFilter(id: string, keyword: string, type: FilterType, enabled: boolean = true, isRegex: boolean = false, contextLine: number = 0, caseSensitive: boolean = false): FilterItem {
+    function createFilter(id: string, pattern: string, type: FilterType, enabled: boolean = true, isRegex: boolean = false, contextLine: number = 0, caseSensitive: boolean = false): FilterItem {
         return {
             id,
-            keyword,
+            pattern,
             type,
             isEnabled: enabled,
             isRegex,
@@ -52,7 +52,7 @@ suite('LogProcessor Integration Test Suite', () => {
         processor = new LogProcessor();
     });
 
-    test('processFile: should correctly filter log file based on "Error" keyword', async () => {
+    test('processFile: should correctly filter log file based on "Error" pattern', async () => {
         const filterGroup = createGroup('test-group', 'Test Group');
         filterGroup.filters.push(createFilter('filter-1', 'Error', 'include'));
 

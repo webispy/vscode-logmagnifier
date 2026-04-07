@@ -17,7 +17,7 @@ suite('Filter Model Test Suite', () => {
             const group: FilterGroup = {
                 id: 'g1',
                 name: 'Test',
-                filters: [{ id: 'f1', keyword: 'test', type: 'include', isEnabled: true }],
+                filters: [{ id: 'f1', pattern: 'test', type: 'include', isEnabled: true }],
                 isEnabled: true
             };
             assert.strictEqual(isFilterGroup(group), true);
@@ -26,7 +26,7 @@ suite('Filter Model Test Suite', () => {
         test('returns false for a FilterItem', () => {
             const item: FilterItem = {
                 id: 'f1',
-                keyword: 'test',
+                pattern: 'test',
                 type: 'include',
                 isEnabled: true
             };

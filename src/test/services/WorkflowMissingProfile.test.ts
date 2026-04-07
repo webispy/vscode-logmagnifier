@@ -5,7 +5,7 @@ import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 
 suite('Workflow Missing Profile Test Suite', () => {
     let workflowManager: WorkflowManager;
@@ -13,7 +13,7 @@ suite('Workflow Missing Profile Test Suite', () => {
     let logProcessor: LogProcessor;
     let logger: Logger;
     let highlightService: HighlightService;
-    let sourceMapService: SourceMapService;
+    let lineMappingService: LineMappingService;
     let context: vscode.ExtensionContext;
     let globalStateData: Record<string, unknown> = {};
 
@@ -32,7 +32,7 @@ suite('Workflow Missing Profile Test Suite', () => {
         highlightService = { registerDocumentFilters: () => { } } as unknown as HighlightService;
         profileManager = new ProfileManager(context);
         logProcessor = new LogProcessor();
-        sourceMapService = { register: () => { } } as unknown as SourceMapService;
+        lineMappingService = { register: () => { } } as unknown as LineMappingService;
 
         workflowManager = new WorkflowManager(
             context,
@@ -40,7 +40,7 @@ suite('Workflow Missing Profile Test Suite', () => {
             logProcessor,
             logger,
             highlightService,
-            sourceMapService
+            lineMappingService
         );
     });
 

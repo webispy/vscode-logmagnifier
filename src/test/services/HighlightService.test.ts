@@ -133,7 +133,7 @@ suite('HighlightService Test Suite', () => {
         await highlightService.updateHighlights(editor);
 
         const activeDecorations = editor.getDecorations();
-        // Exclude 'line-through' style creates 2 decorations (whole line strike + bold keyword)
+        // Exclude 'line-through' style creates 2 decorations (whole line strike + bold pattern)
         assert.strictEqual(activeDecorations.size, 2, 'Should have 2 decorations for line-through exclude');
     });
 
@@ -152,7 +152,7 @@ suite('HighlightService Test Suite', () => {
         assert.strictEqual(ranges[0].start.character, 0);
         assert.strictEqual(ranges[0].end.character, 7);
 
-        // Mode 1: Line (from keyword to end)
+        // Mode 1: Line (from pattern to end)
         highlightService.refreshDecorationType();
         editor.getDecorations().clear();
         filterManager.setFilterHighlightMode(group.id, filter.id, HighlightMode.Line);
@@ -186,10 +186,10 @@ suite('HighlightService Test Suite', () => {
         const countsBefore = await highlightService.updateHighlights(editor);
         assert.strictEqual(countsBefore.get(filter.id), 2, 'ERROR should match 2 times');
 
-        // Rename filter keyword from 'ERROR' to 'WARN'
+        // Rename filter pattern from 'ERROR' to 'WARN'
         highlightService.refreshDecorationType();
         editor.getDecorations().clear();
-        filterManager.updateFilter(group.id, filter.id, { keyword: 'WARN' });
+        filterManager.updateFilter(group.id, filter.id, { pattern: 'WARN' });
 
         const countsAfter = await highlightService.updateHighlights(editor);
         assert.strictEqual(countsAfter.get(filter.id), 1, 'WARN should match 1 time after rename');
@@ -201,7 +201,7 @@ suite('HighlightService Test Suite', () => {
         assert.strictEqual(ranges[0].start.line, 1, 'Should highlight line 1 (WARN detected)');
     });
 
-    test('updateFilter rename to non-matching keyword yields zero matches', async () => {
+    test('updateFilter rename to non-matching pattern yields zero matches', async () => {
         const content = 'ERROR occurred\nERROR again';
         const editor = createMockEditor(content);
 
@@ -212,10 +212,10 @@ suite('HighlightService Test Suite', () => {
         const countsBefore = await highlightService.updateHighlights(editor);
         assert.strictEqual(countsBefore.get(filter.id), 2, 'ERROR should match 2 times');
 
-        // Rename to keyword that does not exist in content
+        // Rename to pattern that does not exist in content
         highlightService.refreshDecorationType();
         editor.getDecorations().clear();
-        filterManager.updateFilter(group.id, filter.id, { keyword: 'FATAL' });
+        filterManager.updateFilter(group.id, filter.id, { pattern: 'FATAL' });
 
         const countsAfter = await highlightService.updateHighlights(editor);
         assert.strictEqual(countsAfter.get(filter.id), 0, 'FATAL should match 0 times');

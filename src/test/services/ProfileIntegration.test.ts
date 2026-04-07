@@ -46,7 +46,7 @@ suite('Profile Integration Test Suite', () => {
         const groups = filterManager.getGroups();
         const persistedGroup = groups.find(g => g.name === 'Default Group');
         assert.ok(persistedGroup, 'Default profile should persist its groups');
-        assert.strictEqual(persistedGroup.filters[0].keyword, 'keyword1');
+        assert.strictEqual(persistedGroup.filters[0].pattern, 'keyword1');
     });
 
     test('Create New Profile', async () => {
@@ -78,7 +78,7 @@ suite('Profile Integration Test Suite', () => {
 
         const copiedGroup = groups.find(g => g.name === 'Source Group');
         assert.ok(copiedGroup, 'Copied profile should have source group');
-        assert.strictEqual(copiedGroup.filters[0].keyword, 'source-filter');
+        assert.strictEqual(copiedGroup.filters[0].pattern, 'source-filter');
     });
 
     test('Profile Isolation', async () => {
@@ -103,7 +103,7 @@ suite('Profile Integration Test Suite', () => {
         // 5. Verify A is unchanged
         const finalGroupA = filterManager.getGroups().find(g => g.name === 'Group A')!;
         assert.strictEqual(finalGroupA.filters.length, 1, 'Profile A should not be affected by changes in Profile B');
-        assert.strictEqual(finalGroupA.filters[0].keyword, 'filter A');
+        assert.strictEqual(finalGroupA.filters[0].pattern, 'filter A');
     });
 
     test('Export/Import per Profile', async () => {
@@ -128,7 +128,7 @@ suite('Profile Integration Test Suite', () => {
         const groups = filterManager.getGroups();
         const importedGroup = groups.find(g => g.name === 'Export Group');
         assert.ok(importedGroup, 'Should have imported group');
-        assert.strictEqual(importedGroup.filters[0].keyword, 'export-keyword');
+        assert.strictEqual(importedGroup.filters[0].pattern, 'export-keyword');
 
         // 5. Verify Isolation (Switch back to Default)
         await filterManager.loadProfile(Constants.Labels.DefaultProfile);

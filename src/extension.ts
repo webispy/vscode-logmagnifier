@@ -23,7 +23,7 @@ import { Logger } from './services/Logger';
 import { LogProcessor } from './services/LogProcessor';
 import { ResultCountService } from './services/ResultCountService';
 import { RunbookService } from './services/RunbookService';
-import { SourceMapService } from './services/SourceMapService';
+import { LineMappingService } from './services/LineMappingService';
 import { TimestampService } from './services/TimestampService';
 import { WorkflowManager } from './services/WorkflowManager';
 import { LmToolManager } from './tools/LmToolManager';
@@ -66,10 +66,10 @@ export function activate(context: vscode.ExtensionContext) {
     const filterManager = new FilterManager(context);
     context.subscriptions.push(filterManager);
 
-    const sourceMapService = SourceMapService.getInstance();
+    const lineMappingService = LineMappingService.getInstance();
     const logProcessor = new LogProcessor();
     const highlightService = new HighlightService(filterManager, logger);
-    const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, sourceMapService);
+    const workflowManager = new WorkflowManager(context, filterManager.profileManagerRef, logProcessor, logger, highlightService, lineMappingService);
     context.subscriptions.push(workflowManager);
 
     const quickAccessProvider = new QuickAccessProvider(filterManager, workflowManager, logger);
@@ -145,7 +145,7 @@ export function activate(context: vscode.ExtensionContext) {
                 { scheme: Constants.Schemes.Untitled, language: 'jsonc' },
                 { scheme: Constants.Schemes.Untitled, language: 'json' }
             ],
-            new FilteredLogDefinitionProvider(sourceMapService)
+            new FilteredLogDefinitionProvider(lineMappingService)
         )
     );
 
@@ -159,7 +159,7 @@ export function activate(context: vscode.ExtensionContext) {
     new CommandManager(context, {
         filterManager, highlightService, resultCountService, logProcessor,
         quickAccessProvider, logger, textTreeView, regexTreeView,
-        jsonPrettyService, sourceMapService
+        jsonPrettyService, lineMappingService
     });
     new WorkflowCommandManager(context, workflowManager, filterManager, logger);
 
@@ -321,7 +321,7 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidCloseTextDocument(doc => {
         timestampService.invalidateIndex(doc.uri.toString());
     }));
-    new TimestampCommandManager(context, timestampService, sourceMapService, highlightService, timeRangeProvider, logger);
+    new TimestampCommandManager(context, timestampService, lineMappingService, highlightService, timeRangeProvider, logger);
     logger.info('[extension] Timestamp Analysis + Time Range Explorer registered');
 
     // Selection Gap Display — show gap gutter icons when multi-line selection
@@ -385,7 +385,7 @@ export function activate(context: vscode.ExtensionContext) {
     logger.info('[extension] Registering Language Model Tools...');
     const lmToolManager = new LmToolManager(
         filterManager, logProcessor,
-        timestampService, sourceMapService,
+        timestampService, lineMappingService,
         workflowManager, bookmarkService, logger
     );
     context.subscriptions.push(lmToolManager);
@@ -413,7 +413,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     logger.info('[extension] Registering event listeners...');
     registerEditorEventListeners(context, {
-        logger, sourceMapService, highlightService, resultCountService,
+        logger, lineMappingService, highlightService, resultCountService,
         quickAccessProvider, refreshHighlightsForEditor,
         getLastProcessedDoc: () => lastProcessedDoc,
         setLastProcessedDoc: (doc) => { lastProcessedDoc = doc; },
@@ -433,7 +433,7 @@ export function activate(context: vscode.ExtensionContext) {
         filterManager,
         bookmarkService,
         highlightService,
-        sourceMapService,
+        lineMappingService,
         adbService
     };
   } catch (e: unknown) {
@@ -454,7 +454,7 @@ function isSupportedScheme(uri: vscode.Uri): boolean {
 
 interface EditorEventListenerDeps {
     logger: Logger;
-    sourceMapService: SourceMapService;
+    lineMappingService: LineMappingService;
     highlightService: HighlightService;
     resultCountService: ResultCountService;
     quickAccessProvider: QuickAccessProvider;
@@ -466,7 +466,7 @@ interface EditorEventListenerDeps {
 }
 
 function registerEditorEventListeners(context: vscode.ExtensionContext, deps: EditorEventListenerDeps) {
-    const { logger, sourceMapService, highlightService, resultCountService,
+    const { logger, lineMappingService, highlightService, resultCountService,
         quickAccessProvider, refreshHighlightsForEditor,
         getLastProcessedDoc, setLastProcessedDoc,
         getDebounceTimer, setDebounceTimer } = deps;
@@ -477,7 +477,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
             const editor = e.textEditor;
             if (editor && e.selections.length > 0) {
                 const line = e.selections[0].active.line;
-                if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
+                if (lineMappingService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
                     highlightService.flashLine(editor, line);
                 }
             }
@@ -489,12 +489,12 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
     // Update highlights and counts when active editor changes
     context.subscriptions.push(vscode.window.onDidChangeActiveTextEditor(async editor => {
         try {
-            sourceMapService.updateContextKey(editor);
+            lineMappingService.updateContextKey(editor);
 
             // Check for pending navigation (animation) on active editor change
             if (editor && editor.selection) {
                 const line = editor.selection.active.line;
-                if (sourceMapService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
+                if (lineMappingService.checkAndConsumePendingNavigation(editor.document.uri, line)) {
                     highlightService.flashLine(editor, line);
                 }
             }
@@ -601,7 +601,7 @@ function registerEditorEventListeners(context: vscode.ExtensionContext, deps: Ed
                 resultCountService.clearCounts();
                 quickAccessProvider.refresh();
             }
-            sourceMapService.unregister(doc.uri);
+            lineMappingService.unregister(doc.uri);
             highlightService.unregisterDocumentFilters(doc.uri);
         } catch (e: unknown) {
             logger.error(`Error in onDidCloseTextDocument: ${e instanceof Error ? e.message : String(e)}`);

@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { FilterManager } from '../services/FilterManager';
 
 interface AddFilterInput {
-    keyword: string;
+    pattern: string;
     groupName?: string;
     type?: 'include' | 'exclude';
     isRegex?: boolean;
@@ -18,9 +18,9 @@ export class AddFilterTool implements vscode.LanguageModelTool<AddFilterInput> {
         options: vscode.LanguageModelToolInvocationPrepareOptions<AddFilterInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const { keyword, type, groupName } = options.input;
+        const { pattern, type, groupName } = options.input;
         return {
-            invocationMessage: `Adding ${type ?? 'include'} filter "${keyword}" to group "${groupName ?? 'AI Filters'}"`,
+            invocationMessage: `Adding ${type ?? 'include'} filter "${pattern}" to group "${groupName ?? 'AI Filters'}"`,
         };
     }
 
@@ -28,7 +28,7 @@ export class AddFilterTool implements vscode.LanguageModelTool<AddFilterInput> {
         options: vscode.LanguageModelToolInvocationOptions<AddFilterInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { keyword, isRegex, caseSensitive } = options.input;
+        const { pattern, isRegex, caseSensitive } = options.input;
         const groupName = options.input.groupName ?? 'AI Filters';
         const type = options.input.type ?? 'include';
 
@@ -44,10 +44,10 @@ export class AddFilterTool implements vscode.LanguageModelTool<AddFilterInput> {
         }
 
         // Add filter
-        const filter = this.filterManager.addFilter(group.id, keyword, type, isRegex);
+        const filter = this.filterManager.addFilter(group.id, pattern, type, isRegex);
         if (!filter) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Failed to add filter "${keyword}" to group "${groupName}".`)
+                new vscode.LanguageModelTextPart(`Failed to add filter "${pattern}" to group "${groupName}".`)
             ]);
         }
 
@@ -58,7 +58,7 @@ export class AddFilterTool implements vscode.LanguageModelTool<AddFilterInput> {
 
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
-                `Added ${type} filter "${keyword}" to group "${groupName}". Highlighting is now active in the editor.`
+                `Added ${type} filter "${pattern}" to group "${groupName}". Highlighting is now active in the editor.`
             )
         ]);
     }

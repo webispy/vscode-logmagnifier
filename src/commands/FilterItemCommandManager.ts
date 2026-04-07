@@ -22,13 +22,13 @@ export class FilterItemCommandManager {
         if (group) {
             if (action === 'enable' && !item.isEnabled) {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`[FilterItemCommandManager] Filter enabled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter enabled: ${item.pattern}`);
             } else if (action === 'disable' && item.isEnabled) {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`[FilterItemCommandManager] Filter disabled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter disabled: ${item.pattern}`);
             } else if (action === 'toggle') {
                 this.filterManager.toggleFilter(group.id, item.id);
-                this.logger.info(`[FilterItemCommandManager] Filter toggled: ${item.keyword}`);
+                this.logger.info(`[FilterItemCommandManager] Filter toggled: ${item.pattern}`);
             }
         }
     }
@@ -77,10 +77,10 @@ export class FilterItemCommandManager {
 
                 const newPattern = await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterRegexPattern,
-                    value: item.keyword,
+                    value: item.pattern,
                     validateInput: (value) => {
-                        if (value.length > Constants.Defaults.MaxKeywordLength) {
-                            return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength));
+                        if (value.length > Constants.Defaults.MaxPatternLength) {
+                            return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength));
                         }
                         try {
                             new RegExp(value);
@@ -95,26 +95,26 @@ export class FilterItemCommandManager {
                     return;
                 }
 
-                if (newNickname !== item.nickname || newPattern !== item.keyword) {
+                if (newNickname !== item.nickname || newPattern !== item.pattern) {
                     this.filterManager.updateFilter(group.id, item.id, {
                         nickname: newNickname,
-                        keyword: newPattern
+                        pattern: newPattern
                     });
                 }
 
             } else {
-                // Text Filter: simple keyword edit
-                const newKeyword = await vscode.window.showInputBox({
-                    prompt: Constants.Prompts.EnterNewKeyword,
-                    value: item.keyword,
-                    validateInput: (v) => v.length > Constants.Defaults.MaxKeywordLength
-                        ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength))
+                // Text Filter: simple pattern edit
+                const newPattern = await vscode.window.showInputBox({
+                    prompt: Constants.Prompts.EnterNewPattern,
+                    value: item.pattern,
+                    validateInput: (v) => v.length > Constants.Defaults.MaxPatternLength
+                        ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength))
                         : null,
                 });
 
-                if (newKeyword && newKeyword !== item.keyword) {
+                if (newPattern && newPattern !== item.pattern) {
                     this.filterManager.updateFilter(group.id, item.id, {
-                        keyword: newKeyword
+                        pattern: newPattern
                     });
                 }
             }
@@ -126,20 +126,20 @@ export class FilterItemCommandManager {
                 return;
             }
 
-            const keyword = await vscode.window.showInputBox({
-                prompt: Constants.Prompts.EnterFilterKeyword,
-                validateInput: (v) => v.length > Constants.Defaults.MaxKeywordLength
-                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength))
+            const pattern = await vscode.window.showInputBox({
+                prompt: Constants.Prompts.EnterFilterPattern,
+                validateInput: (v) => v.length > Constants.Defaults.MaxPatternLength
+                    ? Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength))
                     : null,
             });
-            if (!keyword) {
+            if (!pattern) {
                 return;
             }
 
             const type = Constants.FilterTypes.Include as FilterType;
-            const filter = this.filterManager.addFilter(targetGroupId, keyword, type, false);
+            const filter = this.filterManager.addFilter(targetGroupId, pattern, type, false);
             if (!filter) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.FilterExistsInGroup.replace('{0}', keyword).replace('{1}', type));
+                vscode.window.showErrorMessage(Constants.Messages.Error.FilterExistsInGroup.replace('{0}', pattern).replace('{1}', type));
             }
         }));
 
@@ -162,8 +162,8 @@ export class FilterItemCommandManager {
             const pattern = await vscode.window.showInputBox({
                 prompt: Constants.Prompts.EnterRegexPattern,
                 validateInput: (value) => {
-                    if (value.length > Constants.Defaults.MaxKeywordLength) {
-                        return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxKeywordLength));
+                    if (value.length > Constants.Defaults.MaxPatternLength) {
+                        return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength));
                     }
                     try {
                         new RegExp(value);
@@ -224,8 +224,8 @@ export class FilterItemCommandManager {
                         // Assume we only target Text Filter groups context.
                         targetGroupId = undefined;
                     } else {
-                        // Check for duplicate keyword regardless of type
-                        const existingFilter = targetGroup.filters.find(f => f.keyword.toLowerCase() === selectedText.toLowerCase());
+                        // Check for duplicate pattern regardless of type
+                        const existingFilter = targetGroup.filters.find(f => f.pattern.toLowerCase() === selectedText.toLowerCase());
                         if (existingFilter) {
                             vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', selectedText).replace('{1}', targetGroup.name));
                             return;
@@ -235,7 +235,7 @@ export class FilterItemCommandManager {
             }
 
             if (!targetGroupId) {
-                // Create new group with keyword name
+                // Create new group with pattern name
                 // If group doesn't exist, create it.
                 const newGroup = this.filterManager.addGroup(selectedText, false);
                 if (newGroup) {
@@ -246,7 +246,7 @@ export class FilterItemCommandManager {
                     if (existingGroup) {
                         targetGroupId = existingGroup.id;
                         // Check for duplicate in this existing group as well, just in case
-                        const existingFilter = existingGroup.filters.find(f => f.keyword.toLowerCase() === selectedText.toLowerCase());
+                        const existingFilter = existingGroup.filters.find(f => f.pattern.toLowerCase() === selectedText.toLowerCase());
                         if (existingFilter) {
                             vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyExistsInGroup.replace('{0}', selectedText).replace('{1}', existingGroup.name));
                             return;

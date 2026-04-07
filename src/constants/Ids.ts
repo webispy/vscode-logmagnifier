@@ -41,30 +41,30 @@ export const Ids = {
             Color16: 'logmagnifier.changeFilterColor.color16',
         },
 
-        ToggleFilterHighlightMode: {
-            Word: 'logmagnifier.toggleFilterHighlightMode.word',
-            Line: 'logmagnifier.toggleFilterHighlightMode.line',
-            Full: 'logmagnifier.toggleFilterHighlightMode.full',
+        CycleFilterHighlightMode: {
+            Word: 'logmagnifier.cycleFilterHighlightMode.word',
+            Line: 'logmagnifier.cycleFilterHighlightMode.line',
+            Full: 'logmagnifier.cycleFilterHighlightMode.full',
         },
 
-        ToggleFilterCaseSensitivity: {
-            On: 'logmagnifier.toggleFilterCaseSensitivity.on',
-            Off: 'logmagnifier.toggleFilterCaseSensitivity.off',
+        CycleFilterCaseSensitivity: {
+            On: 'logmagnifier.cycleFilterCaseSensitivity.on',
+            Off: 'logmagnifier.cycleFilterCaseSensitivity.off',
         },
 
-        ToggleFilterType: {
-            Include: 'logmagnifier.toggleFilterType.include',
-            Exclude: 'logmagnifier.toggleFilterType.exclude',
+        CycleFilterType: {
+            Include: 'logmagnifier.cycleFilterType.include',
+            Exclude: 'logmagnifier.cycleFilterType.exclude',
         },
 
         NextMatch: 'logmagnifier.nextMatch',
         PreviousMatch: 'logmagnifier.previousMatch',
 
-        ToggleFilterContextLine: {
-            None: 'logmagnifier.toggleFilterContextLine_cl0',
-            PlusMinus3: 'logmagnifier.toggleFilterContextLine_cl3',
-            PlusMinus5: 'logmagnifier.toggleFilterContextLine_cl5',
-            PlusMinus9: 'logmagnifier.toggleFilterContextLine_cl9',
+        CycleFilterContextLine: {
+            None: 'logmagnifier.cycleFilterContextLine.cl0',
+            PlusMinus3: 'logmagnifier.cycleFilterContextLine.cl3',
+            PlusMinus5: 'logmagnifier.cycleFilterContextLine.cl5',
+            PlusMinus9: 'logmagnifier.cycleFilterContextLine.cl9',
         },
 
         SetFilterType: {
@@ -90,9 +90,9 @@ export const Ids = {
             PlusMinus9: 'logmagnifier.setFilterContextLine.cl9',
         },
 
-        TogglePrependLineNumbers: {
-            Enable: 'logmagnifier.togglePrependLineNumbers.enable',
-            Disable: 'logmagnifier.togglePrependLineNumbers.disable',
+        SetPrependLineNumbers: {
+            Enable: 'logmagnifier.setPrependLineNumbers.enable',
+            Disable: 'logmagnifier.setPrependLineNumbers.disable',
         },
 
         ToggleWordWrap: 'logmagnifier.toggleWordWrap',
@@ -318,7 +318,7 @@ export const Ids = {
         AdbDefaultOptions: '-v threadtime',
         LargeFileSizeLimitMB: 50,
         ContextLineLevels: [0, 3, 5, 9] as readonly number[],
-        MaxKeywordLength: 500,
+        MaxPatternLength: 500,
         MaxNameLength: 100,
         FlashDurationMs: 500,
         NavigationWindowMs: 10_000,

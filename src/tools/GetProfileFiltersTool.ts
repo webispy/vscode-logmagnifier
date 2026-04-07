@@ -42,7 +42,7 @@ export class GetProfileFiltersTool implements vscode.LanguageModelTool<GetProfil
             isRegex: g.isRegex ?? false,
             filterCount: g.filters.length,
             filters: g.filters.map(f => ({
-                keyword: f.keyword,
+                pattern: f.pattern,
                 type: f.type,
                 isEnabled: f.isEnabled,
                 caseSensitive: f.caseSensitive ?? false,

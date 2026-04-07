@@ -19,7 +19,7 @@ suite('AddFilterTool', () => {
     test('adds filter to new group', async () => {
         const result = await tool.invoke(
             {
-                input: { keyword: 'error', groupName: 'My Group', type: 'include' },
+                input: { pattern: 'error', groupName: 'My Group', type: 'include' },
                 toolInvocationToken: undefined as never,
             },
             token
@@ -32,7 +32,7 @@ suite('AddFilterTool', () => {
         const group = filterManager.getGroups().find(g => g.name === 'My Group');
         assert.ok(group, 'Group should be created');
         assert.strictEqual(group.filters.length, 1);
-        assert.strictEqual(group.filters[0].keyword, 'error');
+        assert.strictEqual(group.filters[0].pattern, 'error');
         assert.strictEqual(group.filters[0].type, 'include');
     });
 
@@ -41,7 +41,7 @@ suite('AddFilterTool', () => {
 
         await tool.invoke(
             {
-                input: { keyword: 'warn', groupName: 'Existing' },
+                input: { pattern: 'warn', groupName: 'Existing' },
                 toolInvocationToken: undefined as never,
             },
             token
@@ -49,13 +49,13 @@ suite('AddFilterTool', () => {
 
         const group = filterManager.getGroups().find(g => g.name === 'Existing');
         assert.ok(group);
-        assert.ok(group.filters.some(f => f.keyword === 'warn'));
+        assert.ok(group.filters.some(f => f.pattern === 'warn'));
     });
 
     test('uses default group name', async () => {
         await tool.invoke(
             {
-                input: { keyword: 'test' },
+                input: { pattern: 'test' },
                 toolInvocationToken: undefined as never,
             },
             token
@@ -68,7 +68,7 @@ suite('AddFilterTool', () => {
     test('sets case sensitivity', async () => {
         await tool.invoke(
             {
-                input: { keyword: 'Error', groupName: 'CS Test', caseSensitive: true },
+                input: { pattern: 'Error', groupName: 'CS Test', caseSensitive: true },
                 toolInvocationToken: undefined as never,
             },
             token
@@ -82,8 +82,8 @@ suite('AddFilterTool', () => {
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
             {
-                input: { keyword: 'err', type: 'exclude' as const, groupName: 'G' },
-            } as vscode.LanguageModelToolInvocationPrepareOptions<{ keyword: string; type: 'exclude'; groupName: string }>,
+                input: { pattern: 'err', type: 'exclude' as const, groupName: 'G' },
+            } as vscode.LanguageModelToolInvocationPrepareOptions<{ pattern: string; type: 'exclude'; groupName: string }>,
             token
         );
 

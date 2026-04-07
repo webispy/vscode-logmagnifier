@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as vscode from 'vscode';
 import { LogProcessor } from '../../services/LogProcessor';
 import { FilteredLogDefinitionProvider } from '../../providers/FilteredLogDefinitionProvider';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 import { FilterGroup } from '../../models/Filter';
 
 /**
@@ -19,13 +19,13 @@ suite('FilteredLogDefinitionProvider Integration Test Suite', () => {
     const androidGroupPath = path.join(resourcesDir, 'test_group_android.json');
 
     let processor: LogProcessor;
-    let sourceMapService: SourceMapService;
+    let lineMappingService: LineMappingService;
     let definitionProvider: FilteredLogDefinitionProvider;
 
     setup(() => {
         processor = new LogProcessor();
-        sourceMapService = SourceMapService.getInstance();
-        definitionProvider = new FilteredLogDefinitionProvider(sourceMapService);
+        lineMappingService = LineMappingService.getInstance();
+        definitionProvider = new FilteredLogDefinitionProvider(lineMappingService);
     });
 
     test('provideDefinition: should map filtered lines to correct original lines in Android log', async () => {
@@ -42,7 +42,7 @@ suite('FilteredLogDefinitionProvider Integration Test Suite', () => {
 
         try {
             // 3. Register Mapping
-            sourceMapService.register(filteredUri, sourceUri, result.lineMapping);
+            lineMappingService.register(filteredUri, sourceUri, result.lineMapping);
 
             // 4. Open the filtered document
             const document = await vscode.workspace.openTextDocument(filteredUri);
@@ -84,7 +84,7 @@ suite('FilteredLogDefinitionProvider Integration Test Suite', () => {
 
         } finally {
             // Cleanup
-            sourceMapService.unregister(filteredUri);
+            lineMappingService.unregister(filteredUri);
             if (fs.existsSync(result.outputPath)) {
                 fs.unlinkSync(result.outputPath);
             }

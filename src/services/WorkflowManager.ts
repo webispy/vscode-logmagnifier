@@ -14,7 +14,7 @@ import { HighlightService } from './HighlightService';
 import { Logger } from './Logger';
 import { LogProcessor } from './LogProcessor';
 import { ProfileManager } from './ProfileManager';
-import { SourceMapService } from './SourceMapService';
+import { LineMappingService } from './LineMappingService';
 
 export class WorkflowManager implements vscode.Disposable {
     private _onDidChangeWorkflow: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -38,7 +38,7 @@ export class WorkflowManager implements vscode.Disposable {
         private readonly logProcessor: LogProcessor,
         private readonly logger: Logger,
         private readonly highlightService: HighlightService,
-        private readonly sourceMapService: SourceMapService
+        private readonly lineMappingService: LineMappingService
     ) {
         this.workflows = this.loadFromState();
         this.cleanupStaleTempFiles();
@@ -843,7 +843,7 @@ export class WorkflowManager implements vscode.Disposable {
                     stepIdToResult.set(step.id, stepResult);
 
                     if (result.matched > 0) {
-                        this.sourceMapService.register(
+                        this.lineMappingService.register(
                             vscode.Uri.file(result.outputPath),
                             vscode.Uri.file(inputFile),
                             result.lineMapping

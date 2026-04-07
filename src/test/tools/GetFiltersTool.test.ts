@@ -31,9 +31,9 @@ suite('GetFiltersTool', () => {
         const testGroup = parsed.find((g: { name: string }) => g.name === 'Test Group');
         assert.ok(testGroup, 'Test Group should be in results');
         assert.strictEqual(testGroup.filters.length, 2);
-        assert.strictEqual(testGroup.filters[0].keyword, 'error');
+        assert.strictEqual(testGroup.filters[0].pattern, 'error');
         assert.strictEqual(testGroup.filters[0].type, 'include');
-        assert.strictEqual(testGroup.filters[1].keyword, 'debug');
+        assert.strictEqual(testGroup.filters[1].pattern, 'debug');
         assert.strictEqual(testGroup.filters[1].type, 'exclude');
     });
 

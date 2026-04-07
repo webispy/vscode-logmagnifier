@@ -4,7 +4,7 @@ import { FilterManager } from '../services/FilterManager';
 
 interface UpdateFilterColorInput {
     groupName: string;
-    keyword: string;
+    pattern: string;
     color: string;
 }
 
@@ -43,10 +43,10 @@ export class UpdateFilterColorTool implements vscode.LanguageModelTool<UpdateFil
         options: vscode.LanguageModelToolInvocationPrepareOptions<UpdateFilterColorInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const { keyword, color } = options.input;
+        const { pattern, color } = options.input;
         const name = COLOR_NAMES[color] ?? color;
         return {
-            invocationMessage: `Changing filter "${keyword}" color to ${name}`,
+            invocationMessage: `Changing filter "${pattern}" color to ${name}`,
         };
     }
 
@@ -54,7 +54,7 @@ export class UpdateFilterColorTool implements vscode.LanguageModelTool<UpdateFil
         options: vscode.LanguageModelToolInvocationOptions<UpdateFilterColorInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { groupName, keyword, color } = options.input;
+        const { groupName, pattern, color } = options.input;
 
         if (!VALID_COLORS.includes(color)) {
             return new vscode.LanguageModelToolResult([
@@ -71,17 +71,17 @@ export class UpdateFilterColorTool implements vscode.LanguageModelTool<UpdateFil
             ]);
         }
 
-        const filter = group.filters.find(f => f.keyword === keyword);
+        const filter = group.filters.find(f => f.pattern === pattern);
         if (!filter) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Filter "${keyword}" not found in group "${groupName}".`)
+                new vscode.LanguageModelTextPart(`Filter "${pattern}" not found in group "${groupName}".`)
             ]);
         }
 
         this.filterManager.updateFilterColor(group.id, filter.id, color);
         const name = COLOR_NAMES[color] ?? color;
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart(`Filter "${keyword}" color changed to ${name} (${color}).`)
+            new vscode.LanguageModelTextPart(`Filter "${pattern}" color changed to ${name} (${color}).`)
         ]);
     }
 }

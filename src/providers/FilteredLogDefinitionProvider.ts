@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 
 export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider {
     // Cache the last result to avoid redundant calculations when moving mouse along the same line
@@ -11,7 +11,7 @@ export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider 
         result: vscode.DefinitionLink[] | undefined;
     } | undefined;
 
-    constructor(private readonly sourceMapService: SourceMapService) { }
+    constructor(private readonly lineMappingService: LineMappingService) { }
 
     /** Resolves go-to-definition for filtered log lines by mapping them back to their original source location. */
     public async provideDefinition(
@@ -27,22 +27,22 @@ export class FilteredLogDefinitionProvider implements vscode.DefinitionProvider 
             this.lastResult.line === position.line) {
 
             // Optimization: Do NOT refresh timestamp on every mouse move.
-            // The 10s window in SourceMapService is sufficient for the user to click after hovering.
+            // The 10s window in LineMappingService is sufficient for the user to click after hovering.
             return this.lastResult.result;
         }
 
         // Check if there's a mapping for this document
-        if (!this.sourceMapService.hasMapping(document.uri)) {
+        if (!this.lineMappingService.hasMapping(document.uri)) {
             return undefined;
         }
 
         let result: vscode.DefinitionLink[] | undefined;
 
         // Retrieve original location
-        const location = this.sourceMapService.getOriginalLocation(document.uri, position.line);
+        const location = this.lineMappingService.getOriginalLocation(document.uri, position.line);
         if (location) {
             // Set pending navigation so the destination editor knows to flash the line
-            this.sourceMapService.setPendingNavigation(location.uri, location.range.start.line);
+            this.lineMappingService.setPendingNavigation(location.uri, location.range.start.line);
 
             // Return a DefinitionLink to allow customizing the origin selection range
             // enabling the entire line to be a clickable link

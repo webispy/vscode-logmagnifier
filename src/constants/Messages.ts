@@ -2,7 +2,7 @@ export const Messages = {
     ExtensionDisplayName: 'LogMagnifier',
 
     Prompts: {
-        EnterFilterKeyword: 'Enter Filter Keyword',
+        EnterFilterPattern: 'Enter Filter Pattern',
         EnterFilterNickname: 'Enter Filter Nickname (e.g. ADB Logcat)',
         EnterRegexPattern: 'Enter Regex Pattern',
         SelectColor: 'Select a highlight color',
@@ -18,7 +18,7 @@ export const Messages = {
 
         EnterNewGroupName: 'Enter new group name',
         EnterNickname: 'Enter Name (Nickname)',
-        EnterNewKeyword: 'Enter new keyword',
+        EnterNewPattern: 'Enter new pattern',
         EnterNewProfileName: 'Enter name for new profile',
         EnterDuplicateProfileName: 'Enter name for duplicated profile',
         SelectGroupsToExport: 'Select Filter Groups to Export',
@@ -121,7 +121,7 @@ export const Messages = {
             ExportSuccess: '{0} filters exported successfully to {1}',
             ExportGroupSuccess: 'Group \'{0}\' exported successfully to {1}',
             ImportSuccess: 'Successfully imported {0} {1} filter groups.',
-            NoSourceMapping: 'No source mapping found for this line.',
+            NoSourceMapping: 'No line mapping found for this line.',
             FallbackToOpen: 'Failed to open text document (likely too large), falling back to vscode.open: {0}',
             AllBookmarksCopied: 'All bookmarks copied to clipboard.',
             RemovedBookmarks: 'Removed {0} bookmarks matching selection \'{1}\'.',

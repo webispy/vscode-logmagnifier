@@ -16,12 +16,12 @@ suite('UpdateFilterTool', () => {
         tool = new UpdateFilterTool(filterManager);
     });
 
-    test('updates filter keyword', async () => {
+    test('updates filter pattern', async () => {
         const group = filterManager.addGroup('Test Group', false)!;
         filterManager.addFilter(group.id, 'error', 'include', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', newKeyword: 'ERROR' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', newPattern: 'ERROR' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -34,7 +34,7 @@ suite('UpdateFilterTool', () => {
         filterManager.addFilter(group.id, 'error', 'include', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', nickname: 'Errors' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', nickname: 'Errors' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -44,7 +44,7 @@ suite('UpdateFilterTool', () => {
 
     test('returns error when no updates specified', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -54,7 +54,7 @@ suite('UpdateFilterTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error', newKeyword: 'x' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error', newPattern: 'x' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -66,7 +66,7 @@ suite('UpdateFilterTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing', newKeyword: 'x' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing', newPattern: 'x' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -76,7 +76,7 @@ suite('UpdateFilterTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k', newKeyword: 'nk' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string; newKeyword: string }>,
+            { input: { groupName: 'G', pattern: 'k', newPattern: 'nk' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string; newPattern: string }>,
             token
         );
 

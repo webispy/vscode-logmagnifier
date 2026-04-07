@@ -9,7 +9,7 @@ import { FilterManager } from '../../services/FilterManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 import { MockExtensionContext } from '../utils/Mocks';
 import { FilterGroup, FilterItem } from '../../models/Filter';
 import { EditorUtils } from '../../utils/EditorUtils';
@@ -52,7 +52,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
         // Mocks for others
         const logger = Logger.getInstance();
         const highlightService = new HighlightService(filterManager, logger);
-        const sourceMapService = SourceMapService.getInstance();
+        const lineMappingService = LineMappingService.getInstance();
 
         // Mock TreeViews (casted as any to avoid complex mocking of TreeView)
         const textTreeView = {} as vscode.TreeView<FilterGroup | FilterItem>;
@@ -64,7 +64,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
             highlightService,
             logProcessor,
             logger,
-            sourceMapService,
+            lineMappingService,
             textTreeView,
             regexTreeView,
             false // Do not register commands
@@ -230,7 +230,7 @@ suite('FilterExecutionCommandManager Test Suite', () => {
                 new HighlightService(filterManager, Logger.getInstance()),
                 realLogProcessor,
                 Logger.getInstance(),
-                SourceMapService.getInstance(),
+                LineMappingService.getInstance(),
                 {} as vscode.TreeView<FilterGroup | FilterItem>,
                 {} as vscode.TreeView<FilterGroup | FilterItem>,
                 false

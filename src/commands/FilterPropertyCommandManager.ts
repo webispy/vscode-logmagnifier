@@ -23,8 +23,8 @@ export class FilterPropertyCommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Include, toggleFilterTypeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterType.Exclude, toggleFilterTypeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterType.Include, toggleFilterTypeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterType.Exclude, toggleFilterTypeHandler));
 
         const setFilterTypeHandler = (type: FilterType) => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -54,9 +54,9 @@ export class FilterPropertyCommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Word, toggleHighlightModeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Line, toggleHighlightModeHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterHighlightMode.Full, toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterHighlightMode.Word, toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterHighlightMode.Line, toggleHighlightModeHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterHighlightMode.Full, toggleHighlightModeHandler));
 
         const setHighlightModeHandler = (mode: HighlightMode) => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -76,8 +76,8 @@ export class FilterPropertyCommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterCaseSensitivity.On, toggleCaseSensitivityHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterCaseSensitivity.Off, toggleCaseSensitivityHandler));
 
         const setCaseSensitivityHandler = (enable: boolean) => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);
@@ -96,10 +96,10 @@ export class FilterPropertyCommandManager {
             }
         };
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.None, toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus3, toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus5, toggleContextLineHandler));
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ToggleFilterContextLine.PlusMinus9, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterContextLine.None, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterContextLine.PlusMinus3, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterContextLine.PlusMinus5, toggleContextLineHandler));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.CycleFilterContextLine.PlusMinus9, toggleContextLineHandler));
 
         const setContextLineHandler = (lines: number) => (item: FilterItem) => {
             const targetGroup = this.filterManager.findGroupByFilterId(item.id);

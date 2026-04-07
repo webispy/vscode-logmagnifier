@@ -3,17 +3,17 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 
 import { Constants } from '../../Constants';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 
-suite('SourceMapService Test Suite', () => {
-    let service: SourceMapService;
+suite('LineMappingService Test Suite', () => {
+    let service: LineMappingService;
 
     const makeUri = (path: string): vscode.Uri => vscode.Uri.file(path);
 
     setup(() => {
         // @ts-expect-error: Resetting private singleton instance for testing
-        SourceMapService.instance = undefined;
-        service = SourceMapService.getInstance();
+        LineMappingService.instance = undefined;
+        service = LineMappingService.getInstance();
     });
 
     // --- register / hasMapping ---
@@ -81,7 +81,7 @@ suite('SourceMapService Test Suite', () => {
 
     test('register evicts oldest mapping when maxMappings exceeded', () => {
         // @ts-expect-error: Accessing private static for testing
-        const max: number = SourceMapService.maxMappings;
+        const max: number = LineMappingService.maxMappings;
 
         // Fill cache to max
         for (let i = 0; i < max; i++) {

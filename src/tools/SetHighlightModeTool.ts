@@ -5,7 +5,7 @@ import { FilterManager } from '../services/FilterManager';
 
 interface SetHighlightModeInput {
     groupName: string;
-    keyword: string;
+    pattern: string;
     mode: 'word' | 'line' | 'fullLine';
 }
 
@@ -23,9 +23,9 @@ export class SetHighlightModeTool implements vscode.LanguageModelTool<SetHighlig
         options: vscode.LanguageModelToolInvocationPrepareOptions<SetHighlightModeInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.PreparedToolInvocation> {
-        const { keyword, mode } = options.input;
+        const { pattern, mode } = options.input;
         return {
-            invocationMessage: `Setting highlight mode to "${mode}" for filter "${keyword}"`,
+            invocationMessage: `Setting highlight mode to "${mode}" for filter "${pattern}"`,
         };
     }
 
@@ -33,7 +33,7 @@ export class SetHighlightModeTool implements vscode.LanguageModelTool<SetHighlig
         options: vscode.LanguageModelToolInvocationOptions<SetHighlightModeInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
-        const { groupName, keyword, mode } = options.input;
+        const { groupName, pattern, mode } = options.input;
 
         const highlightMode = MODE_MAP[mode];
         if (highlightMode === undefined) {
@@ -51,16 +51,16 @@ export class SetHighlightModeTool implements vscode.LanguageModelTool<SetHighlig
             ]);
         }
 
-        const filter = group.filters.find(f => f.keyword === keyword);
+        const filter = group.filters.find(f => f.pattern === pattern);
         if (!filter) {
             return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Filter "${keyword}" not found in group "${groupName}".`)
+                new vscode.LanguageModelTextPart(`Filter "${pattern}" not found in group "${groupName}".`)
             ]);
         }
 
         this.filterManager.setFilterHighlightMode(group.id, filter.id, highlightMode);
         return new vscode.LanguageModelToolResult([
-            new vscode.LanguageModelTextPart(`Highlight mode for filter "${keyword}" set to "${mode}".`)
+            new vscode.LanguageModelTextPart(`Highlight mode for filter "${pattern}" set to "${mode}".`)
         ]);
     }
 }

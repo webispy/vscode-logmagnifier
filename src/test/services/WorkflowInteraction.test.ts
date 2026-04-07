@@ -6,7 +6,7 @@ import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { Logger } from '../../services/Logger';
 import { HighlightService } from '../../services/HighlightService';
-import { SourceMapService } from '../../services/SourceMapService';
+import { LineMappingService } from '../../services/LineMappingService';
 
 suite('Workflow Interaction Tests', () => {
     let workflowManager: WorkflowManager;
@@ -34,11 +34,11 @@ suite('Workflow Interaction Tests', () => {
         highlightService = { registerDocumentFilters: () => { } } as unknown as HighlightService;
         profileManager = new ProfileManager(context);
         logProcessor = new LogProcessor();
-        const mockSourceMapService = {
+        const mockLineMappingService = {
             register: (_f: vscode.Uri, _s: vscode.Uri, _m: number[]) => { }
         };
 
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockSourceMapService as unknown as SourceMapService);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, mockLineMappingService as unknown as LineMappingService);
 
         // Mock existing workflows
         // const pb1: Workflow = { id: 'pb1', name: 'Workflow 1', steps: [] };
@@ -55,7 +55,7 @@ suite('Workflow Interaction Tests', () => {
     test('Click Inactive Workflow -> Activates AND Expands', async () => {
         // Init with data in global state
         globalStateData['logmagnifier.workflows'] = [{ id: 'pb1', name: 'Workflow 1', steps: [] }];
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as LineMappingService);
 
         // Initial state: No active workflow
         assert.strictEqual(workflowManager.getActiveWorkflow(), undefined);
@@ -77,7 +77,7 @@ suite('Workflow Interaction Tests', () => {
         // Init with data
         const pb = { id: 'pb1', name: 'Workflow 1', steps: [{ id: 'step1', name: 'Step 1', profileName: 'P1', executionMode: 'independent' }] };
         globalStateData['logmagnifier.workflows'] = [pb];
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as LineMappingService);
 
         // 1. Activate Workflow AND Expand it
         await workflowManager.setActiveWorkflow('pb1');
@@ -104,7 +104,7 @@ suite('Workflow Interaction Tests', () => {
     test('Click Active Workflow -> Toggles Expansion', async () => {
         // Init with valid data
         globalStateData['logmagnifier.workflows'] = [{ id: 'pb1', name: 'Workflow 1', steps: [] }];
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as LineMappingService);
 
         // 1. Activate -> Should Auto-Expand (New Logic)
         await workflowManager.handleWorkflowClick('pb1');
@@ -132,7 +132,7 @@ suite('Workflow Interaction Tests', () => {
             { id: 'pb1', name: 'PB1', steps: [] },
             { id: 'pb2', name: 'PB2', steps: [] }
         ];
-        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
+        workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as LineMappingService);
 
         // Activate pb1 -> Should be active AND expanded (new logic)
         await workflowManager.handleWorkflowClick('pb1');
@@ -152,7 +152,7 @@ suite('Workflow Interaction Tests', () => {
     suite('Auto-Expansion on Actions', () => {
         setup(async () => {
             globalStateData['logmagnifier.workflows'] = [{ id: 'pb1', name: 'PB1', steps: [] }];
-            workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as SourceMapService);
+            workflowManager = new WorkflowManager(context, profileManager, logProcessor, logger, highlightService, { register: () => { } } as unknown as LineMappingService);
         });
 
         test('addProfileToWorkflow should expand the workflow', async () => {

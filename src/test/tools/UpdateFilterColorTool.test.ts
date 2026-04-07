@@ -21,7 +21,7 @@ suite('UpdateFilterColorTool', () => {
         const filter = filterManager.addFilter(group.id, 'error', 'include', false)!;
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', color: 'color03' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', color: 'color03' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -35,7 +35,7 @@ suite('UpdateFilterColorTool', () => {
         filterManager.addFilter(group.id, 'error', 'include', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'error', color: 'color99' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'error', color: 'color99' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -45,7 +45,7 @@ suite('UpdateFilterColorTool', () => {
 
     test('returns error for non-existent group', async () => {
         const result = await tool.invoke(
-            { input: { groupName: 'NoGroup', keyword: 'error', color: 'color01' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'NoGroup', pattern: 'error', color: 'color01' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -57,7 +57,7 @@ suite('UpdateFilterColorTool', () => {
         filterManager.addGroup('Test Group', false);
 
         const result = await tool.invoke(
-            { input: { groupName: 'Test Group', keyword: 'missing', color: 'color01' }, toolInvocationToken: undefined as never },
+            { input: { groupName: 'Test Group', pattern: 'missing', color: 'color01' }, toolInvocationToken: undefined as never },
             token
         );
 
@@ -67,7 +67,7 @@ suite('UpdateFilterColorTool', () => {
 
     test('prepareInvocation returns message', async () => {
         const prepared = await tool.prepareInvocation(
-            { input: { groupName: 'G', keyword: 'k', color: 'color06' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; keyword: string; color: string }>,
+            { input: { groupName: 'G', pattern: 'k', color: 'color06' } } as vscode.LanguageModelToolInvocationPrepareOptions<{ groupName: string; pattern: string; color: string }>,
             token
         );
 

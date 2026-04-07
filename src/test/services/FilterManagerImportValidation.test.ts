@@ -29,7 +29,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                 isRegex: true,
                 isEnabled: true,
                 filters: [{
-                    keyword: '\\d{4}-\\d{2}-\\d{2}',
+                    pattern: '\\d{4}-\\d{2}-\\d{2}',
                     type: 'include',
                     isRegex: true,
                     isEnabled: true
@@ -53,7 +53,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                 isRegex: true,
                 isEnabled: true,
                 filters: [{
-                    keyword: '(unclosed',
+                    pattern: '(unclosed',
                     type: 'include',
                     isRegex: true,
                     isEnabled: true
@@ -67,11 +67,11 @@ suite('FilterManager Import Validation Test Suite', () => {
         const imported = filterManager.getGroups().find(g => g.name === 'Bad Regex');
         assert.ok(imported);
         assert.strictEqual(imported.filters[0].isEnabled, false, 'Invalid regex should be disabled on import');
-        assert.strictEqual(imported.filters[0].keyword, '(unclosed', 'Keyword should be preserved');
+        assert.strictEqual(imported.filters[0].pattern, '(unclosed', 'Keyword should be preserved');
     });
 
-    test('import truncates oversized keyword to 500 chars', () => {
-        const longKeyword = 'x'.repeat(600);
+    test('import truncates oversized pattern to 500 chars', () => {
+        const longPattern = 'x'.repeat(600);
         const json = JSON.stringify({
             version: '1.0',
             groups: [{
@@ -79,7 +79,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                 isRegex: false,
                 isEnabled: true,
                 filters: [{
-                    keyword: longKeyword,
+                    pattern: longPattern,
                     type: 'include',
                     isEnabled: true,
                     isRegex: false
@@ -92,7 +92,7 @@ suite('FilterManager Import Validation Test Suite', () => {
 
         const imported = filterManager.getGroups().find(g => g.name === 'Long');
         assert.ok(imported);
-        assert.strictEqual(imported.filters[0].keyword.length, 500, 'Keyword should be truncated to 500');
+        assert.strictEqual(imported.filters[0].pattern.length, 500, 'Keyword should be truncated to 500');
     });
 
     test('import truncates group name to 200 chars', () => {
@@ -128,7 +128,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                 name: 'Regex Group',
                 isRegex: true,
                 isEnabled: true,
-                filters: [{ keyword: 'test', type: 'include', isRegex: true, isEnabled: true }]
+                filters: [{ pattern: 'test', type: 'include', isRegex: true, isEnabled: true }]
             }]
         });
 
@@ -145,8 +145,8 @@ suite('FilterManager Import Validation Test Suite', () => {
                 isRegex: false,
                 isEnabled: true,
                 filters: [{
-                    // Only keyword and type — everything else missing
-                    keyword: 'search',
+                    // Only pattern and type — everything else missing
+                    pattern: 'search',
                     type: 'include'
                 }]
             }]
@@ -171,7 +171,7 @@ suite('FilterManager Import Validation Test Suite', () => {
                 isRegex: false,
                 isEnabled: true,
                 filters: [{
-                    keyword: 'test',
+                    pattern: 'test',
                     type: 'include',
                     isEnabled: true,
                     isRegex: false,

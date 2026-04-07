@@ -5,7 +5,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 
 import { Logger } from '../services/Logger';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 import { TimestampService } from '../services/TimestampService';
 
 interface ExtractLogsWithMarginInput {
@@ -17,7 +17,7 @@ interface ExtractLogsWithMarginInput {
 export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<ExtractLogsWithMarginInput> {
     constructor(
         private readonly timestampService: TimestampService,
-        private readonly sourceMapService: SourceMapService,
+        private readonly lineMappingService: LineMappingService,
         private readonly logger: Logger
     ) {}
 
@@ -94,7 +94,7 @@ export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<Extra
             fs.writeFileSync(tmpFile, result.filteredLines.join('\n'), 'utf-8');
 
             const outputUri = vscode.Uri.file(tmpFile);
-            this.sourceMapService.register(outputUri, doc.uri, result.lineMapping);
+            this.lineMappingService.register(outputUri, doc.uri, result.lineMapping);
 
             const newDoc = await vscode.workspace.openTextDocument(tmpFile);
             await vscode.window.showTextDocument(newDoc, { preview: false });

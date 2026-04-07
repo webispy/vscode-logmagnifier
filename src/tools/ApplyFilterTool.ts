@@ -3,7 +3,7 @@ import * as vscode from 'vscode';
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
-import { SourceMapService } from '../services/SourceMapService';
+import { LineMappingService } from '../services/LineMappingService';
 
 interface ApplyFilterInput {
     filterType?: 'word' | 'regex' | 'all';
@@ -15,7 +15,7 @@ export class ApplyFilterTool implements vscode.LanguageModelTool<ApplyFilterInpu
     constructor(
         private readonly filterManager: FilterManager,
         private readonly logProcessor: LogProcessor,
-        private readonly sourceMapService: SourceMapService,
+        private readonly lineMappingService: LineMappingService,
         private readonly logger: Logger
     ) {}
 
@@ -86,10 +86,10 @@ export class ApplyFilterTool implements vscode.LanguageModelTool<ApplyFilterInpu
                 content: doc.getText(),
             });
 
-            // Register source map for navigation
+            // Register line mapping for navigation
             if (result.lineMapping) {
                 const outputUri = vscode.Uri.file(result.outputPath);
-                this.sourceMapService.register(outputUri, doc.uri, result.lineMapping);
+                this.lineMappingService.register(outputUri, doc.uri, result.lineMapping);
             }
 
             // Open filtered document

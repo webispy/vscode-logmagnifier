@@ -61,7 +61,7 @@ export class LogBookmarkHtmlGenerator {
             `;
 
             // --- Tags Generation ---
-            const groupMap = new Map<string, { keyword: string, count: number }>();
+            const groupMap = new Map<string, { pattern: string, count: number }>();
             for (const item of items) {
                 if (item.groupId) {
                     const existing = groupMap.get(item.groupId);
@@ -69,7 +69,7 @@ export class LogBookmarkHtmlGenerator {
                         existing.count++;
                     } else {
                         groupMap.set(item.groupId, {
-                            keyword: item.matchText || `L:${item.line + 1}`,
+                            pattern: item.matchText || `L:${item.line + 1}`,
                             count: 1
                         });
                     }
@@ -79,8 +79,8 @@ export class LogBookmarkHtmlGenerator {
             const tagsHtml = Array.from(groupMap.entries())
                 .sort((a, b) => a[0].localeCompare(b[0]))
                 .map(([groupId, data]) => `
-                <span class="tag" title="${escapeHtml(data.keyword)} (${data.count} lines)">
-                    <span class="tag-label">${escapeHtml(data.keyword)}</span>
+                <span class="tag" title="${escapeHtml(data.pattern)} (${data.count} lines)">
+                    <span class="tag-label">${escapeHtml(data.pattern)}</span>
                     <span class="tag-remove" data-action="removeGroup" data-group-id="${escapeHtml(groupId)}">×</span>
                 </span>
             `).join('');

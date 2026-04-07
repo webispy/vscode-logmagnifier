@@ -5,7 +5,7 @@
             "name": "tmp",
             "filters": [
                 {
-                    "keyword": "Access denied",
+                    "pattern": "Access denied",
                     "type": "include",
                     "isEnabled": true,
                     "isRegex": false,
@@ -13,7 +13,7 @@
                     "contextLine": 0
                 },
                 {
-                    "keyword": "MainActivity",
+                    "pattern": "MainActivity",
                     "type": "exclude",
                     "isEnabled": true,
                     "isRegex": false,
@@ -22,7 +22,7 @@
                     "excludeStyle": "hidden"
                 },
                 {
-                    "keyword": "ime()",
+                    "pattern": "ime()",
                     "type": "include",
                     "isEnabled": true,
                     "isRegex": false,

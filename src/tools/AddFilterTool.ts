@@ -56,9 +56,14 @@ export class AddFilterTool implements vscode.LanguageModelTool<AddFilterInput> {
             this.filterManager.setFilterCaseSensitivity(group.id, filter.id, true);
         }
 
+        const groupEnabled = group.isEnabled;
+        const hint = groupEnabled
+            ? 'Highlighting is now active in the editor.'
+            : 'Note: The group is currently disabled — call toggleFilterGroup to enable it, or specify groupName in applyFilter to apply it directly.';
+
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
-                `Added ${type} filter "${pattern}" to group "${groupName}". Highlighting is now active in the editor.`
+                `Added ${type} filter "${pattern}" to group "${groupName}". ${hint}`
             )
         ]);
     }

@@ -42,10 +42,10 @@ export class FilterExecutionCommandManager {
 
     /**
      * Applies enabled filters to the active document, writing matched lines to a new output file.
-     * @param filterType Limits execution to word or regex groups; omit to apply both.
+     * @param filterType Limits execution to text or regex groups; omit to apply both.
      * @param targetGroup When provided, runs only that group regardless of its enabled state.
      */
-    private async applyFilter(filterType?: 'word' | 'regex', targetGroup?: FilterGroup) {
+    private async applyFilter(filterType?: 'text' | 'regex', targetGroup?: FilterGroup) {
         if (this.isProcessing) {
             vscode.window.showWarningMessage(Constants.Messages.Warn.FilterAlreadyProcessing);
             return;
@@ -64,7 +64,7 @@ export class FilterExecutionCommandManager {
             }
 
             candidateGroups = candidateGroups.filter(g => {
-                if (filterType === 'word') {
+                if (filterType === 'text') {
                     return !g.isRegex;
                 }
                 if (filterType === 'regex') {
@@ -81,8 +81,7 @@ export class FilterExecutionCommandManager {
             });
 
             if (activeGroups.length === 0) {
-                const displayType = filterType === 'word' ? 'text' : filterType;
-                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', displayType || 'filter'));
+                vscode.window.showWarningMessage(Constants.Messages.Warn.NoActiveGroups.replace('{0}', filterType || 'filter'));
                 return;
             }
 
@@ -409,9 +408,9 @@ export class FilterExecutionCommandManager {
             await this.findMatch(item, 'previous');
         }));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyTextFilter, () => this.applyFilter('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyTextFilter, () => this.applyFilter('text')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.RunFilterGroup, (group: FilterGroup) => {
-            const type = group.isRegex ? 'regex' : 'word';
+            const type = group.isRegex ? 'regex' : 'text';
             this.applyFilter(type, group);
         }));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ApplyRegexFilter, () => this.applyFilter('regex')));

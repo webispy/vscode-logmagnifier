@@ -26,18 +26,18 @@ export class FilterExportImportCommandManager {
     }
 
     private registerCommands() {
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportTextFilters, () => this.handleExport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportTextFilters, () => this.handleExport('text')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportGroup, (group: FilterGroup) => this.handleExportGroup(group)));
 
-        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportTextFilters, () => this.handleImport('word')));
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportTextFilters, () => this.handleImport('text')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportRegexFilters, () => this.handleImport('regex')));
 
         this.registerProfileCommands();
     }
 
     /** Shows a multi-select QuickPick for the user to choose groups, then exports them. */
-    private async handleExport(mode: 'word' | 'regex') {
+    private async handleExport(mode: 'text' | 'regex') {
         // Get all groups for the mode
         const allGroups = this.filterManager.getGroups().filter(g => mode === 'regex' ? g.isRegex : !g.isRegex);
 
@@ -48,7 +48,7 @@ export class FilterExportImportCommandManager {
 
         // Create QuickPick
         const quickPick = vscode.window.createQuickPick();
-        quickPick.title = mode === 'word' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters;
+        quickPick.title = mode === 'text' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters;
         quickPick.placeholder = Constants.Prompts.SelectGroupsToExport;
         quickPick.canSelectMany = true; // Enable native checkboxes
         quickPick.matchOnDescription = true;
@@ -134,10 +134,9 @@ export class FilterExportImportCommandManager {
     }
 
     /** Serializes selected filter groups to JSON and prompts the user to save the file. */
-    private async performExport(mode: 'word' | 'regex', groupIds: string[]) {
+    private async performExport(mode: 'text' | 'regex', groupIds: string[]) {
         const filtersJson = this.filterManager.exportFilters(mode, groupIds);
-        const displayMode = mode === 'word' ? 'text' : mode;
-        const fileName = `logmagnifier_${displayMode}_filters.json`;
+        const fileName = `logmagnifier_${mode}_filters.json`;
 
         const downloadsPath = path.join(os.homedir(), 'Downloads');
         let defaultUri = vscode.Uri.file(path.join(downloadsPath, fileName));
@@ -150,13 +149,13 @@ export class FilterExportImportCommandManager {
         const uri = await vscode.window.showSaveDialog({
             defaultUri: defaultUri,
             filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters
+            title: mode === 'text' ? Constants.Prompts.ExportTextFilters : Constants.Prompts.ExportRegexFilters
         });
 
         if (uri) {
             try {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
-                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'word' ? 'Text' : 'Regex').replace('{1}', uri.fsPath));
+                vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'text' ? 'Text' : 'Regex').replace('{1}', uri.fsPath));
             } catch (e: unknown) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
@@ -203,11 +202,11 @@ export class FilterExportImportCommandManager {
     }
 
     /** Prompts the user to select a JSON file and imports filter groups in merge or overwrite mode. */
-    private async handleImport(mode: 'word' | 'regex') {
+    private async handleImport(mode: 'text' | 'regex') {
         const uris = await vscode.window.showOpenDialog({
             canSelectMany: false,
             filters: { 'JSON': ['json'] },
-            title: mode === 'word' ? Constants.Prompts.ImportTextFilters : Constants.Prompts.ImportRegexFilters
+            title: mode === 'text' ? Constants.Prompts.ImportTextFilters : Constants.Prompts.ImportRegexFilters
         });
 
         if (uris && uris.length > 0) {
@@ -238,7 +237,7 @@ export class FilterExportImportCommandManager {
                 } else if (result.count === 0) {
                     vscode.window.showWarningMessage(Constants.Messages.Warn.NoMatchingFilters);
                 } else {
-                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'word' ? 'Text' : 'Regex'));
+                    vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'text' ? 'Text' : 'Regex'));
                 }
             } catch (e: unknown) {
                 vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', e instanceof Error ? e.message : String(e)));

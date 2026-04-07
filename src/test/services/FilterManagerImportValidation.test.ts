@@ -87,7 +87,7 @@ suite('FilterManager Import Validation Test Suite', () => {
             }]
         });
 
-        const result = filterManager.importFilters(json, 'word', false);
+        const result = filterManager.importFilters(json, 'text', false);
         assert.strictEqual(result.count, 1);
 
         const imported = filterManager.getGroups().find(g => g.name === 'Long');
@@ -107,7 +107,7 @@ suite('FilterManager Import Validation Test Suite', () => {
             }]
         });
 
-        const result = filterManager.importFilters(json, 'word', false);
+        const result = filterManager.importFilters(json, 'text', false);
         assert.strictEqual(result.count, 1);
 
         const imported = filterManager.getGroups().find(g => g.name.startsWith('GGG'));
@@ -116,7 +116,7 @@ suite('FilterManager Import Validation Test Suite', () => {
     });
 
     test('import with invalid JSON returns error', () => {
-        const result = filterManager.importFilters('not json {{{', 'word', false);
+        const result = filterManager.importFilters('not json {{{', 'text', false);
         assert.strictEqual(result.count, 0);
         assert.ok(result.error, 'Should return an error message');
     });
@@ -132,8 +132,8 @@ suite('FilterManager Import Validation Test Suite', () => {
             }]
         });
 
-        // Import as 'word' mode — the regex group should be skipped
-        const result = filterManager.importFilters(json, 'word', false);
+        // Import as 'text' mode — the regex group should be skipped
+        const result = filterManager.importFilters(json, 'text', false);
         assert.strictEqual(result.count, 0, 'Regex group should not import in word mode');
     });
 
@@ -152,7 +152,7 @@ suite('FilterManager Import Validation Test Suite', () => {
             }]
         });
 
-        const result = filterManager.importFilters(json, 'word', false);
+        const result = filterManager.importFilters(json, 'text', false);
         assert.strictEqual(result.count, 1);
 
         const imported = filterManager.getGroups().find(g => g.name === 'Minimal');
@@ -180,7 +180,7 @@ suite('FilterManager Import Validation Test Suite', () => {
             }]
         });
 
-        const result = filterManager.importFilters(json, 'word', false);
+        const result = filterManager.importFilters(json, 'text', false);
         assert.strictEqual(result.count, 1);
 
         const imported = filterManager.getGroups().find(g => g.name === 'Bad Context');

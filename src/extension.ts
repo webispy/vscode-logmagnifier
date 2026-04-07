@@ -101,7 +101,7 @@ export function activate(context: vscode.ExtensionContext) {
     let lastProcessedDoc: vscode.TextDocument | undefined;
 
     logger.info('[extension] Registering Filter views...');
-    const textTreeDataProvider = new FilterTreeDataProvider(filterManager, 'word', logger);
+    const textTreeDataProvider = new FilterTreeDataProvider(filterManager, 'text', logger);
     context.subscriptions.push(textTreeDataProvider);
     const textTreeView = vscode.window.createTreeView(Constants.Views.TextFilters, {
         treeDataProvider: textTreeDataProvider,

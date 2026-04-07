@@ -40,7 +40,7 @@ suite('FilterExportImport Test Suite', () => {
             filterManager.addFilter(group.id, 'keyword1', 'include', false);
             filterManager.addFilter(group.id, 'keyword2', 'exclude', false);
 
-            const json = filterManager.exportFilters('word');
+            const json = filterManager.exportFilters('text');
             const parsed = JSON.parse(json);
 
             assert.ok(parsed.version);
@@ -54,7 +54,7 @@ suite('FilterExportImport Test Suite', () => {
             filterManager.addGroup('Word Group', false);
             filterManager.addGroup('Regex Group', true);
 
-            const wordJson = filterManager.exportFilters('word');
+            const wordJson = filterManager.exportFilters('text');
             const wordParsed = JSON.parse(wordJson);
             assert.ok(wordParsed.groups.every((g: { isRegex?: boolean }) => !g.isRegex));
 
@@ -68,7 +68,7 @@ suite('FilterExportImport Test Suite', () => {
             filterManager.addGroup('Group 2', false);
             filterManager.addFilter(group1.id, 'test', 'include', false);
 
-            const json = filterManager.exportFilters('word', [group1.id]);
+            const json = filterManager.exportFilters('text', [group1.id]);
             const parsed = JSON.parse(json);
 
             assert.strictEqual(parsed.groups.length, 1);
@@ -113,7 +113,7 @@ suite('FilterExportImport Test Suite', () => {
             const group = filterManager.addGroup('File Test', false)!;
             filterManager.addFilter(group.id, 'roundtrip', 'include', false);
 
-            const json = filterManager.exportFilters('word');
+            const json = filterManager.exportFilters('text');
             const filePath = path.join(tmpDir, 'test_export.json');
             await fsp.writeFile(filePath, json, 'utf8');
 
@@ -128,14 +128,14 @@ suite('FilterExportImport Test Suite', () => {
             const group = filterManager.addGroup('Existing', false)!;
             filterManager.addFilter(group.id, 'existing', 'include', false);
 
-            const exportJson = filterManager.exportFilters('word');
+            const exportJson = filterManager.exportFilters('text');
 
             // Create another manager to import into
             const manager2 = new FilterManager(new MockExtensionContext());
             const groups2 = manager2.getGroups();
             [...groups2].forEach(g => manager2.removeGroup(g.id));
 
-            const result = manager2.importFilters(exportJson, 'word', false);
+            const result = manager2.importFilters(exportJson, 'text', false);
             assert.ok(!result.error);
             assert.ok(result.count > 0);
 
@@ -147,7 +147,7 @@ suite('FilterExportImport Test Suite', () => {
             // Set up source
             const group = filterManager.addGroup('Source', false)!;
             filterManager.addFilter(group.id, 'src', 'include', false);
-            const exportJson = filterManager.exportFilters('word');
+            const exportJson = filterManager.exportFilters('text');
 
             // Set up target with different data
             const manager2 = new FilterManager(new MockExtensionContext());
@@ -155,7 +155,7 @@ suite('FilterExportImport Test Suite', () => {
             [...groups2].forEach(g => manager2.removeGroup(g.id));
             manager2.addGroup('OldGroup', false);
 
-            const result = manager2.importFilters(exportJson, 'word', true);
+            const result = manager2.importFilters(exportJson, 'text', true);
             assert.ok(!result.error);
 
             const remaining = manager2.getGroups().filter(g => !g.isRegex);
@@ -164,15 +164,15 @@ suite('FilterExportImport Test Suite', () => {
         });
 
         test('importFilters rejects invalid JSON', () => {
-            const result = filterManager.importFilters('not valid json', 'word', false);
+            const result = filterManager.importFilters('not valid json', 'text', false);
             assert.ok(result.error);
         });
 
         test('importFilters assigns new IDs to avoid collisions', () => {
             const group = filterManager.addGroup('ID Test', false)!;
             filterManager.addFilter(group.id, 'test', 'include', false);
-            const exportJson = filterManager.exportFilters('word');
-            filterManager.importFilters(exportJson, 'word', false);
+            const exportJson = filterManager.exportFilters('text');
+            filterManager.importFilters(exportJson, 'text', false);
 
             const allGroups = filterManager.getGroups().filter(g => g.name === 'ID Test');
             assert.strictEqual(allGroups.length, 2, 'Should have original + imported');
@@ -181,7 +181,7 @@ suite('FilterExportImport Test Suite', () => {
 
         test('importFilters handles empty groups array', () => {
             const json = JSON.stringify({ version: '1.0.0', groups: [] });
-            const result = filterManager.importFilters(json, 'word', false);
+            const result = filterManager.importFilters(json, 'text', false);
             assert.strictEqual(result.count, 0);
         });
 
@@ -193,7 +193,7 @@ suite('FilterExportImport Test Suite', () => {
 
             // Try to import as word — should be ignored
             const manager2 = new FilterManager(new MockExtensionContext());
-            const result = manager2.importFilters(regexJson, 'word', false);
+            const result = manager2.importFilters(regexJson, 'text', false);
             assert.strictEqual(result.count, 0);
         });
     });

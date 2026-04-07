@@ -673,7 +673,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     /** Serializes filter groups to a JSON string for file export. */
-    public exportFilters(mode: 'word' | 'regex', groupIds?: string[]): string {
+    public exportFilters(mode: 'text' | 'regex', groupIds?: string[]): string {
         const groupsToExport = this.groups
             .filter(g => {
                 const modeMatch = mode === 'regex' ? g.isRegex : !g.isRegex;
@@ -729,7 +729,7 @@ export class FilterManager implements vscode.Disposable {
     }
 
     /** Imports filter groups from a JSON string, optionally overwriting existing groups. */
-    public importFilters(json: string, mode: 'word' | 'regex', overwrite: boolean): { count: number, error?: string } {
+    public importFilters(json: string, mode: 'text' | 'regex', overwrite: boolean): { count: number, error?: string } {
         this.logger.info(`[FilterManager] Starting ${mode} filters import (Overwrite: ${overwrite})...`);
         try {
             const parsedData = JSON.parse(json);

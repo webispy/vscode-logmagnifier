@@ -13,11 +13,11 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 - **Filter Groups**: Organize your analysis with named groups of filters.
 - **Include/Exclude Logic**:
-  - **Include**: Keep and highlight lines containing specific keywords.
-  - **Exclude**: Remove lines containing specific keywords (highest priority) and display matches with a strike-through or hide them completely.
-- **Match Counts**: Real-time count of keyword occurrences displayed in the sidebar.
+  - **Include**: Keep and highlight lines containing specific patterns.
+  - **Exclude**: Remove lines containing specific patterns (highest priority) and display matches with a strikethrough or hide them completely.
+- **Match Counts**: Real-time count of pattern matches displayed in the sidebar.
 - **Search Navigation**: Quickly navigate between matches using Previous/Next buttons in the sidebar.
-- **Highlighting**: Automatically highlights include type keywords in the filtered view.
+- **Highlighting**: Automatically highlights include type patterns in the filtered view.
 - **3-Stage Highlighting**: Toggle between Word, Line, and Full Line highlight modes.
 - **Navigation Animation**: Visual flash effect when navigating to search matches (configurable).
 - **Expanded Colors**: 17 distinct, high-visibility colors including a "Bold Only" (Color00) option.
@@ -30,7 +30,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 - **Persistence**: Filters are automatically saved and restored when VS Code restarts.
 - **Clear Data**: Commands to wipe persistent data for a fresh start — clear all at once or per-module (Filters, Bookmarks, Workflows, Runbook).
 - **Import/Export**: Share and backup your filter configurations via JSON files.
-- **Quick Access**: Toggle Word Wrap (active tab), Minimap, Sticky Scroll, and view File Size from the sidebar.
+- **Dashboard**: Toggle Word Wrap (active tab), Minimap, Sticky Scroll, and view File Size from the sidebar.
 - **ADB Logcat Integration**: Directly view and filter Android logs within VS Code.
   - **Device Management**: View connected devices and their status.
   - **Process Filtering**: Filter logs by specific running applications (PID) automatically.
@@ -40,7 +40,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Session Management**: Create multiple logcat sessions with custom tag filters, priorities, and historical time toggles.
 - **Log Bookmarks**: Bookmark important lines in your log files for easy reference and navigation.
   - **Add/Remove**: Toggle bookmarks via context menu.
-  - **Keyword Tags**: Add custom tags to bookmarks for better organization.
+  - **Pattern Tags**: Add custom tags to bookmarks for better organization.
   - **Navigate**: Jump to bookmarks instantly from the "LogMagnifier" view in the Panel.
   - **Word Wrap**: Toggle word wrap specifically for the bookmark view.
   - **Clear All**: Quickly remove all bookmarks for the current file.
@@ -85,18 +85,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 3. **Manage Filters**:
     - **Add Group**: Click the folder icon to create a new Filter Group (e.g., "AuthFlow").
     - **Expand/Collapse All**: Use the **Expand/Collapse** icons in the view title to manage all groups at once.
-    - **Rename**: Right-click a group or a filter item to **Rename** its keyword.
+    - **Rename**: Right-click a group or a filter item to **Rename** its pattern.
     - **Bulk Actions**: Right-click a group to **Enable All Items** or **Disable All Items**.
     - **Copy**: Right-click a group to **Copy Enabled Items** as a list or tag format.
     - **Import/Export**: Use the Export and Import icons in the view title bar to backup or share your filters.
-4. **Add Filters**: Activate the group, then click the **Plus** (`+`) icon to add a keyword.
+4. **Add Filters**: Activate the group, then click the **Plus** (`+`) icon to add a filter pattern.
     - *Tip*: Select text in the editor, right-click, and choose **Add Selection to LogMagnifier** to instantly create a filter.
     - *Tip*: Right-click items to access organized options like **Filter Type**, **Case Sensitivity**, **Highlight Mode**, and **Context Lines**.
     - *Tip*: Click the **Arrow Up/Down** icons on a filter item to navigate to the previous or next match in the editor.
     - *Tip*: Use keyboard shortcuts **`Ctrl + Cmd + ]`** (Next) and **`Ctrl + Cmd + [`** (Previous) to navigate matches of the selected filter.
 5. **Apply**: Click the **Play** icon in the view title to generate filtered results.
     - *Tip*: Toggle the **List Icon** in the view title to include original line numbers in the output.
-6. **Quick Access**: Use the **Quick Access** view to toggle editor settings (Word Wrap, Minimap, Sticky Scroll) or check the current file size.
+6. **Dashboard**: Use the **Dashboard** view to toggle editor settings (Word Wrap, Minimap, Sticky Scroll) or check the current file size.
     - *Tip*: Click the **File Size** item to cycle through units (Bytes, KB, MB).
 
 ### ADB Devices View
@@ -125,8 +125,8 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 ![Workflows Demo](resources/demo/workflow.gif)
 
-1.  **Automation**: Chain multiple profiles to analyze complex issues from various angles sequentially.
-2.  **Cumulative Filtering**: Each step in a workflow inherits filtered results from previous steps (Step N = Profile N applies to results of Step 0..N-1).
+1.  **Automation**: Chain multiple profiles to analyze complex issues from various angles.
+2.  **Aggregated Filtering**: Each step in a workflow inherits filtered results from previous steps (Step N = Profile N applies to results of Step 0..N-1).
 3.  **Manage Workflows**:
     - Click the **Workflows** icon (circuit board) in the activity bar.
     - **Create/Rename**: Manage your analysis scenarios as Workflows.
@@ -190,7 +190,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - Click the 'x' icon to remove a bookmark.
 3.  **Manage Bookmarks**:
     - **Quick File Switch**: Click the file tabs in the header to instantly jump between bookmarked files.
-    - **Keyword Tags**: Bookmarks created via selection text or filter matches automatically carry the matched keyword as a tag, displayed next to the line number. Tags are grouped in the file header for quick filtering.
+    - **Pattern Tags**: Bookmarks created via selection text or filter matches automatically carry the matched pattern as a tag, displayed next to the line number. Tags are grouped in the file header for quick filtering.
     - **Toggle Word Wrap**: Use the "Word Wrap" icon in the view title or `Alt+Z` (when view is focused) to toggle wrapping for long log lines.
     - **Clear All**: Use the "Clear All" icon to remove all bookmarks for the current file.
     - **Remove**: Click the 'x' icon to remove a single bookmark.

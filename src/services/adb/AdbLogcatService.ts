@@ -147,10 +147,15 @@ export class AdbLogcatService {
             // Tag filters
             if (session.tags.length > 0) {
                 const TAG_NAME_PATTERN = /^[a-zA-Z0-9._\-/]+$/;
+                const VALID_PRIORITIES = new Set(['V', 'D', 'I', 'W', 'E', 'F', 'S']);
                 session.tags.forEach(tag => {
                     if (tag.isEnabled) {
                         if (!TAG_NAME_PATTERN.test(tag.name)) {
-                            this.logger.warn(`[ADB] Skipping invalid tag name: ${tag.name}`);
+                            this.logger.warn(`[AdbLogcatService] Skipping invalid tag name: ${tag.name}`);
+                            return;
+                        }
+                        if (!VALID_PRIORITIES.has(tag.priority)) {
+                            this.logger.warn(`[AdbLogcatService] Skipping invalid priority '${tag.priority}' for tag: ${tag.name}`);
                             return;
                         }
                         args.push(`${tag.name}:${tag.priority}`);

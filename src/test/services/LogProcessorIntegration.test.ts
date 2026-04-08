@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import { LogProcessor } from '../../services/LogProcessor';
 import { FilterGroup, FilterItem, FilterType } from '../../models/Filter';
 import { FileHierarchyService } from '../../services/FileHierarchyService';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 import * as vscode from 'vscode';
 
@@ -48,7 +49,7 @@ suite('LogProcessor Integration Test Suite', () => {
         // Ensure FileHierarchyService is initialized (used by LogProcessor.processFile)
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        FileHierarchyService.createInstance(new MockExtensionContext() as unknown as vscode.ExtensionContext);
+        FileHierarchyService.createInstance(new MockExtensionContext() as unknown as vscode.ExtensionContext, Logger.getInstance());
         processor = new LogProcessor();
     });
 

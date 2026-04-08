@@ -1,6 +1,7 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { FileHierarchyService } from '../../services/FileHierarchyService';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 
 suite('FileHierarchyService Test Suite', () => {
@@ -17,7 +18,7 @@ suite('FileHierarchyService Test Suite', () => {
         // Reset singleton for testing
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        service = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
+        service = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext, Logger.getInstance());
     });
 
     test('Scenario 1: Original > Filter1 > Parent > Original', () => {
@@ -101,7 +102,7 @@ suite('FileHierarchyService Test Suite', () => {
         // 3. Simulate Restart: New Service Instance with same context
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
+        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext, Logger.getInstance());
 
         // 4. Verify restored state
         const parent = newService.getParent(filter1Uri);
@@ -116,7 +117,7 @@ suite('FileHierarchyService Test Suite', () => {
         // Restart
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext);
+        const newService = FileHierarchyService.createInstance(mockContext as unknown as vscode.ExtensionContext, Logger.getInstance());
 
         // Verify Bookmark -> Parent is Filter1
         const bkParent = newService.getParent(bookmarkUri);

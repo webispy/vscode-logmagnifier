@@ -4,6 +4,8 @@ import * as path from 'path';
 
 import * as vscode from 'vscode';
 
+import { Logger } from './Logger';
+
 export interface HierarchyNode {
     uri: vscode.Uri;
     parentId?: string; // URI string
@@ -21,21 +23,24 @@ export class FileHierarchyService implements vscode.Disposable {
     private readonly storageKey = 'logmagnifier.fileHierarchy';
     private nodes: Map<string, HierarchyNode> = new Map();
     private storage: vscode.Memento;
+    private logger: Logger;
 
-    private constructor(storage: vscode.Memento) {
+    private constructor(storage: vscode.Memento, logger: Logger) {
         this.storage = storage;
+        this.logger = logger;
         this.restore();
         this.pruneStaleNodes().catch((e: unknown) => {
-            void e; // Non-critical — stale nodes will be pruned on next activation
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.warn(`[FileHierarchyService] Failed to prune stale nodes: ${msg}`);
         });
     }
 
     /** Creates and returns the singleton instance, storing hierarchy in workspace state. */
-    public static createInstance(context: vscode.ExtensionContext): FileHierarchyService {
+    public static createInstance(context: vscode.ExtensionContext, logger: Logger): FileHierarchyService {
         if (FileHierarchyService.instance) {
             return FileHierarchyService.instance;
         }
-        FileHierarchyService.instance = new FileHierarchyService(context.workspaceState);
+        FileHierarchyService.instance = new FileHierarchyService(context.workspaceState, logger);
         return FileHierarchyService.instance;
     }
 

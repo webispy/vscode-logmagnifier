@@ -7,6 +7,7 @@ import { FilterItem } from '../models/Filter';
 import { FileHierarchyService } from '../services/FileHierarchyService';
 import { HighlightService } from '../services/HighlightService';
 import { LogBookmarkService } from '../services/LogBookmarkService';
+import { Logger } from '../services/Logger';
 import { EditorUtils } from '../utils/EditorUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 
@@ -16,7 +17,8 @@ export class LogBookmarkCommandManager {
     constructor(
         context: vscode.ExtensionContext,
         private readonly bookmarkService: LogBookmarkService,
-        private readonly highlightService: HighlightService
+        private readonly highlightService: HighlightService,
+        private readonly logger: Logger
     ) {
         this.registerCommands(context);
         this.registerEventListeners(context);
@@ -108,7 +110,9 @@ export class LogBookmarkCommandManager {
                 editBuilder.replace(fullRange, content);
             });
         } catch (e: unknown) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', e instanceof Error ? e.message : String(e)));
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[LogBookmarkCommandManager] Failed to open bookmarks: ${msg}`);
+            vscode.window.showErrorMessage(Constants.Messages.Error.FailedToOpenBookmarks.replace('{0}', msg));
         }
     }
 
@@ -324,7 +328,9 @@ export class LogBookmarkCommandManager {
             editor.selection = new vscode.Selection(range.start, range.start);
             this.highlightService.flashLine(editor, item.line, Constants.Configuration.Bookmark.HighlightColor);
         } catch (e: unknown) {
-            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.error(`[LogBookmarkCommandManager] Failed to open bookmark: ${msg}`);
+            vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkFailed.replace('{0}', msg));
         }
     }
 
@@ -381,7 +387,9 @@ export class LogBookmarkCommandManager {
                 FileHierarchyService.getInstance().registerChild(uri, doc.uri, 'bookmark', docName);
 
             } catch (e: unknown) {
-                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
+                const msg = e instanceof Error ? e.message : String(e);
+                this.logger.error(`[LogBookmarkCommandManager] Failed to open bookmark tab: ${msg}`);
+                vscode.window.showErrorMessage(Constants.Messages.Error.OpenBookmarkTabFailed.replace('{0}', msg));
             }
         }
     }

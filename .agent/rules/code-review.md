@@ -60,6 +60,33 @@ When a code review is requested, follow these guidelines automatically.
 - Unnecessary dependencies that increase bundle size
 - Missing `devDependencies` vs `dependencies` classification
 
+## Verification Requirements
+
+Every finding MUST be backed by code evidence, not pattern-based inference.
+
+### Stale reference / object identity claims
+Before claiming a variable holds a stale or wrong reference:
+1. Read the **getter implementation** — does it return the original object or a copy?
+2. Read the **mutator implementation** — does it mutate in-place or replace with a new object?
+3. Only report if the getter returns a copy AND the mutator modifies the original (or vice versa).
+
+Example false alarm: "variable captured before toggle holds stale state" — but `getGroups()` returns `this.groups` directly, and `toggleGroup()` mutates the same object in-place, so the reference is never stale.
+
+### Cross-location inconsistency claims
+Before claiming two call sites handle the same value differently:
+1. **Grep all usage sites** of the constant/function in question.
+2. Compare the actual code at each site — do not assume "the other site probably uses the raw value".
+3. Only report if the actual code differs in a way that causes a bug.
+
+Example false alarm: "cleanup uses sanitized prefix but processFile uses original" — but both sites apply the identical `.replace()` transform.
+
+### VS Code extension lifecycle claims
+Do not flag module-level `vscode.workspace.getConfiguration()` reads as bugs.
+VS Code loads extension modules immediately before calling `activate()` — the workspace API is available at module load time. This is a standard VS Code extension pattern.
+
+### Map.has() + Map.get() patterns
+`Map.has(key)` followed by `Map.get(key)` is not a bug — the value is guaranteed to exist at runtime. It is a Minor style issue (TypeScript cannot narrow after `has()`), not a Major or Critical finding. Recommend `const v = map.get(key); if (v !== undefined)` as an alternative, but do not overstate severity.
+
 ## Severity Levels
 
 Classify each finding by severity:

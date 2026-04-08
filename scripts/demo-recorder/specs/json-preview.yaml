@@ -34,7 +34,7 @@
 #   in the caption bar for ~1.5 s before the UI responds.
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:json-preview
 #

@@ -33,9 +33,9 @@
 #     "Request"             — 9 lines  (HTTP / network request events)
 #
 # Highlight mode mechanics (inline toggle button cycles word → line → full):
-#   hm0 (word)  : button title "Toggle Highlight mode: word"
-#   hm1 (line)  : button title "Toggle Highlight mode: line"
-#   hm2 (full)  : button title "Toggle Highlight mode: full line"
+#   hm0 (word)  : button title "Cycle Highlight mode: word"
+#   hm1 (line)  : button title "Cycle Highlight mode: line"
+#   hm2 (full)  : button title "Cycle Highlight mode: full line"
 #
 # Sequencing trick — buttons are targeted via .first() in DOM order
 # (Choreographer → CameraManagerGlobal → AdFit).  Each click is made when
@@ -45,7 +45,7 @@
 #   Click C "word"  → CameraManagerGlobal (first remaining hm0)   → hm1
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:base
 #
@@ -133,13 +133,13 @@ steps:
   # ----------------------------------------------------------
   # 6. Demonstrate all three highlight modes
   #
-  #  Click A: "Toggle Highlight mode: word"
+  #  Click A: "Cycle Highlight mode: word"
   #    → Choreographer (first hm0 item in DOM order) moves to hm1 (line)
   #
-  #  Click B: "Toggle Highlight mode: line"
+  #  Click B: "Cycle Highlight mode: line"
   #    → Choreographer is the ONLY hm1 item → moves to hm2 (full)
   #
-  #  Click C: "Toggle Highlight mode: word"
+  #  Click C: "Cycle Highlight mode: word"
   #    → CameraManagerGlobal is now the first hm0 item → moves to hm1 (line)
   #
   #  Final: Choreographer=full line, CameraManagerGlobal=line, AdFit=word
@@ -154,14 +154,14 @@ steps:
     ms: 300
 
   - type: hover
-    selector: "[aria-label='Toggle Highlight mode: word']"
+    selector: "[aria-label='Cycle Highlight mode: word']"
     caption: "Choreographer: word → line highlight mode"
 
   - type: delay
     ms: 200
 
   - type: click
-    selector: "[aria-label='Toggle Highlight mode: word']"
+    selector: "[aria-label='Cycle Highlight mode: word']"
     capture: false
 
   - type: delay
@@ -180,14 +180,14 @@ steps:
     ms: 300
 
   - type: hover
-    selector: "[aria-label='Toggle Highlight mode: line']"
+    selector: "[aria-label='Cycle Highlight mode: line']"
     caption: "Choreographer: line → full line highlight mode"
 
   - type: delay
     ms: 200
 
   - type: click
-    selector: "[aria-label='Toggle Highlight mode: line']"
+    selector: "[aria-label='Cycle Highlight mode: line']"
     capture: false
 
   - type: delay
@@ -206,14 +206,14 @@ steps:
     ms: 300
 
   - type: hover
-    selector: "[aria-label='Toggle Highlight mode: word']"
+    selector: "[aria-label='Cycle Highlight mode: word']"
     caption: "CameraManagerGlobal: word → line highlight mode"
 
   - type: delay
     ms: 200
 
   - type: click
-    selector: "[aria-label='Toggle Highlight mode: word']"
+    selector: "[aria-label='Cycle Highlight mode: word']"
     capture: false
 
   - type: delay

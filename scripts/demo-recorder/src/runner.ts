@@ -1,6 +1,7 @@
 /**
  * Main runner: reads a YAML spec, launches VS Code via Playwright Electron API,
- * executes each step, captures frames, and hands off to the composer for GIF generation.
+ * executes each step, captures frames, and hands off to the composer for output
+ * generation (GIF, MP4, or both).
  */
 
 import * as fs from 'fs';
@@ -11,7 +12,7 @@ import { execFileSync, spawn } from 'child_process';
 import { _electron as electron, Page } from 'playwright';
 import { downloadAndUnzipVSCode } from '@vscode/test-electron';
 import { Spec, Step, FrameMeta } from './types';
-import { composeGif } from './composer';
+import { compose, OutputFormat } from './composer';
 
 interface AppHandle {
   firstWindow(): Promise<Page>;
@@ -20,19 +21,50 @@ interface AppHandle {
 }
 
 // ---------------------------------------------------------------------------
+// CLI argument parsing
+// ---------------------------------------------------------------------------
+
+interface CliArgs {
+  specPath: string;
+  format?: OutputFormat;
+}
+
+function parseArgs(argv: string[]): CliArgs {
+  let specPath: string | undefined;
+  let format: OutputFormat | undefined;
+
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--format' && i + 1 < argv.length) {
+      const val = argv[++i];
+      if (val !== 'gif' && val !== 'mp4' && val !== 'both') {
+        console.error(`Invalid --format value: "${val}". Use gif, mp4, or both.`);
+        process.exit(1);
+      }
+      format = val;
+    } else if (!argv[i].startsWith('--')) {
+      specPath = argv[i];
+    }
+  }
+
+  if (!specPath) {
+    console.error('Usage: ts-node src/runner.ts <spec.yaml> [--format gif|mp4|both]');
+    process.exit(1);
+  }
+
+  return { specPath, format };
+}
+
+// ---------------------------------------------------------------------------
 // Entry point
 // ---------------------------------------------------------------------------
 
 async function main() {
-  const specPath = process.argv[2];
-  if (!specPath) {
-    console.error('Usage: ts-node src/runner.ts <spec.yaml>');
-    process.exit(1);
-  }
+  const { specPath, format } = parseArgs(process.argv.slice(2));
 
   const spec = loadSpec(specPath);
   const outputName = spec.output ?? toKebabCase(spec.name);
-  const framesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gif-frames-'));
+  const outputFormat: OutputFormat = format ?? spec.format ?? 'gif';
+  const framesDir = fs.mkdtempSync(path.join(os.tmpdir(), 'demo-frames-'));
 
   console.log(`▶ Recording "${spec.name}"`);
   console.log(`  Frames dir: ${framesDir}`);
@@ -179,15 +211,18 @@ async function main() {
     }
 
     const repoRoot = path.resolve(__dirname, '..', '..', '..');
-    const outputPath = path.join(repoRoot, 'resources', 'demo', `${outputName}.gif`);
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    const outputBase = path.join(repoRoot, 'resources', 'demo', outputName);
+    fs.mkdirSync(path.dirname(outputBase), { recursive: true });
 
-    await composeGif(frames, outputPath, {
+    const result = await compose(frames, outputBase, {
+      format: outputFormat,
       frameDelay: spec.frameDelay ?? 80,
       scale: spec.scale ?? 1.0,
     });
 
-    console.log(`  ✓ GIF saved: ${outputPath}`);
+    for (const out of result.outputs) {
+      console.log(`  ✓ Saved: ${out}`);
+    }
   } finally {
     if (app) {
       await app.close();
@@ -255,10 +290,15 @@ async function launchVSCode(spec: Spec): Promise<AppHandle> {
   const repoRoot = path.resolve(__dirname, '..', '..', '..');
   const extensionPath = repoRoot;
   const fixturesDir = path.resolve(__dirname, '..', 'fixtures');
-  const workspaceDir = path.join(fixturesDir, 'workspace');
+  const fixtureWorkspaceDir = path.join(fixturesDir, 'workspace');
 
   // Create an isolated user-data directory for a clean VS Code session
-  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-gif-'));
+  const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'vscode-demo-'));
+
+  // Copy the workspace fixtures to a temp directory so VS Code doesn't
+  // modify the original files (e.g. theme migration rewrites settings.json).
+  const workspaceDir = path.join(userDataDir, 'workspace');
+  copyRecursive(fixtureWorkspaceDir, workspaceDir);
 
   // Pre-populate extension globalStorage with runbook fixtures so the tree
   // loads without manual setup.

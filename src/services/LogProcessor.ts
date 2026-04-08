@@ -105,11 +105,16 @@ export class LogProcessor {
         const outputPath = path.join(tmpDir, outputFilename);
         const outputStream = fs.createWriteStream(outputPath);
 
-        // Surface stream errors as rejections
+        // Surface stream errors as rejections, cleaning up resources
         const streamError = new Promise<never>((_, reject) => {
-            inputStream.on('error', (err) => reject(new Error(`Failed to read file ${inputPath}: ${err.message}`)));
-            rl.on('error', (err) => reject(new Error(`Readline error while processing ${inputPath}: ${err.message}`)));
-            outputStream.on('error', (err) => reject(new Error(`Failed to write output file ${outputPath}: ${err.message}`)));
+            const cleanup = (err: Error) => {
+                rl.close();
+                outputStream.destroy();
+                reject(err);
+            };
+            inputStream.on('error', (err) => cleanup(new Error(`Failed to read file ${inputPath}: ${err.message}`)));
+            rl.on('error', (err) => cleanup(new Error(`Readline error while processing ${inputPath}: ${err.message}`)));
+            outputStream.on('error', (err) => cleanup(new Error(`Failed to write output file ${outputPath}: ${err.message}`)));
         });
 
         let processed = 0;

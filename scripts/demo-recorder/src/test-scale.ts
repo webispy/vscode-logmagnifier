@@ -2,7 +2,7 @@
  * Scale diagnostic test.
  *
  * Part 1 — Composer isolation: creates a known-size PNG (1280×800),
- *          feeds it to composeGif at several scales, reads resulting GIF dimensions.
+ *          feeds it to compose() at several scales, reads resulting GIF dimensions.
  *
  * Part 2 — Screenshot probe: launches VS Code the same way runner.ts does,
  *          takes a raw screenshot, and reports its pixel dimensions.
@@ -15,7 +15,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import sharp from 'sharp';
-import { composeGif } from './composer';
+import { compose } from './composer';
 import { FrameMeta } from './types';
 
 // ---------------------------------------------------------------------------
@@ -66,7 +66,9 @@ async function testComposer() {
       { path: srcPng, caption: 'test' },
     ];
 
-    await composeGif(frames, outGif, { frameDelay: 300, scale });
+    // compose() appends the extension, so strip it for the base path
+    const outBase = outGif.replace(/\.gif$/, '');
+    await compose(frames, outBase, { format: 'gif', frameDelay: 300, scale });
 
     const dim = readGifDimensions(outGif);
     const expectW = Math.round(1280 * scale);

@@ -1,5 +1,5 @@
 /**
- * Type definitions for the GIF recorder spec format.
+ * Type definitions for the demo recorder spec format.
  *
  * A spec YAML file describes a sequence of steps to automate in VS Code.
  * Each step can be a command, click, keystroke, wait, or screenshot capture.
@@ -9,8 +9,13 @@
 export interface Spec {
   /** Human-readable name of the demo (used as default output filename) */
   name: string;
-  /** Output GIF filename (without extension). Defaults to kebab-case of name. */
+  /** Output filename (without extension). Defaults to kebab-case of name. */
   output?: string;
+  /**
+   * Output format: 'gif', 'mp4', or 'both'. Default: 'gif'.
+   * Can be overridden by the `--format` CLI flag.
+   */
+  format?: 'gif' | 'mp4' | 'both';
   /**
    * Path to a shared defaults YAML file (relative to this spec file).
    * Top-level non-steps keys are merged in; values defined in this spec take precedence.
@@ -26,9 +31,9 @@ export interface Spec {
     width: number;
     height: number;
   };
-  /** GIF playback frame delay in milliseconds (default: 80) */
+  /** Playback frame delay in milliseconds (default: 80) */
   frameDelay?: number;
-  /** GIF output scale factor 0.0–1.0 (default: 1.0) */
+  /** Output scale factor 0.0–1.0 (default: 1.0) */
   scale?: number;
   /**
    * If true, hover over each clickable element and capture hover + mousedown frames
@@ -37,7 +42,7 @@ export interface Spec {
    */
   hoverBeforeClick?: boolean;
   /**
-   * Milliseconds to hold on the last frame before the GIF loops back to the start.
+   * Milliseconds to hold on the last frame before the output loops back to the start.
    * Achieved by duplicating the final frame. Default: 0
    */
   loopDelay?: number;

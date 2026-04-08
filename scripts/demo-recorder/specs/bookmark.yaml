@@ -16,7 +16,7 @@
 #     2. Bottom panel:          include open-logmagnifier-panel.yaml
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:bookmark
 #

@@ -21,7 +21,7 @@
 #             Omit to show for exactly one frameDelay period.
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:runbook
 #

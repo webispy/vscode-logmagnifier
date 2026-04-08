@@ -1,11 +1,14 @@
 /**
- * Composer: adds caption overlays to frames and assembles the final GIF.
+ * Composer: adds caption overlays to frames and assembles the final output.
+ *
+ * Supports two output formats:
+ *   - **GIF**: assembled via `gifski` (preferred) or `ffmpeg` two-pass palette.
+ *   - **MP4**: assembled via `ffmpeg` with H.264 (libx264) encoding.
  *
  * Strategy:
  *   1. For each frame, composite a semi-transparent caption bar at the bottom
  *      using `sharp` + SVG text overlay.
- *   2. Assemble the annotated PNG frames into an animated GIF using `gifski`
- *      (preferred, high quality) or `ffmpeg` as a fallback.
+ *   2. Assemble the annotated PNG frames into the requested format(s).
  */
 
 import * as fs from 'fs';
@@ -19,8 +22,12 @@ import { FrameMeta } from './types';
 // Public API
 // ---------------------------------------------------------------------------
 
+export type OutputFormat = 'gif' | 'mp4' | 'both';
+
 export interface ComposeOptions {
-  /** GIF frame delay in milliseconds (default: 80) */
+  /** Output format: 'gif', 'mp4', or 'both' (default: 'gif') */
+  format?: OutputFormat;
+  /** Frame delay in milliseconds (default: 80) */
   frameDelay?: number;
   /** Output scale factor 0.0–1.0 (default: 1.0) */
   scale?: number;
@@ -30,26 +37,35 @@ export interface ComposeOptions {
   captionFontSize?: number;
 }
 
+export interface ComposeResult {
+  /** Paths to the output files that were generated */
+  outputs: string[];
+}
+
 /**
- * Annotate each frame with its caption and assemble into an animated GIF.
+ * Annotate each frame with its caption and assemble into the requested
+ * output format(s).
  *
  * @param frames   Ordered list of { path, caption } objects
- * @param output   Absolute path for the output .gif file
+ * @param output   Absolute path for the output file **without** extension.
+ *                 The composer appends `.gif` / `.mp4` as needed.
  * @param options  Composer options
+ * @returns Paths of the generated output files
  */
-export async function composeGif(
+export async function compose(
   frames: FrameMeta[],
   output: string,
   options: ComposeOptions = {}
-): Promise<void> {
+): Promise<ComposeResult> {
   const {
+    format = 'gif',
     frameDelay = 80,
     scale = 1.0,
     captionBarHeight = 36,
     captionFontSize = 14,
   } = options;
 
-  const annotatedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gif-annotated-'));
+  const annotatedDir = fs.mkdtempSync(path.join(os.tmpdir(), 'demo-annotated-'));
 
   try {
     console.log(`  Annotating ${frames.length} frames…`);
@@ -68,24 +84,30 @@ export async function composeGif(
     }
 
     // Read the actual dimensions of the first annotated frame so we can
-    // pass them explicitly to gifski (prevents silent Retina downscaling).
+    // pass them explicitly to assemblers (prevents silent Retina downscaling).
     const firstMeta = await sharp(annotatedPaths[0]).metadata();
     const outWidth = firstMeta.width ?? 0;
     const outHeight = firstMeta.height ?? 0;
 
-    console.log(`  Assembling GIF…`);
+    const outputs: string[] = [];
 
-    if (isAvailable('gifski')) {
-      await assembleWithGifski(annotatedPaths, output, { frameDelay, width: outWidth, height: outHeight });
-    } else if (isAvailable('ffmpeg')) {
-      await assembleWithFfmpeg(annotatedDir, output, { frameDelay });
-    } else {
-      throw new Error(
-        'Neither gifski nor ffmpeg found.\n' +
-        'Install gifski: brew install gifski  (macOS) / cargo install gifski  (other)\n' +
-        'Install ffmpeg: brew install ffmpeg  (macOS) / apt install ffmpeg    (Linux)'
-      );
+    if (format === 'gif' || format === 'both') {
+      const gifPath = `${output}.gif`;
+      console.log(`  Assembling GIF…`);
+      await assembleGif(annotatedPaths, annotatedDir, gifPath, { frameDelay, width: outWidth, height: outHeight });
+      console.log(`  ✓ GIF saved: ${gifPath}`);
+      outputs.push(gifPath);
     }
+
+    if (format === 'mp4' || format === 'both') {
+      const mp4Path = `${output}.mp4`;
+      console.log(`  Assembling MP4…`);
+      await assembleMp4(annotatedDir, mp4Path, { frameDelay, width: outWidth, height: outHeight });
+      console.log(`  ✓ MP4 saved: ${mp4Path}`);
+      outputs.push(mp4Path);
+    }
+
+    return { outputs };
   } finally {
     fs.rmSync(annotatedDir, { recursive: true, force: true });
   }
@@ -162,18 +184,36 @@ function buildCaptionSvg(
 }
 
 // ---------------------------------------------------------------------------
-// GIF assembly — gifski (preferred, high quality)
+// GIF assembly
 // ---------------------------------------------------------------------------
 
 interface AssembleOptions {
   frameDelay: number;
-  /** Explicit output width — forces gifski to use this exact size */
-  width?: number;
-  /** Explicit output height — forces gifski to use this exact size */
-  height?: number;
+  width: number;
+  height: number;
 }
 
-async function assembleWithGifski(
+async function assembleGif(
+  frames: string[],
+  frameDir: string,
+  output: string,
+  opts: AssembleOptions
+): Promise<void> {
+  if (isAvailable('gifski')) {
+    await assembleGifWithGifski(frames, output, opts);
+  } else if (isAvailable('ffmpeg')) {
+    await assembleGifWithFfmpeg(frameDir, output, opts);
+  } else {
+    throw new Error(
+      'Neither gifski nor ffmpeg found.\n' +
+      'Install gifski: brew install gifski  (macOS) / cargo install gifski  (other)\n' +
+      'Install ffmpeg: brew install ffmpeg  (macOS) / apt install ffmpeg    (Linux)'
+    );
+  }
+}
+
+/** gifski — preferred, high quality */
+async function assembleGifWithGifski(
   frames: string[],
   output: string,
   opts: AssembleOptions
@@ -192,11 +232,8 @@ async function assembleWithGifski(
   await execFileAsync('gifski', args);
 }
 
-// ---------------------------------------------------------------------------
-// GIF assembly — ffmpeg fallback (two-pass with palette for quality)
-// ---------------------------------------------------------------------------
-
-async function assembleWithFfmpeg(
+/** ffmpeg fallback — two-pass with palette for quality */
+async function assembleGifWithFfmpeg(
   frameDir: string,
   output: string,
   opts: AssembleOptions
@@ -231,6 +268,45 @@ async function assembleWithFfmpeg(
   } finally {
     fs.rmSync(palettePath, { force: true });
   }
+}
+
+// ---------------------------------------------------------------------------
+// MP4 assembly — ffmpeg H.264
+// ---------------------------------------------------------------------------
+
+async function assembleMp4(
+  frameDir: string,
+  output: string,
+  opts: AssembleOptions
+): Promise<void> {
+  if (!isAvailable('ffmpeg')) {
+    throw new Error(
+      'ffmpeg is required for MP4 output.\n' +
+      'Install ffmpeg: brew install ffmpeg  (macOS) / apt install ffmpeg  (Linux)'
+    );
+  }
+
+  const fps = Math.round(1000 / opts.frameDelay);
+  const inputPattern = path.join(frameDir, 'frame_%04d.png');
+
+  // H.264 requires even dimensions — pad if needed
+  const scaleFilter = `scale=trunc(iw/2)*2:trunc(ih/2)*2`;
+
+  const args = [
+    '-y',
+    '-framerate', String(fps),
+    '-i', inputPattern,
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-crf', '23',
+    '-preset', 'slower',
+    '-movflags', '+faststart',
+    '-vf', scaleFilter,
+    output,
+  ];
+
+  console.log(`    $ ffmpeg -framerate ${fps} -c:v libx264 -crf 23 -preset slower [${opts.width}×${opts.height}]`);
+  await execFileAsync('ffmpeg', args);
 }
 
 // ---------------------------------------------------------------------------

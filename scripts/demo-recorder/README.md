@@ -1,13 +1,14 @@
-# GIF Recorder
+# Demo Recorder
 
-Automated animated GIF generator for LogMagnifier VS Code extension demos.
+Automated demo recorder for LogMagnifier VS Code extension — outputs GIF or
+MP4.
 
 Driven by YAML spec files that describe step-by-step interactions. Uses the
 [Playwright Electron API](https://playwright.dev/docs/api/class-electron) to
 launch a clean, isolated VS Code instance (downloaded automatically via
 `@vscode/test-electron`, cached in `~/.vscode-test/`) with the extension
-loaded, then captures frames and assembles them into a polished GIF with
-caption overlays.
+loaded, then captures frames and assembles them into a polished GIF or MP4
+with caption overlays.
 
 ---
 
@@ -16,8 +17,8 @@ caption overlays.
 | Tool | Install |
 |------|---------|
 | Node.js ≥ 18 | [nodejs.org](https://nodejs.org) |
-| `gifski` (recommended) | `brew install gifski` |
-| `ffmpeg` (fallback) | `brew install ffmpeg` |
+| `ffmpeg` (required for MP4) | `brew install ffmpeg` |
+| `gifski` (recommended for GIF) | `brew install gifski` |
 
 > **No system VS Code required.** A clean VS Code stable build is downloaded
 > automatically on first run and cached in `~/.vscode-test/`.
@@ -28,18 +29,21 @@ caption overlays.
 
 ```bash
 # Install dependencies
-cd scripts/gif-recorder
+cd scripts/demo-recorder
 npm install
 
-# Record the Runbook demo
+# Record the Runbook demo (default: GIF)
 npm run record:runbook
 
-# Record any spec
-npm run record specs/runbook.yaml
+# Record as MP4
+npm run record -- specs/runbook.yaml --format mp4
+
+# Record both GIF and MP4
+npm run record -- specs/runbook.yaml --format both
 ```
 
-The output GIF is written to `resources/demo/<spec-output>.gif` in the
-repository root.
+Output is written to `resources/demo/<spec-output>.gif` and/or
+`resources/demo/<spec-output>.mp4` in the repository root.
 
 ---
 
@@ -49,11 +53,11 @@ Specs are YAML files in the `specs/` directory. Each file defines:
 
 ```yaml
 name: My Feature Demo      # Human-readable title
-output: my-feature         # Output filename (without .gif)
+output: my-feature         # Output filename (without extension)
 window:
   width: 1280
   height: 800
-frameDelay: 100            # ms between GIF frames (100 = 10 fps)
+frameDelay: 100            # ms between frames (100 = 10 fps)
 scale: 0.85                # Resize factor for smaller file size
 steps:
   - type: command
@@ -123,6 +127,6 @@ runner.ts
 
 composer.ts
   └── annotateFrame()     — adds caption bar overlay using sharp + SVG
-  └── assembleWithGifski()— gifski CLI for high-quality GIF (preferred)
-  └── assembleWithFfmpeg()— ffmpeg two-pass palette GIF (fallback)
+  └── assembleGif()       — gifski (preferred) or ffmpeg palette GIF (fallback)
+  └── assembleMp4()       — ffmpeg H.264 MP4 encoding
 ```

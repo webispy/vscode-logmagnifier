@@ -1,7 +1,7 @@
 {
-  "name": "gif-recorder",
-  "version": "1.0.0",
-  "description": "Automated GIF recorder for VS Code extension demos using Playwright",
+  "name": "demo-recorder",
+  "version": "2.0.0",
+  "description": "Automated demo recorder for VS Code extensions — outputs GIF or MP4 via Playwright",
   "private": true,
   "scripts": {
     "build": "tsc",

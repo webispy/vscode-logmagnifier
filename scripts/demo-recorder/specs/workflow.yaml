@@ -35,7 +35,7 @@
 #   'Run Workflow'   — executes all steps sequentially
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:workflow
 #

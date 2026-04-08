@@ -41,7 +41,7 @@
 #   visible highlight effect against the streaming log lines.
 #
 # Run:
-#   cd scripts/gif-recorder
+#   cd scripts/demo-recorder
 #   npm install
 #   npm run record:adb
 #

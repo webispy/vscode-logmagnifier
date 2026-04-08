@@ -167,7 +167,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     // File Hierarchy Service & Navigation
     logger.info('[extension] Registering File Hierarchy...');
-    const fileHierarchyService = FileHierarchyService.createInstance(context);
+    const fileHierarchyService = FileHierarchyService.createInstance(context, logger);
     context.subscriptions.push(fileHierarchyService);
     new NavigationCommandManager(context, fileHierarchyService, logger);
     const hierarchyLensProvider = new FileHierarchyLensProvider(fileHierarchyService);
@@ -218,7 +218,7 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.window.registerWebviewViewProvider(Constants.Views.Bookmark, bookmarkWebviewProvider)
     );
 
-    new LogBookmarkCommandManager(context, bookmarkService, highlightService);
+    new LogBookmarkCommandManager(context, bookmarkService, highlightService, logger);
 
     logger.info('[extension] Bookmark view registered');
 

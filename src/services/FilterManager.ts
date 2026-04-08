@@ -986,6 +986,8 @@ export class FilterManager implements vscode.Disposable {
         if (this.saveDebounceTimer) {
             clearTimeout(this.saveDebounceTimer);
             this.saveDebounceTimer = undefined;
+        }
+        if (this.dirty) {
             this.stateService.saveToState(this.groups);
         }
         this._onDidChangeFilters.dispose();

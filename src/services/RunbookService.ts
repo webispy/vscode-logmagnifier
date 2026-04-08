@@ -173,16 +173,16 @@ $uptime = (Get-Date) - $boot
             if (!fs.existsSync(this.storagePath)) {
                 return;
             }
-            this.runbookItems = this.scanDir(this.storagePath);
+            this.runbookItems = await this.scanDir(this.storagePath);
         } catch (e: unknown) {
             const msg = e instanceof Error ? e.message : String(e);
             this.logger.error(`[RunbookService] Error loading runbook configurations: ${msg}`);
         }
     }
 
-    private scanDir(dirPath: string, isRoot: boolean = true): RunbookItem[] {
+    private async scanDir(dirPath: string, isRoot: boolean = true): Promise<RunbookItem[]> {
         const items: RunbookItem[] = [];
-        const files = fs.readdirSync(dirPath, { withFileTypes: true });
+        const files = await fsp.readdir(dirPath, { withFileTypes: true });
 
         for (const file of files) {
             const fullPath = path.join(dirPath, file.name);
@@ -194,7 +194,7 @@ $uptime = (Get-Date) - $boot
                     kind: 'group',
                     label: file.name,
                     dirPath: fullPath,
-                    children: this.scanDir(fullPath, false)
+                    children: await this.scanDir(fullPath, false)
                 };
                 items.push(group);
             } else if (!isRoot && file.isFile() && file.name.endsWith('.md')) {

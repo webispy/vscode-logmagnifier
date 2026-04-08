@@ -6,6 +6,7 @@ import * as os from 'os';
 import { LogProcessor } from '../../services/LogProcessor';
 import { FilterGroup, FilterType } from '../../models/Filter';
 import { FileHierarchyService } from '../../services/FileHierarchyService';
+import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
 import * as vscode from 'vscode';
 
@@ -30,7 +31,7 @@ suite('LogProcessor Streaming Edge Cases', () => {
     setup(async () => {
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        FileHierarchyService.createInstance(new MockExtensionContext() as unknown as vscode.ExtensionContext);
+        FileHierarchyService.createInstance(new MockExtensionContext() as unknown as vscode.ExtensionContext, Logger.getInstance());
         processor = new LogProcessor();
         tmpDir = await fsp.mkdtemp(path.join(os.tmpdir(), 'logproc-test-'));
     });

@@ -7,6 +7,7 @@ import { WorkflowManager } from '../../services/WorkflowManager';
 import { ProfileManager } from '../../services/ProfileManager';
 import { LogProcessor } from '../../services/LogProcessor';
 import { FileHierarchyService } from '../../services/FileHierarchyService';
+import { Logger } from '../../services/Logger';
 
 function createFilter(pattern: string) {
     return {
@@ -50,7 +51,7 @@ suite('Workflow Final Verification', () => {
         // Ensure FileHierarchyService is initialized (used by LogProcessor.processFile)
         // @ts-expect-error: Resetting private singleton instance for testing
         FileHierarchyService.instance = undefined;
-        FileHierarchyService.createInstance(context);
+        FileHierarchyService.createInstance(context, Logger.getInstance());
 
         // Mock Logger
         logger = {

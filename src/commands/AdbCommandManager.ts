@@ -488,14 +488,13 @@ export class AdbCommandManager {
             }
         });
 
-        vscode.window.showInformationMessage(
+        const choice = await vscode.window.showInformationMessage(
             'URL copied! Paste into Chrome address bar (Ctrl+L, Ctrl+V, Enter)',
             'Copy Again'
-        ).then(choice => {
-            if (choice === 'Copy Again') {
-                vscode.env.clipboard.writeText(url);
-            }
-        });
+        );
+        if (choice === 'Copy Again') {
+            await vscode.env.clipboard.writeText(url);
+        }
     }
 
     /** Opens chrome://inspect on macOS/Linux where command-line URL launch works. */

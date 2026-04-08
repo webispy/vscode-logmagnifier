@@ -122,11 +122,12 @@ export class TimeRangeTreeDataProvider implements vscode.TreeDataProvider<TimeRa
 
     getChildren(element?: TimeRangeTreeItem): TimeRangeTreeItem[] {
         if (!element) {
-            if (!this.index) {
+            const index = this.index;
+            if (!index) {
                 return [];
             }
-            return this.index.hourBuckets.map(
-                node => new TimeRangeTreeItem(node, this.index!.documentUri)
+            return index.hourBuckets.map(
+                node => new TimeRangeTreeItem(node, index.documentUri)
             );
         }
 

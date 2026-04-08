@@ -468,8 +468,11 @@ export class WorkflowManager implements vscode.Disposable {
             return { ...s, id: newId };
         });
         for (const step of newSteps) {
-            if (step.parentId && idMap.has(step.parentId)) {
-                step.parentId = idMap.get(step.parentId);
+            if (step.parentId) {
+                const newParentId = idMap.get(step.parentId);
+                if (newParentId) {
+                    step.parentId = newParentId;
+                }
             }
         }
 
@@ -1018,7 +1021,7 @@ export class WorkflowManager implements vscode.Disposable {
 
     private cloneGroupsWithSuffix(groups: FilterGroup[], suffix: string): FilterGroup[] {
         return groups.map(g => {
-            const newGroup = JSON.parse(JSON.stringify(g)) as FilterGroup & { originalId?: string };
+            const newGroup = structuredClone(g) as FilterGroup & { originalId?: string };
             newGroup.originalId = newGroup.id;
             newGroup.id = `${newGroup.id}${suffix}`;
             newGroup.filters = newGroup.filters.map((f, fIndex) => ({

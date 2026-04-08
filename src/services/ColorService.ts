@@ -15,6 +15,8 @@ export interface ColorPreset {
  * Provides Solarized-inspired colors and manages color assignment for filter groups.
  */
 export class ColorService {
+    private static readonly COLOR_PRESET_COUNT = 17; // color00 ~ color16
+
     private colorPresets: ColorPreset[] = [];
     private colorPresetsMap: Map<string, ColorPreset> = new Map();
 
@@ -28,7 +30,7 @@ export class ColorService {
         const presets: ColorPreset[] = [];
 
         // Load all defined color presets from configuration (package.json provides defaults)
-        for (let i = 0; i <= 16; i++) {
+        for (let i = 0; i < ColorService.COLOR_PRESET_COUNT; i++) {
             const id = `color${i.toString().padStart(2, '0')}`;
             const colorConfig = config.get<{ dark: string, light: string }>(id);
 

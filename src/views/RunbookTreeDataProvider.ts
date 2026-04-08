@@ -8,7 +8,7 @@ import { IconUtils } from '../utils/IconUtils';
 import { ThemeUtils } from '../utils/ThemeUtils';
 
 export class RunbookTreeDataProvider implements vscode.TreeDataProvider<RunbookItem>, vscode.Disposable {
-    private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
+    private readonly _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();
     readonly onDidChangeTreeData: vscode.Event<RunbookItem | undefined | null | void> = this._onDidChangeTreeData.event;
     private disposables: vscode.Disposable[] = [];
 

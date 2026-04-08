@@ -190,7 +190,6 @@ $uptime = (Get-Date) - $boot
             if (isRoot && file.isDirectory()) {
                 const group: RunbookGroup = {
                     id: fullPath,
-                    type: 'group',
                     kind: 'group',
                     label: file.name,
                     dirPath: fullPath,
@@ -200,7 +199,6 @@ $uptime = (Get-Date) - $boot
             } else if (!isRoot && file.isFile() && file.name.endsWith('.md')) {
                 const item: RunbookMarkdown = {
                     id: fullPath,
-                    type: 'markdown',
                     kind: 'markdown',
                     label: path.basename(file.name, '.md'),
                     filePath: fullPath

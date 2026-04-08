@@ -471,6 +471,7 @@ suite('TimestampService Test Suite', () => {
                 lastTime: new Date(),
                 totalLines: 0,
                 lineTimestamps: new Map(),
+                sortedEntries: [],
                 hourBuckets: [],
             };
             assert.strictEqual(service.formatStatusBarText(index), '');
@@ -534,6 +535,7 @@ suite('TimestampService Test Suite', () => {
                 lastTime: new Date(),
                 totalLines: 0,
                 lineTimestamps: new Map(),
+                sortedEntries: [],
                 hourBuckets: [],
             };
             assert.strictEqual(service.findLineByTime(index, new Date()), -1);

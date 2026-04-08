@@ -169,7 +169,7 @@ suite('ProfileManager Test Suite', () => {
 
     // --- getProfilesMetadata ---
 
-    test('getProfilesMetadata returns word and regex counts', async () => {
+    test('getProfilesMetadata returns text and regex group counts', async () => {
         await manager.createProfile('Mixed', [
             makeGroup('w1', false),
             makeGroup('w2', false),
@@ -179,8 +179,8 @@ suite('ProfileManager Test Suite', () => {
         const metadata = manager.getProfilesMetadata();
         const mixed = metadata.find(m => m.name === 'Mixed');
         assert.ok(mixed);
-        assert.strictEqual(mixed.textCount, 2);
-        assert.strictEqual(mixed.regexCount, 1);
+        assert.strictEqual(mixed.textGroupCount, 2);
+        assert.strictEqual(mixed.regexGroupCount, 1);
     });
 
     test('getProfilesMetadata includes Default even if not stored', () => {

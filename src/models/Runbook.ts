@@ -9,14 +9,12 @@ export interface RunbookItemBase {
 
 /** A leaf node representing a single markdown runbook file. */
 export interface RunbookMarkdown extends RunbookItemBase {
-    type: "markdown";
     kind: "markdown";
     filePath: string;
 }
 
 /** A directory node containing child runbook items. */
 export interface RunbookGroup extends RunbookItemBase {
-    type: "group";
     kind: "group";
     dirPath: string;
     children: RunbookItem[];

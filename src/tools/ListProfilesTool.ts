@@ -18,8 +18,8 @@ export class ListProfilesTool implements vscode.LanguageModelTool<Record<string,
             profiles: metadata.map(p => ({
                 name: p.name,
                 isActive: p.name === activeProfile,
-                textGroupCount: p.textCount,
-                regexGroupCount: p.regexCount,
+                textGroupCount: p.textGroupCount,
+                regexGroupCount: p.regexGroupCount,
             })),
         };
 

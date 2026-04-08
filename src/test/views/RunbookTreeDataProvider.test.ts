@@ -12,11 +12,11 @@ suite('RunbookTreeDataProvider Test Suite', () => {
     let changeHandler: (() => void) | undefined;
 
     const createMarkdown = (label: string, filePath: string): RunbookMarkdown => ({
-        id: filePath, kind: 'markdown', type: 'markdown', label, filePath
+        id: filePath, kind: 'markdown', label, filePath
     });
 
     const createGroup = (label: string, dirPath: string, children: RunbookItem[] = []): RunbookGroup => ({
-        id: dirPath, kind: 'group', type: 'group', label, dirPath, children
+        id: dirPath, kind: 'group', label, dirPath, children
     });
 
     setup(() => {

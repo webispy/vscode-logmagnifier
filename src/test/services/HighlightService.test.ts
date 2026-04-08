@@ -2,6 +2,7 @@ import * as assert from 'assert';
 import * as vscode from 'vscode';
 import { HighlightService } from '../../services/HighlightService';
 import { FilterManager } from '../../services/FilterManager';
+import { Constants } from '../../Constants';
 import { HighlightMode } from '../../models/Filter';
 import { Logger } from '../../services/Logger';
 import { MockExtensionContext } from '../utils/Mocks';
@@ -219,6 +220,49 @@ suite('HighlightService Test Suite', () => {
 
         const countsAfter = await highlightService.updateHighlights(editor);
         assert.strictEqual(countsAfter.get(filter.id), 0, 'FATAL should match 0 times');
+    });
+
+    test('zero-length regex match does not cause infinite loop', async () => {
+        const content = 'abc\ndef';
+        const editor = createMockEditor(content);
+
+        // Enable regex highlighting
+        await vscode.workspace.getConfiguration(Constants.Configuration.Section)
+            .update(Constants.Configuration.Regex.EnableHighlight, true, vscode.ConfigurationTarget.Global);
+        highlightService.dispose();
+        highlightService = new HighlightService(filterManager, logger);
+
+        const group = filterManager.addGroup('Test Group', false)!;
+        filterManager.toggleGroup(group.id);
+        // '^' is a zero-length match regex — previously caused infinite loop
+        const filter = filterManager.addFilter(group.id, '^', 'include', true)!;
+
+        // Should complete without hanging
+        const counts = await highlightService.updateHighlights(editor);
+        assert.strictEqual(counts.get(filter.id), 0, 'Zero-length matches should be skipped');
+
+        await vscode.workspace.getConfiguration(Constants.Configuration.Section)
+            .update(Constants.Configuration.Regex.EnableHighlight, undefined, vscode.ConfigurationTarget.Global);
+    });
+
+    test('zero-length lookahead regex does not cause infinite loop', async () => {
+        const content = 'aaa bbb ccc';
+        const editor = createMockEditor(content);
+
+        await vscode.workspace.getConfiguration(Constants.Configuration.Section)
+            .update(Constants.Configuration.Regex.EnableHighlight, true, vscode.ConfigurationTarget.Global);
+        highlightService.dispose();
+        highlightService = new HighlightService(filterManager, logger);
+
+        const group = filterManager.addGroup('Test Group', false)!;
+        filterManager.toggleGroup(group.id);
+        const filter = filterManager.addFilter(group.id, '(?=a)', 'include', true)!;
+
+        const counts = await highlightService.updateHighlights(editor);
+        assert.strictEqual(counts.get(filter.id), 0, 'Zero-length lookahead matches should be skipped');
+
+        await vscode.workspace.getConfiguration(Constants.Configuration.Section)
+            .update(Constants.Configuration.Regex.EnableHighlight, undefined, vscode.ConfigurationTarget.Global);
     });
 
     test('Chunked Highlighting', async () => {

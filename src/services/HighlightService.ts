@@ -328,6 +328,10 @@ export class HighlightService implements vscode.Disposable {
             let match;
 
             while ((match = regex.exec(text))) {
+                if (match[0].length === 0) {
+                    regex.lastIndex++;
+                    continue;
+                }
                 count++;
                 const startIndex = match.index;
                 const absStartIndex = offset + startIndex;

@@ -846,8 +846,8 @@ export class FilterManager implements vscode.Disposable {
         return this.profileManager.getProfileNames();
     }
 
-    /** Returns metadata for all profiles including text and regex filter group counts. */
-    public getProfilesMetadata(): { name: string, textCount: number, regexCount: number }[] {
+    /** Returns metadata for all profiles including text and regex group counts. */
+    public getProfilesMetadata(): { name: string, textGroupCount: number, regexGroupCount: number }[] {
         return this.profileManager.getProfilesMetadata();
     }
 

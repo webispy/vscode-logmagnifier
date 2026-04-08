@@ -21,6 +21,7 @@ export class AdbLogcatService {
     private processes: Map<string, cp.ChildProcess> = new Map();
     private buffers: Map<string, string[]> = new Map();
     private flushTimers: Map<string, NodeJS.Timeout> = new Map();
+    private flushing = new Set<string>();
 
     constructor(
         private readonly logger: Logger,
@@ -282,8 +283,6 @@ export class AdbLogcatService {
             this.flushTimers.set(sessionId, timer);
         }
     }
-
-    private flushing = new Set<string>();
 
     private async flushLogs(sessionId: string) {
         if (this.flushing.has(sessionId)) {

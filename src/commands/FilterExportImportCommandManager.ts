@@ -277,8 +277,8 @@ export class FilterExportImportCommandManager {
                     return {
                         label: p.name === activeProfile ? `$(check) ${p.name}` : p.name,
                         description: p.name === activeProfile
-                            ? `Active (Text: ${p.textCount}, Regex: ${p.regexCount})`
-                            : `(Text: ${p.textCount}, Regex: ${p.regexCount})`,
+                            ? `Active (Text: ${p.textGroupCount}, Regex: ${p.regexGroupCount})`
+                            : `(Text: ${p.textGroupCount}, Regex: ${p.regexGroupCount})`,
                         detail: 'Switch to this profile',
                         buttons: p.name === Constants.Labels.DefaultProfile ? [] : [
                             {

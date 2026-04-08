@@ -2,10 +2,10 @@ import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
+import * as vscode from 'vscode';
+
 import * as marked from 'marked';
 import sanitizeHtmlLib from 'sanitize-html';
-
-import * as vscode from 'vscode';
 
 import { RunbookMarkdown } from '../models/Runbook';
 

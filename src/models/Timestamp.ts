@@ -27,6 +27,8 @@ export interface TimestampIndex {
     totalLines: number;
     /** Maps line number → parsed Date (only lines that contain a timestamp). */
     lineTimestamps: Map<number, Date>;
+    /** Pre-sorted entries from lineTimestamps, sorted by line number ascending. */
+    sortedEntries: [number, Date][];
     hourBuckets: TimeRangeNode[];
 }
 

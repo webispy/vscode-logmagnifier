@@ -203,6 +203,7 @@ export class TimestampService {
             lastTime,
             totalLines: lines.length,
             lineTimestamps,
+            sortedEntries,
             hourBuckets,
         };
 
@@ -222,7 +223,7 @@ export class TimestampService {
      * Find gaps (silences) in the index above a duration threshold in milliseconds.
      */
     findGaps(index: TimestampIndex, thresholdMs: number): GapInfo[] {
-        const entries = Array.from(index.lineTimestamps.entries()).sort((a, b) => a[0] - b[0]);
+        const entries = index.sortedEntries;
         const gaps: GapInfo[] = [];
 
         for (let i = 1; i < entries.length; i++) {
@@ -248,9 +249,8 @@ export class TimestampService {
      * Same logic as findGaps but restricted to [startLine, endLine].
      */
     findGapsInRange(index: TimestampIndex, startLine: number, endLine: number, thresholdMs: number): GapInfo[] {
-        const entries = Array.from(index.lineTimestamps.entries())
-            .filter(([line]) => line >= startLine && line <= endLine)
-            .sort((a, b) => a[0] - b[0]);
+        const entries = index.sortedEntries
+            .filter(([line]) => line >= startLine && line <= endLine);
         const gaps: GapInfo[] = [];
 
         for (let i = 1; i < entries.length; i++) {
@@ -276,7 +276,7 @@ export class TimestampService {
      * Returns -1 if the index is empty.
      */
     findLineByTime(index: TimestampIndex, targetTime: Date): number {
-        const entries = Array.from(index.lineTimestamps.entries()).sort((a, b) => a[0] - b[0]);
+        const entries = index.sortedEntries;
         if (entries.length === 0) {
             return -1;
         }

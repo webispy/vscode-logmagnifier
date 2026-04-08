@@ -550,16 +550,9 @@ export class AdbCommandManager {
 
         if (selection) {
             if (selection.label === 'Clear Storage') {
-                // Reuse existing logic or call service directly?
-                // Existing logic for 'clearStorage' action type calls `adbService.clearAppStorage`
-                await this.adbService.clearAppStorage(item.device.id, item.device.targetApp);
-                vscode.window.showInformationMessage(`Cleared storage for ${item.device.targetApp}`);
+                await vscode.commands.executeCommand(Constants.Commands.ControlClearStorage, item);
             } else if (selection.label === 'Clear Cache') {
-                // Check AdbService for clear cache method.
-                // I'll assume it exists or I use what was there.
-                // Actually there was `clearCache` action type.
-                await this.adbService.clearAppCache(item.device.id, item.device.targetApp);
-                vscode.window.showInformationMessage(`Cleared cache for ${item.device.targetApp}`);
+                await vscode.commands.executeCommand(Constants.Commands.ControlClearCache, item);
             } else if (selection.label === 'Dumpsys: Package') {
                 await this.executeDumpsysCommand(item, (d, p) => this.adbService.runDumpsysPackage(d, p), "pkg");
             } else if (selection.label === 'Dumpsys: Meminfo') {

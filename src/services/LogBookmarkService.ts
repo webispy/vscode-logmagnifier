@@ -1,5 +1,4 @@
 import * as crypto from 'crypto';
-import * as fs from 'fs';
 
 import * as vscode from 'vscode';
 
@@ -142,14 +141,12 @@ export class LogBookmarkService implements vscode.Disposable {
         const checkPromises = keys.map(async (key) => {
             try {
                 const uri = vscode.Uri.parse(key);
-                if (uri.scheme === 'file') {
-                    try {
-                        await fs.promises.access(uri.fsPath);
-                        this.missingFiles.delete(key);
-                    } catch (_e: unknown) {
-                        // File not accessible — mark as missing
-                        this.missingFiles.add(key);
-                    }
+                try {
+                    await vscode.workspace.fs.stat(uri);
+                    this.missingFiles.delete(key);
+                } catch (_e: unknown) {
+                    // File not accessible — mark as missing
+                    this.missingFiles.add(key);
                 }
             } catch (e: unknown) {
                 const msg = e instanceof Error ? e.message : String(e);

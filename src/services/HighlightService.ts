@@ -328,7 +328,8 @@ export class HighlightService implements vscode.Disposable {
             let match;
 
             while ((match = regex.exec(text))) {
-                if (match[0].length === 0) {
+                const matchLength = match[0].length;
+                if (matchLength === 0) {
                     regex.lastIndex++;
                     continue;
                 }
@@ -346,7 +347,7 @@ export class HighlightService implements vscode.Disposable {
                     if (ctx.useLineRange) {
                         rangesByDeco.get(ctx.key)?.push(editor.document.lineAt(startPos.line).range);
                     } else {
-                        const endIndex = startIndex + match![0].length;
+                        const endIndex = startIndex + matchLength;
                         const absEndIndex = offset + endIndex;
                         const endPos = editor.document.positionAt(absEndIndex);
                         rangesByDeco.get(ctx.key)?.push(new vscode.Range(startPos, endPos));

@@ -7,6 +7,7 @@ import { AdbClient } from './AdbClient';
 
 export class AdbTargetAppService {
     private static readonly scanConcurrency = 8;
+    private static readonly packageNamePattern = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z][a-zA-Z0-9_]*)+$/;
     private deviceTargetApps: Map<string, string> = new Map(); // deviceId -> packageName
     private launchableAppsCache: Map<string, { packageName: string, componentName: string }[]> = new Map();
     private launchableAppScanPromises: Map<string, Promise<void>> = new Map();
@@ -18,6 +19,10 @@ export class AdbTargetAppService {
 
     /** Sets the target app for logcat filtering on the given device. */
     public setTargetApp(device: AdbDevice, packageName: string) {
+        if (!AdbTargetAppService.packageNamePattern.test(packageName)) {
+            this.logger.warn(`[AdbTargetAppService] Invalid package name rejected: ${packageName}`);
+            return;
+        }
         this.deviceTargetApps.set(device.id, packageName);
         device.targetApp = packageName;
         this._onDidChangeTargetApp.fire();

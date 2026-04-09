@@ -251,6 +251,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     /** Clears the icon cache and disposes all subscriptions. */
     public dispose() {
         this.iconCache.clear();
+        this._onDidChangeTreeData.dispose();
         this.disposables.forEach(d => d.dispose());
         this.disposables = [];
     }

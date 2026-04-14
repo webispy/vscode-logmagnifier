@@ -1,7 +1,7 @@
 # LogMagnifier
 
-[![Visual Studio Marketplace Version](https://img.shields.io/visual-studio-marketplace/v/webispy.logmagnifier)](https://marketplace.visualstudio.com/items?itemName=webispy.logmagnifier)
-[![Visual Studio Marketplace Installs](https://img.shields.io/visual-studio-marketplace/i/webispy.logmagnifier)](https://marketplace.visualstudio.com/items?itemName=webispy.logmagnifier)
+[![Visual Studio Marketplace Version](https://vsmarketplacebadges.dev/version-short/webispy.logmagnifier.svg)](https://marketplace.visualstudio.com/items?itemName=webispy.logmagnifier)
+[![Visual Studio Marketplace Installs](https://vsmarketplacebadges.dev/installs/webispy.logmagnifier.svg)](https://marketplace.visualstudio.com/items?itemName=webispy.logmagnifier)
 [![Build Status](https://github.com/webispy/vscode-logmagnifier/actions/workflows/package.yml/badge.svg)](https://github.com/webispy/vscode-logmagnifier/actions/workflows/package.yml)
 [![codecov](https://codecov.io/gh/webispy/vscode-logmagnifier/branch/main/graph/badge.svg)](https://app.codecov.io/github/webispy/vscode-logmagnifier)
 

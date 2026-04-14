@@ -80,8 +80,9 @@ export class EditorUtils {
     /**
      * Attempts to resolve the active text document from:
      * 1. Active Text Editor
-     * 2. Visible Text Editors (first check)
-     * 3. Active Tab Group (if Input is Text)
+     * 2. Active Tab Group (if Input is Text) — checked before visible editors
+     *    so that large files (no TextEditor) in split view are correctly identified
+     * 3. Visible Text Editors (last resort fallback)
      */
     public static async resolveActiveDocument(): Promise<vscode.TextDocument | undefined> {
         let document = vscode.window.activeTextEditor?.document;
@@ -91,16 +92,9 @@ export class EditorUtils {
             document = undefined;
         }
 
-        // Check visible editors if no active editor
-        if (!document) {
-            const visible = vscode.window.visibleTextEditors;
-            const supportedEditor = visible.find(e => e.document.uri.scheme === Constants.Schemes.File || e.document.uri.scheme === Constants.Schemes.Untitled);
-            if (supportedEditor) {
-                document = supportedEditor.document;
-            }
-        }
-
-        // Check active tab if still not found
+        // Check active tab BEFORE visible editors — in split editor with large files,
+        // activeTextEditor is undefined but the active tab correctly reflects user focus.
+        // Falling back to visible editors first would pick the wrong (opposite) editor.
         if (!document) {
             const activeTab = vscode.window.tabGroups.activeTabGroup.activeTab;
             if (activeTab && activeTab.input instanceof vscode.TabInputText) {
@@ -112,6 +106,15 @@ export class EditorUtils {
                         Logger.getInstance().error(`[EditorUtils] Failed to resolve document from tab: ${e instanceof Error ? e.message : String(e)}`);
                     }
                 }
+            }
+        }
+
+        // Last resort: check visible editors
+        if (!document) {
+            const visible = vscode.window.visibleTextEditors;
+            const supportedEditor = visible.find(e => e.document.uri.scheme === Constants.Schemes.File || e.document.uri.scheme === Constants.Schemes.Untitled);
+            if (supportedEditor) {
+                document = supportedEditor.document;
             }
         }
 

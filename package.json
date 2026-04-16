@@ -2,7 +2,7 @@
   "name": "logmagnifier",
   "displayName": "LogMagnifier",
   "description": "A full-focus log analysis tool for Visual Studio Code, featuring advanced filtering, highlighting, timestamp analysis, and AI agent integration.",
-  "version": "1.7.1",
+  "version": "1.7.2",
   "author": "webispy@gmail.com",
   "publisher": "webispy",
   "icon": "icon.png",

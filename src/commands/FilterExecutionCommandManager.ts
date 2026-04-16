@@ -93,6 +93,7 @@ export class FilterExecutionCommandManager {
                 if (uri) {
                     if (uri.scheme === 'file') {
                         filePathFromTab = uri.fsPath;
+                        this.logger.info(`[FilterExecution] Resolved target via Tab URI (large file): ${filePathFromTab}`);
                     } else if (uri.scheme === 'untitled') {
                         try {
                             // Try to open validation doc if possible
@@ -109,6 +110,10 @@ export class FilterExecutionCommandManager {
                 vscode.window.showErrorMessage(Constants.Messages.Error.NoActiveFile);
                 return;
             }
+
+            // Log the actual target for debugging split-editor scenarios
+            const resolvedTarget = filePathFromTab || document?.uri.fsPath || 'unknown';
+            this.logger.info(`[FilterExecution] Apply filter target: ${resolvedTarget} (source: ${filePathFromTab ? 'Tab URI' : 'TextDocument'})`);
 
             let outputPath = '';
             const stats = { processed: 0, matched: 0 };

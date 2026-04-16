@@ -66,11 +66,10 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
             }, null, this.disposables);
 
             // Cleanup when view is disposed
-            const disposeSubscription = webviewView.onDidDispose(() => {
+            webviewView.onDidDispose(() => {
                 this.disposables.forEach(d => d.dispose());
                 this.disposables = [];
-                disposeSubscription.dispose();
-            });
+            }, null, this.disposables);
 
         } catch (e: unknown) {
             this.logger.error(`[WorkflowWebviewProvider] Error resolving webview: ${e instanceof Error ? e.message : String(e)}`);

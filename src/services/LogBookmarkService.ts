@@ -589,12 +589,12 @@ export class LogBookmarkService implements vscode.Disposable {
                         }
 
                         return {
-                            id: b.id as string,
-                            uri: vscode.Uri.parse(b.uri as string),
+                            id: typeof b.id === 'string' ? b.id : String(b.id),
+                            uri: vscode.Uri.parse(typeof b.uri === 'string' ? b.uri : String(b.uri)),
                             line: typeof b.line === 'number' ? b.line : 0,
-                            content: (b.content as string) || '',
-                            groupId: (b.groupId as string) || Date.now().toString(), // Fallback for old bookmarks
-                            matchText: b.matchText as string | undefined
+                            content: typeof b.content === 'string' ? b.content : '',
+                            groupId: typeof b.groupId === 'string' ? b.groupId : Date.now().toString(),
+                            matchText: typeof b.matchText === 'string' ? b.matchText : undefined
                         } as BookmarkItem;
                     } catch (e: unknown) {
                         const msg = e instanceof Error ? e.message : String(e);

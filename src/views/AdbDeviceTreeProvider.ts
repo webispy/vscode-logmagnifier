@@ -325,7 +325,7 @@ export class AdbDeviceTreeProvider implements vscode.TreeDataProvider<AdbTreeIte
                 try {
                     showTouchesState = await this.adbService.getShowTouchesState(element.device.id);
                 } catch (_e: unknown) {
-                    // Fall back to false on error
+                    // Non-critical: fall back to false if showTouches state cannot be read
                 }
                 return [
                     { type: 'controlDeviceAction', actionType: 'screenshot', device: element.device } as ControlDeviceActionItem,

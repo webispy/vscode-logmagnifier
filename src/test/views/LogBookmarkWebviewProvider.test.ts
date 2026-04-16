@@ -42,6 +42,7 @@ suite('LogBookmarkWebviewProvider Test Suite', () => {
                 options: {},
                 onDidReceiveMessage: (_listener: unknown) => {
                     listenerRegistered = true;
+                    return { dispose: () => { } };
                 },
                 html: ''
             }

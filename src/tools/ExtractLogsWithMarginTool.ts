@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -91,7 +91,7 @@ export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<Extra
 
         try {
             const tmpFile = path.join(os.tmpdir(), `LM_margin_${Date.now()}.log`);
-            fs.writeFileSync(tmpFile, result.filteredLines.join('\n'), 'utf-8');
+            await fsp.writeFile(tmpFile, result.filteredLines.join('\n'), 'utf-8');
 
             const outputUri = vscode.Uri.file(tmpFile);
             this.lineMappingService.register(outputUri, doc.uri, result.lineMapping);

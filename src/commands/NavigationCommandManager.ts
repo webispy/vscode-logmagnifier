@@ -139,7 +139,7 @@ export class NavigationCommandManager {
             if (selection && selection.detail) {
                 let targetUri: vscode.Uri | undefined;
 
-                if (selection.detail.startsWith('Untitled:') || selection.detail.startsWith('untitled:')) {
+                if (selection.detail.startsWith('untitled:')) {
                     targetUri = vscode.Uri.parse(selection.detail);
                 } else {
                     targetUri = vscode.Uri.file(selection.detail);

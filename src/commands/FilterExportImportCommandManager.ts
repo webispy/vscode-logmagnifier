@@ -9,6 +9,7 @@ import { Constants } from '../Constants';
 import { FilterGroup } from '../models/Filter';
 
 import { FilterManager } from '../services/FilterManager';
+import { Logger } from '../services/Logger';
 import { IconUtils } from '../utils/IconUtils';
 import { ThemeUtils } from '../utils/ThemeUtils';
 
@@ -20,7 +21,8 @@ interface FilterGroupQuickPickItem extends vscode.QuickPickItem {
 export class FilterExportImportCommandManager {
     constructor(
         private readonly context: vscode.ExtensionContext,
-        private readonly filterManager: FilterManager
+        private readonly filterManager: FilterManager,
+        private readonly logger: Logger
     ) {
         this.registerCommands();
     }
@@ -157,6 +159,7 @@ export class FilterExportImportCommandManager {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportSuccess.replace('{0}', mode === 'text' ? 'Text' : 'Regex').replace('{1}', uri.fsPath));
             } catch (e: unknown) {
+                this.logger.error(`[FilterExportImport] Export failed: ${e instanceof Error ? e.message : String(e)}`);
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
@@ -196,6 +199,7 @@ export class FilterExportImportCommandManager {
                 await fsp.writeFile(uri.fsPath, filtersJson, 'utf8');
                 vscode.window.showInformationMessage(Constants.Messages.Info.ExportGroupSuccess.replace('{0}', group.name).replace('{1}', uri.fsPath));
             } catch (e: unknown) {
+                this.logger.error(`[FilterExportImport] Export group failed: ${e instanceof Error ? e.message : String(e)}`);
                 vscode.window.showErrorMessage(Constants.Messages.Error.ExportGroupFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
@@ -240,6 +244,7 @@ export class FilterExportImportCommandManager {
                     vscode.window.showInformationMessage(Constants.Messages.Info.ImportSuccess.replace('{0}', result.count.toString()).replace('{1}', mode === 'text' ? 'Text' : 'Regex'));
                 }
             } catch (e: unknown) {
+                this.logger.error(`[FilterExportImport] Import failed: ${e instanceof Error ? e.message : String(e)}`);
                 vscode.window.showErrorMessage(Constants.Messages.Error.ReadFilterFileFailed.replace('{0}', e instanceof Error ? e.message : String(e)));
             }
         }
@@ -311,7 +316,9 @@ export class FilterExportImportCommandManager {
 
                     // Refresh list
                     quickPick.hide();
-                    vscode.commands.executeCommand(Constants.Commands.ManageProfiles).then(undefined, () => { /* command routing error is non-fatal */ });
+                    vscode.commands.executeCommand(Constants.Commands.ManageProfiles).then(undefined, (e: unknown) => {
+                        this.logger.warn(`[FilterExportImport] Command routing error: ${e instanceof Error ? e.message : String(e)}`);
+                    });
                 }
             });
 

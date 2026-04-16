@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 
 import { Logger } from '../services/Logger';
+import { RegexUtils } from '../utils/RegexUtils';
 
 interface SearchLogInput {
     pattern: string;
@@ -29,15 +30,7 @@ export class SearchLogTool implements vscode.LanguageModelTool<SearchLogInput> {
         const maxResults = options.input.maxResults ?? 50;
         const ctx = contextLines ?? 0;
 
-        let regex: RegExp;
-        try {
-            const flags = caseSensitive ? 'g' : 'gi';
-            regex = isRegex ? new RegExp(pattern, flags) : new RegExp(this.escapeRegex(pattern), flags);
-        } catch (e: unknown) {
-            return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart(`Invalid pattern: ${e instanceof Error ? e.message : String(e)}`)
-            ]);
-        }
+        const regex = RegexUtils.create(pattern, isRegex ?? false, caseSensitive ?? false);
 
         const doc = editor.document;
         const matches: { line: number; text: string; context?: string[] }[] = [];
@@ -92,9 +85,5 @@ export class SearchLogTool implements vscode.LanguageModelTool<SearchLogInput> {
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(JSON.stringify(result, null, 2))
         ]);
-    }
-
-    private escapeRegex(str: string): string {
-        return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     }
 }

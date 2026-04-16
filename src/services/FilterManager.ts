@@ -28,6 +28,7 @@ export class FilterManager implements vscode.Disposable {
     private profileManager: ProfileManager;
     private stateService: FilterStateService;
     private configDisposable: vscode.Disposable;
+    private profileDisposable: vscode.Disposable;
     private saveDebounceTimer: NodeJS.Timeout | undefined;
 
     constructor(private readonly context: vscode.ExtensionContext) {
@@ -41,7 +42,7 @@ export class FilterManager implements vscode.Disposable {
         this.initDefaultFilters();
 
         // Relay profile changes & Reload filters
-        this.profileManager.onDidChangeProfile(async () => {
+        this.profileDisposable = this.profileManager.onDidChangeProfile(async () => {
             this._onDidChangeProfile.fire();
             await this.reloadFromProfile();
         });
@@ -994,5 +995,6 @@ export class FilterManager implements vscode.Disposable {
         this._onDidChangeResultCounts.dispose();
         this._onDidChangeProfile.dispose();
         this.configDisposable.dispose();
+        this.profileDisposable.dispose();
     }
 }

@@ -94,7 +94,7 @@ export class ExtractJsonTool implements vscode.LanguageModelTool<ExtractJsonInpu
                     try {
                         const parsed = JSON.parse(bounded.text);
                         found.push({ text: bounded.text, parsed });
-                    } catch {
+                    } catch (_e: unknown) {
                         found.push({ text: bounded.text });
                     }
                 }

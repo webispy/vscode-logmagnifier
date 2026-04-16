@@ -107,12 +107,17 @@ export class EditorUtils {
                         document = await vscode.workspace.openTextDocument(uri);
                     } catch (e: unknown) {
                         Logger.getInstance().error(`[EditorUtils] Failed to resolve document from tab: ${e instanceof Error ? e.message : String(e)}`);
+                        // Active tab is identified but document cannot be opened (e.g. large file).
+                        // Return undefined instead of falling back to visible editors,
+                        // which would incorrectly pick a file from another split pane.
+                        // The caller can use resolveActiveUri() to get the file path directly.
+                        return undefined;
                     }
                 }
             }
         }
 
-        // Last resort: check visible editors
+        // Last resort: check visible editors (only when no active tab was identified)
         if (!document) {
             const visible = vscode.window.visibleTextEditors;
             const supportedEditor = visible.find(e => e.document.uri.scheme === Constants.Schemes.File || e.document.uri.scheme === Constants.Schemes.Untitled);

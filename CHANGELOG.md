@@ -1,5 +1,25 @@
 # Change Log
 
+## [1.7.2]
+
+### Fixed
+- **Filter**: Fixed wrong file targeted when applying filters in split editor with large files (>50MB). The fallback logic incorrectly selected the opposite pane's file instead of the intended active tab.
+- **Editor**: Fixed active tab resolution priority in split editor with large files. The active tab is now checked before visible editors to prevent selecting the wrong pane.
+- **Highlight**: Fixed infinite loop when a regex pattern produces zero-length matches (e.g. `^`, `a*`, `(?=...)`). Zero-length matches are now skipped by advancing the match index.
+- **Filter**: Fixed file handle leak in LogProcessor when stream errors occur during large file processing. Streams are now properly closed on error.
+- **Stability**: Hardened error handling, type safety, disposal patterns, and resource management across 20+ services and views via comprehensive code review.
+  - SearchLogTool now uses RegexUtils for ReDoS protection.
+  - LineMappingService cache upgraded from FIFO to LRU eviction.
+  - AdbLogcatService validates tag priority values.
+  - RunbookService file reads converted from sync to async.
+  - Multiple missing disposable subscriptions tracked and cleaned up.
+- **Security**: Added Android package name validation in AdbTargetAppService.
+
+### Changed
+- **Build**: Updated devDependency versions (brace-expansion, picomatch, serialize-javascript).
+- **Marketplace**: Migrated badge URLs from shields.io to vsmarketplacebadges.dev.
+- **Tooling**: Renamed `gif-recorder` to `demo-recorder` with MP4 output support via ffmpeg.
+
 ## [1.7.1]
 
 ### Added

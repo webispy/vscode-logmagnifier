@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 
 import * as vscode from 'vscode';
 
@@ -64,8 +64,11 @@ export class EditorUtils {
                     return stat.size;
                 } catch (_e: unknown) {
                     // Fallback to node fs if workspace fs fails (though workspace.fs is preferred)
-                    if (fs.existsSync(uri.fsPath)) {
-                        return fs.statSync(uri.fsPath).size;
+                    try {
+                        const stat = await fsp.stat(uri.fsPath);
+                        return stat.size;
+                    } catch (_fallback: unknown) {
+                        // File does not exist or is inaccessible
                     }
                 }
             }

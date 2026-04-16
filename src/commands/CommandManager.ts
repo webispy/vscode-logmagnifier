@@ -68,7 +68,7 @@ export class CommandManager {
         new FilterGroupCommandManager(context, this.filterManager, this.logger);
         new FilterItemCommandManager(context, this.filterManager, this.logger, this.textTreeView);
         new FilterPropertyCommandManager(context, this.filterManager);
-        new FilterExportImportCommandManager(context, this.filterManager);
+        new FilterExportImportCommandManager(context, this.filterManager, this.logger);
         new FilterExecutionCommandManager(context, this.filterManager, this.highlightService, this.logProcessor, this.logger, this.lineMappingService, this.textTreeView, this.regexTreeView);
         new EditorToggleCommandManager(context, this.dashboardProvider, this.jsonPrettyService);
 

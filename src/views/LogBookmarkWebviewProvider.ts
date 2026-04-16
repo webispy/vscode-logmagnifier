@@ -105,7 +105,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                 ]
             };
 
-            webviewView.webview.onDidReceiveMessage((data: BookmarkWebviewMessage) => {
+            this.disposables.push(webviewView.webview.onDidReceiveMessage((data: BookmarkWebviewMessage) => {
                 switch (data.type) {
                     case 'jump':
                         if (data.item) {
@@ -182,7 +182,7 @@ export class LogBookmarkWebviewProvider implements vscode.WebviewViewProvider, v
                         }
                         break;
                 }
-            });
+            }));
 
             this.updateContent().catch((e: unknown) =>
                 this.logger.error(`[BookmarkWebview] Update failed: ${e instanceof Error ? e.message : String(e)}`)

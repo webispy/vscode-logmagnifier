@@ -55,10 +55,15 @@ export class LineMappingService {
      * @param line Line number in the filtered file (0-based)
      */
     public getOriginalLocation(filteredUri: vscode.Uri, line: number): vscode.Location | undefined {
-        const mapping = this.mappings.get(filteredUri.toString());
+        const key = filteredUri.toString();
+        const mapping = this.mappings.get(key);
         if (!mapping) {
             return undefined;
         }
+
+        // LRU: Refresh by deleting and re-inserting
+        this.mappings.delete(key);
+        this.mappings.set(key, mapping);
 
         const originalLine = mapping.lineMapping[line];
         if (originalLine === undefined) {

@@ -142,7 +142,8 @@ export class FilterStateService {
             delete legacy['contextLine'];
         }
 
-        // Migrate legacy 'line-through' excludeStyle to 'strikethrough'
+        // Migrate legacy 'line-through' excludeStyle to 'strikethrough' (pre-v1.6 data)
+        // Safe to remove once all users have migrated past v1.6
         if (filter.excludeStyle === 'line-through' as string) {
             filter.excludeStyle = 'strikethrough';
         }

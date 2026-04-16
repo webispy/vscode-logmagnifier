@@ -1,4 +1,4 @@
-import * as fs from 'fs';
+import * as fsp from 'fs/promises';
 import * as os from 'os';
 import * as path from 'path';
 
@@ -94,7 +94,7 @@ export class FilterByTimeRangeTool implements vscode.LanguageModelTool<FilterByT
         try {
             // Write filtered output to temp file
             const tmpFile = path.join(os.tmpdir(), `LM_timerange_${Date.now()}.log`);
-            fs.writeFileSync(tmpFile, result.filteredLines.join('\n'), 'utf-8');
+            await fsp.writeFile(tmpFile, result.filteredLines.join('\n'), 'utf-8');
 
             // Register line mapping
             const outputUri = vscode.Uri.file(tmpFile);

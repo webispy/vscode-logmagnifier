@@ -15,6 +15,8 @@ interface ExtractLogsWithMarginInput {
 
 /** Extracts log lines around a center time with a ± margin in seconds. */
 export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<ExtractLogsWithMarginInput> {
+    private static readonly maxMarginSeconds = 86400;
+
     constructor(
         private readonly timestampService: TimestampService,
         private readonly lineMappingService: LineMappingService,
@@ -35,6 +37,20 @@ export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<Extra
         options: vscode.LanguageModelToolInvocationOptions<ExtractLogsWithMarginInput>,
         _token: vscode.CancellationToken
     ): Promise<vscode.LanguageModelToolResult> {
+        const { time: timeStr, marginSeconds } = options.input;
+
+        if (!Number.isFinite(marginSeconds) || marginSeconds < 0) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart('marginSeconds must be a non-negative finite number.')
+            ]);
+        }
+
+        if (marginSeconds > ExtractLogsWithMarginTool.maxMarginSeconds) {
+            return new vscode.LanguageModelToolResult([
+                new vscode.LanguageModelTextPart(`marginSeconds must not exceed ${ExtractLogsWithMarginTool.maxMarginSeconds} (24 hours).`)
+            ]);
+        }
+
         const editor = vscode.window.activeTextEditor;
         if (!editor) {
             return new vscode.LanguageModelToolResult([
@@ -48,14 +64,6 @@ export class ExtractLogsWithMarginTool implements vscode.LanguageModelTool<Extra
         if (!index) {
             return new vscode.LanguageModelToolResult([
                 new vscode.LanguageModelTextPart('No timestamps detected in the active file.')
-            ]);
-        }
-
-        const { time: timeStr, marginSeconds } = options.input;
-
-        if (marginSeconds < 0) {
-            return new vscode.LanguageModelToolResult([
-                new vscode.LanguageModelTextPart('marginSeconds must be a non-negative number.')
             ]);
         }
 

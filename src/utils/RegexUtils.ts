@@ -5,10 +5,39 @@ export class RegexUtils {
     private static readonly maxCacheSize = Constants.Defaults.RegexCacheSize;
     private static readonly escapeRegex = /[.*+?^${}()|[\]\\]/g;
     private static readonly maxReportedErrors = 200;
+    private static readonly reDoSPatterns = [
+        /(\+|\*|\{)\)?(\+|\*|\{)/,
+        /\([^)]*[+*]\)[+*{]/,
+        /\([^)]*\|[^)]*\)[*+{]/,
+        /\([^)]*[+*][^)]*\|[^)]*\)[*+]/,
+        /(\.\*){2,}/,
+        /\(\.[\*\+]\)\{/,
+    ];
 
     /** Cache stores the 'prototype' RegExp. We clone it to return a fresh instance with its own lastIndex. */
     private static cache: Map<string, RegExp> = new Map();
     private static reportedErrors: Set<string> = new Set();
+
+    /**
+     * Validates a regex pattern for use in validateInput callbacks.
+     * Checks length, ReDoS risk, and syntax.
+     * @returns null if valid, or an error message string if invalid.
+     */
+    public static validatePattern(pattern: string): string | null {
+        const max = Constants.Defaults.MaxPatternLength;
+        if (pattern.length > max) {
+            return Constants.Messages.Error.InputTooLong.replace('{0}', String(max));
+        }
+        if (RegexUtils.reDoSPatterns.some(p => p.test(pattern))) {
+            return 'Pattern may cause performance issues (nested quantifiers)';
+        }
+        try {
+            new RegExp(pattern);
+            return null;
+        } catch (e: unknown) {
+            return e instanceof Error ? e.message : String(e);
+        }
+    }
 
     /**
      * Creates a RegExp object safely with caching.
@@ -33,20 +62,10 @@ export class RegexUtils {
             const flags = caseSensitive ? 'g' : 'gi';
             let regex: RegExp;
             if (isRegex) {
-                // Reject patterns that may cause catastrophic backtracking (ReDoS)
-                const MAX_REGEX_LENGTH = 500;
-                const REDOS_PATTERNS = [
-                    /(\+|\*|\{)\)?(\+|\*|\{)/,       // consecutive quantifiers: (a+)+, a**
-                    /\([^)]*[+*]\)[+*{]/,             // group+quantifier combo: (a+)+, (a|b)*{2}
-                    /\([^)]*\|[^)]*\)[*+{]/,          // alternation with quantifier: (a|b)+
-                    /\([^)]*[+*][^)]*\|[^)]*\)[*+]/,  // overlap in alternation: (a+|a)*
-                    /(\.\*){2,}/,                      // multiple greedy wildcards: .*.*
-                    /\(\.[\*\+]\)\{/,                  // dot-star/plus in group with repetition: (.*){n}
-                ];
-                if (pattern.length > MAX_REGEX_LENGTH) {
+                if (pattern.length > Constants.Defaults.MaxPatternLength) {
                     throw new Error('Pattern too long');
                 }
-                if (REDOS_PATTERNS.some(p => p.test(pattern))) {
+                if (RegexUtils.reDoSPatterns.some(p => p.test(pattern))) {
                     throw new Error('Pattern contains nested quantifiers that may cause performance issues');
                 }
                 regex = new RegExp(pattern, flags);

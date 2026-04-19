@@ -151,6 +151,30 @@ suite('FileHierarchyService Test Suite', () => {
         assert.strictEqual(service.getNode(bookmarkUri), undefined, 'Bookmark should be removed');
     });
 
+    test('Case-insensitive lookup (darwin/win32): mixed-case fsPath resolves to same node', function () {
+        if (process.platform !== 'darwin' && process.platform !== 'win32') {
+            this.skip();
+            return;
+        }
+        const lowerUri = vscode.Uri.file('/Logs/MixedCase.log');
+        const upperUri = vscode.Uri.file('/logs/mixedcase.log');
+        const childUri = vscode.Uri.file('/tmp/child.log');
+
+        service.registerChild(lowerUri, childUri, 'filter');
+
+        // Lookup with differently-cased URI should still resolve
+        assert.ok(service.getNode(upperUri), 'Expected mixed-case parent lookup to hit existing node');
+        assert.strictEqual(service.getChildren(upperUri).length, 1);
+
+        // Parent of child should resolve to same node regardless of case
+        const parent = service.getParent(childUri);
+        assert.ok(parent, 'Expected parent for child');
+        assert.strictEqual(
+            FileHierarchyService.keyOf(parent!),
+            FileHierarchyService.keyOf(lowerUri)
+        );
+    });
+
     test('Scenario 10: Child Delete (Original > Filter > Bookmark -> Delete Filter)', () => {
         // Setup: Original > Filter1 > Bookmark
         service.registerChild(originalUri, filter1Uri, 'filter');

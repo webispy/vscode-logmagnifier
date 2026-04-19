@@ -15,6 +15,10 @@ export interface HierarchyNode {
 }
 
 export class FileHierarchyService implements vscode.Disposable {
+    // Case-insensitive filesystems (macOS default, Windows) can produce
+    // differently-cased paths for the same file. Normalize the key on those
+    // platforms so hierarchy lookups don't create duplicate entries.
+    private static readonly caseInsensitiveFs = process.platform === 'darwin' || process.platform === 'win32';
     private static instance: FileHierarchyService;
 
     private _onDidChangeHierarchy: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
@@ -24,6 +28,14 @@ export class FileHierarchyService implements vscode.Disposable {
     private nodes: Map<string, HierarchyNode> = new Map();
     private storage: vscode.Memento;
     private logger: Logger;
+
+    /** Returns a storage key that is stable across filesystem case variations (file:// only). */
+    public static keyOf(uri: vscode.Uri): string {
+        if (FileHierarchyService.caseInsensitiveFs && uri.scheme === 'file') {
+            return uri.with({ path: uri.path.toLowerCase() }).toString();
+        }
+        return uri.toString();
+    }
 
     private constructor(storage: vscode.Memento, logger: Logger) {
         this.storage = storage;
@@ -54,8 +66,8 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Registers a child file (filter or bookmark) under a parent, creating the parent node if needed. */
     public registerChild(parentUri: vscode.Uri, childUri: vscode.Uri, type: 'filter' | 'bookmark', label?: string) {
-        const parentKey = parentUri.toString();
-        const childKey = childUri.toString();
+        const parentKey = FileHierarchyService.keyOf(parentUri);
+        const childKey = FileHierarchyService.keyOf(childUri);
 
         // Ensure parent exists
         if (!this.nodes.has(parentKey)) {
@@ -87,7 +99,7 @@ export class FileHierarchyService implements vscode.Disposable {
         if (recursive) {
             this.removeGroup(uri);
         } else {
-            const key = uri.toString();
+            const key = FileHierarchyService.keyOf(uri);
             const node = this.nodes.get(key);
 
             if (node) {
@@ -107,7 +119,7 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Returns the parent URI of the given node, or undefined if it has no parent. */
     public getParent(uri: vscode.Uri): vscode.Uri | undefined {
-        const node = this.nodes.get(uri.toString());
+        const node = this.nodes.get(FileHierarchyService.keyOf(uri));
         if (node && node.parentId) {
             const parent = this.nodes.get(node.parentId);
             return parent ? parent.uri : vscode.Uri.parse(node.parentId);
@@ -117,7 +129,7 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Walks up the hierarchy and returns the root ancestor URI. */
     public getRoot(uri: vscode.Uri): vscode.Uri | undefined {
-        let current = this.nodes.get(uri.toString());
+        let current = this.nodes.get(FileHierarchyService.keyOf(uri));
         if (!current) { return undefined; }
 
         while (current.parentId) {
@@ -131,7 +143,8 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Returns sibling URIs that share the same parent, excluding the given URI itself. */
     public getSiblings(uri: vscode.Uri): vscode.Uri[] {
-        const node = this.nodes.get(uri.toString());
+        const selfKey = FileHierarchyService.keyOf(uri);
+        const node = this.nodes.get(selfKey);
         if (!node || !node.parentId) { return []; }
 
         const parent = this.nodes.get(node.parentId);
@@ -139,7 +152,7 @@ export class FileHierarchyService implements vscode.Disposable {
 
         const siblings: vscode.Uri[] = [];
         for (const childKey of parent.children) {
-            if (childKey !== uri.toString()) {
+            if (childKey !== selfKey) {
                 const child = this.nodes.get(childKey);
                 if (child) {
                     siblings.push(child.uri);
@@ -151,7 +164,7 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Returns the child URIs of the given node. */
     public getChildren(uri: vscode.Uri): vscode.Uri[] {
-        const node = this.nodes.get(uri.toString());
+        const node = this.nodes.get(FileHierarchyService.keyOf(uri));
         if (!node) { return []; }
 
         const children: vscode.Uri[] = [];
@@ -166,7 +179,7 @@ export class FileHierarchyService implements vscode.Disposable {
 
     /** Returns the hierarchy node for the given URI, or undefined if not registered. */
     public getNode(uri: vscode.Uri): HierarchyNode | undefined {
-        return this.nodes.get(uri.toString());
+        return this.nodes.get(FileHierarchyService.keyOf(uri));
     }
 
     private save() {
@@ -192,7 +205,7 @@ export class FileHierarchyService implements vscode.Disposable {
         const entries = this.storage.get<[string, StoredNode][]>(this.storageKey, []) ?? [];
         this.nodes = new Map();
 
-        for (const [key, rawNode] of entries) {
+        for (const [, rawNode] of entries) {
             if (!rawNode || typeof rawNode !== 'object') { continue; }
             let uri: vscode.Uri;
             if (rawNode.uri && typeof rawNode.uri === 'object' && 'path' in rawNode.uri) {
@@ -203,10 +216,18 @@ export class FileHierarchyService implements vscode.Disposable {
                 continue;
             }
 
-            this.nodes.set(key, {
+            // Normalize legacy (pre-m6) unnormalized keys on load.
+            const normalizedKey = FileHierarchyService.keyOf(uri);
+            const normalizedParentId = rawNode.parentId
+                ? FileHierarchyService.keyOf(vscode.Uri.parse(rawNode.parentId))
+                : undefined;
+            const normalizedChildren = (rawNode.children ?? []).map(c =>
+                FileHierarchyService.keyOf(vscode.Uri.parse(c)));
+
+            this.nodes.set(normalizedKey, {
                 uri: uri,
-                parentId: rawNode.parentId,
-                children: new Set(rawNode.children ?? []),
+                parentId: normalizedParentId,
+                children: new Set(normalizedChildren),
                 type: rawNode.type,
                 label: rawNode.label ?? ''
             });
@@ -214,7 +235,7 @@ export class FileHierarchyService implements vscode.Disposable {
     }
 
     private removeGroup(uri: vscode.Uri) {
-        const key = uri.toString();
+        const key = FileHierarchyService.keyOf(uri);
         const node = this.nodes.get(key);
         if (!node) { return; }
 

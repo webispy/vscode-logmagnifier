@@ -103,6 +103,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
 
     private async handleMessage(data: WorkflowWebviewMessage): Promise<void> {
         switch (data.type) {
+            case 'create': return this.handleCreate();
             case 'import': return this.handleImport();
             case 'export': return this.handleExport();
             case 'run': return this.handleRun(data);
@@ -119,6 +120,10 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
             case 'moveStepUp': return this.handleMoveStep(data, 'up');
             case 'moveStepDown': return this.handleMoveStep(data, 'down');
         }
+    }
+
+    private async handleCreate(): Promise<void> {
+        await vscode.commands.executeCommand(Constants.Commands.WorkflowCreate);
     }
 
     private async handleImport(): Promise<void> {

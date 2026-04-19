@@ -25,6 +25,7 @@ export interface SerializedBookmarkItem {
 }
 
 export type WorkflowWebviewMessage =
+    | { type: 'create' }
     | { type: 'import' }
     | { type: 'export' }
     | { type: 'run'; id: string }

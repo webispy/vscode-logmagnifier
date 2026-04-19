@@ -842,8 +842,9 @@ export class WorkflowManager implements vscode.Disposable {
                     // Run LogProcessor
                     const result = await this.logProcessor.processFile(inputFile, effectiveGroups, {
                         prependLineNumbers: false,
-                        totalLineCount: lineCount, // pass 0 or real count
-                        mergeGroups: true // Always use Union logic for multiple profiles/levels
+                        totalLineCount: lineCount,
+                        mergeGroups: true,
+                        token
                     });
 
                     // Track file

@@ -122,8 +122,8 @@ export class FilterExecutionCommandManager {
             await vscode.window.withProgress({
                 location: vscode.ProgressLocation.Notification,
                 title: `Applying ${filterType || ''} Filters on ${sourceName}...`,
-                cancellable: false
-            }, async (_progress) => {
+                cancellable: true
+            }, async (progress, token) => {
                 try {
                     const targetPath = filePathFromTab || document?.uri.fsPath;
 
@@ -140,7 +140,17 @@ export class FilterExecutionCommandManager {
                     const result = await this.logProcessor.processFile(targetPath, activeGroups, {
                         prependLineNumbers: this.prependLineNumbersEnabled,
                         totalLineCount: totalLineCount,
-                        content: document ? document.getText() : undefined
+                        content: document ? document.getText() : undefined,
+                        token,
+                        onProgress: (processed, total) => {
+                            const knownTotal = document && total === document.lineCount;
+                            const pct = knownTotal
+                                ? Math.min(Math.floor(processed / total * 100), 99)
+                                : undefined;
+                            progress.report({
+                                message: pct !== undefined ? `${pct}%` : `${processed.toLocaleString()} lines...`
+                            });
+                        }
                     });
                     outputPath = result.outputPath;
                     stats.processed = result.processed;
@@ -159,6 +169,9 @@ export class FilterExecutionCommandManager {
                         this.lineMappingService.register(outputUri, sourceUri, result.lineMapping);
                     }
                 } catch (e: unknown) {
+                    if (e instanceof vscode.CancellationError) {
+                        return;
+                    }
                     vscode.window.showErrorMessage(Constants.Messages.Error.ApplyFiltersError.replace('{0}', e instanceof Error ? e.message : String(e)));
                     return;
                 }

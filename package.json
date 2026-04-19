@@ -1553,6 +1553,12 @@
         "icon": "$(json)"
       },
       {
+        "command": "logmagnifier.export",
+        "title": "Export Filters...",
+        "category": "LogMagnifier",
+        "icon": "$(repo-push)"
+      },
+      {
         "command": "logmagnifier.exportTextFilters",
         "title": "Export Text Filters",
         "category": "LogMagnifier",
@@ -2446,6 +2452,14 @@
         },
         {
           "command": "logmagnifier.toggleFileSizeUnit",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.exportTextFilters",
+          "when": "false"
+        },
+        {
+          "command": "logmagnifier.exportRegexFilters",
           "when": "false"
         }
       ],

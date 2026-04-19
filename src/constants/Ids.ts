@@ -102,6 +102,7 @@ export const Ids = {
         ToggleOccurrencesHighlight: 'logmagnifier.toggleOccurrencesHighlight',
         ToggleFileSizeUnit: 'logmagnifier.toggleFileSizeUnit',
 
+        Export: 'logmagnifier.export',
         ExportTextFilters: 'logmagnifier.exportTextFilters',
         ImportTextFilters: 'logmagnifier.importTextFilters',
         ExportRegexFilters: 'logmagnifier.exportRegexFilters',

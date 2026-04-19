@@ -1,5 +1,19 @@
 # Change Log
 
+## [1.7.3]
+
+### Fixed
+- **Tool Input**: `extractLogsWithMargin` now rejects non-finite and out-of-range `marginSeconds` (negative or above 24 hours) before attempting time math, preventing downstream overflow from unbounded inputs.
+- **Hierarchy**: `FileHierarchyService` keys file:// URIs case-insensitively on macOS/Windows so mixed-case paths no longer produce duplicate hierarchy entries; legacy unnormalized keys are normalized on load.
+- **Regex Errors**: Deduplication of invalid-pattern popups is now keyed on the pattern alone so engine-message variation cannot produce repeat alerts for the same bad input.
+- **Webview**: Replaced the inline JSON `<\/` escape in the bookmark webview with the shared `safeJson()` helper so escaping is consistent with other webviews.
+- **Logging**: `WebviewUtils.safeJson()` now logs serialization failures instead of silently returning `'null'`.
+- **UX**: Filter execution and profile-manager relay failures are now surfaced via a warning popup instead of being logger-only.
+
+### Changed
+- **AI Tools**: `SearchLogTool` now exposes a `prepareInvocation` summary consistent with the other Language Model Tools.
+- **Style**: Import grouping in `extension.ts`, class-member ordering in the command managers, and drag/drop MIME declarations in `FilterTreeDataProvider` now match `.agent/rules/code-style.md`. LRU-eviction sites carry explanatory comments.
+
 ## [1.7.2]
 
 ### Fixed

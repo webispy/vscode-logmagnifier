@@ -29,13 +29,49 @@ suite('ExtractLogsWithMarginTool', () => {
     });
 
     test('rejects negative margin', async () => {
-        // This test would need an active editor to reach the margin check,
-        // so we just verify the tool can be instantiated
         const mockTs = {} as never;
         const mockSm = {} as never;
         const mockLogger = {} as never;
         const tool = new ExtractLogsWithMarginTool(mockTs, mockSm, mockLogger);
-        assert.ok(tool);
+
+        const result = await tool.invoke(
+            { input: { time: '14:30', marginSeconds: -1 }, toolInvocationToken: undefined as never },
+            token
+        );
+
+        const text = (result.content[0] as vscode.LanguageModelTextPart).value;
+        assert.ok(text.includes('non-negative'), `Unexpected response: ${text}`);
+    });
+
+    test('rejects margin above 24h cap', async () => {
+        const mockTs = {} as never;
+        const mockSm = {} as never;
+        const mockLogger = {} as never;
+        const tool = new ExtractLogsWithMarginTool(mockTs, mockSm, mockLogger);
+
+        const result = await tool.invoke(
+            { input: { time: '14:30', marginSeconds: 86401 }, toolInvocationToken: undefined as never },
+            token
+        );
+
+        const text = (result.content[0] as vscode.LanguageModelTextPart).value;
+        assert.ok(text.includes('86400'), `Unexpected response: ${text}`);
+        assert.ok(text.includes('24 hours'), `Unexpected response: ${text}`);
+    });
+
+    test('rejects non-finite margin (NaN)', async () => {
+        const mockTs = {} as never;
+        const mockSm = {} as never;
+        const mockLogger = {} as never;
+        const tool = new ExtractLogsWithMarginTool(mockTs, mockSm, mockLogger);
+
+        const result = await tool.invoke(
+            { input: { time: '14:30', marginSeconds: Number.NaN }, toolInvocationToken: undefined as never },
+            token
+        );
+
+        const text = (result.content[0] as vscode.LanguageModelTextPart).value;
+        assert.ok(text.includes('finite'), `Unexpected response: ${text}`);
     });
 
     test('prepareInvocation returns message with time and margin', async () => {

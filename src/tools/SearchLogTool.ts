@@ -15,6 +15,21 @@ interface SearchLogInput {
 export class SearchLogTool implements vscode.LanguageModelTool<SearchLogInput> {
     constructor(private readonly logger: Logger) {}
 
+    async prepareInvocation(
+        options: vscode.LanguageModelToolInvocationPrepareOptions<SearchLogInput>,
+        _token: vscode.CancellationToken
+    ): Promise<vscode.PreparedToolInvocation> {
+        const { pattern, isRegex, caseSensitive, maxResults, contextLines } = options.input;
+        const parts: string[] = [];
+        parts.push(isRegex ? `regex /${pattern}/` : `"${pattern}"`);
+        if (caseSensitive) { parts.push('case-sensitive'); }
+        if (typeof maxResults === 'number') { parts.push(`max ${maxResults}`); }
+        if (typeof contextLines === 'number' && contextLines > 0) { parts.push(`±${contextLines} ctx`); }
+        return {
+            invocationMessage: `Searching logs: ${parts.join(', ')}`,
+        };
+    }
+
     async invoke(
         options: vscode.LanguageModelToolInvocationOptions<SearchLogInput>,
         token: vscode.CancellationToken

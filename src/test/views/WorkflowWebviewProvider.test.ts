@@ -66,11 +66,14 @@ suite('WorkflowWebviewProvider Test Suite', () => {
 
     test('refresh posts update message', async () => {
         let postedMessage: { type?: string } | undefined;
+        let htmlValue = '';
+
         const mockWebviewView = {
             webview: {
                 options: {},
                 onDidReceiveMessage: () => { },
-                html: '',
+                get html() { return htmlValue; },
+                set html(v: string) { htmlValue = v; },
                 postMessage: async (msg: unknown) => {
                     postedMessage = msg as { type?: string };
                 }
@@ -87,7 +90,7 @@ suite('WorkflowWebviewProvider Test Suite', () => {
 
         await provider.refresh();
 
-        assert.ok(postedMessage);
+        assert.ok(postedMessage, 'postMessage should be called on refresh');
         assert.strictEqual(postedMessage.type, 'update');
     });
 });

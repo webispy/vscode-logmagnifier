@@ -1141,7 +1141,24 @@
         ]
       }
     ],
-    "viewsWelcome": [],
+    "viewsWelcome": [
+      {
+        "view": "logmagnifier-text-filters",
+        "contents": "No text filters yet.\n[Add Group](command:logmagnifier.addTextFilterGroup)\n[Import Filters](command:logmagnifier.importTextFilters)"
+      },
+      {
+        "view": "logmagnifier-regex-filters",
+        "contents": "No regex filters yet.\n[Add Group](command:logmagnifier.addRegexFilterGroup)\n[Import Filters](command:logmagnifier.importRegexFilters)"
+      },
+      {
+        "view": "logmagnifier-runbook",
+        "contents": "No runbook entries yet.\n[Add Group](command:logmagnifier.runbook.addGroup)\n[Import Runbook](command:logmagnifier.runbook.import)"
+      },
+      {
+        "view": "logmagnifier-time-range",
+        "contents": "Open a log file with timestamp entries to explore time ranges here."
+      }
+    ],
     "keybindings": [
       {
         "command": "logmagnifier.nextMatch",

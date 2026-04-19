@@ -13,6 +13,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
     private view?: vscode.WebviewView;
     private disposables: vscode.Disposable[] = [];
     private readonly htmlGenerator: WorkflowHtmlGenerator;
+    private viewInitialized = false;
 
     constructor(
         private readonly context: vscode.ExtensionContext,
@@ -38,11 +39,7 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
                 ]
             };
 
-            const workflows = await this.workflowManager.getWorkflowViewModels();
-            const activeId = this.workflowManager.getActiveWorkflow();
-            const activeStepId = this.workflowManager.getActiveStep();
-
-            webviewView.webview.html = await this.htmlGenerator.generate(webviewView.webview, workflows, activeId, activeStepId);
+            await this.updateView();
 
             webviewView.webview.onDidReceiveMessage(
                 (data) => this.handleMessage(data),
@@ -69,6 +66,8 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
             webviewView.onDidDispose(() => {
                 this.disposables.forEach(d => d.dispose());
                 this.disposables = [];
+                this.view = undefined;
+                this.viewInitialized = false;
             }, null, this.disposables);
 
         } catch (e: unknown) {
@@ -77,17 +76,27 @@ export class WorkflowWebviewProvider implements vscode.WebviewViewProvider, vsco
         }
     }
 
-    /** Sends updated workflow data to the webview via postMessage. */
+    /** Sends updated workflow data to the webview via postMessage, or generates full HTML on first render. */
     public async refresh() {
-        if (this.view) {
-            const workflows = await this.workflowManager.getWorkflowViewModels();
-            const activeId = this.workflowManager.getActiveWorkflow();
+        await this.updateView();
+    }
 
+    private async updateView(): Promise<void> {
+        if (!this.view) { return; }
+
+        const workflows = await this.workflowManager.getWorkflowViewModels();
+        const activeId = this.workflowManager.getActiveWorkflow();
+        const activeStepId = this.workflowManager.getActiveStep();
+
+        if (!this.viewInitialized) {
+            this.view.webview.html = await this.htmlGenerator.generate(this.view.webview, workflows, activeId, activeStepId);
+            this.viewInitialized = true;
+        } else {
             this.view.webview.postMessage({
                 type: 'update',
-                workflows: workflows,
-                activeId: activeId,
-                activeStepId: this.workflowManager.getActiveStep()
+                workflows,
+                activeId,
+                activeStepId
             });
         }
     }

@@ -69,7 +69,7 @@ export class LogProcessor {
      * @returns Promise resolving to output path and statistics
      * @throws Error if file cannot be read or written
      */
-    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string, mergeGroups?: boolean, content?: string }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
+    public async processFile(inputPath: string, filterGroups: FilterGroup[], options?: { prependLineNumbers?: boolean, totalLineCount?: number, originalPath?: string, mergeGroups?: boolean, content?: string, token?: vscode.CancellationToken, onProgress?: (processed: number, total: number) => void }): Promise<{ outputPath: string, processed: number, matched: number, lineMapping: number[] }> {
         const inputStream: Readable = options?.content !== undefined
             ? Readable.from(options.content)
             : fs.createReadStream(inputPath, { encoding: 'utf8' });
@@ -148,9 +148,24 @@ export class LogProcessor {
             return ok;
         };
 
+        const token = options?.token;
+        const onProgress = options?.onProgress;
+        const reportTotal = options?.totalLineCount || DEFAULT_MAX_LINE_COUNT;
+        const PROGRESS_INTERVAL = 5000;
+
         const processLines = async () => {
             for await (const line of rl) {
                 processed++; // 1-based index
+
+                if (processed % PROGRESS_INTERVAL === 0) {
+                    if (token?.isCancellationRequested) {
+                        rl.close();
+                        outputStream.destroy();
+                        throw new vscode.CancellationError();
+                    }
+                    onProgress?.(processed, reportTotal);
+                }
+
                 const matchResult = this.checkMatchCompiled(line, compiledGroups);
 
                 if (matchResult.isMatched) {
@@ -202,7 +217,15 @@ export class LogProcessor {
         };
 
         // Race: process lines vs stream errors
-        await Promise.race([processLines(), streamError]);
+        try {
+            await Promise.race([processLines(), streamError]);
+        } catch (e: unknown) {
+            if (e instanceof vscode.CancellationError) {
+                fs.unlink(outputPath, () => { /* best-effort cleanup */ });
+                throw e;
+            }
+            throw e;
+        }
 
         // Adjust mapping to be 0-based for VS Code Positions
         const adjustedMapping = lineMapping.map(l => l - 1);

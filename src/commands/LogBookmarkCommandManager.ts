@@ -12,8 +12,10 @@ import { EditorUtils } from '../utils/EditorUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 
 export class LogBookmarkCommandManager {
+    // Runtime state
     private lastActiveEditor: vscode.TextEditor | undefined;
 
+    // Injected service references are declared via constructor-parameter properties below.
     constructor(
         context: vscode.ExtensionContext,
         private readonly bookmarkService: LogBookmarkService,

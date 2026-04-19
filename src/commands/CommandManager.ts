@@ -38,6 +38,7 @@ export interface CommandManagerServices {
 export class CommandManager {
     private static readonly jsonPreviewDebounceMs = 50;
 
+    // Injected service references (immutable after construction)
     private readonly filterManager: FilterManager;
     private readonly highlightService: HighlightService;
     private readonly logProcessor: LogProcessor;
@@ -47,6 +48,8 @@ export class CommandManager {
     private readonly regexTreeView: vscode.TreeView<FilterGroup | FilterItem>;
     private readonly jsonPrettyService: JsonPrettyService;
     private readonly lineMappingService: LineMappingService;
+
+    // Runtime state
     private lastActiveLine: number = -1;
     private lastUriStr: string = '';
     private debounceTimer: NodeJS.Timeout | undefined;

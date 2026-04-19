@@ -332,7 +332,9 @@ export class FilterExportImportCommandManager {
                     // Refresh list
                     quickPick.hide();
                     vscode.commands.executeCommand(Constants.Commands.ManageProfiles).then(undefined, (e: unknown) => {
-                        this.logger.warn(`[FilterExportImport] Command routing error: ${e instanceof Error ? e.message : String(e)}`);
+                        const msg = e instanceof Error ? e.message : String(e);
+                        this.logger.warn(`[FilterExportImport] Command routing error: ${msg}`);
+                        vscode.window.showWarningMessage(`Could not reopen profile manager: ${msg}`);
                     });
                 }
             });

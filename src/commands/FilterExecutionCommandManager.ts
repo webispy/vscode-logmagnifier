@@ -12,9 +12,11 @@ import { EditorUtils } from '../utils/EditorUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 
 export class FilterExecutionCommandManager {
+    // Runtime state
     private prependLineNumbersEnabled: boolean = false;
     private isProcessing = false;
 
+    // Injected service references are declared via constructor-parameter properties below.
     constructor(
         private readonly context: vscode.ExtensionContext,
         private readonly filterManager: FilterManager,
@@ -100,7 +102,9 @@ export class FilterExecutionCommandManager {
                             const doc = await vscode.workspace.openTextDocument(uri);
                             document = doc;
                         } catch (e: unknown) {
-                            this.logger.error(`[FilterExecutionCommandManager] ${e instanceof Error ? e.message : String(e)}`);
+                            const msg = e instanceof Error ? e.message : String(e);
+                            this.logger.error(`[FilterExecutionCommandManager] ${msg}`);
+                            vscode.window.showWarningMessage(`Could not open the untitled document for filtering: ${msg}`);
                         }
                     }
                 }

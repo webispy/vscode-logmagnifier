@@ -1,6 +1,8 @@
 import * as crypto from 'crypto';
 import * as vscode from 'vscode';
 
+import { Logger } from '../services/Logger';
+
 /** Generates a cryptographically random nonce for CSP-compliant webview scripts. */
 export function getNonce(): string {
     return crypto.randomBytes(16).toString('base64');
@@ -21,7 +23,9 @@ export function applyWebviewTemplate(html: string, webview: vscode.Webview): str
 export function safeJson(val: unknown): string {
     try {
         return JSON.stringify(val).replace(/</g, '\\u003c');
-    } catch (_e: unknown) {
+    } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        Logger.getInstance().error(`[WebviewUtils] safeJson serialization failed: ${msg}`);
         return 'null';
     }
 }

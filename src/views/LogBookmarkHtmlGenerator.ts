@@ -5,7 +5,7 @@ import { SerializedBookmarkItem } from '../models/WebviewModels';
 
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { Logger } from '../services/Logger';
-import { applyWebviewTemplate, escapeHtml } from '../utils/WebviewUtils';
+import { applyWebviewTemplate, escapeHtml, safeJson } from '../utils/WebviewUtils';
 
 export class LogBookmarkHtmlGenerator {
     private static readonly maxRegexCache = 100;
@@ -127,6 +127,7 @@ export class LogBookmarkHtmlGenerator {
                         let regex = this.regexCache.get(combinedPattern);
                         if (!regex) {
                             regex = new RegExp(combinedPattern, 'gi');
+                            // Insertion-order eviction: drop the oldest entry when at capacity.
                             if (this.regexCache.size >= LogBookmarkHtmlGenerator.maxRegexCache) {
                                 const oldest = this.regexCache.keys().next().value;
                                 if (oldest) {
@@ -236,8 +237,7 @@ export class LogBookmarkHtmlGenerator {
             template = template.replace(/{{\s*NAV_BAR\s*}}/g, headerButtonsHtml);
             template = template.replace(/{{\s*WORD_WRAP_CLASS\s*}}/g, wordWrapEnabled ? 'word-wrap' : '');
             template = template.replace(/{{\s*CONTENT\s*}}/g, finalHtml);
-            const safeItemsMap = JSON.stringify(itemsMap).replace(/<\//g, '<\\/');
-            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, safeItemsMap);
+            template = template.replace(/{{\s*ITEMS_MAP\s*}}/g, safeJson(itemsMap));
 
             return template;
         } catch (e: unknown) {

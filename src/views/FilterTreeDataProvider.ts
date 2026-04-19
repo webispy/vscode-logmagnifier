@@ -15,6 +15,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
     private readonly _onDidChangeTreeData: vscode.EventEmitter<TreeItem | undefined | void> = new vscode.EventEmitter<TreeItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<TreeItem | undefined | void> = this._onDidChangeTreeData.event;
 
+    // TreeDragAndDropController contract: declares which MIME types this provider can emit (drag)
+    // and accept (drop). Same private MIME on both sides means drag-and-drop is scoped to this tree only.
     dropMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
     dragMimeTypes = ['application/vnd.code.tree.logmagnifier-filters'];
 
@@ -35,6 +37,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<TreeItem>
         if (cached) {
             return cached;
         }
+        // Insertion-order eviction: Map iterates keys in insertion order, so
+        // `keys().next()` gives the oldest entry. Evict it before adding the new one.
         if (this.iconCache.size >= FilterTreeDataProvider.maxIconCacheSize) {
             const oldestKey = this.iconCache.keys().next().value;
             if (oldestKey) { this.iconCache.delete(oldestKey); }

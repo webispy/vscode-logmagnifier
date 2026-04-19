@@ -74,7 +74,9 @@ export class RegexUtils {
                 regex = new RegExp(escaped, flags);
             }
 
-            // LRU: Evict oldest if full
+            // LRU eviction — Map iterates in insertion order, so the first key
+            // is the oldest; the `get()` path above re-inserts on hit so hot keys
+            // are never at the front when this evicts.
             if (RegexUtils.cache.size >= RegexUtils.maxCacheSize) {
                 const oldestKey = RegexUtils.cache.keys().next().value;
                 if (oldestKey) {
@@ -85,9 +87,11 @@ export class RegexUtils {
             return new RegExp(regex);
 
         } catch (e: unknown) {
-            // Report error to user (once per invalid pattern to avoid spam)
+            // Report error to user (once per invalid pattern to avoid spam).
+            // Key on the pattern only: engine error text can vary for the same bad
+            // input, and we only want to notify the user once per pattern.
             const errorMessage = e instanceof Error ? e.message : String(e);
-            const errorKey = `${pattern}_${errorMessage}`;
+            const errorKey = pattern;
 
             if (!RegexUtils.reportedErrors.has(errorKey)) {
                 if (RegexUtils.reportedErrors.size >= RegexUtils.maxReportedErrors) {

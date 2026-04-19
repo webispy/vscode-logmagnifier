@@ -28,6 +28,7 @@ export class FilterExportImportCommandManager {
     }
 
     private registerCommands() {
+        this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.Export, () => this.handleUnifiedExport()));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportTextFilters, () => this.handleExport('text')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportRegexFilters, () => this.handleExport('regex')));
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ExportGroup, (group: FilterGroup) => this.handleExportGroup(group)));
@@ -36,6 +37,20 @@ export class FilterExportImportCommandManager {
         this.context.subscriptions.push(vscode.commands.registerCommand(Constants.Commands.ImportRegexFilters, () => this.handleImport('regex')));
 
         this.registerProfileCommands();
+    }
+
+    /** Shows a QuickPick to choose between text and regex filter export. */
+    private async handleUnifiedExport(): Promise<void> {
+        const choice = await vscode.window.showQuickPick(
+            [
+                { label: '$(symbol-text) Text Filters', description: 'Export word/phrase filters', mode: 'text' as const },
+                { label: '$(regex) Regex Filters', description: 'Export regular expression filters', mode: 'regex' as const }
+            ],
+            { title: 'Export Filters', placeHolder: 'Select filter type to export' }
+        );
+        if (choice) {
+            await this.handleExport(choice.mode);
+        }
     }
 
     /** Shows a multi-select QuickPick for the user to choose groups, then exports them. */

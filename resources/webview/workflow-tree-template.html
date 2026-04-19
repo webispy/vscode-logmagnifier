@@ -361,14 +361,16 @@
                         <div style="padding: 20px 24px; color: var(--vscode-foreground); font-size: 13px; line-height: 1.6;">
                             <p style="margin: 0 0 12px;">No workflows yet.</p>
                             <p style="margin: 0 0 6px;">
-                                <a href="#" onclick="post('create',{}); return false;"
+                                <a href="#" id="welcome-create"
                                    style="color: var(--vscode-textLink-foreground); text-decoration: none;">New Workflow</a>
                             </p>
                             <p style="margin: 0;">
-                                <a href="#" onclick="post('import',{}); return false;"
+                                <a href="#" id="welcome-import"
                                    style="color: var(--vscode-textLink-foreground); text-decoration: none;">Import Workflow</a>
                             </p>
                         </div>`;
+                    document.getElementById('welcome-create')?.addEventListener('click', (e) => { e.preventDefault(); post('create', {}); });
+                    document.getElementById('welcome-import')?.addEventListener('click', (e) => { e.preventDefault(); post('import', {}); });
                     return;
                 }
 

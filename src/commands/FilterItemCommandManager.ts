@@ -5,6 +5,7 @@ import { FilterGroup, FilterItem, FilterType } from '../models/Filter';
 
 import { FilterManager } from '../services/FilterManager';
 import { Logger } from '../services/Logger';
+import { RegexUtils } from '../utils/RegexUtils';
 
 export class FilterItemCommandManager {
     constructor(
@@ -78,17 +79,7 @@ export class FilterItemCommandManager {
                 const newPattern = await vscode.window.showInputBox({
                     prompt: Constants.Prompts.EnterRegexPattern,
                     value: item.pattern,
-                    validateInput: (value) => {
-                        if (value.length > Constants.Defaults.MaxPatternLength) {
-                            return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength));
-                        }
-                        try {
-                            new RegExp(value);
-                            return null;
-                        } catch (_e: unknown) {
-                            return Constants.Messages.Error.InvalidRegularExpression;
-                        }
-                    }
+                    validateInput: (value) => RegexUtils.validatePattern(value)
                 });
 
                 if (newPattern === undefined) {
@@ -161,17 +152,7 @@ export class FilterItemCommandManager {
 
             const pattern = await vscode.window.showInputBox({
                 prompt: Constants.Prompts.EnterRegexPattern,
-                validateInput: (value) => {
-                    if (value.length > Constants.Defaults.MaxPatternLength) {
-                        return Constants.Messages.Error.InputTooLong.replace('{0}', String(Constants.Defaults.MaxPatternLength));
-                    }
-                    try {
-                        new RegExp(value);
-                        return null;
-                    } catch (_e: unknown) {
-                        return Constants.Messages.Error.InvalidRegularExpression;
-                    }
-                }
+                validateInput: (value) => RegexUtils.validatePattern(value)
             });
             if (!pattern) {
                 return;

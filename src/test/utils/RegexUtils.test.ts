@@ -57,4 +57,41 @@ suite('RegexUtils Test Suite', () => {
         // Both should work
         assert.strictEqual(regex1.source, regex2.source);
     });
+
+    suite('validatePattern', () => {
+        test('returns null for valid pattern', () => {
+            assert.strictEqual(RegexUtils.validatePattern('hello.*world'), null);
+        });
+
+        test('returns null for empty string', () => {
+            assert.strictEqual(RegexUtils.validatePattern(''), null);
+        });
+
+        test('returns error for invalid regex syntax', () => {
+            const result = RegexUtils.validatePattern('(unclosed');
+            assert.ok(result !== null, 'Should return error for invalid syntax');
+        });
+
+        test('returns error for pattern exceeding max length', () => {
+            const long = 'a'.repeat(501);
+            const result = RegexUtils.validatePattern(long);
+            assert.ok(result !== null, 'Should return error for too-long pattern');
+            assert.ok(result!.includes('500'), 'Error should mention max length');
+        });
+
+        test('returns error for consecutive quantifiers (ReDoS)', () => {
+            const result = RegexUtils.validatePattern('(a+)+');
+            assert.ok(result !== null, 'Should reject nested quantifiers');
+            assert.ok(result!.includes('performance'), 'Error should mention performance');
+        });
+
+        test('returns error for alternation with quantifier (ReDoS)', () => {
+            const result = RegexUtils.validatePattern('(a|b)+');
+            assert.ok(result !== null, 'Should reject alternation with quantifier');
+        });
+
+        test('returns null for safe alternation', () => {
+            assert.strictEqual(RegexUtils.validatePattern('cat|dog'), null);
+        });
+    });
 });

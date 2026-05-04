@@ -47,18 +47,18 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
   - **Persistence**: Bookmarks are saved and restored across sessions.
 - **Log Analysis Workflows**: Automated, multi-step log analysis by chaining multiple filter profiles.
 - **Runbook**: Manage and execute operational runbooks via an interactive, Markdown-based notebook interface with real-time webview output. Write documentation alongside executable shell code blocks, stop long-running commands, edit scripts inline, and share configurations via import/export.
-- **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (Ctrl+Cmd+J).
+- **Interactive JSON Preview**: Extract and explore JSON objects from log lines in a dedicated, searchable tree view (`Ctrl+Cmd+J` on macOS, `Ctrl+Alt+J` on Windows/Linux).
   - **Depth Control**: Incrementally expand or collapse JSON structure levels with persistent depth state.
 - **Timestamp Analysis**: Automatic timestamp detection and time-based log navigation.
   - **Auto Detection**: Recognizes 8 built-in formats (ISO 8601, Apache, syslog, Android logcat, etc.).
   - **Time Range Explorer**: Hierarchical tree view (hour → 10min → minute) with density bar icons.
   - **Time Range Extract**: Extract log segments by time range via tree or editor context menus.
-  - **Go to Timestamp**: Jump to a specific time (`Ctrl+Cmd+G`) with absolute (`HH:MM:SS`) or relative (`+5m`, `-30s`) input.
+  - **Go to Timestamp**: Jump to a specific time (`Ctrl+Cmd+G` on macOS, `Ctrl+Alt+G` on Windows/Linux) with absolute (`HH:MM:SS`) or relative (`+5m`, `-30s`) input.
   - **Selection Gap Display**: Select multiple lines to see time gaps — gutter icons mark gaps, hover shows duration, status bar summarizes the selection.
 - **AI Agent Integration**: Language Model Tools for GitHub Copilot Agent Mode — control filters, profiles, workflows, bookmarks, timestamps, and JSON extraction via natural language (`#logmagnifier` tool set).
 - **File Hierarchy & Navigation**: Persistent tracking of relationships between original logs, filtered views, and bookmarks.
   - **CodeLens**: clickable "Original" and "Parent" links automatically appear at the top of filtered files.
-  - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (Ctrl+Cmd+T).
+  - **Tree View**: Visualize the full hierarchy (Original -> Filter -> Bookmark) in an indented tree (`Ctrl+Cmd+T` on macOS, `Ctrl+Alt+T` on Windows/Linux).
   - **Management**: Quickly remove items using the trash icon, with support for recursive deletion (deleting a root file removes all its derivatives).
   - **Persistence**: Navigation links and hierarchy are preserved even after restarting VS Code.
 
@@ -94,7 +94,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - *Tip*: Select text in the editor, right-click, and choose **Add Selection to LogMagnifier** to instantly create a filter.
     - *Tip*: Right-click items to access organized options like **Filter Type**, **Case Sensitivity**, **Highlight Mode**, and **Context Lines**.
     - *Tip*: Click the **Arrow Up/Down** icons on a filter item to navigate to the previous or next match in the editor.
-    - *Tip*: Use keyboard shortcuts **`Ctrl + Cmd + ]`** (Next) and **`Ctrl + Cmd + [`** (Previous) to navigate matches of the selected filter.
+    - *Tip*: Use keyboard shortcuts **`Ctrl+Cmd+]`** / **`Ctrl+Cmd+[`** on macOS (or **`Ctrl+Alt+]`** / **`Ctrl+Alt+[`** on Windows/Linux) to navigate Next / Previous matches of the selected filter.
 5. **Apply**: Click the **Play** icon in the view title to generate filtered results.
     - *Tip*: Toggle the **List Icon** in the view title to include original line numbers in the output.
 6. **Dashboard**: Use the **Dashboard** view to toggle editor settings (Word Wrap, Minimap, Sticky Scroll) or check the current file size.
@@ -160,7 +160,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
 
 ![JSON Preview Demo](resources/demo/json-preview.gif)
 
-1.  **Open**: Press `Ctrl+Cmd+J` on a log line containing a JSON object to extract and display it in the JSON Preview view.
+1.  **Open**: Press `Ctrl+Cmd+J` (macOS) or `Ctrl+Alt+J` (Windows/Linux) on a log line containing a JSON object to extract and display it in the JSON Preview view.
 2.  **Explore**: Expand or collapse nodes in the tree view to navigate the JSON structure.
 3.  **Depth Control**: Use the **+/-** icons to incrementally expand or collapse all nodes by one level at a time.
 4.  **Search**: Use the search box to filter visible nodes by key or value.
@@ -173,7 +173,7 @@ A powerful log analysis tool for Visual Studio Code, featuring advanced log filt
     - Right-click a tree node → **Extract This Time → End** or **Extract Start → This Time**.
     - Right-click in the editor → **Extract This Line → End** or **Extract Start → This Line**.
     - **Extract This Range** / **Extract Range ± Margin...** to extract a specific time window.
-4.  **Go to Timestamp**: Press `Ctrl+Cmd+G` (or click the status bar) to jump to a specific time. Supports absolute (`14:30`, `14:30:05.123`) and relative (`+5m`, `-30s`) input.
+4.  **Go to Timestamp**: Press `Ctrl+Cmd+G` (macOS) or `Ctrl+Alt+G` (Windows/Linux), or click the status bar, to jump to a specific time. Supports absolute (`14:30`, `14:30:05.123`) and relative (`+5m`, `-30s`) input.
 5.  **Selection Gap Display**: Select multiple lines to analyze time gaps — clock icons appear in the gutter at gap locations, hover for details, and the status bar shows a summary.
 6.  **Settings**: Configure via `logmagnifier.timestamp.enabled`, `autoDetect`, `customPatterns`, and `gapThreshold`.
 

@@ -16,7 +16,7 @@ interface ExportedRunbookItem {
     children?: ExportedRunbookItem[];
 }
 
-export class RunbookService {
+export class RunbookService implements vscode.Disposable {
     private static readonly maxImportDepth = 10;
 
     private _onDidChangeTreeData: vscode.EventEmitter<RunbookItem | undefined | null | void> = new vscode.EventEmitter<RunbookItem | undefined | null | void>();

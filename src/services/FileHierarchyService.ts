@@ -190,7 +190,9 @@ export class FileHierarchyService implements vscode.Disposable {
             }];
         });
         Promise.resolve(this.storage.update(this.storageKey, entries)).catch((e: unknown) => {
-            void e; // Storage write failures are non-fatal; hierarchy will be rebuilt on next activation
+            // Storage write failures are non-fatal; hierarchy will be rebuilt on next activation.
+            const msg = e instanceof Error ? e.message : String(e);
+            this.logger.warn(`[FileHierarchyService] Failed to persist hierarchy: ${msg}`);
         });
     }
 

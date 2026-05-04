@@ -1,12 +1,13 @@
 import * as vscode from 'vscode';
 
 import { FilterManager } from '../services/FilterManager';
+import { LineMappingService } from '../services/LineMappingService';
 import { LogBookmarkService } from '../services/LogBookmarkService';
 import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
-import { LineMappingService } from '../services/LineMappingService';
 import { TimestampService } from '../services/TimestampService';
 import { WorkflowManager } from '../services/WorkflowManager';
+
 import { AddBookmarkTool } from './AddBookmarkTool';
 import { AddFilterTool } from './AddFilterTool';
 import { ApplyFilterTool } from './ApplyFilterTool';

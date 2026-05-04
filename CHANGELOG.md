@@ -2,6 +2,13 @@
 
 ## [1.7.3]
 
+### Added
+- **Welcome Views**: Empty Text Filters, Regex Filters, Runbook, Time Range, and Workflows views now display CTA links (Add / Import / Open) so first-time users have a clear entry point.
+- **Cross-Platform Keybindings**: All `Ctrl+Cmd+*` shortcuts now also bind to `Ctrl+Alt+*` on Windows/Linux. Affected commands: Go to Timestamp, JSON Preview, File Hierarchy Tree, Next/Previous Match.
+- **Unified Export**: Added a single `LogMagnifier: Export` command palette entry that prompts for Text or Regex Filters; the per-type export commands are hidden from the palette but still available via title bar buttons.
+- **Regex Live Validation**: Filter input boxes now validate regex patterns inline (length, ReDoS heuristics, syntax) via the new `RegexUtils.validatePattern()` helper.
+- **Cancellable Progress**: Apply Filter and Workflow runs on large files now show a cancellable progress notification with percentage or processed-line count. Cancelling cleans up the partial temp file.
+
 ### Fixed
 - **Tool Input**: `extractLogsWithMargin` now rejects non-finite and out-of-range `marginSeconds` (negative or above 24 hours) before attempting time math, preventing downstream overflow from unbounded inputs.
 - **Hierarchy**: `FileHierarchyService` keys file:// URIs case-insensitively on macOS/Windows so mixed-case paths no longer produce duplicate hierarchy entries; legacy unnormalized keys are normalized on load.
@@ -9,9 +16,12 @@
 - **Webview**: Replaced the inline JSON `<\/` escape in the bookmark webview with the shared `safeJson()` helper so escaping is consistent with other webviews.
 - **Logging**: `WebviewUtils.safeJson()` now logs serialization failures instead of silently returning `'null'`.
 - **UX**: Filter execution and profile-manager relay failures are now surfaced via a warning popup instead of being logger-only.
+- **Workflow Welcome**: New Workflow / Import Workflow links in the empty-state webview were silently ignored due to a missing message handler and a CSP-blocked inline `onclick`. Both are now wired up via nonce-compliant `addEventListener`.
+- **Regex Presets**: The default Presets group is now seeded only once per install. Users who delete the Presets group no longer see it reappear on every window reload; the explicit `Clear Regex Filter Data` command still restores defaults.
 
 ### Changed
 - **AI Tools**: `SearchLogTool` now exposes a `prepareInvocation` summary consistent with the other Language Model Tools.
+- **Sidebar Welcome**: Welcome content for Workflows, Runbook, Text Filters, and Regex Filters was reduced to a single inline line so users can now collapse those views to make room for siblings.
 - **Style**: Import grouping in `extension.ts`, class-member ordering in the command managers, and drag/drop MIME declarations in `FilterTreeDataProvider` now match `.agent/rules/code-style.md`. LRU-eviction sites carry explanatory comments.
 
 ## [1.7.2]

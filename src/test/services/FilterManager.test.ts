@@ -351,3 +351,57 @@ suite('FilterManager Clear Groups Test Suite', () => {
         assert.strictEqual(groups.length, 0, 'No groups should exist after removing the only group');
     });
 });
+
+suite('FilterManager Default Presets Seeding', () => {
+    test('First construction seeds default Presets group', () => {
+        const ctx = new MockExtensionContext();
+        const fm = new FilterManager(ctx);
+        try {
+            const presets = fm.getGroups().find(g => g.name === 'Presets');
+            assert.ok(presets, 'Presets should be seeded on first run');
+            assert.strictEqual(presets.isRegex, true);
+        } finally {
+            fm.dispose();
+        }
+    });
+
+    test('Reconstruction with same context does not re-seed Presets after deletion', () => {
+        const ctx = new MockExtensionContext();
+
+        const fm1 = new FilterManager(ctx);
+        const presets = fm1.getGroups().find(g => g.name === 'Presets');
+        assert.ok(presets, 'Setup: Presets should exist after first construction');
+        fm1.removeGroup(presets.id);
+        assert.strictEqual(fm1.getGroups().length, 0, 'All groups removed before dispose');
+        fm1.dispose();
+
+        const fm2 = new FilterManager(ctx);
+        try {
+            assert.strictEqual(fm2.getGroups().length, 0,
+                'Presets must not be auto-restored after deletion + restart');
+        } finally {
+            fm2.dispose();
+        }
+    });
+
+    test('clearRegexGroups restores Presets even when seeded flag is set', () => {
+        const ctx = new MockExtensionContext();
+
+        const fm1 = new FilterManager(ctx);
+        const initial = fm1.getGroups().find(g => g.name === 'Presets');
+        assert.ok(initial, 'Setup: Presets seeded');
+        fm1.removeGroup(initial.id);
+        fm1.dispose();
+
+        const fm2 = new FilterManager(ctx);
+        try {
+            assert.strictEqual(fm2.getGroups().length, 0, 'Setup: groups empty after restart');
+            fm2.clearRegexGroups();
+            const restored = fm2.getGroups().find(g => g.name === 'Presets');
+            assert.ok(restored, 'clearRegexGroups must restore Presets regardless of seeded flag');
+            assert.strictEqual(restored.filters.length, 2);
+        } finally {
+            fm2.dispose();
+        }
+    });
+});

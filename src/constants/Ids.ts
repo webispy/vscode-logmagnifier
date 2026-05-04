@@ -311,6 +311,7 @@ export const Ids = {
         BookmarkFileOrder: 'logmagnifier.bookmarks_fileOrder',
         Workflows: 'logmagnifier.workflows',
         ActiveWorkflow: 'logmagnifier.activeWorkflow',
+        DefaultRegexPresetsSeeded: 'logmagnifier.defaultRegexPresetsSeeded',
     },
 
     Defaults: {

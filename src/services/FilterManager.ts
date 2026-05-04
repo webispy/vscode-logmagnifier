@@ -39,7 +39,15 @@ export class FilterManager implements vscode.Disposable {
 
         this.groups = this.stateService.loadFromState();
         this.resetCounts();
-        this.initDefaultFilters();
+
+        // Seed the default Presets group only on first run. Once seeded, a user
+        // who deletes the group must not have it auto-restored on restart;
+        // clearRegexGroups() bypasses this flag to honor the explicit reset command.
+        const seeded = this.context.globalState.get<boolean>(Constants.GlobalState.DefaultRegexPresetsSeeded, false);
+        if (!seeded) {
+            this.initDefaultFilters();
+            this.context.globalState.update(Constants.GlobalState.DefaultRegexPresetsSeeded, true);
+        }
 
         // Relay profile changes & Reload filters
         this.profileDisposable = this.profileManager.onDidChangeProfile(async () => {

@@ -1144,15 +1144,15 @@
     "viewsWelcome": [
       {
         "view": "logmagnifier-text-filters",
-        "contents": "No text filters yet.\n[Add Group](command:logmagnifier.addTextFilterGroup)\n[Import Filters](command:logmagnifier.importTextFilters)"
+        "contents": "No text filters yet. [Add Group](command:logmagnifier.addTextFilterGroup) · [Import](command:logmagnifier.importTextFilters)"
       },
       {
         "view": "logmagnifier-regex-filters",
-        "contents": "No regex filters yet.\n[Add Group](command:logmagnifier.addRegexFilterGroup)\n[Import Filters](command:logmagnifier.importRegexFilters)"
+        "contents": "No regex filters yet. [Add Group](command:logmagnifier.addRegexFilterGroup) · [Import](command:logmagnifier.importRegexFilters)"
       },
       {
         "view": "logmagnifier-runbook",
-        "contents": "No runbook entries yet.\n[Add Group](command:logmagnifier.runbook.addGroup)\n[Import Runbook](command:logmagnifier.runbook.import)"
+        "contents": "No runbook entries yet. [Add Group](command:logmagnifier.runbook.addGroup) · [Import](command:logmagnifier.runbook.import)"
       },
       {
         "view": "logmagnifier-time-range",

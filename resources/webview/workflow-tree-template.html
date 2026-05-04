@@ -358,16 +358,13 @@
 
                 if (!workflows || workflows.length === 0) {
                     container.innerHTML = `
-                        <div style="padding: 20px 24px; color: var(--vscode-foreground); font-size: 13px; line-height: 1.6;">
-                            <p style="margin: 0 0 12px;">No workflows yet.</p>
-                            <p style="margin: 0 0 6px;">
-                                <a href="#" id="welcome-create"
-                                   style="color: var(--vscode-textLink-foreground); text-decoration: none;">New Workflow</a>
-                            </p>
-                            <p style="margin: 0;">
-                                <a href="#" id="welcome-import"
-                                   style="color: var(--vscode-textLink-foreground); text-decoration: none;">Import Workflow</a>
-                            </p>
+                        <div style="padding: 6px 12px; color: var(--vscode-foreground); font-size: 13px; line-height: 1.4;">
+                            No workflows yet.
+                            <a href="#" id="welcome-create"
+                               style="color: var(--vscode-textLink-foreground); text-decoration: none;">New</a>
+                            ·
+                            <a href="#" id="welcome-import"
+                               style="color: var(--vscode-textLink-foreground); text-decoration: none;">Import</a>
                         </div>`;
                     document.getElementById('welcome-create')?.addEventListener('click', (e) => { e.preventDefault(); post('create', {}); });
                     document.getElementById('welcome-import')?.addEventListener('click', (e) => { e.preventDefault(); post('import', {}); });

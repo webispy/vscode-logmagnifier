@@ -9,8 +9,8 @@ import { Constants } from '../Constants';
 
 import { FileHierarchyService } from '../services/FileHierarchyService';
 import { HighlightService } from '../services/HighlightService';
-import { Logger } from '../services/Logger';
 import { LineMappingService } from '../services/LineMappingService';
+import { Logger } from '../services/Logger';
 import { TimestampService } from '../services/TimestampService';
 import { TimeRangeTreeDataProvider, TimeRangeTreeItem } from '../views/TimeRangeTreeDataProvider';
 

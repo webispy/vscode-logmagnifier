@@ -5,9 +5,9 @@ import { FilterGroup, FilterItem } from '../models/Filter';
 
 import { FilterManager } from '../services/FilterManager';
 import { HighlightService } from '../services/HighlightService';
-import { LogProcessor } from '../services/LogProcessor';
-import { Logger } from '../services/Logger';
 import { LineMappingService } from '../services/LineMappingService';
+import { Logger } from '../services/Logger';
+import { LogProcessor } from '../services/LogProcessor';
 import { EditorUtils } from '../utils/EditorUtils';
 import { RegexUtils } from '../utils/RegexUtils';
 

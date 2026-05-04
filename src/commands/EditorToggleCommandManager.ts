@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
+
 import { Constants } from '../Constants';
-import { DashboardProvider } from '../views/DashboardProvider';
+
 import { JsonPrettyService } from '../services/JsonPrettyService';
+import { DashboardProvider } from '../views/DashboardProvider';
 
 export class EditorToggleCommandManager {
     constructor(

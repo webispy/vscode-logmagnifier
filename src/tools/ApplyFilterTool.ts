@@ -1,9 +1,9 @@
 import * as vscode from 'vscode';
 
 import { FilterManager } from '../services/FilterManager';
+import { LineMappingService } from '../services/LineMappingService';
 import { Logger } from '../services/Logger';
 import { LogProcessor } from '../services/LogProcessor';
-import { LineMappingService } from '../services/LineMappingService';
 
 interface ApplyFilterInput {
     filterType?: 'text' | 'regex' | 'all';

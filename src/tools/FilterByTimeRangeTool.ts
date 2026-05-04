@@ -4,8 +4,8 @@ import * as path from 'path';
 
 import * as vscode from 'vscode';
 
-import { Logger } from '../services/Logger';
 import { LineMappingService } from '../services/LineMappingService';
+import { Logger } from '../services/Logger';
 import { TimestampService } from '../services/TimestampService';
 
 interface FilterByTimeRangeInput {
